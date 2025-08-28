@@ -1,36 +1,135 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔧 Tools Hub – Online Utilities Platform
 
-## Getting Started
+Tools Hub is a **Next.js (App Router)** based platform providing free, fast, and privacy-friendly online tools.  
+It includes a wide range of utilities such as URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators.
 
-First, run the development server:
+---
+
+## 🚀 Features
+
+- URL Shortener with custom slugs & click analytics
+- Text & String Tools (case converter, slugify, word counter, base64 encode/decode)
+- PDF Tools (merge, split, compress, convert)
+- Image Tools (convert, resize, remove EXIF)
+- Developer Tools (JSON formatter, JWT decoder, regex tester)
+- SEO Tools (robots.txt generator, OG builder, meta preview)
+- Calculators (BMI, unit converter, date diff, percentage)
+
+---
+
+## ⚙️ Tech Stack
+
+- **Framework:** [Next.js 14+ (App Router)](https://nextjs.org)
+- **UI:** [ShadCN UI](https://ui.shadcn.com) + TailwindCSS
+- **Database:** PostgreSQL with Prisma ORM (for shortener & analytics)
+- **Auth (optional):** Clerk / NextAuth
+- **Storage:** Cloudinary or AWS S3 (for media/PDF if needed)
+- **Deployment:** Docker + Traefik (reverse proxy, SSL via Let’s Encrypt)
+
+---
+
+## 📂 Project Structure
+
+```
+
+project-root/
+├── app/
+│ ├── page.tsx # Homepage
+│ ├── sitemap.ts # Dynamic sitemap
+│ ├── robots.ts # Robots.txt
+│ ├── tools/ # Tools Hub routes
+│ │ ├── url/ # URL shortener
+│ │ ├── text/ # Text tools
+│ │ ├── pdf/ # PDF tools
+│ │ ├── image/ # Image tools
+│ │ ├── dev/ # Developer tools
+│ │ ├── seo/ # SEO tools
+│ │ └── calc/ # Calculators
+├── components/ # UI & shared components
+├── lib/ # DB, rate-limit, utilities
+├── prisma/ # Prisma schema & migrations
+├── public/ # Static assets
+├── styles/ # Global styles
+├── docs/PROJECT.md # Roadmap & full documentation
+├── Dockerfile
+├── docker/entrypoint.sh
+└── README.md
+
+```
+
+---
+
+## 🛠️ Getting Started
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/your-username/tools-hub.git
+cd tools-hub
+npm install
+```
+
+### 2. Environment Setup
+
+Create a `.env` file with:
+
+```env
+DATABASE_URL="postgresql://user:pass@localhost:5432/tools_hub"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+# Optional
+CLERK_SECRET_KEY=...
+CLERK_PUBLISHABLE_KEY=...
+```
+
+### 3. Prisma Migration
+
+```bash
+npx prisma migrate deploy
+```
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🐳 Docker (Production)
 
-## Learn More
+Build & run with Docker:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+docker build -t tools-hub .
+docker run -d --name tools-hub -p 3000:3000 --env-file .env tools-hub
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📊 Roadmap
 
-## Deploy on Vercel
+- [x] Base Next.js setup with ShadCN theme
+- [x] Core UI (Navbar, Footer, Ads slots, SEO layout)
+- [x] URL shortener + analytics with Prisma
+- [ ] 15–20 initial tools live (text, PDF, image, calc)
+- [ ] Deploy with Docker + Traefik
+- [ ] Google AdSense integration
+- [ ] Add advanced tools (SEO/dev/media)
+- [ ] Multi-language support (EN/BN)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📖 Learn More
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [ShadCN UI](https://ui.shadcn.com)
+- [Prisma ORM](https://www.prisma.io/docs)
+- [Traefik Reverse Proxy](https://doc.traefik.io/traefik/)
+
+---
+
+## 📜 License
+
+MIT License © 2025 \[Your Name / Team]
