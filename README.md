@@ -132,4 +132,4 @@ docker run -d --name tools-hub -p 3000:3000 --env-file .env tools-hub
 
 ## 📜 License
 
-MIT License © 2025 \[Your Name / Team]
+MIT License © 2025
