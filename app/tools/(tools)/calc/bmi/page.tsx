@@ -80,8 +80,8 @@ export default function BMIPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cm">cm</SelectItem>
-                    <SelectItem value="in">inch</SelectItem>
+                    <SelectItem value="cm">CM</SelectItem>
+                    <SelectItem value="in">INCH</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -91,14 +91,14 @@ export default function BMIPage() {
             <div className="grid gap-3">
               <Label className="text-sm">Weight</Label>
               <div className="flex items-center gap-2">
-                <Input inputMode="decimal" placeholder="e.g., 65" value={weightValue} onChange={(e) => setWeightValue(e.target.value)} />
+                <Input inputMode="decimal" placeholder="65" value={weightValue} onChange={(e) => setWeightValue(e.target.value)} />
                 <Select value={weightUnit} onValueChange={(v) => setWeightUnit(v as any)}>
                   <SelectTrigger className="w-28">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="lb">lb</SelectItem>
+                    <SelectItem value="kg">KG</SelectItem>
+                    <SelectItem value="lb">LB</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
