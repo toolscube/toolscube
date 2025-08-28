@@ -40,7 +40,7 @@ export default function HomePage() {
         </p>
         <div className="relative flex gap-3">
           <Button asChild>
-            <Link href="/tools" className="text-white" aria-label="Explore all tools">
+            <Link href="/tools" aria-label="Explore all tools">
               Explore Tools
             </Link>
           </Button>
