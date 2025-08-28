@@ -1,103 +1,112 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
+
+const tools = [
+  { title: 'URL Shortener', desc: 'Custom slug & click analytics', href: '/tools/url' },
+  { title: 'QR Code', desc: 'Generate and download QR codes', href: '/tools/text/qr' },
+  { title: 'Base64', desc: 'Encode / Decode strings & files', href: '/tools/text/base64' },
+  { title: 'Word Counter', desc: 'Count words, chars, lines', href: '/tools/text/word-counter' },
+  { title: 'PDF Merge', desc: 'Combine multiple PDFs', href: '/tools/pdf/merge' },
+  { title: 'PDF Compress', desc: 'Reduce PDF file size', href: '/tools/pdf/compress' },
+  { title: 'Image Convert', desc: 'JPG ⇄ PNG ⇄ WebP', href: '/tools/image/convert' },
+  { title: 'Image Resize', desc: 'Resize or crop images', href: '/tools/image/resize' },
+  { title: 'JSON Formatter', desc: 'Pretty print & validate JSON', href: '/tools/dev/json-formatter' },
+  { title: 'JWT Decoder', desc: 'Decode tokens (offline)', href: '/tools/dev/jwt-decode' },
+  { title: 'Unit Converter', desc: 'Length, weight, temperature', href: '/tools/calc/unit-converter' },
+  { title: 'BMI Calculator', desc: 'Body Mass Index calculator', href: '/tools/calc/bmi' },
+];
+
+export default function HomePage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <main className="py-10">
+      {/* Hero */}
+      <section className="relative flex flex-col items-start gap-4 overflow-hidden rounded-2xl border bg-background/40 p-6 md:p-8">
+        {/* subtle gradient aura for dark */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-1 rounded-2xl bg-[radial-gradient(60%_60%_at_20%_0%,rgba(59,130,246,0.18),transparent_60%),radial-gradient(50%_50%_at_90%_20%,rgba(34,197,94,0.14),transparent_60%)]"
         />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <Badge variant="secondary" className="relative">
+          Fast • Free • Privacy-Friendly
+        </Badge>
+        <h1 className="relative text-balance text-3xl font-semibold leading-tight tracking-tight md:text-4xl">All your essential online tools, in one clean place.</h1>
+        <p className="relative max-w-2xl text-pretty text-muted-foreground">
+          Shorten links, convert PDFs & images, format JSON, calculate BMI, and more. Built with modern web tech and a focus on speed and usability.
+        </p>
+        <div className="relative flex gap-3">
+          <Button asChild>
+            <Link href="/tools" className="text-white" aria-label="Explore all tools">
+              Explore Tools
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/about" aria-label="Learn more about Tools Hub">
+              About
+            </Link>
+          </Button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      <Separator className="my-8" />
+
+      {/* Tools Grid */}
+      <section aria-label="Popular tools" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {tools.map((t) => (
+          <Link key={t.title} href={t.href} className="group" aria-label={`${t.title} — ${t.desc}`}>
+            <Card
+              className={[
+                // glassy + gradient top border
+                'relative h-full overflow-hidden rounded-2xl border',
+                'bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40',
+                // hover and focus states
+                'transition-all duration-200',
+                'hover:border-primary/50 hover:shadow-[0_8px_30px_rgba(2,132,199,0.08)]',
+                'focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/50',
+              ].join(' ')}>
+              {/* gradient top hairline */}
+              <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base md:text-lg">{t.title}</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">{t.desc}</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button size="sm" variant="secondary" className="transition-transform group-hover:-translate-y-0.5">
+                  Open
+                </Button>
+              </CardContent>
+
+              {/* subtle bottom sheen on hover (dark nice) */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-10 translate-y-6 bg-gradient-to-t from-primary/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+              />
+            </Card>
+          </Link>
+        ))}
+      </section>
+
+      <Separator className="my-12" />
+
+      {/* Footer */}
+      <footer className="flex flex-wrap items-center justify-between gap-3 py-6 text-sm text-muted-foreground">
+        <div>© {new Date().getFullYear()} Tools Hub</div>
+        <nav className="flex gap-4">
+          <Link href="/privacy" className="hover:underline">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:underline">
+            Terms
+          </Link>
+          <Link href="/about" className="hover:underline">
+            About
+          </Link>
+        </nav>
       </footer>
-    </div>
+    </main>
   );
 }
