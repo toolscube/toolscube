@@ -1,7 +1,7 @@
-// app/calc/bmi/page.tsx
 'use client';
 import SectionHeader from '@/components/root/section-header';
 import Stat from '@/components/root/stat';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,9 +10,9 @@ import { Separator } from '@/components/ui/separator';
 import { useMemo, useState } from 'react';
 
 export default function BMIPage() {
-  const [heightValue, setHeightValue] = useState<string>('');
+  const [heightValue, setHeightValue] = useState('');
   const [heightUnit, setHeightUnit] = useState<'cm' | 'in'>('cm');
-  const [weightValue, setWeightValue] = useState<string>('');
+  const [weightValue, setWeightValue] = useState('');
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg');
 
   const parsed = useMemo(() => {
@@ -33,22 +33,43 @@ export default function BMIPage() {
     const minKg = 18.5 * meters * meters;
     const maxKg = 24.9 * meters * meters;
 
-    return { bmi, category, minKg, maxKg, meters };
+    return { bmi, category, minKg, maxKg };
   }, [heightValue, heightUnit, weightValue, weightUnit]);
 
-  const pretty = (n: number, d = 1) => (Number.isFinite(n) ? n.toFixed(d) : '-');
+  const pretty = (n: number, d = 1) => (Number.isFinite(n) ? n.toFixed(d) : '—');
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-10">
-      <SectionHeader title="BMI Calculator" desc="Calculate your Body Mass Index with metric or imperial units. Dark‑mode friendly UI with ShadCN components." />
+    <div className="container mx-auto max-w-3xl px-4 py-10 space-y-8">
+      {/* Breadcrumb */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/tools">Tools</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/tools/calc">Calculators</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>BMI Calculator</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-      <Card className="backdrop-blur supports-[backdrop-filter]:bg-background/80 border-muted/40">
+      {/* Header */}
+      <SectionHeader title="BMI Calculator" desc="Calculate your Body Mass Index with metric or imperial units. Designed with ShadCN components, fully dark-mode ready." />
+
+      {/* Calculator Card */}
+      <Card className="relative overflow-hidden rounded-2xl border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+        <div aria-hidden className="absolute -top-20 -left-20 h-60 w-60 rounded-full bg-primary/10 blur-3xl" />
         <CardHeader>
           <CardTitle>Inputs</CardTitle>
-          <CardDescription>Enter your height and weight, then see your BMI and healthy weight range.</CardDescription>
+          <CardDescription>Enter your height and weight to calculate BMI and see your healthy range.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-2">
+            {/* Height */}
             <div className="grid gap-3">
               <Label className="text-sm">Height</Label>
               <div className="flex items-center gap-2">
@@ -65,6 +86,7 @@ export default function BMIPage() {
               </div>
             </div>
 
+            {/* Weight */}
             <div className="grid gap-3">
               <Label className="text-sm">Weight</Label>
               <div className="flex items-center gap-2">
@@ -87,12 +109,10 @@ export default function BMIPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Stat label="BMI" value={parsed ? pretty(parsed.bmi, 1) : '—'} />
             <Stat label="Category" value={parsed ? parsed.category : '—'} />
-            <Stat label="Healthy Range" value={parsed ? `${pretty(parsed.minKg, 1)}–${pretty(parsed.maxKg, 1)} kg` : '—'} />
+            <Stat label="Healthy Range" value={parsed ? `${pretty(parsed.minKg, 1)} – ${pretty(parsed.maxKg, 1)} kg` : '—'} />
           </div>
 
-          <div className="mt-6 text-xs text-muted-foreground">
-            <p>* Categories based on WHO: Underweight (&lt;18.5), Healthy (18.5–24.9), Overweight (25–29.9), Obese (≥30).</p>
-          </div>
+          <div className="mt-6 text-xs text-muted-foreground">* Categories: Underweight (&lt;18.5), Healthy (18.5–24.9), Overweight (25–29.9), Obese (≥30).</div>
         </CardContent>
       </Card>
     </div>
