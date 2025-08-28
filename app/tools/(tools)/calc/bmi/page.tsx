@@ -39,7 +39,7 @@ export default function BMIPage() {
   const pretty = (n: number, d = 1) => (Number.isFinite(n) ? n.toFixed(d) : '—');
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-10 space-y-8">
+    <div className="py-10 space-y-8">
       {/* Breadcrumb */}
       <Breadcrumb>
         <BreadcrumbList>
@@ -58,7 +58,7 @@ export default function BMIPage() {
       </Breadcrumb>
 
       {/* Header */}
-      <SectionHeader title="BMI Calculator" desc="Calculate your Body Mass Index with metric or imperial units. Designed with ShadCN components, fully dark-mode ready." />
+      <SectionHeader title="BMI Calculator" desc="Calculate your Body Mass Index with metric or imperial units." />
 
       {/* Calculator Card */}
       <Card className="relative overflow-hidden rounded-2xl border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
@@ -73,7 +73,8 @@ export default function BMIPage() {
             <div className="grid gap-3">
               <Label className="text-sm">Height</Label>
               <div className="flex items-center gap-2">
-                <Input inputMode="decimal" placeholder="e.g., 170" value={heightValue} onChange={(e) => setHeightValue(e.target.value)} />
+                <Input inputMode="decimal" placeholder="170" value={heightValue} onChange={(e) => setHeightValue(e.target.value)} />
+
                 <Select value={heightUnit} onValueChange={(v) => setHeightUnit(v as any)}>
                   <SelectTrigger className="w-28">
                     <SelectValue />

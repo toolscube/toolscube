@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <div className="mx-auto max-w-6xl px-4">{children}</div>
+        <div className="mx-auto px-4">{children}</div>
       </body>
     </html>
   );
