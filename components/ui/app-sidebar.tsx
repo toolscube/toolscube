@@ -82,6 +82,8 @@ const data = {
         { title: 'Unit Converter', url: '/tools/calc/unit-converter' },
         { title: 'Date Difference', url: '/tools/calc/date-diff' },
         { title: 'Standard Calculator', url: '/tools/calc/standard' },
+        { title: 'Scientific Calculator', url: '/tools/calc/scientific' },
+        { title: 'Percentage Calculator', url: '/tools/calc/percentage' },
       ],
     },
   ],
