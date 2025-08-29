@@ -1,8 +1,10 @@
 'use client';
+
 import SectionHeader from '@/components/root/section-header';
 import Stat from '@/components/root/stat';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,6 +40,16 @@ export default function BMIPage() {
 
   const pretty = (n: number, d = 1) => (Number.isFinite(n) ? n.toFixed(d) : '—');
 
+  // convert healthy range to current weight unit for display
+  const rangeText = useMemo(() => {
+    if (!parsed) return '—';
+    const { minKg, maxKg } = parsed;
+    if (weightUnit === 'kg') return `${pretty(minKg, 1)} – ${pretty(maxKg, 1)} kg`;
+    const minLb = minKg / 0.45359237;
+    const maxLb = maxKg / 0.45359237;
+    return `${pretty(minLb, 1)} – ${pretty(maxLb, 1)} lb`;
+  }, [parsed, weightUnit]);
+
   return (
     <div className="py-10 space-y-8">
       {/* Breadcrumb */}
@@ -60,62 +72,84 @@ export default function BMIPage() {
       {/* Header */}
       <SectionHeader title="BMI Calculator" desc="Calculate your Body Mass Index with metric or imperial units." />
 
-      {/* Calculator Card */}
-      <Card className="relative overflow-hidden rounded-2xl border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
-        <div aria-hidden className="absolute -top-20 -left-20 h-60 w-60 rounded-full bg-primary/10 blur-3xl" />
+      {/* Glass Calculator Card */}
+      <MotionGlassCard>
         <CardHeader>
           <CardTitle>Inputs</CardTitle>
           <CardDescription>Enter your height and weight to calculate BMI and see your healthy range.</CardDescription>
         </CardHeader>
-        <CardContent>
+
+        <div className="px-6 pb-6">
           <div className="grid gap-6 sm:grid-cols-2">
             {/* Height */}
-            <div className="grid gap-3">
-              <Label className="text-sm">Height</Label>
-              <div className="flex items-center gap-2">
-                <Input inputMode="decimal" placeholder="170" value={heightValue} onChange={(e) => setHeightValue(e.target.value)} />
-
-                <Select value={heightUnit} onValueChange={(v) => setHeightUnit(v as any)}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cm">CM</SelectItem>
-                    <SelectItem value="in">INCH</SelectItem>
-                  </SelectContent>
-                </Select>
+            <GlassCard className="p-4 bg-card/60 backdrop-blur">
+              <div className="grid gap-3">
+                <Label className="text-sm">Height</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    inputMode="decimal"
+                    placeholder={heightUnit === 'cm' ? '170' : '67'}
+                    value={heightValue}
+                    onChange={(e) => setHeightValue(e.target.value)}
+                    className="bg-background/60 backdrop-blur"
+                  />
+                  <Select value={heightUnit} onValueChange={(v) => setHeightUnit(v as any)}>
+                    <SelectTrigger className="w-28 bg-background/60 backdrop-blur">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cm">CM</SelectItem>
+                      <SelectItem value="in">INCH</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            </GlassCard>
 
             {/* Weight */}
-            <div className="grid gap-3">
-              <Label className="text-sm">Weight</Label>
-              <div className="flex items-center gap-2">
-                <Input inputMode="decimal" placeholder="65" value={weightValue} onChange={(e) => setWeightValue(e.target.value)} />
-                <Select value={weightUnit} onValueChange={(v) => setWeightUnit(v as any)}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kg">KG</SelectItem>
-                    <SelectItem value="lb">LB</SelectItem>
-                  </SelectContent>
-                </Select>
+            <GlassCard className="p-4 bg-card/60 backdrop-blur">
+              <div className="grid gap-3">
+                <Label className="text-sm">Weight</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    inputMode="decimal"
+                    placeholder={weightUnit === 'kg' ? '65' : '143'}
+                    value={weightValue}
+                    onChange={(e) => setWeightValue(e.target.value)}
+                    className="bg-background/60 backdrop-blur"
+                  />
+                  <Select value={weightUnit} onValueChange={(v) => setWeightUnit(v as any)}>
+                    <SelectTrigger className="w-28 bg-background/60 backdrop-blur">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">KG</SelectItem>
+                      <SelectItem value="lb">LB</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            </GlassCard>
           </div>
 
           <Separator className="my-6" />
 
+          {/* Stats in glass tiles */}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Stat label="BMI" value={parsed ? pretty(parsed.bmi, 1) : '—'} />
-            <Stat label="Category" value={parsed ? parsed.category : '—'} />
-            <Stat label="Healthy Range" value={parsed ? `${pretty(parsed.minKg, 1)} – ${pretty(parsed.maxKg, 1)} kg` : '—'} />
+            <GlassCard className="p-4">
+              <Stat label="BMI" value={parsed ? pretty(parsed.bmi, 1) : '—'} />
+            </GlassCard>
+            <GlassCard className="p-4">
+              <Stat label="Category" value={parsed ? parsed.category : '—'} />
+            </GlassCard>
+            <GlassCard className="p-4">
+              <Stat label="Healthy Range" value={parsed ? rangeText : '—'} />
+            </GlassCard>
           </div>
 
           <div className="mt-6 text-xs text-muted-foreground">* Categories: Underweight (&lt;18.5), Healthy (18.5–24.9), Overweight (25–29.9), Obese (≥30).</div>
-        </CardContent>
-      </Card>
+        </div>
+      </MotionGlassCard>
     </div>
   );
 }

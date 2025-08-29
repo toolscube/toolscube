@@ -11,27 +11,27 @@ const data = {
     {
       title: 'Url',
       url: '/tools/url',
-      icon: LinkIcon, // was SquareTerminal
+      icon: LinkIcon,
       isActive: true,
       items: [{ title: 'URL Shortener', url: '/tools/url' }],
     },
     {
       title: 'Text',
       url: '/tools/text/qr',
-      icon: Type, // was Bot
+      icon: Type,
       isActive: true,
       items: [
         { title: 'QR Code', url: '/tools/text/qr' },
         { title: 'Base64', url: '/tools/text/base64' },
         { title: 'Case Converter', url: '/tools/text/case-converter' },
         { title: 'Slugify', url: '/tools/text/slugify' },
-        { title: 'Word Counter', url: '/tools/text/word-counter' }, // fixed path (was work-counter)
+        { title: 'Word Counter', url: '/tools/text/word-counter' },
       ],
     },
     {
       title: 'PDF',
       url: '/tools/pdf/merge',
-      icon: FileText, // better fit for docs/PDF
+      icon: FileText,
       isActive: true,
       items: [
         { title: 'PDF Merge', url: '/tools/pdf/merge' },
@@ -43,7 +43,7 @@ const data = {
     {
       title: 'Image',
       url: '/tools/image/convert',
-      icon: ImageIcon, // was Settings2
+      icon: ImageIcon,
       isActive: true,
       items: [
         { title: 'Image Convert', url: '/tools/image/convert' },
@@ -54,7 +54,7 @@ const data = {
     {
       title: 'Developer',
       url: '/tools/dev/json-formatter',
-      icon: Braces, // was Settings2
+      icon: Braces,
       isActive: true,
       items: [
         { title: 'JSON Formatter', url: '/tools/dev/json-formatter' },
@@ -65,17 +65,17 @@ const data = {
     {
       title: 'SEO',
       url: '/tools/seo/og-builder',
-      icon: Globe, // was Settings2
+      icon: Globe,
       isActive: true,
       items: [
         { title: 'OG Image Builder', url: '/tools/seo/og-builder' },
-        { title: 'robots.txt Generator', url: '/tools/seo/robots-generator' }, // label cleaned up
+        { title: 'robots.txt Generator', url: '/tools/seo/robots-generator' },
       ],
     },
     {
       title: 'Calculators',
       url: '/tools/calc/bmi',
-      icon: Calculator, // was Settings2
+      icon: Calculator,
       isActive: true,
       items: [
         { title: 'BMI Calculator', url: '/tools/calc/bmi' },
@@ -90,9 +90,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       {/* Header */}
-      <SidebarHeader className="flex justify-center items-center gap-2 px-3 py-4 border-b">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">TH</div>
-        <h2 className="text-base font-semibold tracking-tight">Tools Hub</h2>
+      <SidebarHeader className="px-3 py-4 border-b">
+        <div className="flex justify-center items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">TH</div>
+          <h2 className="text-base font-semibold tracking-tight">Tools Hub</h2>
+        </div>
       </SidebarHeader>
 
       {/* Content */}

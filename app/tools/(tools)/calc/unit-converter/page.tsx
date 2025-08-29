@@ -1,14 +1,18 @@
 'use client';
+
 import SectionHeader from '@/components/root/section-header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { ArrowLeftRight, Copy, Info, Ruler, Scale, Sparkles, ThermometerSun } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 const CATEGORIES = ['Length', 'Weight', 'Temperature'] as const;
-
 type Category = (typeof CATEGORIES)[number];
 
 const UNITS: Record<Category, string[]> = {
@@ -84,11 +88,18 @@ function fromBase(category: Category, baseValue: number, unit: string): number {
   }
 }
 
+const ICON_BY_CATEGORY = {
+  Length: <Ruler className="h-4 w-4" />,
+  Weight: <Scale className="h-4 w-4" />,
+  Temperature: <ThermometerSun className="h-4 w-4" />,
+};
+
 export default function UnitConverterPage() {
   const [category, setCategory] = useState<Category>('Length');
   const [fromUnit, setFromUnit] = useState<string>(UNITS['Length'][0]);
   const [toUnit, setToUnit] = useState<string>(UNITS['Length'][1]);
   const [amount, setAmount] = useState<string>('1');
+  const [copied, setCopied] = useState(false);
 
   const result = useMemo(() => {
     const num = parseFloat(amount);
@@ -97,37 +108,66 @@ export default function UnitConverterPage() {
     return fromBase(category, base, toUnit);
   }, [category, fromUnit, toUnit, amount]);
 
-  // Ensure unit selections reset when category changes
   const handleCategory = (v: Category) => {
     setCategory(v);
     setFromUnit(UNITS[v][0]);
     setToUnit(UNITS[v][1] ?? UNITS[v][0]);
   };
 
+  const swapUnits = () => {
+    setFromUnit((prev) => {
+      const f = toUnit;
+      setToUnit(prev);
+      return f;
+    });
+  };
+
   const pretty = (n: number | null) => (n == null ? '—' : new Intl.NumberFormat().format(n));
 
-  return (
-    <div className="container mx-auto max-w-3xl px-4 py-10">
-      <SectionHeader title="Unit Converter" desc="Convert between common length, weight, and temperature units. Built with ShadCN UI." />
+  const copyResult = async () => {
+    try {
+      if (result == null) return;
+      await navigator.clipboard.writeText(`${pretty(result)} ${toUnit}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {}
+  };
 
-      <Card className="backdrop-blur supports-[backdrop-filter]:bg-background/80 border-muted/40">
+  return (
+    <div className="container mx-auto py-10">
+      <SectionHeader title="Unit Converter" desc="Convert between length, weight, and temperature with a gorgeous glass UI." />
+
+      <MotionGlassCard>
         <CardHeader>
-          <CardTitle>Conversion</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" /> Conversion
+            </CardTitle>
+            <Badge variant="secondary" className="ml-1">
+              {ICON_BY_CATEGORY[category as keyof typeof ICON_BY_CATEGORY]}
+              <span className="ml-1 hidden sm:inline">{category}</span>
+            </Badge>
+          </div>
           <CardDescription>Select a category, units, and amount.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
+
+        <div className="px-6 pb-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Controls */}
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label>Category</Label>
                 <Select value={category} onValueChange={(v) => handleCategory(v as Category)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background/60 backdrop-blur">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((c) => (
                       <SelectItem key={c} value={c}>
-                        {c}
+                        <div className="flex items-center gap-2">
+                          {ICON_BY_CATEGORY[c as keyof typeof ICON_BY_CATEGORY]}
+                          <span>{c}</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -137,9 +177,9 @@ export default function UnitConverterPage() {
               <div className="grid gap-2">
                 <Label>From</Label>
                 <div className="flex items-center gap-2">
-                  <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                  <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className="bg-background/60 backdrop-blur" />
                   <Select value={fromUnit} onValueChange={setFromUnit}>
-                    <SelectTrigger className="w-36">
+                    <SelectTrigger className="w-40 bg-background/60 backdrop-blur">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -150,13 +190,16 @@ export default function UnitConverterPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Button variant="outline" size="icon" onClick={swapUnits} className="shrink-0">
+                    <ArrowLeftRight className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
               <div className="grid gap-2">
                 <Label>To</Label>
                 <Select value={toUnit} onValueChange={setToUnit}>
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger className="w-40 bg-background/60 backdrop-blur">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -168,26 +211,59 @@ export default function UnitConverterPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Quick presets */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {['1', '10', '100', '1000'].map((p) => (
+                  <Badge key={p} variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => setAmount(p)}>
+                    {p}
+                  </Badge>
+                ))}
+              </div>
             </div>
 
+            {/* Result / Info */}
             <div className="grid gap-4">
-              <div className="rounded-xl border bg-card p-6">
+              {/* Result box as a GlassCard */}
+              <GlassCard className="rounded-2xl p-6">
                 <div className="text-sm text-muted-foreground">Result</div>
-                <div className="mt-2 text-3xl font-semibold">
-                  {pretty(result)} {toUnit}
+                <div className="mt-2 flex items-baseline gap-3">
+                  <div className="text-4xl font-semibold tracking-tight">
+                    {pretty(result)} {toUnit}
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={copyResult} title="Copy" className="hover:bg-primary/10">
+                    <Copy className={`h-4 w-4 ${copied ? 'animate-pulse' : ''}`} />
+                  </Button>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">Base units: meters, kilograms, and Celsius.</p>
-              </div>
+              </GlassCard>
 
-              <div className="rounded-xl border bg-card p-4 text-xs text-muted-foreground">
-                <p>Temperature uses exact conversion formulas. Length & weight use SI factors.</p>
-              </div>
+              {/* Info box as a GlassCard */}
+              <GlassCard className="rounded-2xl p-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 font-medium text-foreground">
+                  <Info className="h-3.5 w-3.5" /> Notes
+                </div>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  <li>Temperature uses exact conversion formulas.</li>
+                  <li>Length &amp; weight use SI factors.</li>
+                  <li className="flex items-center gap-1 flex-wrap">
+                    Use the
+                    <span>
+                      <ArrowLeftRight className="h-4 w-4" />
+                    </span>
+                    button to quickly swap units.
+                  </li>
+                </ul>
+              </GlassCard>
             </div>
           </div>
+
           <Separator className="my-6" />
-          <p className="text-xs text-muted-foreground">Tip: Press Tab to quickly move between fields.</p>
-        </CardContent>
-      </Card>
+          <p className="text-xs text-muted-foreground">
+            Tip: Press <kbd className="rounded bg-muted px-1 py-0.5 text-[10px]">Tab</kbd> to move between fields.
+          </p>
+        </div>
+      </MotionGlassCard>
     </div>
   );
 }
