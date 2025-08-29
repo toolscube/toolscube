@@ -119,7 +119,7 @@ export default function UrlShortenerPage() {
 
   return (
     <div className="">
-      <ToolsHeader breadcrumbItems={[{ label: 'Tools', href: '/tools' }, { label: 'URL', href: '/tools/url' }, { label: 'URL Shortener' }]} />
+      <ToolsHeader breadcrumbItems={[{ label: 'Tools', href: '/tools' }, { label: 'URL', href: '/tools/#cat-URL' }, { label: 'URL Shortener' }]} />
 
       <SectionHeader title="URL Shortener" desc="Paste a link and get the shortest possible domain/slug. Anonymous by default. If a URL was shortened before, you’ll get the same short link." />
 

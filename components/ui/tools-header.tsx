@@ -32,7 +32,7 @@ export function ToolsHeader({ title = 'Tools', breadcrumbItems, rightActions, sh
         {/* Title or Breadcrumb */}
         <div className="min-w-0 flex-1">
           {hasBreadcrumb ? (
-            <BreadcrumbContainer items={breadcrumbItems!} className="text-sm" />
+            <BreadcrumbContainer items={breadcrumbItems!} className="font-medium" />
           ) : (
             <div className="flex items-center gap-4">
               <h1 className="text-base font-semibold tracking-tight">{title}</h1>
