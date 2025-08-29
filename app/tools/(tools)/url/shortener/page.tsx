@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { createShort } from '@/lib/actions/shortener';
 
-import { BarChart2, CalendarClock, Check, Copy, ExternalLink, Link as LinkIcon, MoreHorizontal, QrCode, RefreshCcw, Trash2 } from 'lucide-react';
+import { BarChart2, CalendarClock, Check, Copy, ExternalLink, Link as LinkIcon, MoreHorizontal, QrCode, RefreshCcw, ShieldCheck, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -148,7 +148,8 @@ export default function UrlShortenerPage() {
               </Link>
 
               <Link href={interstitialUrl || '#'} aria-disabled={!shortUrl}>
-                <Button variant="outline" size="sm" disabled={!shortUrl}>
+                <Button variant="outline" size="sm" className="gap-2" disabled={!shortUrl}>
+                  <ShieldCheck className="h-4 w-4" />
                   Interstitial
                 </Button>
               </Link>

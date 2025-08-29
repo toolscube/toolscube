@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { getLink, recordClickAndRedirect } from '@/lib/actions/shortener';
 import { ExternalLink, Link as LinkIcon, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 export default async function InterstitialPage({ params }: { params: { id: string } }) {
@@ -73,19 +74,19 @@ export default async function InterstitialPage({ params }: { params: { id: strin
               <br />
               Created: <span className="font-medium">{link.createdAt.toDateString()}</span>
             </div>
-            <a href={analyticsHref} className="mt-3 inline-flex items-center gap-2 text-xs text-foreground/80 underline underline-offset-4 hover:text-foreground">
+            <Link href={analyticsHref} className="mt-3 inline-flex items-center gap-2 text-xs text-foreground/80 underline underline-offset-4 hover:text-foreground">
               <ExternalLink className="h-3.5 w-3.5" />
               View analytics
-            </a>
+            </Link>
           </GlassCard>
         </div>
 
         {/* Actions */}
         <form action={continueAction} className="mt-6 flex flex-wrap items-center gap-2">
           <Button type="submit">Continue</Button>
-          <a href="/tools/url/shortener" className="inline-flex items-center rounded-md border px-3 py-2 text-sm hover:bg-primary/10">
+          <Link href="/tools/url/shortener" className="inline-flex items-center rounded-md border px-3 py-2 text-sm hover:bg-primary/10">
             Make another
-          </a>
+          </Link>
         </form>
       </MotionGlassCard>
     </div>
