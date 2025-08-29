@@ -2,6 +2,7 @@
 'use client';
 
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { ToolsHeader } from '@/components/ui/tools-header';
 import { ToolsSidebar } from '@/components/ui/tools-sidebar';
 import type { ChildrenProps } from '@/types';
 
@@ -38,7 +39,7 @@ export default function Layout({ children }: ChildrenProps) {
         {/* Main area */}
         <div className="flex flex-1 flex-col">
           {/* Optional global top bar goes here */}
-
+          <ToolsHeader />
           <main className="flex-1">
             <div className="@container/main min-h-screen w-full px-4 py-4 lg:px-6">{children}</div>
           </main>
