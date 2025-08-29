@@ -4,25 +4,31 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { ToolsData } from '@/data/tools';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
-const tools = [
-  { title: 'URL Shortener', desc: 'Custom slug & click analytics', href: '/tools/url' },
-  { title: 'QR Code', desc: 'Generate and download QR codes', href: '/tools/text/qr' },
-  { title: 'Base64', desc: 'Encode / Decode strings & files', href: '/tools/text/base64' },
-  { title: 'Word Counter', desc: 'Count words, chars, lines', href: '/tools/text/word-counter' },
-  { title: 'PDF Merge', desc: 'Combine multiple PDFs', href: '/tools/pdf/merge' },
-  { title: 'PDF Compress', desc: 'Reduce PDF file size', href: '/tools/pdf/compress' },
-  { title: 'Image Convert', desc: 'JPG ⇄ PNG ⇄ WebP', href: '/tools/image/convert' },
-  { title: 'Image Resize', desc: 'Resize or crop images', href: '/tools/image/resize' },
-  { title: 'JSON Formatter', desc: 'Pretty print & validate JSON', href: '/tools/dev/json-formatter' },
-  { title: 'JWT Decoder', desc: 'Decode tokens (offline)', href: '/tools/dev/jwt-decode' },
-  { title: 'Unit Converter', desc: 'Length, weight, temperature', href: '/tools/calc/unit-converter' },
-  { title: 'BMI Calculator', desc: 'Body Mass Index calculator', href: '/tools/calc/bmi' },
-];
+// ------ helpers ------
+type ToolItem = {
+  title: string;
+  url: string;
+  description?: string;
+  popular?: boolean;
+};
+
+function getPopularTools(max = 12): ToolItem[] {
+  const flat: ToolItem[] = ToolsData.flatMap((cat) => cat.items ?? []);
+  const popular = flat.filter((t) => t.popular);
+  const pool = popular.length ? popular : flat;
+  // de-dup by url just in case
+  const seen = new Set<string>();
+  const unique = pool.filter((t) => (seen.has(t.url) ? false : (seen.add(t.url), true)));
+  return unique.slice(0, max);
+}
 
 export default function HomePage() {
+  const tools = getPopularTools(12);
+
   return (
     <main className="py-10">
       {/* Hero */}
@@ -51,12 +57,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Separator className="my-10" />
-
-      {/* Tools Grid */}
-      <section aria-label="Popular tools" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Tools Grid (Popular) */}
+      <section aria-label="Popular tools" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 pt-8">
         {tools.map((t) => (
-          <Link key={t.title} href={t.href} className="group focus:outline-none" aria-label={`${t.title} — ${t.desc}`}>
+          <Link key={t.url} href={t.url} className="group focus:outline-none" aria-label={`${t.title}${t.description ? ` — ${t.description}` : ''}`}>
             <Card
               className={[
                 'relative h-full overflow-hidden rounded-2xl border',
@@ -74,7 +78,7 @@ export default function HomePage() {
 
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold tracking-tight">{t.title}</CardTitle>
-                <CardDescription className="text-sm text-muted-foreground line-clamp-2">{t.desc}</CardDescription>
+                {t.description && <CardDescription className="text-sm text-muted-foreground line-clamp-2">{t.description}</CardDescription>}
               </CardHeader>
               <CardContent className="pt-0">
                 <Button size="sm" variant="secondary" className="transition-all group-hover:-translate-y-0.5 group-hover:shadow-sm">
@@ -95,7 +99,7 @@ export default function HomePage() {
       <Separator className="my-14" />
 
       {/* Footer */}
-      <footer className="flex flex-wrap items-center justify-between gap-3 py-6 text-sm text-muted-foreground">
+      <footer className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <div>© {new Date().getFullYear()} Tools Hub</div>
         <nav className="flex gap-5">
           <Link href="/privacy" className="hover:underline">

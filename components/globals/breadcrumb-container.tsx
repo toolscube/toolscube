@@ -1,7 +1,6 @@
 'use client';
 
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { cn } from '@/lib/utils';
 import React from 'react';
 
 interface BreadcrumbItem {
@@ -16,7 +15,7 @@ interface BreadcrumbProps {
 
 export function BreadcrumbContainer({ items, className }: BreadcrumbProps) {
   return (
-    <Breadcrumb className={cn('font-grotesk', className)}>
+    <Breadcrumb className={className}>
       <BreadcrumbList>
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
