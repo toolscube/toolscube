@@ -96,6 +96,7 @@ export default function UrlShortenerPage() {
     const res = await createShort({ url });
     if (!res.ok) {
       setStatus('error');
+      toast.error('Invalid URL!');
       return;
     }
     setSlug(res.link.short);
@@ -174,7 +175,7 @@ export default function UrlShortenerPage() {
           <div className="grid gap-2">
             <Label>Destination URL</Label>
             <div className="flex gap-2">
-              <Input placeholder="tariqul.dev or https://example.com/page" value={url} onChange={(e) => setUrl(e.target.value)} className="bg-background/60 backdrop-blur" />
+              <Input type="url" placeholder="Enter your URL..." value={url} onChange={(e) => setUrl(e.target.value)} className="bg-background/60 backdrop-blur" />
               <Button onClick={onShorten} disabled={!url || status === 'saving'}>
                 <LinkIcon className="mr-2 h-4 w-4" /> {status === 'saving' ? 'Shortening…' : 'Shorten'}
               </Button>
