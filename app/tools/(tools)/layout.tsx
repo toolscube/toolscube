@@ -1,8 +1,8 @@
 // app/(tools)/layout.tsx  (or wherever this layout lives)
 'use client';
 
-import { AppSidebar } from '@/components/ui/app-sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { ToolsSidebar } from '@/components/ui/tools-sidebar';
 import type { ChildrenProps } from '@/types';
 
 // Background FX extracted so layout stays readable
@@ -33,7 +33,7 @@ export default function Layout({ children }: ChildrenProps) {
         <BackgroundFX />
 
         {/* Sidebar */}
-        <AppSidebar />
+        <ToolsSidebar />
 
         {/* Main area */}
         <div className="flex flex-1 flex-col">
