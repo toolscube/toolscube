@@ -8,6 +8,8 @@ export default async function AnalyticsPage({ params }: { params: { id: string }
   if (!data) notFound();
   const { link, total, first, last, byDay, topReferrers, topCountries } = data;
 
+  console.log(data);
+
   return (
     <div className="container mx-auto max-w-4xl px-4 py-10">
       <MotionGlassCard className="p-6">

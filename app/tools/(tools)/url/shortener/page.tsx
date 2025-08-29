@@ -63,8 +63,8 @@ export default function UrlShortenerPage() {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
   const shortUrl = useMemo(() => (slug ? `${origin}/${slug}` : ''), [origin, slug]);
-  const interstitialUrl = useMemo(() => (slug ? `${origin}/url/shortener/interstitial/${slug}` : ''), [origin, slug]);
-  const analyticsUrl = useMemo(() => (slug ? `${origin}/url/shortener/analytics/${slug}` : ''), [origin, slug]);
+  const interstitialUrl = useMemo(() => (slug ? `${origin}/tools/url/shortener/interstitial/${slug}` : ''), [origin, slug]);
+  const analyticsUrl = useMemo(() => (slug ? `${origin}/tools/url/shortener/analytics/${slug}` : ''), [origin, slug]);
 
   const handleCopy = async (text: string, rowSlug?: string) => {
     try {
@@ -185,7 +185,7 @@ export default function UrlShortenerPage() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              We normalize URLs automatically (adds <code>https://</code> if missing).
+              We normalize URLs automatically (adds <code className="rounded-md bg-muted px-2 py-1 text-xs">https://</code> if missing).
             </p>
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function UrlShortenerPage() {
             <div className="grid md:grid-cols-2 gap-2">
               {recent.slice(0, 8).map((it) => {
                 const sUrl = `${origin}/${it.slug}`;
-                const aUrl = `${origin}/url/shortener/analytics/${it.slug}`;
+                const aUrl = `${origin}/tools/url/shortener/analytics/${it.slug}`;
 
                 const host = (() => {
                   try {
