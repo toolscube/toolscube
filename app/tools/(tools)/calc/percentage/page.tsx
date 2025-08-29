@@ -87,7 +87,7 @@ export default function PercentageCalculatorPage() {
           </GlassCard>
         </div>
 
-        <Separator className="my-6" />
+        <Separator />
 
         {/* Increase / Decrease by % */}
         <GlassCard className="p-4">

@@ -13,7 +13,7 @@ const data = {
       url: '/tools/url',
       icon: LinkIcon,
       isActive: true,
-      items: [{ title: 'URL Shortener', url: '/tools/url' }],
+      items: [{ title: 'URL Shortener', url: '/tools/url/shortener' }],
     },
     {
       title: 'Text',

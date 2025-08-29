@@ -1,8 +1,8 @@
 'use client';
 
+import { BreadcrumbContainer } from '@/components/globals/breadcrumb-container';
 import SectionHeader from '@/components/root/section-header';
 import Stat from '@/components/root/stat';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
@@ -53,21 +53,13 @@ export default function BMIPage() {
   return (
     <div className="py-10 space-y-8">
       {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/tools">Tools</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/tools/calc">Calculators</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>BMI Calculator</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbContainer
+        items={[
+          { label: 'Tools', href: '/tools' },
+          { label: 'Calculators', href: '/tools/calc/bmi' },
+          { label: 'BMI Calculator', href: '/tools/calc/bmi' },
+        ]}
+      />
 
       {/* Header */}
       <SectionHeader title="BMI Calculator" desc="Calculate your Body Mass Index with metric or imperial units." />
@@ -146,8 +138,6 @@ export default function BMIPage() {
               <Stat label="Healthy Range" value={parsed ? rangeText : '—'} />
             </GlassCard>
           </div>
-
-          <div className="mt-6 text-xs text-muted-foreground">* Categories: Underweight (&lt;18.5), Healthy (18.5–24.9), Overweight (25–29.9), Obese (≥30).</div>
         </div>
       </MotionGlassCard>
     </div>
