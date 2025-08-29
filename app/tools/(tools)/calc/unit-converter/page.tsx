@@ -8,9 +8,9 @@ import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { ArrowLeftRight, Copy, Info, Ruler, Scale, Sparkles, ThermometerSun } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const CATEGORIES = ['Length', 'Weight', 'Temperature'] as const;
 type Category = (typeof CATEGORIES)[number];
@@ -129,6 +129,7 @@ export default function UnitConverterPage() {
       if (result == null) return;
       await navigator.clipboard.writeText(`${pretty(result)} ${toUnit}`);
       setCopied(true);
+      toast.success('Copied Successfully!');
       setTimeout(() => setCopied(false), 1200);
     } catch {}
   };
@@ -257,11 +258,6 @@ export default function UnitConverterPage() {
               </GlassCard>
             </div>
           </div>
-
-          <Separator className="my-6" />
-          <p className="text-xs text-muted-foreground">
-            Tip: Press <kbd className="rounded bg-muted px-1 py-0.5 text-[10px]">Tab</kbd> to move between fields.
-          </p>
         </div>
       </MotionGlassCard>
     </div>

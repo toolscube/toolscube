@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { Toaster } from 'react-hot-toast';
 import './globals.css';
 
 const geistSans = Geist({
@@ -30,10 +31,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const darkTheme = {
+    style: {
+      backgroundColor: '#333',
+      color: '#fff',
+    },
+    iconTheme: {
+      primary: '#fff',
+      secondary: '#333',
+    },
+  };
+
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <body className="min-h-screen bg-background text-foreground antialiased">
         <div className="mx-auto px-4">{children}</div>
+        <Toaster toastOptions={{ style: darkTheme.style, iconTheme: darkTheme.iconTheme }} position="top-right" />
       </body>
     </html>
   );
