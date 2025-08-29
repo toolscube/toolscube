@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { ToolsHeader } from '@/components/ui/tools-header';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { createShort } from '@/lib/actions/shortener';
 
@@ -117,7 +118,9 @@ export default function UrlShortenerPage() {
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="">
+      <ToolsHeader breadcrumbItems={[{ label: 'Tools', href: '/tools' }, { label: 'URL', href: '/tools/url' }, { label: 'URL Shortener' }]} />
+
       <SectionHeader title="URL Shortener" desc="Paste a link and get the shortest possible domain/slug. Anonymous by default. If a URL was shortened before, you’ll get the same short link." />
 
       <MotionGlassCard className="p-6">
