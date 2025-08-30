@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -310,9 +311,9 @@ for (const m of matches) {
   const localPresets = loadLocalPresets();
 
   return (
-    <div className="container mx-auto max-w-6xl p-4 md:p-6 lg:p-8">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
+        <div className="w-1/2">
           <h1 className="text-2xl font-semibold tracking-tight">Regex Tester</h1>
           <p className="text-sm text-muted-foreground">Interactive tester with flags, highlights, replace, performance guard, line tools, and exports.</p>
         </div>
@@ -330,10 +331,10 @@ for (const m of matches) {
             <Download className="h-4 w-4" /> CSV
           </Button>
         </div>
-      </div>
+      </GlassCard>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Card className="shadow-sm xl:col-span-1">
+        <GlassCard className="shadow-sm xl:col-span-1">
           <CardHeader>
             <CardTitle className="text-base">Pattern & Flags</CardTitle>
             <CardDescription>Write your regex, toggle flags, tweak limits.</CardDescription>
@@ -421,9 +422,9 @@ for (const m of matches) {
               </Button>
             </div>
           </CardFooter>
-        </Card>
+        </GlassCard>
 
-        <Card className="shadow-sm xl:col-span-2">
+        <GlassCard className="shadow-sm xl:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Test Area</CardTitle>
             <CardDescription>Type or paste your text to test the pattern on.</CardDescription>
@@ -498,7 +499,7 @@ for (const m of matches) {
 
               <TabsContent value="ops" className="space-y-3">
                 <div className="grid gap-3 md:grid-cols-2">
-                  <Card>
+                  <GlassCard>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <ListChecks className="h-4 w-4" />
@@ -509,9 +510,9 @@ for (const m of matches) {
                     <CardContent>
                       <div className="rounded border bg-muted/30 p-3 font-mono text-sm">{String(matches.length > 0)}</div>
                     </CardContent>
-                  </Card>
+                  </GlassCard>
 
-                  <Card>
+                  <GlassCard>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <Filter className="h-4 w-4" />
@@ -522,9 +523,9 @@ for (const m of matches) {
                     <CardContent>
                       <div className="rounded border bg-muted/30 p-3 font-mono text-xs max-h-48 overflow-auto">{JSON.stringify(testText.split(buildRegex() || /$^/), null, 2)}</div>
                     </CardContent>
-                  </Card>
+                  </GlassCard>
 
-                  <Card className="md:col-span-2">
+                  <GlassCard className="md:col-span-2">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <Scissors className="h-4 w-4" />
@@ -535,7 +536,7 @@ for (const m of matches) {
                     <CardContent>
                       <div className="rounded border bg-muted/30 p-3 font-mono text-xs max-h-72 overflow-auto">{JSON.stringify(matches, null, 2)}</div>
                     </CardContent>
-                  </Card>
+                  </GlassCard>
                 </div>
               </TabsContent>
 
@@ -622,10 +623,10 @@ for (const m of matches) {
               {copied === 'result' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy Current View
             </Button>
           </CardFooter>
-        </Card>
+        </GlassCard>
       </div>
 
-      <Separator className="my-6" />
+      <Separator />
 
       <Card className="shadow-sm">
         <CardHeader>
@@ -644,6 +645,6 @@ for (const m of matches) {
           </ul>
         </CardContent>
       </Card>
-    </div>
+    </MotionGlassCard>
   );
 }

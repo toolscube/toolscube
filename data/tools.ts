@@ -147,6 +147,19 @@ export const ToolsData = [
         description: 'Generate MD5, SHA1, SHA256 and other hashes',
         popular: true,
       },
+
+      {
+        title: 'Lorem Ipsum Generator',
+        url: '/tools/dev/lorem-ipsum',
+        description: 'Generate filler Lorem Ipsum text',
+        popular: false,
+      },
+      {
+        title: 'Password Generator',
+        url: '/tools/dev/password-generator',
+        description: 'Generate secure random passwords',
+        popular: true,
+      },
       {
         title: 'Base64 Encode/Decode',
         url: '/tools/dev/base64',
@@ -193,18 +206,6 @@ export const ToolsData = [
         title: 'API Request Tester',
         url: '/tools/dev/api-tester',
         description: 'Test API endpoints (like a mini Postman)',
-        popular: true,
-      },
-      {
-        title: 'Lorem Ipsum Generator',
-        url: '/tools/dev/lorem-ipsum',
-        description: 'Generate filler Lorem Ipsum text',
-        popular: false,
-      },
-      {
-        title: 'Password Generator',
-        url: '/tools/dev/password-generator',
-        description: 'Generate secure random passwords',
         popular: true,
       },
     ],

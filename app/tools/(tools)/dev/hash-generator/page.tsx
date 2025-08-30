@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -280,7 +281,7 @@ export default function HashGeneratorPage() {
 
   return (
     <div className="container mx-auto max-w-6xl p-4 md:p-6 lg:p-8">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <GlassCard className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Hash className="h-6 w-6" /> Hash Generator
@@ -295,7 +296,7 @@ export default function HashGeneratorPage() {
             <DownloadCloud className="h-4 w-4" /> Export JSON
           </Button>
         </div>
-      </div>
+      </GlassCard>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Settings */}
