@@ -1,6 +1,7 @@
 import { Braces, Calculator, ClipboardList, Clock, FileText, Globe, ImageIcon, LinkIcon, Map, Type, Wallet, Wrench } from 'lucide-react';
 
 export const ToolsData = [
+  /* ----------------------------- URL / Links ----------------------------- */
   {
     title: 'URL',
     url: '/tools/url',
@@ -25,32 +26,36 @@ export const ToolsData = [
         description: 'Unshorten & inspect destination safely',
         popular: false,
       },
+      // ❗ Moved "Open Graph Preview" to SEO (fits better there)
+      // {
+      //   title: 'Open Graph Preview',
+      //   url: '/tools/url/og-preview',
+      //   description: 'Preview OG/Twitter cards for any URL',
+      //   popular: false,
+      // },
       {
-        title: 'Open Graph Preview',
-        url: '/tools/url/og-preview',
-        description: 'Preview OG/Twitter cards for any URL',
-        popular: false,
-      },
-      {
-        title: 'QR Code (Advanced)',
+        title: 'QR Code',
         url: '/tools/url/qr',
-        description: 'Custom colors, ECC, PNG/SVG export',
+        description: 'Create QR codes quickly from text or links or others',
         popular: true,
       },
     ],
   },
+
+  /* -------------------------------- Text -------------------------------- */
   {
     title: 'Text',
     url: '/tools/text',
     icon: Type,
     isActive: true,
     items: [
-      {
-        title: 'QR Code',
-        url: '/tools/text/qr',
-        description: 'Create QR codes quickly from text or links',
-        popular: true,
-      },
+      // ❌ Duplicate with URL/qr → daily flow এ URL সেকশনে রাখলাম
+      // {
+      //   title: 'QR Code',
+      //   url: '/tools/text/qr',
+      //   description: 'Create QR codes quickly from text or links',
+      //   popular: true,
+      // },
       {
         title: 'Base64',
         url: '/tools/text/base64',
@@ -93,8 +98,17 @@ export const ToolsData = [
         description: 'Split by comma/newline → clean list',
         popular: false,
       },
+      // ✅ Added: Password Strength (daily use)
+      {
+        title: 'Password Strength',
+        url: '/tools/text/password-strength',
+        description: 'Check password entropy & hints',
+        popular: false,
+      },
     ],
   },
+
+  /* -------------------------------- PDF --------------------------------- */
   {
     title: 'PDF',
     url: '/tools/pdf',
@@ -143,8 +157,17 @@ export const ToolsData = [
         description: 'Fill forms and add signatures',
         popular: false,
       },
+      // ✅ Added: Rotate Pages (quick daily need)
+      {
+        title: 'PDF Rotate',
+        url: '/tools/pdf/rotate',
+        description: 'Rotate selected pages & save',
+        popular: false,
+      },
     ],
   },
+
+  /* ------------------------------- Image -------------------------------- */
   {
     title: 'Image',
     url: '/tools/image',
@@ -181,14 +204,24 @@ export const ToolsData = [
         description: 'Erase background (client-side)',
         popular: false,
       },
+      // Low-frequency; রাখলে পরে চালু করবে
+      // {
+      //   title: 'Sprite Sheet Maker',
+      //   url: '/tools/image/sprite',
+      //   description: 'Combine icons into a sprite sheet',
+      //   popular: false,
+      // },
+      // ✅ Added: OCR (daily docs use)
       {
-        title: 'Sprite Sheet Maker',
-        url: '/tools/image/sprite',
-        description: 'Combine icons into a sprite sheet',
-        popular: false,
+        title: 'Image to Text (OCR)',
+        url: '/tools/image/ocr',
+        description: 'Extract text from images (offline-capable)',
+        popular: true,
       },
     ],
   },
+
+  /* ------------------------------ Developer ------------------------------ */
   {
     title: 'Developer',
     url: '/tools/dev',
@@ -231,12 +264,13 @@ export const ToolsData = [
         description: 'Generate secure random passwords',
         popular: true,
       },
-      {
-        title: 'Base64 Encode/Decode',
-        url: '/tools/dev/base64',
-        description: 'Encode and decode Base64 strings easily',
-        popular: false,
-      },
+      // ❌ Duplicate with Text/Base64 → dev থেকে comment
+      // {
+      //   title: 'Base64 Encode/Decode',
+      //   url: '/tools/dev/base64',
+      //   description: 'Encode and decode Base64 strings easily',
+      //   popular: false,
+      // },
       {
         title: 'UUID / NanoID Generator',
         url: '/tools/dev/uuid-nanoid',
@@ -267,12 +301,13 @@ export const ToolsData = [
         description: 'Preview and convert Markdown to HTML',
         popular: false,
       },
-      {
-        title: 'Regex Library',
-        url: '/tools/dev/regex-library',
-        description: 'Collection of useful regular expressions',
-        popular: false,
-      },
+      // Low-priority lib তালিকা; চাইলে চালু করবে
+      // {
+      //   title: 'Regex Library',
+      //   url: '/tools/dev/regex-library',
+      //   description: 'Collection of useful regular expressions',
+      //   popular: false,
+      // },
       {
         title: 'API Request Tester',
         url: '/tools/dev/api-tester',
@@ -299,6 +334,8 @@ export const ToolsData = [
       },
     ],
   },
+
+  /* --------------------------------- SEO --------------------------------- */
   {
     title: 'SEO',
     url: '/tools/seo',
@@ -309,6 +346,12 @@ export const ToolsData = [
         title: 'OG Image Builder',
         url: '/tools/seo/og-builder',
         description: 'Create Open Graph images for social media',
+        popular: false,
+      },
+      {
+        title: 'Open Graph Preview', // ⬅️ moved from URL
+        url: '/tools/seo/og-preview',
+        description: 'Preview OG/Twitter cards for any URL',
         popular: false,
       },
       {
@@ -337,6 +380,8 @@ export const ToolsData = [
       },
     ],
   },
+
+  /* ------------------------------ Calculators ---------------------------- */
   {
     title: 'Calculators',
     url: '/tools/calc',
@@ -405,6 +450,8 @@ export const ToolsData = [
       },
     ],
   },
+
+  /* ------------------------------ Date & Time ---------------------------- */
   {
     title: 'Date & Time',
     url: '/tools/time',
@@ -437,6 +484,8 @@ export const ToolsData = [
       },
     ],
   },
+
+  /* ------------------------------- Utilities ----------------------------- */
   {
     title: 'Utilities',
     url: '/tools/util',
@@ -475,6 +524,8 @@ export const ToolsData = [
       },
     ],
   },
+
+  /* -------------------------------- Office ------------------------------- */
   {
     title: 'Office',
     url: '/tools/office',
@@ -501,6 +552,8 @@ export const ToolsData = [
       },
     ],
   },
+
+  /* -------------------------------- Travel ------------------------------- */
   {
     title: 'Travel',
     url: '/tools/travel',
@@ -521,6 +574,8 @@ export const ToolsData = [
       },
     ],
   },
+
+  /* -------------------------------- Finance ------------------------------ */
   {
     title: 'Finance',
     url: '/tools/finance',
