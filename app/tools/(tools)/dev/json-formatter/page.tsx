@@ -1,5 +1,6 @@
 'use client';
 
+import SectionHeader from '@/components/root/section-header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,9 +13,10 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { ToolsHeader } from '@/components/ui/tools-header';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { AlignLeft, Braces, Check, ClipboardPaste, Copy, Download, FileJson, Hash, Info, Link2, Minimize2, RotateCcw, Search, SortAsc, Trash2, Type, Upload, Wand2 } from 'lucide-react';
+import { AlignLeft, Braces, Check, ClipboardPaste, Copy, Download, Hash, Info, Link2, Minimize2, RotateCcw, Search, SortAsc, Trash2, Type, Upload, Wand2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function JsonFormatterPage() {
@@ -256,20 +258,12 @@ export default function JsonFormatterPage() {
   // --- Render ---
   return (
     <TooltipProvider>
-      <div className="container mx-auto max-w-7xl px-4 py-8">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <FileJson className="h-6 w-6" />
-              <h1 className="text-2xl font-semibold tracking-tight">JSON Formatter</h1>
-              <Badge variant="secondary" className="rounded-full">
-                Pro
-              </Badge>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">Pretty, minify, validate, sort keys, JSONPath, TypeScript, Base64/URL tools.</p>
-          </div>
+      <div className="pb-4">
+        <ToolsHeader breadcrumbItems={[{ label: 'Tools', href: '/tools' }, { label: 'Developer', href: '/tools/#cat-Developer' }, { label: 'JSON Formatter' }]} />
 
+        {/* Header */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <SectionHeader title="JSON Formatter" desc="Pretty, minify, validate, sort keys, JSONPath, TypeScript, Base64/URL tools." />
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-2 md:flex">
               <Badge variant="outline">Lines: {stats.lines}</Badge>
@@ -544,12 +538,13 @@ export default function JsonFormatterPage() {
 
 // --- Example JSON ---
 const example = `{
-  "name": "Natural Sefa",
-  "products": [
-    { "id": 2, "title": "Methi Mix Plus", "price": 490, "tags": ["gastric", "herbal"] },
-    { "id": 1, "title": "Migraine Remove Oil", "price": 399, "tags": ["oil", "headache"] }
-  ],
-  "meta": { "site": "naturalsefaa.com", "bangladesh": true }
+  "name": "Tariqul Islam",
+  "title": "Full-Stack Developer",
+  "skills": ["NextJS", "Express", "MongoDB", "Postgresql", "TypeScript", "Javascript", "Prisma", "Firebase", "Docker"],
+  "hardWorker": true,
+  "quickLearner": true,
+  "problemSolver": true,
+  "yearsOfExperience": "1++"
 }`;
 
 // --- Simple JSON → TS inference ---
