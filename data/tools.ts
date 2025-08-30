@@ -13,12 +13,6 @@ export const ToolsData = [
         description: 'Shorten links with custom slugs & analytics',
         popular: true,
       },
-      {
-        title: 'QR (Advanced)',
-        url: '/tools/url/qr',
-        description: 'Generate customizable QR codes with logos',
-        popular: false,
-      },
     ],
   },
   {
