@@ -1,4 +1,4 @@
-import { Braces, Calculator, FileText, Globe, ImageIcon, LinkIcon, Type } from 'lucide-react';
+import { Braces, Calculator, ClipboardList, Clock, FileText, Globe, ImageIcon, LinkIcon, Map, Type, Wallet, Wrench } from 'lucide-react';
 
 export const ToolsData = [
   {
@@ -13,11 +13,35 @@ export const ToolsData = [
         description: 'Shorten links with custom slugs & analytics',
         popular: true,
       },
+      {
+        title: 'UTM Builder',
+        url: '/tools/url/utm-builder',
+        description: 'Create campaign UTM parameters fast',
+        popular: false,
+      },
+      {
+        title: 'Link Expander',
+        url: '/tools/url/expand',
+        description: 'Unshorten & inspect destination safely',
+        popular: false,
+      },
+      {
+        title: 'Open Graph Preview',
+        url: '/tools/url/og-preview',
+        description: 'Preview OG/Twitter cards for any URL',
+        popular: false,
+      },
+      {
+        title: 'QR Code (Advanced)',
+        url: '/tools/url/qr',
+        description: 'Custom colors, ECC, PNG/SVG export',
+        popular: true,
+      },
     ],
   },
   {
     title: 'Text',
-    url: '/tools/text/qr',
+    url: '/tools/text',
     icon: Type,
     isActive: true,
     items: [
@@ -36,7 +60,7 @@ export const ToolsData = [
       {
         title: 'Case Converter',
         url: '/tools/text/case-converter',
-        description: 'Convert text into upper, lower, title case',
+        description: 'Upper, lower, title, camel/snake/kebab',
         popular: false,
       },
       {
@@ -51,11 +75,29 @@ export const ToolsData = [
         description: 'Count words, characters, and lines',
         popular: true,
       },
+      {
+        title: 'Line Tools',
+        url: '/tools/text/line-tools',
+        description: 'Sort, dedupe, trim, find & replace',
+        popular: false,
+      },
+      {
+        title: 'Text Cleaner',
+        url: '/tools/text/cleaner',
+        description: 'Remove extra spaces, emojis, HTML, etc.',
+        popular: false,
+      },
+      {
+        title: 'Text to List',
+        url: '/tools/text/to-list',
+        description: 'Split by comma/newline → clean list',
+        popular: false,
+      },
     ],
   },
   {
     title: 'PDF',
-    url: '/tools/pdf/merge',
+    url: '/tools/pdf',
     icon: FileText,
     isActive: true,
     items: [
@@ -83,11 +125,29 @@ export const ToolsData = [
         description: 'Convert PDF documents into editable Word',
         popular: false,
       },
+      {
+        title: 'Image ↔ PDF',
+        url: '/tools/pdf/image-pdf',
+        description: 'Images to PDF and PDF pages to images',
+        popular: false,
+      },
+      {
+        title: 'Protect / Unlock',
+        url: '/tools/pdf/protect',
+        description: 'Add/remove password & permissions',
+        popular: false,
+      },
+      {
+        title: 'Sign & Fill',
+        url: '/tools/pdf/sign-fill',
+        description: 'Fill forms and add signatures',
+        popular: false,
+      },
     ],
   },
   {
     title: 'Image',
-    url: '/tools/image/convert',
+    url: '/tools/image',
     icon: ImageIcon,
     isActive: true,
     items: [
@@ -109,11 +169,29 @@ export const ToolsData = [
         description: 'Remove sensitive EXIF metadata from images',
         popular: false,
       },
+      {
+        title: 'Image Compress',
+        url: '/tools/image/compress',
+        description: 'Shrink images for web & social',
+        popular: true,
+      },
+      {
+        title: 'Background Remover',
+        url: '/tools/image/bg-remove',
+        description: 'Erase background (client-side)',
+        popular: false,
+      },
+      {
+        title: 'Sprite Sheet Maker',
+        url: '/tools/image/sprite',
+        description: 'Combine icons into a sprite sheet',
+        popular: false,
+      },
     ],
   },
   {
     title: 'Developer',
-    url: '/tools/dev/json-formatter',
+    url: '/tools/dev',
     icon: Braces,
     isActive: true,
     items: [
@@ -141,7 +219,6 @@ export const ToolsData = [
         description: 'Generate MD5, SHA1, SHA256 and other hashes',
         popular: true,
       },
-
       {
         title: 'Lorem Ipsum Generator',
         url: '/tools/dev/lorem-ipsum',
@@ -202,11 +279,29 @@ export const ToolsData = [
         description: 'Test API endpoints (like a mini Postman)',
         popular: true,
       },
+      {
+        title: 'YAML ↔ JSON',
+        url: '/tools/dev/yaml-json',
+        description: 'Convert YAML to JSON and back',
+        popular: false,
+      },
+      {
+        title: 'CSV ↔ JSON',
+        url: '/tools/dev/csv-json',
+        description: 'Tabular to JSON and back (headers aware)',
+        popular: false,
+      },
+      {
+        title: 'Number Base Converter',
+        url: '/tools/dev/base-converter',
+        description: 'Binary, octal, decimal, hex',
+        popular: false,
+      },
     ],
   },
   {
     title: 'SEO',
-    url: '/tools/seo/og-builder',
+    url: '/tools/seo',
     icon: Globe,
     isActive: true,
     items: [
@@ -222,11 +317,29 @@ export const ToolsData = [
         description: 'Generate robots.txt for SEO optimization',
         popular: false,
       },
+      {
+        title: 'Meta Tags Generator',
+        url: '/tools/seo/meta-generator',
+        description: 'Head meta preview for SEO & social',
+        popular: true,
+      },
+      {
+        title: 'Sitemap.xml Generator',
+        url: '/tools/seo/sitemap-generator',
+        description: 'Build sitemaps from URL lists',
+        popular: false,
+      },
+      {
+        title: 'Schema Markup',
+        url: '/tools/seo/schema-generator',
+        description: 'JSON-LD for Article, Product, Org',
+        popular: false,
+      },
     ],
   },
   {
     title: 'Calculators',
-    url: '/tools/calc/bmi',
+    url: '/tools/calc',
     icon: Calculator,
     isActive: true,
     items: [
@@ -239,7 +352,7 @@ export const ToolsData = [
       {
         title: 'Unit Converter',
         url: '/tools/calc/unit-converter',
-        description: 'Convert units of length, weight, temp, etc.',
+        description: 'Convert length, weight, temp, etc.',
         popular: false,
       },
       {
@@ -257,13 +370,179 @@ export const ToolsData = [
       {
         title: 'Scientific Calculator',
         url: '/tools/calc/scientific',
-        description: 'Advanced calculator for science & engineering',
+        description: 'Advanced scientific operations',
         popular: false,
       },
       {
         title: 'Percentage Calculator',
         url: '/tools/calc/percentage',
-        description: 'Quickly calculate percentages',
+        description: 'Find X% of Y, increase/decrease',
+        popular: false,
+      },
+      {
+        title: 'Loan / EMI',
+        url: '/tools/calc/emi',
+        description: 'Monthly payment, interest & amortization',
+        popular: true,
+      },
+      {
+        title: 'Currency Converter',
+        url: '/tools/calc/currency',
+        description: 'Convert currencies (live rates)',
+        popular: true,
+      },
+      {
+        title: 'Tip Splitter',
+        url: '/tools/calc/tip-split',
+        description: 'Split bill by people & tip',
+        popular: false,
+      },
+      {
+        title: 'Discount Finder',
+        url: '/tools/calc/discount',
+        description: 'Before/after price & savings',
+        popular: false,
+      },
+    ],
+  },
+  {
+    title: 'Date & Time',
+    url: '/tools/time',
+    icon: Clock,
+    isActive: true,
+    items: [
+      {
+        title: 'Time Zone Converter',
+        url: '/tools/time/timezone',
+        description: 'Convert time across cities',
+        popular: true,
+      },
+      {
+        title: 'Age Calculator',
+        url: '/tools/time/age',
+        description: 'Years, months, days from DOB',
+        popular: false,
+      },
+      {
+        title: 'Countdown / Timer',
+        url: '/tools/time/countdown',
+        description: 'Pomodoro, meeting, event timer',
+        popular: false,
+      },
+      {
+        title: 'Week Number',
+        url: '/tools/time/weekno',
+        description: 'Find ISO week and date range',
+        popular: false,
+      },
+    ],
+  },
+  {
+    title: 'Utilities',
+    url: '/tools/util',
+    icon: Wrench,
+    isActive: true,
+    items: [
+      {
+        title: 'Clipboard Cleaner',
+        url: '/tools/util/clipboard-cleaner',
+        description: 'Strip formatting & paste as plain text',
+        popular: false,
+      },
+      {
+        title: 'Random Picker',
+        url: '/tools/util/random-picker',
+        description: 'Pick winner from names list',
+        popular: false,
+      },
+      {
+        title: 'GUID / Order ID',
+        url: '/tools/util/id-generator',
+        description: 'Readable order & short IDs',
+        popular: false,
+      },
+      {
+        title: 'Pomodoro Focus',
+        url: '/tools/util/pomodoro',
+        description: 'Work/break cycles with sound',
+        popular: false,
+      },
+      {
+        title: 'Unit Price Compare',
+        url: '/tools/util/unit-price',
+        description: 'Which product size is cheaper?',
+        popular: false,
+      },
+    ],
+  },
+  {
+    title: 'Office',
+    url: '/tools/office',
+    icon: ClipboardList,
+    isActive: true,
+    items: [
+      {
+        title: 'Simple Invoice',
+        url: '/tools/office/invoice',
+        description: 'Create & download a quick invoice',
+        popular: true,
+      },
+      {
+        title: 'To-Do (Offline)',
+        url: '/tools/office/todo',
+        description: 'Local, private, no signup',
+        popular: false,
+      },
+      {
+        title: 'Meeting Notes',
+        url: '/tools/office/meeting-notes',
+        description: 'Timestamped notes template',
+        popular: false,
+      },
+    ],
+  },
+  {
+    title: 'Travel',
+    url: '/tools/travel',
+    icon: Map,
+    isActive: true,
+    items: [
+      {
+        title: 'Distance & ETA',
+        url: '/tools/travel/distance',
+        description: 'Rough distance / time by map points',
+        popular: false,
+      },
+      {
+        title: 'Packing Checklist',
+        url: '/tools/travel/packing',
+        description: 'Smart templated packing list',
+        popular: false,
+      },
+    ],
+  },
+  {
+    title: 'Finance',
+    url: '/tools/finance',
+    icon: Wallet,
+    isActive: true,
+    items: [
+      {
+        title: 'Savings Goal',
+        url: '/tools/finance/savings-goal',
+        description: 'How much per month to reach a goal',
+        popular: false,
+      },
+      {
+        title: 'GST/VAT Calculator',
+        url: '/tools/finance/vat',
+        description: 'Add/remove tax from price',
+        popular: false,
+      },
+      {
+        title: 'Salary → Hourly',
+        url: '/tools/finance/salary-hourly',
+        description: 'Pay rate conversions',
         popular: false,
       },
     ],
