@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -68,8 +69,8 @@ export default function PasswordGeneratorPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-4 md:p-6 lg:p-8">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <MotionGlassCard>
+      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Key className="h-6 w-6" /> Password Generator
@@ -84,9 +85,9 @@ export default function PasswordGeneratorPage() {
             <Key className="h-4 w-4" /> Generate
           </Button>
         </div>
-      </div>
+      </GlassCard>
 
-      <Card className="shadow-sm">
+      <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Customize password length and character sets.</CardDescription>
@@ -118,11 +119,11 @@ export default function PasswordGeneratorPage() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator />
 
-      <Card className="shadow-sm">
+      <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Generated Passwords</CardTitle>
           <CardDescription>Click copy to save a password.</CardDescription>
@@ -142,7 +143,7 @@ export default function PasswordGeneratorPage() {
             </div>
           ))}
         </CardContent>
-      </Card>
-    </div>
+      </GlassCard>
+    </MotionGlassCard>
   );
 }

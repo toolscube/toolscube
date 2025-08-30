@@ -2,8 +2,8 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard } from '@/components/ui/glass-card';
+import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -128,11 +128,17 @@ function md5(input: Uint8Array): Uint8Array {
   return out;
 }
 
+// Always return a fresh, plain ArrayBuffer (never SharedArrayBuffer)
+function toArrayBufferStrict(u8: Uint8Array): ArrayBuffer {
+  const buf = new ArrayBuffer(u8.byteLength);
+  new Uint8Array(buf).set(u8);
+  return buf;
+}
+
 // Generic digest wrapper (returns bytes)
 async function digest(algo: 'MD5' | 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512', data: Uint8Array): Promise<Uint8Array> {
   if (algo === 'MD5') return md5(data);
-  // SubtleCrypto supports SHA-1/256/384/512
-  const ab = await crypto.subtle.digest(algo, data);
+  const ab = await crypto.subtle.digest(algo, toArrayBufferStrict(data)); // <-- pass ArrayBuffer
   return new Uint8Array(ab);
 }
 
@@ -280,7 +286,7 @@ export default function HashGeneratorPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl p-4 md:p-6 lg:p-8">
+    <MotionGlassCard>
       <GlassCard className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
@@ -300,7 +306,7 @@ export default function HashGeneratorPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Settings */}
-        <Card className="shadow-sm">
+        <GlassCard className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Input & Settings</CardTitle>
             <CardDescription>Choose input type, algorithms and output format.</CardDescription>
@@ -399,10 +405,10 @@ export default function HashGeneratorPage() {
               <RotateCcw className="h-4 w-4" /> Reset
             </Button>
           </CardFooter>
-        </Card>
+        </GlassCard>
 
         {/* Right: Input & Results */}
-        <Card className="shadow-sm lg:col-span-2">
+        <GlassCard className="shadow-sm lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">{mode === 'text' ? 'Text Input' : 'File Input'}</CardTitle>
             <CardDescription>Paste text or pick a file to hash.</CardDescription>
@@ -451,12 +457,12 @@ export default function HashGeneratorPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </GlassCard>
       </div>
 
-      <Separator className="my-6" />
+      <Separator />
 
-      <Card className="shadow-sm">
+      <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Notes</CardTitle>
           <CardDescription>About algorithms & file hashing.</CardDescription>
@@ -469,7 +475,7 @@ export default function HashGeneratorPage() {
             <li>Salt is simply concatenated (prefix or suffix) before hashing; not the same as a KDF.</li>
           </ul>
         </CardContent>
-      </Card>
-    </div>
+      </GlassCard>
+    </MotionGlassCard>
   );
 }

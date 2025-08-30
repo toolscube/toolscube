@@ -2,15 +2,14 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, Code, Copy, Download, Filter, Info, ListChecks, RotateCcw, Save, Scissors, Share2, Timer, Upload } from 'lucide-react';
+import { Check, Code, Copy, Download, Filter, Info, ListChecks, Regex, RotateCcw, Save, Scissors, Share2, Timer, Upload } from 'lucide-react';
 import React from 'react';
 
 // ---- Types ----
@@ -314,7 +313,9 @@ for (const m of matches) {
     <MotionGlassCard className="p-4 md:p-6 lg:p-8">
       <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
         <div className="w-1/2">
-          <h1 className="text-2xl font-semibold tracking-tight">Regex Tester</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+            <Regex className="h-6 w-6" /> Regex Tester
+          </h1>
           <p className="text-sm text-muted-foreground">Interactive tester with flags, highlights, replace, performance guard, line tools, and exports.</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -625,26 +626,6 @@ for (const m of matches) {
           </CardFooter>
         </GlassCard>
       </div>
-
-      <Separator />
-
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">Tips</CardTitle>
-          <CardDescription>Quick notes for common tasks.</CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          <ul className="list-disc space-y-1 pl-5">
-            <li>
-              Use <code>(?&lt;name&gt;...)</code> for named capture groups and view them under each match.
-            </li>
-            <li>Guard long-running patterns with the timeout. If you hit the limit, simplify quantifiers or add anchors.</li>
-            <li>
-              Click <strong>Share</strong> to copy a link that preserves your current state (pattern, text, flags, limits).
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
     </MotionGlassCard>
   );
 }

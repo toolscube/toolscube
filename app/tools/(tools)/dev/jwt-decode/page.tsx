@@ -11,22 +11,12 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Check, ClipboardCopy, ClipboardPaste, Clock, Download, Eye, EyeOff, FileJson, FileKey2, Info, KeyRound, Link2, RefreshCw, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react';
+import { Check, ClipboardCopy, ClipboardPaste, Clock, Download as DownloadIcon, Eye, EyeOff, FileJson, FileKey2, KeyRound, Link2, RefreshCw, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 /*
   JWT Decoder & Verifier — Tools Hub
   Path: app/tools/(tools)/dev/jwt-decode/page.tsx
-
-  Features
-  - Paste/Type a JWT → decode header, payload, signature (Base64URL)
-  - Human-friendly claim summary (exp/iat/nbf/jti/iss/sub/aud)
-  - Expiration status with relative time
-  - Optional verification (HS256 secret or RS256 public key in PEM)
-  - Auto-decode on paste (toggle)
-  - Copy/Download decoded JSON
-  - Load token from ?token= URL param
-  - Privacy-first: everything in browser
 */
 
 export default function JwtDecodePage() {
@@ -41,7 +31,7 @@ export default function JwtDecodePage() {
   // Verify state
   const [secret, setSecret] = useState(''); // HS256
   const [showSecret, setShowSecret] = useState(false);
-  const [publicKeyPem, setPublicKeyPem] = useState(''); // RS256 PEM (-----BEGIN PUBLIC KEY-----)
+  const [publicKeyPem, setPublicKeyPem] = useState(''); // RS256 PEM
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<null | { ok: boolean; message: string }>(null);
 
@@ -56,6 +46,7 @@ export default function JwtDecodePage() {
       setToken(t);
       decodeToken(t);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Stats & status
@@ -132,22 +123,25 @@ export default function JwtDecodePage() {
       const [h, p, s] = token.split('.');
       const alg = header.alg;
       if (!alg) throw new Error('Missing alg in header');
-
       if (!s) throw new Error('Token has no signature part to verify');
-      const data = new TextEncoder().encode(`${h}.${p}`);
-      const sig = base64urlToUint8Array(s);
+
+      const dataBytes = new TextEncoder().encode(`${h}.${p}`);
+      const dataBuf = toArrayBuffer(dataBytes);
+      const sigBytes = base64urlToUint8Array(s);
+      const sigBuf = toArrayBuffer(sigBytes);
 
       if (alg === 'HS256') {
         if (!secret) throw new Error('Provide an HMAC secret to verify HS256');
         const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-        const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, data));
-        const ok = timingSafeEqual(mac, sig);
+        const macBuf = await crypto.subtle.sign('HMAC', key, dataBuf);
+        const mac = new Uint8Array(macBuf);
+        const ok = timingSafeEqual(mac, sigBytes);
         setVerifyResult({ ok, message: ok ? 'HS256 signature matches (HMAC)' : 'HS256 signature mismatch' });
       } else if (alg === 'RS256') {
         if (!publicKeyPem) throw new Error('Provide an RSA public key (PEM) to verify RS256');
         const spki = pemToArrayBuffer(publicKeyPem);
         const key = await crypto.subtle.importKey('spki', spki, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
-        const ok = await crypto.subtle.verify({ name: 'RSASSA-PKCS1-v1_5' }, key, sig, data);
+        const ok = await crypto.subtle.verify({ name: 'RSASSA-PKCS1-v1_5' }, key, sigBuf, dataBuf);
         setVerifyResult({ ok, message: ok ? 'RS256 signature valid' : 'RS256 signature invalid' });
       } else {
         setVerifyResult({ ok: false, message: `Unsupported alg: ${alg}. Only HS256/RS256 implemented here.` });
@@ -165,9 +159,9 @@ export default function JwtDecodePage() {
 
   return (
     <TooltipProvider>
-      <div className="container mx-auto max-w-7xl px-4 py-8">
+      <MotionGlassCard>
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <GlassCard className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-6">
           <div>
             <div className="flex items-center gap-2">
               <FileJson className="h-6 w-6" />
@@ -206,11 +200,11 @@ export default function JwtDecodePage() {
               <Trash2 className="h-4 w-4" /> Clear
             </Button>
           </div>
-        </div>
+        </GlassCard>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Left: Token input */}
-          <MotionGlassCard>
+          <GlassCard>
             <div className="p-4">
               <div className="mb-2 flex items-center justify-between">
                 <span className="font-semibold">Token</span>
@@ -259,10 +253,10 @@ export default function JwtDecodePage() {
                 </Alert>
               )}
             </div>
-          </MotionGlassCard>
+          </GlassCard>
 
           {/* Right: Decoded */}
-          <MotionGlassCard>
+          <GlassCard>
             <div className="p-4">
               <Tabs defaultValue="summary" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
@@ -314,7 +308,7 @@ export default function JwtDecodePage() {
                       {copied === 'payload' ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />} Copy payload JSON
                     </Button>
                     <Button variant="outline" onClick={() => download(payloadJson || '{}', 'payload.json')} disabled={!payloadJson} className="gap-2">
-                      <Download className="h-4 w-4" /> Download payload
+                      <DownloadIcon className="h-4 w-4" /> Download payload
                     </Button>
                   </div>
                 </TabsContent>
@@ -327,11 +321,11 @@ export default function JwtDecodePage() {
                 </TabsContent>
               </Tabs>
             </div>
-          </MotionGlassCard>
+          </GlassCard>
         </div>
 
         {/* Verify */}
-        <MotionGlassCard className="mt-6">
+        <GlassCard>
           <div className="p-4">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -344,26 +338,26 @@ export default function JwtDecodePage() {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {/* HS256 */}
               <GlassCard className="p-4">
-                <div className="mb-2 flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <KeyRound className="h-4 w-4" />
                   <div className="font-medium">HS256 (HMAC secret)</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Input type={showSecret ? 'text' : 'password'} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="Your HMAC secret" />
-                  <Button variant="ghost" onClick={() => setShowSecret((s) => !s)} className="gap-2">
-                    {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />} {showSecret ? 'Hide' : 'Show'}
-                  </Button>
                 </div>
-                <div className="mt-3 flex gap-2">
+                <div className="flex gap-2">
                   <Button onClick={verify} disabled={!token || !header || header?.alg !== 'HS256' || verifying}>
                     {verifying ? 'Verifying…' : 'Verify HS256'}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setShowSecret((s) => !s)} className="gap-2">
+                    {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />} {showSecret ? 'Hide' : 'Show'}
                   </Button>
                 </div>
               </GlassCard>
 
               {/* RS256 */}
               <GlassCard className="p-4">
-                <div className="mb-2 flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <FileKey2 className="h-4 w-4" />
                   <div className="font-medium">RS256 (Public key PEM)</div>
                 </div>
@@ -373,7 +367,7 @@ export default function JwtDecodePage() {
                   placeholder={`-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...\n-----END PUBLIC KEY-----`}
                   className="min-h-[120px] font-mono"
                 />
-                <div className="mt-3 flex gap-2">
+                <div className="flex gap-2">
                   <Button onClick={verify} disabled={!token || !header || header?.alg !== 'RS256' || verifying}>
                     {verifying ? 'Verifying…' : 'Verify RS256'}
                   </Button>
@@ -398,16 +392,9 @@ export default function JwtDecodePage() {
                 )}
               </div>
             )}
-
-            <div className="mt-3 text-xs text-muted-foreground flex items-start gap-2">
-              <Info className="mt-0.5 h-3.5 w-3.5" />
-              <p>
-                Verification only checks the signature for the given <code>alg</code> using your secret/public key. It does not fetch JWKs or validate claim semantics (audience, issuer, etc.).
-              </p>
-            </div>
           </div>
-        </MotionGlassCard>
-      </div>
+        </GlassCard>
+      </MotionGlassCard>
     </TooltipProvider>
   );
 }
@@ -439,6 +426,26 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array) {
   let out = 0;
   for (let i = 0; i < a.length; i++) out |= a[i] ^ b[i];
   return out === 0;
+}
+
+// Force clean ArrayBuffer for WebCrypto (handles TS 5.5 typed array generics)
+function toArrayBuffer(u8: Uint8Array): ArrayBuffer {
+  const buf = new ArrayBuffer(u8.byteLength);
+  new Uint8Array(buf).set(u8);
+  return buf;
+}
+
+// Simple file download helper
+function download(text: string, filename: string) {
+  const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function buildStatus(payload: any): { state: 'none' | 'valid' | 'expired' | 'nbf' } & Record<string, any> {
@@ -485,7 +492,7 @@ function humanizeDuration(ms: number) {
   return `${s}s ${sign}`;
 }
 
-function Claim({ label, value, hint }: { label: string; value?: string; hint?: string }) {
+function Claim({ label, value, hint }: { label: string; value?: string | number; hint?: string }) {
   return (
     <div className="rounded-lg border p-3">
       <div className="text-xs text-muted-foreground">{label}</div>

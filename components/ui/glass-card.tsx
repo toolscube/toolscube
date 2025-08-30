@@ -37,7 +37,7 @@ type MotionGlassProps = BaseProps & MotionProps;
 export function MotionGlassCard({ className, children, ...props }: MotionGlassProps) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}>
-      <GlassCard className={className} {...props}>
+      <GlassCard className={cn('p-6', className)} {...props}>
         {children}
       </GlassCard>
     </motion.div>

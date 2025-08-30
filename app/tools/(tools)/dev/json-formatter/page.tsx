@@ -1,6 +1,5 @@
 'use client';
 
-import SectionHeader from '@/components/root/section-header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,10 +12,9 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { ToolsHeader } from '@/components/ui/tools-header';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { AlignLeft, Braces, Check, ClipboardPaste, Copy, Download, Hash, Info, Link2, Minimize2, RotateCcw, Search, SortAsc, Trash2, Type, Upload, Wand2 } from 'lucide-react';
+import { AlignLeft, Braces, Check, ClipboardPaste, Copy, Download, FileJson, Hash, Info, Link2, Minimize2, RotateCcw, Search, SortAsc, Trash2, Type, Upload, Wand2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function JsonFormatterPage() {
@@ -258,13 +256,17 @@ export default function JsonFormatterPage() {
   // --- Render ---
   return (
     <TooltipProvider>
-      <div className="pb-4">
-        <ToolsHeader breadcrumbItems={[{ label: 'Tools', href: '/tools' }, { label: 'Developer', href: '/tools/#cat-Developer' }, { label: 'JSON Formatter' }]} />
-
-        {/* Header */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <SectionHeader title="JSON Formatter" desc="Pretty, minify, validate, sort keys, JSONPath, TypeScript, Base64/URL tools." />
-          <div className="flex items-center gap-3">
+      <MotionGlassCard className="p-6">
+        {/* Options Bar */}
+        <GlassCard className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
+          <div>
+            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+              <FileJson className="h-6 w-6" />
+              JSON Formatter
+            </h1>
+            <p className="text-sm text-muted-foreground">Pretty, minify, validate, sort keys, JSONPath, TypeScript, Base64/URL tools.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
             <div className="hidden items-center gap-2 md:flex">
               <Badge variant="outline">Lines: {stats.lines}</Badge>
               <Badge variant="outline">Chars: {stats.chars}</Badge>
@@ -273,67 +275,64 @@ export default function JsonFormatterPage() {
               <Trash2 className="h-4 w-4" /> Clear
             </Button>
           </div>
-        </div>
+        </GlassCard>
 
-        {/* Options Bar */}
-        <MotionGlassCard className="mb-6">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              <div className="flex items-center justify-between gap-3 md:justify-start">
-                <Label htmlFor="indent" className="whitespace-nowrap">
-                  Indent
-                </Label>
-                <Select value={indent} onValueChange={(v: any) => setIndent(v)}>
-                  <SelectTrigger id="indent" className="w-[160px]">
-                    <SelectValue placeholder="Indent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">2 spaces</SelectItem>
-                    <SelectItem value="4">4 spaces</SelectItem>
-                    <SelectItem value="tab">Tabs</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="flex items-center justify-between gap-3 md:justify-start">
+              <Label htmlFor="indent" className="whitespace-nowrap">
+                Indent
+              </Label>
+              <Select value={indent} onValueChange={(v: any) => setIndent(v)}>
+                <SelectTrigger id="indent" className="w-[160px]">
+                  <SelectValue placeholder="Indent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2">2 spaces</SelectItem>
+                  <SelectItem value="4">4 spaces</SelectItem>
+                  <SelectItem value="tab">Tabs</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="flex items-center justify-between gap-3 md:justify-start">
-                <Label htmlFor="sortKeys" className="whitespace-nowrap">
-                  Sort keys
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Switch id="sortKeys" checked={sortKeys} onCheckedChange={setSortKeys} />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Sort object keys alphabetically (deep). Arrays are preserved.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 md:justify-start">
-                <Label htmlFor="autoPaste" className="whitespace-nowrap">
-                  Auto-format on paste
-                </Label>
-                <Switch id="autoPaste" checked={autoOnPaste} onCheckedChange={setAutoOnPaste} />
-              </div>
-
-              <div className="flex items-center justify-between gap-3 md:justify-start">
-                <input ref={fileRef} type="file" accept="application/json,.json,.txt" className="hidden" onChange={handleFile} />
-                <Button variant="outline" onClick={() => fileRef.current?.click()} className="w-full gap-2">
-                  <Upload className="h-4 w-4" /> Import JSON
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 md:justify-start">
-                <Button variant="outline" onClick={() => download(output || input || '{}', 'data.json')} className="w-full gap-2">
-                  <Download className="h-4 w-4" /> Download
-                </Button>
+            <div className="flex items-center justify-between gap-3 md:justify-start">
+              <Label htmlFor="sortKeys" className="whitespace-nowrap">
+                Sort keys
+              </Label>
+              <div className="flex items-center gap-2">
+                <Switch id="sortKeys" checked={sortKeys} onCheckedChange={setSortKeys} />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Sort object keys alphabetically (deep). Arrays are preserved.</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
-          </CardContent>
-        </MotionGlassCard>
+
+            <div className="flex items-center justify-between gap-3 md:justify-start">
+              <Label htmlFor="autoPaste" className="whitespace-nowrap">
+                Auto-format on paste
+              </Label>
+              <Switch id="autoPaste" checked={autoOnPaste} onCheckedChange={setAutoOnPaste} />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 md:justify-start">
+              <input ref={fileRef} type="file" accept="application/json,.json,.txt" className="hidden" onChange={handleFile} />
+              <Button variant="outline" onClick={() => fileRef.current?.click()} className="w-full gap-2">
+                <Upload className="h-4 w-4" /> Import JSON
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 md:justify-start">
+              <Button variant="outline" onClick={() => download(output || input || '{}', 'data.json')} className="w-full gap-2">
+                <Download className="h-4 w-4" /> Download
+              </Button>
+            </div>
+          </div>
+        </CardContent>
 
         {/* Workbench */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -525,13 +524,13 @@ export default function JsonFormatterPage() {
         </div>
 
         {/* Footer help */}
-        <div className="mt-8 text-center text-xs text-muted-foreground">
+        <div className="text-center text-xs text-muted-foreground">
           <p>
             Keyboard: <kbd className="rounded bg-muted px-1">Ctrl</kbd> + <kbd className="rounded bg-muted px-1">Enter</kbd> to prettify • <kbd className="rounded bg-muted px-1">Ctrl</kbd> +{' '}
             <kbd className="rounded bg-muted px-1">M</kbd> to minify
           </p>
         </div>
-      </div>
+      </MotionGlassCard>
     </TooltipProvider>
   );
 }
