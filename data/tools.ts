@@ -140,7 +140,7 @@ export const ToolsData = [
         popular: false,
       },
       {
-        title: 'Image ↔ PDF',
+        title: 'Image To PDF',
         url: '/tools/pdf/image-pdf',
         description: 'Images to PDF and PDF pages to images',
         popular: false,
@@ -315,13 +315,13 @@ export const ToolsData = [
         popular: true,
       },
       {
-        title: 'YAML ↔ JSON',
+        title: 'YAML To JSON',
         url: '/tools/dev/yaml-json',
         description: 'Convert YAML to JSON and back',
         popular: false,
       },
       {
-        title: 'CSV ↔ JSON',
+        title: 'CSV To JSON',
         url: '/tools/dev/csv-json',
         description: 'Tabular to JSON and back (headers aware)',
         popular: false,
