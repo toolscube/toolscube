@@ -239,6 +239,48 @@ export default function UrlShortenerPage() {
           </div>
 
           {!shortUrl && <p className="mt-2 text-xs text-muted-foreground">Your short link will appear here after you shorten a URL.</p>}
+
+          {/* Compact Controls */}
+          <div className="grid w-full grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="qr-size" className="text-xs">
+                Size
+              </Label>
+              <Input id="qr-size" type="number" min={96} max={1024} value={qrSize} onChange={(e) => setQrSize(Math.min(1024, Math.max(96, Number(e.target.value) || 160)))} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="qr-margin" className="text-xs">
+                Margin
+              </Label>
+              <Input id="qr-margin" type="number" min={0} max={8} value={qrMargin} onChange={(e) => setQrMargin(Math.min(8, Math.max(0, Number(e.target.value) || 0)))} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="qr-ecc" className="text-xs">
+                ECC
+              </Label>
+              <div className="flex gap-1">
+                {(['L', 'M', 'Q', 'H'] as ECC[]).map((level) => (
+                  <Button key={level} size="sm" variant={qrECC === level ? 'default' : 'outline'} className="px-2" onClick={() => setQrECC(level)}>
+                    {level}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="grid w-full grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="qr-dark" className="text-xs flex items-center gap-1">
+                <PaintBucket className="h-3.5 w-3.5" /> Dark
+              </Label>
+              <Input id="qr-dark" type="color" value={qrDark} onChange={(e) => setQrDark(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="qr-light" className="text-xs flex items-center gap-1">
+                <PaintBucket className="h-3.5 w-3.5" /> Light
+              </Label>
+              <Input id="qr-light" type="color" value={qrLight} onChange={(e) => setQrLight(e.target.value)} />
+            </div>
+          </div>
         </GlassCard>
 
         {/* QR Preview + Controls */}
@@ -269,49 +311,6 @@ export default function UrlShortenerPage() {
             ) : (
               <div className="text-xs text-muted-foreground">QR appears after you create a link.</div>
             )}
-
-            {/* Compact Controls */}
-            <div className="grid w-full grid-cols-3 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="qr-size" className="text-xs">
-                  Size
-                </Label>
-                <Input id="qr-size" type="number" min={96} max={1024} value={qrSize} onChange={(e) => setQrSize(Math.min(1024, Math.max(96, Number(e.target.value) || 160)))} />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="qr-margin" className="text-xs">
-                  Margin
-                </Label>
-                <Input id="qr-margin" type="number" min={0} max={8} value={qrMargin} onChange={(e) => setQrMargin(Math.min(8, Math.max(0, Number(e.target.value) || 0)))} />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="qr-ecc" className="text-xs">
-                  ECC
-                </Label>
-                <div className="flex gap-1">
-                  {(['L', 'M', 'Q', 'H'] as ECC[]).map((level) => (
-                    <Button key={level} size="sm" variant={qrECC === level ? 'default' : 'outline'} className="px-2" onClick={() => setQrECC(level)}>
-                      {level}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid w-full grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="qr-dark" className="text-xs flex items-center gap-1">
-                  <PaintBucket className="h-3.5 w-3.5" /> Dark
-                </Label>
-                <Input id="qr-dark" type="color" value={qrDark} onChange={(e) => setQrDark(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="qr-light" className="text-xs flex items-center gap-1">
-                  <PaintBucket className="h-3.5 w-3.5" /> Light
-                </Label>
-                <Input id="qr-light" type="color" value={qrLight} onChange={(e) => setQrLight(e.target.value)} />
-              </div>
-            </div>
           </div>
         </GlassCard>
       </div>
