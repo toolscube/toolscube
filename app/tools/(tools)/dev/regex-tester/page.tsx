@@ -359,8 +359,8 @@ for (const m of matches) {
             <div className="space-y-2">
               <Label>Presets</Label>
               <div className="flex flex-wrap gap-2">
-                {PRESETS.concat(localPresets).map((p) => (
-                  <Button key={p.name} variant="secondary" size="sm" onClick={() => loadPreset(p.pattern)}>
+                {PRESETS.concat(localPresets).map((p, idx) => (
+                  <Button key={idx} variant="secondary" size="sm" onClick={() => loadPreset(p.pattern)}>
                     {p.name}
                   </Button>
                 ))}
