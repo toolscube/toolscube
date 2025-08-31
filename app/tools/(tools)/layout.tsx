@@ -1,5 +1,4 @@
-'use client';
-
+import { MotionGlassCard } from '@/components/ui/glass-card';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ToolsSidebar } from '@/components/ui/tools-sidebar';
 import type { ChildrenProps } from '@/types';
@@ -29,8 +28,8 @@ export default function Layout({ children }: ChildrenProps) {
 
         {/* Main area */}
         <div className="flex flex-1 flex-col">
-          <main className="flex-1">
-            <div className="@container/main min-h-screen w-full ">{children}</div>
+          <main className="flex-1 py-4">
+            <MotionGlassCard className="@container/main min-h-screen w-full">{children}</MotionGlassCard>
           </main>
         </div>
       </div>

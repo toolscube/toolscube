@@ -1,5 +1,5 @@
-import ContinueForm from '@/components/globals/continue-form';
-import CopyUrlButton from '@/components/globals/copy-url-button';
+import ContinueForm from '@/components/shared/continue-form';
+import CopyUrlButton from '@/components/shared/copy-url-button';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
