@@ -8,11 +8,12 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import ToolPageHeader from '@/components/ui/tool-page-header';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { createShort } from '@/lib/actions/shortener';
 import { timeAgo } from '@/lib/utils/time-ago';
 
-import { BarChart2, CalendarClock, Download, ExternalLink, Link as LinkIcon, PaintBucket, QrCode, RefreshCcw, ShieldCheck, SlidersHorizontal, Trash } from 'lucide-react';
+import { BarChart2, CalendarClock, Download, ExternalLink, Link2, Link as LinkIcon, PaintBucket, QrCode, RefreshCcw, ShieldCheck, SlidersHorizontal, Trash } from 'lucide-react';
 import Link from 'next/link';
 import * as QRCodeLib from 'qrcode';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -152,6 +153,13 @@ export default function ShortenerClient() {
 
   return (
     <>
+      <ToolPageHeader
+        icon={Link2}
+        title="URL Shortener"
+        description="Shorten links with custom slugs & analytics"
+        actions={<CopyButton getText={() => (typeof window !== 'undefined' ? window.location.href : '')} label="Copy page" copiedLabel="Copied" variant="outline" size="sm" className="gap-2" />}
+      />
+
       <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
         <GlassCard className="p-4">
           <div className="text-sm text-muted-foreground">Your shortest link</div>

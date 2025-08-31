@@ -1,8 +1,6 @@
 import JsonLd from '@/components/seo/json-ld';
 import ShortenerClient from '@/components/tools/url/shortener/shortener-client';
-import ToolPageHeader from '@/components/ui/tool-page-header';
 import { buildMetadata } from '@/lib/seo';
-import { Link2 } from 'lucide-react';
 
 export const metadata = buildMetadata({
   title: 'URL Shortener • Tools Hub',
@@ -31,8 +29,6 @@ export default function Page() {
 
   return (
     <div className="space-y-4">
-      <ToolPageHeader icon={Link2} title="URL Shortener" description="Shorten links with custom slugs & analytics" />
-
       {/* JSON-LD */}
       <JsonLd data={jsonLd} />
 
