@@ -8,7 +8,7 @@ import { ToolsData } from '@/data/tools';
 import Link from 'next/link';
 
 const categories = ToolsData.map((cat) => ({
-  key: cat.title,
+  key: cat.url,
   label: cat.title,
   icon: cat.icon,
   items: cat.items,
