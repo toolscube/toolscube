@@ -367,7 +367,7 @@ export default function UuidNanoidPage() {
                       )}
                       <div className="space-y-1.5 sm:col-span-2">
                         <Label>Name (string)</Label>
-                        <Input placeholder="e.g. https://naturalsefaa.com" value={v5Name} onChange={(e) => setV5Name(e.target.value)} />
+                        <Input placeholder="e.g. https://tariqul.dev" value={v5Name} onChange={(e) => setV5Name(e.target.value)} />
                       </div>
                     </>
                   )}

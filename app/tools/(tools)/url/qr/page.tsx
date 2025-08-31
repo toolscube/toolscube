@@ -155,7 +155,7 @@ export default function QRFlowingPage() {
   /* ----- Dynamic form ----- */
   const [form, setForm] = React.useState<FormState>({
     kind: 'url',
-    url: 'https://naturalsefaa.com',
+    url: 'https://tariqul.dev',
 
     text: 'Scan me',
 
@@ -169,8 +169,8 @@ export default function QRFlowingPage() {
     vcOrg: 'Natural Sefa',
     vcTitle: '',
     vcPhone: '+8801XXXXXXXXX',
-    vcEmail: 'hello@naturalsefaa.com',
-    vcUrl: 'https://naturalsefaa.com',
+    vcEmail: 'hello@tariqul.dev',
+    vcUrl: 'https://tariqul.dev',
 
     emailTo: 'hello@example.com',
     emailSubject: 'Hello!',
@@ -218,7 +218,7 @@ export default function QRFlowingPage() {
 
   /* ----- Actions ----- */
   const resetAll = () => {
-    setForm((s) => ({ ...s, kind: 'url', url: 'https://naturalsefaa.com' }));
+    setForm((s) => ({ ...s, kind: 'url', url: 'https://tariqul.dev' }));
     setEcl('M');
     setSize(320);
     setMargin(2);
