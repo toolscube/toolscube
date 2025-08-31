@@ -1,13 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { getAnalytics } from '@/lib/actions/shortener';
+import { getAnalytics } from '@/lib/actions/shortener.action';
 import { ExternalLink, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-// Client components
-import ClicksByDayChart from '@/components/root/clicks-by-day-chart';
-import TopTable from '@/components/root/top-table';
+import ClicksByDayChart from '@/components/tools/url/clicks-by-day-chart';
+import TopTable from '@/components/tools/url/top-table';
 
 export default async function AnalyticsPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -85,7 +84,7 @@ export default async function AnalyticsPage({ params }: { params: { id: string }
   );
 }
 
-/* ------------------------------ Small Server Bits ------------------------------ */
+/* Small Server Bits */
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <GlassCard className="p-4">

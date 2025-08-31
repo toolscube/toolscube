@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useQrExport } from '@/hooks/use-qr-export';
 
-import { createShort } from '@/lib/actions/shortener';
+import { createShort } from '@/lib/actions/shortener.action';
 import { timeAgo } from '@/lib/utils/time-ago';
 
 import { BarChart2, CalendarClock, Download, ExternalLink, Grip, Link2, Link as LinkIcon, PaintBucket, QrCode, RefreshCcw, ShieldCheck, Trash } from 'lucide-react';

@@ -1,9 +1,9 @@
-import ContinueForm from '@/components/shared/continue-form';
-import CopyUrlButton from '@/components/shared/copy-url-button';
+import { CopyButton } from '@/components/shared/copy-button';
+import ContinueForm from '@/components/tools/url/continue-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { getLink, recordClickAndRedirect } from '@/lib/actions/shortener';
+import { getLink, recordClickAndRedirect } from '@/lib/actions/shortener.action';
 import { ExternalLink, Link as LinkIcon, Lock, ShieldCheck, TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -30,7 +30,7 @@ export default async function InterstitialPage({ params }: { params: { id: strin
     <div className="container mx-auto max-w-3xl px-4 py-10">
       <MotionGlassCard className="overflow-hidden">
         {/* Top banner */}
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-4">
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-4 rounded-md">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border bg-background/50 backdrop-blur">
@@ -74,7 +74,7 @@ export default async function InterstitialPage({ params }: { params: { id: strin
             <div className="text-xs text-muted-foreground">Full URL</div>
             <code className="mt-1 block max-w-[58ch] truncate rounded-md bg-muted px-2 py-1 text-sm">{link.targetUrl}</code>
             <div className="mt-3 flex flex-wrap gap-2">
-              <CopyUrlButton url={link.targetUrl} />
+              <CopyButton getText={link.targetUrl} />
               <Button asChild variant="outline" className="gap-2">
                 <a href={link.targetUrl} target="_blank" rel="noreferrer">
                   <ExternalLink className="h-4 w-4" />
