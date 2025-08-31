@@ -1,11 +1,10 @@
 'use client';
 
 import { CopyButton } from '@/components/shared/copy-button';
+import { InputField } from '@/components/shared/form-fields/input-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { GlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
@@ -13,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { createShort } from '@/lib/actions/shortener';
 import { timeAgo } from '@/lib/utils/time-ago';
 
-import { BarChart2, CalendarClock, Download, ExternalLink, Link as LinkIcon, MoreHorizontal, PaintBucket, QrCode, RefreshCcw, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { BarChart2, CalendarClock, Download, ExternalLink, Link as LinkIcon, PaintBucket, QrCode, RefreshCcw, ShieldCheck, SlidersHorizontal, Trash } from 'lucide-react';
 import Link from 'next/link';
 import * as QRCodeLib from 'qrcode';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -22,7 +21,10 @@ import toast from 'react-hot-toast';
 type RecentItem = { slug: string; url: string; createdAt: number };
 const RECENT_KEY = 'shortener:recent:v1';
 
-// Local storage helpers
+// Define ECC locally for safety
+type ECC = 'L' | 'M' | 'Q' | 'H';
+
+/* ---------- Local storage helpers ---------- */
 function loadRecent(): RecentItem[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -41,8 +43,6 @@ function saveRecent(items: RecentItem[]) {
 export default function ShortenerClient() {
   const [url, setUrl] = useState('');
   const [slug, setSlug] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
   const [recent, setRecent] = useState<RecentItem[]>([]);
 
@@ -58,12 +58,11 @@ export default function ShortenerClient() {
   useEffect(() => setRecent(loadRecent()), []);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-
   const shortUrl = useMemo(() => (slug ? `${origin}/${slug}` : ''), [origin, slug]);
   const interstitialUrl = useMemo(() => (slug ? `${origin}/tools/url/shortener/interstitial/${slug}` : ''), [origin, slug]);
   const analyticsUrl = useMemo(() => (slug ? `${origin}/tools/url/shortener/analytics/${slug}` : ''), [origin, slug]);
 
-  // ------------------------------ QR Render ------------------------------
+  /* ------------------------------ QR Render ------------------------------ */
   const renderQR = async () => {
     if (!shortUrl || !canvasRef.current) return;
     try {
@@ -113,7 +112,7 @@ export default function ShortenerClient() {
     }
   };
 
-  // ------------------------------ Actions ------------------------------
+  /* ------------------------------ Actions ------------------------------ */
 
   const removeRecent = (rowSlug: string) => {
     const next = recent.filter((i) => i.slug !== rowSlug);
@@ -133,7 +132,11 @@ export default function ShortenerClient() {
     setSlug(res.link.short);
 
     // store to recent (dedupe by slug)
-    const item: RecentItem = { slug: res.link.short, url: res.link.targetUrl, createdAt: Date.now() };
+    const item: RecentItem = {
+      slug: res.link.short,
+      url: res.link.targetUrl,
+      createdAt: Date.now(),
+    };
     const next = [item, ...loadRecent().filter((i) => i.slug !== item.slug)].slice(0, 12);
     setRecent(next);
     saveRecent(next);
@@ -183,18 +186,36 @@ export default function ShortenerClient() {
 
           {/* Compact Controls */}
           <div className="grid w-full grid-cols-3 gap-2">
-            <div className="space-y-1">
-              <Label htmlFor="qr-size" className="text-xs">
-                Size
-              </Label>
-              <Input id="qr-size" type="number" min={96} max={1024} value={qrSize} onChange={(e) => setQrSize(Math.min(1024, Math.max(96, Number(e.target.value) || 160)))} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="qr-margin" className="text-xs">
-                Margin
-              </Label>
-              <Input id="qr-margin" type="number" min={0} max={8} value={qrMargin} onChange={(e) => setQrMargin(Math.min(8, Math.max(0, Number(e.target.value) || 0)))} />
-            </div>
+            <InputField
+              id="qr-size"
+              type="number"
+              value={qrSize}
+              min={96}
+              max={1024}
+              parseNumber
+              label="Size"
+              className="space-y-1"
+              onChange={(e) => {
+                const n = e.target.value === '' ? 160 : Number(e.target.value);
+                setQrSize(Math.min(1024, Math.max(96, n)));
+              }}
+            />
+
+            <InputField
+              id="qr-margin"
+              type="number"
+              value={qrMargin}
+              min={0}
+              max={8}
+              parseNumber
+              label="Margin"
+              className="space-y-1"
+              onChange={(e) => {
+                const n = e.target.value === '' ? 0 : Number(e.target.value);
+                setQrMargin(Math.min(8, Math.max(0, n)));
+              }}
+            />
+
             <div className="space-y-1">
               <Label htmlFor="qr-ecc" className="text-xs">
                 ECC
@@ -208,19 +229,30 @@ export default function ShortenerClient() {
               </div>
             </div>
           </div>
+
           <div className="grid w-full grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <Label htmlFor="qr-dark" className="text-xs flex items-center gap-1">
-                <PaintBucket className="h-3.5 w-3.5" /> Dark
-              </Label>
-              <Input id="qr-dark" type="color" value={qrDark} onChange={(e) => setQrDark(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="qr-light" className="text-xs flex items-center gap-1">
-                <PaintBucket className="h-3.5 w-3.5" /> Light
-              </Label>
-              <Input id="qr-light" type="color" value={qrLight} onChange={(e) => setQrLight(e.target.value)} />
-            </div>
+            <InputField
+              id="qr-dark"
+              type="color"
+              value={qrDark}
+              onChange={(e) => setQrDark(e.target.value)}
+              labelNode={
+                <span className="text-xs flex items-center gap-1">
+                  <PaintBucket className="h-3.5 w-3.5" /> Dark
+                </span>
+              }
+            />
+            <InputField
+              id="qr-light"
+              type="color"
+              value={qrLight}
+              onChange={(e) => setQrLight(e.target.value)}
+              labelNode={
+                <span className="text-xs flex items-center gap-1">
+                  <PaintBucket className="h-3.5 w-3.5" /> Light
+                </span>
+              }
+            />
           </div>
         </GlassCard>
 
@@ -263,7 +295,15 @@ export default function ShortenerClient() {
         <div className="grid gap-2">
           <Label>Destination URL</Label>
           <div className="flex gap-2">
-            <Input type="url" placeholder="Enter your URL..." value={url} onChange={(e) => setUrl(e.target.value)} className="bg-background/60 backdrop-blur" />
+            <InputField
+              id="dest-url"
+              type="url"
+              placeholder="Enter your URL..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              inputClassName="bg-background/60 backdrop-blur"
+              className="flex-1"
+            />
             <Button onClick={onShorten} disabled={!url || status === 'saving'} className="gap-2">
               <LinkIcon className="h-4 w-4" />
               {status === 'saving' ? 'Shortening…' : 'Shorten'}
@@ -376,20 +416,9 @@ export default function ShortenerClient() {
                       </Button>
                     </Link>
 
-                    {/* More (delete) */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="min-w-40">
-                        <DropdownMenuItem onClick={() => removeRecent(it.slug)} className="text-destructive focus:text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Remove from recent
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button onClick={() => removeRecent(it.slug)} size="sm" variant="outline">
+                      <Trash className="h-4 w-4" />
+                    </Button>
                   </div>
                 </GlassCard>
               );
