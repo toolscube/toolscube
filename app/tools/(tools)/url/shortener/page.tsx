@@ -1,5 +1,5 @@
 import JsonLd from '@/components/seo/json-ld';
-import ShortenerClient from '@/components/tools/url/shortener/shortener-client';
+import ShortenerClient from '@/components/tools/url/shortener-client';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({

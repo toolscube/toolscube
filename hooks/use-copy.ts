@@ -1,38 +1,73 @@
 import { copyToClipboard } from '@/lib/clipboard';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function useCopy(timeoutMs = 1000) {
+type CopyOptions = { timeoutMs?: number };
+
+export function useCopy(options: CopyOptions = {}) {
+  const { timeoutMs = 1000 } = options;
+
   const [copied, setCopied] = useState(false);
-  const t = useRef<number | undefined>(undefined);
-  const clearLater = () => {
-    window.clearTimeout(t.current);
-    t.current = window.setTimeout(() => setCopied(false), timeoutMs);
+  const timerRef = useRef<number | null>(null);
+
+  const clearTimer = () => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
   };
 
-  const copy = useCallback(async (text: string) => {
-    const ok = await copyToClipboard(text);
-    setCopied(ok);
-    clearLater();
-    return ok;
+  useEffect(() => clearTimer, []);
+
+  const reset = useCallback(() => {
+    clearTimer();
+    setCopied(false);
   }, []);
 
-  return { copied, copy, reset: () => setCopied(false) };
+  const copy = useCallback(
+    async (text: string) => {
+      const ok = await copyToClipboard(text);
+      setCopied(ok);
+      if (ok) {
+        clearTimer();
+        timerRef.current = window.setTimeout(() => setCopied(false), timeoutMs);
+      }
+      return ok;
+    },
+    [timeoutMs],
+  );
+
+  return { copied, copy, reset };
 }
 
-export function useCopyKeyed<K extends string = string>(timeoutMs = 1200) {
-  const [copiedKey, setCopiedKey] = useState<K | null>(null);
-  const t = useRef<number | undefined>(undefined);
+export function useCopyKeyed<K extends string | number = string>(options: CopyOptions = {}) {
+  const { timeoutMs = 1200 } = options;
 
-  const copy = useCallback(async (text: string, key?: K) => {
-    const ok = await copyToClipboard(text);
-    if (!ok) return false;
-    if (key) {
-      setCopiedKey(key);
-      window.clearTimeout(t.current);
-      t.current = window.setTimeout(() => setCopiedKey(null), timeoutMs);
-    }
-    return true;
+  const [copiedKey, setCopiedKey] = useState<K | null>(null);
+  const timerRef = useRef<number | null>(null);
+
+  const clearTimer = () => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+  };
+
+  useEffect(() => clearTimer, []);
+
+  const reset = useCallback(() => {
+    clearTimer();
+    setCopiedKey(null);
   }, []);
 
-  return { copiedKey, copy, reset: () => setCopiedKey(null) };
+  const copy = useCallback(
+    async (text: string, key?: K) => {
+      const ok = await copyToClipboard(text);
+      if (!ok) return false;
+      if (key !== undefined && key !== null) {
+        setCopiedKey(key);
+        clearTimer();
+        timerRef.current = window.setTimeout(() => setCopiedKey(null), timeoutMs);
+      }
+      return true;
+    },
+    [timeoutMs],
+  );
+
+  return { copiedKey, copy, reset };
 }

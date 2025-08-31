@@ -7,21 +7,21 @@ import * as React from 'react';
 import { useFormContext } from 'react-hook-form';
 
 interface Props extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
-  name?: string; // RHF mode only (under <FormProvider>)
-  label?: React.ReactNode; // text or ReactNode
-  labelNode?: React.ReactNode; // alias; if provided, overrides label
-  disable?: boolean; // back-compat; prefer disabled
-  value?: string | number; // standalone controlled
-  defaultValue?: string | number; // standalone uncontrolled
+  name?: string;
+  label?: React.ReactNode;
+  labelNode?: React.ReactNode;
+  disable?: boolean;
+  value?: string | number;
+  defaultValue?: string | number;
   requiredMark?: boolean;
   hint?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   type?: React.HTMLInputTypeAttribute;
-  parseNumber?: boolean; // coerce to number (default true when type==='number')
-  preventWheelChange?: boolean; // blur on wheel for number inputs
+  parseNumber?: boolean;
+  preventWheelChange?: boolean;
   id?: string;
-  className?: string; // wrapper class
-  inputClassName?: string; // <Input/> class
+  className?: string;
+  inputClassName?: string;
 }
 
 export function InputField({
@@ -58,7 +58,7 @@ export function InputField({
 
   const labelContent = labelNode ?? label;
 
-  /* ---------------- RHF mode ---------------- */
+  /* RHF mode */
   if (name && rhf) {
     return (
       <FormField
@@ -105,7 +105,7 @@ export function InputField({
     );
   }
 
-  /* -------------- Standalone mode -------------- */
+  /* Standalone mode */
   const isControlled = value !== undefined;
   const [internal, setInternal] = React.useState<string | number | undefined>(defaultValue);
   const currentValue = isControlled ? value : internal;

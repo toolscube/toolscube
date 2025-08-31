@@ -1,31 +1,33 @@
 'use client';
 
+import { ColorField } from '@/components/shared/color-field';
 import { CopyButton } from '@/components/shared/copy-button';
 import { InputField } from '@/components/shared/form-fields/input-field';
+import { QRCodeBox } from '@/components/shared/qr-code';
+
+import ToolPageHeader from '@/components/shared/tool-page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { GlassCard } from '@/components/ui/glass-card';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import ToolPageHeader from '@/components/ui/tool-page-header';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useQrExport } from '@/hooks/use-qr-export';
+
 import { createShort } from '@/lib/actions/shortener';
 import { timeAgo } from '@/lib/utils/time-ago';
 
-import { BarChart2, CalendarClock, Download, ExternalLink, Link2, Link as LinkIcon, PaintBucket, QrCode, RefreshCcw, ShieldCheck, SlidersHorizontal, Trash } from 'lucide-react';
+import { BarChart2, CalendarClock, Download, ExternalLink, Grip, Link2, Link as LinkIcon, PaintBucket, QrCode, RefreshCcw, ShieldCheck, Trash } from 'lucide-react';
 import Link from 'next/link';
-import * as QRCodeLib from 'qrcode';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+
+/* ---------- Types & LS helpers ---------- */
 
 type RecentItem = { slug: string; url: string; createdAt: number };
 const RECENT_KEY = 'shortener:recent:v1';
 
-// Define ECC locally for safety
-type ECC = 'L' | 'M' | 'Q' | 'H';
-
-/* ---------- Local storage helpers ---------- */
 function loadRecent(): RecentItem[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -41,6 +43,8 @@ function saveRecent(items: RecentItem[]) {
   } catch {}
 }
 
+/* Component */
+
 export default function ShortenerClient() {
   const [url, setUrl] = useState('');
   const [slug, setSlug] = useState('');
@@ -54,8 +58,6 @@ export default function ShortenerClient() {
   const [qrDark, setQrDark] = useState<string>('#000000');
   const [qrLight, setQrLight] = useState<string>('#ffffff');
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
   useEffect(() => setRecent(loadRecent()), []);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -63,57 +65,18 @@ export default function ShortenerClient() {
   const interstitialUrl = useMemo(() => (slug ? `${origin}/tools/url/shortener/interstitial/${slug}` : ''), [origin, slug]);
   const analyticsUrl = useMemo(() => (slug ? `${origin}/tools/url/shortener/analytics/${slug}` : ''), [origin, slug]);
 
-  /* ------------------------------ QR Render ------------------------------ */
-  const renderQR = async () => {
-    if (!shortUrl || !canvasRef.current) return;
-    try {
-      await QRCodeLib.toCanvas(canvasRef.current, shortUrl, {
-        errorCorrectionLevel: qrECC,
-        margin: qrMargin,
-        width: qrSize,
-        color: { dark: qrDark, light: qrLight },
-      });
-    } catch {
-      // ignore
-    }
-  };
+  const { downloadPNG, downloadSVG } = useQrExport({
+    value: shortUrl || 'https://example.com',
+    size: qrSize,
+    margin: qrMargin,
+    ecl: qrECC,
+    fg: qrDark,
+    bg: qrLight,
+    quietZone: true,
+    logo: null,
+  });
 
-  useEffect(() => {
-    renderQR();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shortUrl, qrSize, qrMargin, qrECC, qrDark, qrLight]);
-
-  const downloadQRPNG = () => {
-    if (!canvasRef.current || !shortUrl) return;
-    const a = document.createElement('a');
-    a.href = canvasRef.current.toDataURL('image/png');
-    a.download = `qr-${slug || 'link'}.png`;
-    a.click();
-  };
-
-  const downloadQRSVG = async () => {
-    if (!shortUrl) return;
-    try {
-      const svgString = await QRCodeLib.toString(shortUrl, {
-        type: 'svg',
-        errorCorrectionLevel: qrECC,
-        margin: qrMargin,
-        width: qrSize,
-        color: { dark: qrDark, light: qrLight },
-      });
-      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `qr-${slug || 'link'}.svg`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      // ignore
-    }
-  };
-
-  /* ------------------------------ Actions ------------------------------ */
+  /* Actions */
 
   const removeRecent = (rowSlug: string) => {
     const next = recent.filter((i) => i.slug !== rowSlug);
@@ -132,7 +95,6 @@ export default function ShortenerClient() {
     }
     setSlug(res.link.short);
 
-    // store to recent (dedupe by slug)
     const item: RecentItem = {
       slug: res.link.short,
       url: res.link.targetUrl,
@@ -163,6 +125,7 @@ export default function ShortenerClient() {
       <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
         <GlassCard className="p-4">
           <div className="text-sm text-muted-foreground">Your shortest link</div>
+
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <code className="rounded-md bg-muted px-2 py-1 text-sm">{shortUrl || '—'}</code>
 
@@ -225,9 +188,7 @@ export default function ShortenerClient() {
             />
 
             <div className="space-y-1">
-              <Label htmlFor="qr-ecc" className="text-xs">
-                ECC
-              </Label>
+              <Label className="text-xs">ECC</Label>
               <div className="flex gap-1">
                 {(['L', 'M', 'Q', 'H'] as ECC[]).map((level) => (
                   <Button key={level} size="sm" variant={qrECC === level ? 'default' : 'outline'} className="px-2" onClick={() => setQrECC(level)}>
@@ -239,22 +200,20 @@ export default function ShortenerClient() {
           </div>
 
           <div className="grid w-full grid-cols-2 gap-2">
-            <InputField
+            <ColorField
               id="qr-dark"
-              type="color"
               value={qrDark}
-              onChange={(e) => setQrDark(e.target.value)}
+              onChange={setQrDark}
               labelNode={
                 <span className="text-xs flex items-center gap-1">
                   <PaintBucket className="h-3.5 w-3.5" /> Dark
                 </span>
               }
             />
-            <InputField
+            <ColorField
               id="qr-light"
-              type="color"
               value={qrLight}
-              onChange={(e) => setQrLight(e.target.value)}
+              onChange={setQrLight}
               labelNode={
                 <span className="text-xs flex items-center gap-1">
                   <PaintBucket className="h-3.5 w-3.5" /> Light
@@ -264,28 +223,38 @@ export default function ShortenerClient() {
           </div>
         </GlassCard>
 
-        {/* QR Preview + Controls */}
+        {/* QR Preview + Export using reusable component */}
         <GlassCard className="p-4">
           <div className="flex items-center justify-between">
             <div className="text-sm font-medium">QR Code</div>
             <Badge variant="secondary" className="gap-1">
-              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <Grip className="h-3.5 w-3.5" />
               Customizable
             </Badge>
           </div>
 
           <div className="mt-3 flex flex-col items-center gap-3">
             <div className="rounded-lg border p-3 bg-background/60">
-              {/* Canvas-based QR (qrcode package) */}
-              <canvas ref={canvasRef} width={qrSize} height={qrSize} className="h-auto w-[160px] sm:w-[200px] md:w-[220px]" />
+              <QRCodeBox
+                value={shortUrl}
+                format="png"
+                size={qrSize}
+                margin={qrMargin}
+                ecl={qrECC}
+                fg={qrDark}
+                bg={qrLight}
+                quietZone
+                // optional: canvas/svg classes
+                canvasClassName="h-auto w-[160px] sm:w-[200px] md:w-[220px]"
+              />
             </div>
 
             {shortUrl ? (
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" className="gap-2" onClick={downloadQRPNG}>
+                <Button size="sm" className="gap-2" onClick={() => downloadPNG(`qr-${slug || 'link'}.png`, 2)}>
                   <Download className="h-4 w-4" /> PNG
                 </Button>
-                <Button size="sm" variant="outline" className="gap-2" onClick={downloadQRSVG}>
+                <Button size="sm" variant="outline" className="gap-2" onClick={() => downloadSVG(`qr-${slug || 'link'}.svg`)}>
                   <Download className="h-4 w-4" /> SVG
                 </Button>
               </div>
@@ -392,7 +361,7 @@ export default function ShortenerClient() {
                       <TooltipContent>Copy short link</TooltipContent>
                     </Tooltip>
 
-                    {/* QR popover */}
+                    {/* QR popover (uses reusable component at small size) */}
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button size="sm" variant="outline" className="gap-2">
@@ -402,7 +371,7 @@ export default function ShortenerClient() {
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-4">
                         <div className="flex flex-col items-center gap-2">
-                          <InlineQR value={sUrl} size={144} />
+                          <QRCodeBox value={sUrl} size={144} margin={1} ecl="M" fg="#000000" bg="#ffffff" quietZone />
                           <div className="break-all text-center text-xs text-muted-foreground">{sUrl}</div>
                         </div>
                       </PopoverContent>
@@ -436,14 +405,4 @@ export default function ShortenerClient() {
       </div>
     </>
   );
-}
-
-/* Inline canvas QR for popovers (also uses qrcode) */
-function InlineQR({ value, size = 144 }: { value: string; size?: number }) {
-  const ref = useRef<HTMLCanvasElement | null>(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    QRCodeLib.toCanvas(ref.current, value, { width: size, margin: 1 });
-  }, [value, size]);
-  return <canvas ref={ref} width={size} height={size} className="h-auto w-[144px]" />;
 }
