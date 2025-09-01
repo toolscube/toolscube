@@ -37,3 +37,36 @@ type ControlValues = {
   format: RenderFormat;
   wifiAuth: WifiAuth;
 };
+
+// utm builder
+type Pair = { id: string; key: string; value: string; enabled: boolean };
+
+type UTMState = {
+  source: string;
+  medium: string;
+  campaign: string;
+  term: string;
+  content: string;
+  id: string;
+  custom: Pair[];
+};
+
+type OptionsState = {
+  keepExisting: boolean;
+  encodeParams: boolean;
+  lowercaseKeys: boolean;
+  prefixCustomWithUTM: boolean;
+  batchMode: boolean;
+};
+
+type Preset = {
+  name: string;
+  utm: UTMState;
+  options: OptionsState;
+};
+
+type HistoryItem = {
+  ts: number;
+  base: string;
+  result: string | string[];
+};
