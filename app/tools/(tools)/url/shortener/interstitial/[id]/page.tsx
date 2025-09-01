@@ -1,4 +1,4 @@
-import { CopyButton } from '@/components/shared/copy-button';
+import { CopyButton } from '@/components/shared/action-buttons';
 import ContinueForm from '@/components/tools/url/continue-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

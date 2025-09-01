@@ -70,3 +70,34 @@ type HistoryItem = {
   base: string;
   result: string | string[];
 };
+
+// Link Expander
+type Hop = {
+  index: number;
+  url: string;
+  status: number;
+  statusText: string;
+  location?: string | null;
+};
+
+type Meta = {
+  title?: string;
+  description?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  finalUrl?: string;
+  contentType?: string;
+};
+
+type Result = {
+  ok: boolean;
+  inputUrl: string;
+  finalUrl: string;
+  totalHops: number;
+  hops: Hop[];
+  meta?: Meta;
+  error?: string;
+  startedAt: string;
+  ms: number;
+};

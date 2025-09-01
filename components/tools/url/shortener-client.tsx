@@ -1,7 +1,7 @@
 'use client';
 
+import { CopyButton } from '@/components/shared/action-buttons';
 import { ColorField } from '@/components/shared/color-field';
-import { CopyButton } from '@/components/shared/copy-button';
 import { InputField } from '@/components/shared/form-fields/input-field';
 import { QRCodeBox } from '@/components/shared/qr-code';
 
@@ -119,7 +119,7 @@ export default function ShortenerClient() {
         icon={Link2}
         title="URL Shortener"
         description="Shorten links with custom slugs & analytics"
-        actions={<CopyButton getText={() => (typeof window !== 'undefined' ? window.location.href : '')} label="Copy page" copiedLabel="Copied" variant="outline" size="sm" className="gap-2" />}
+        actions={<CopyButton getText={() => (typeof window !== 'undefined' ? window.location.href : '')} label="Copy Page" />}
       />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_auto]">

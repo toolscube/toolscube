@@ -18,8 +18,8 @@ import SelectField from '@/components/shared/form-fields/select-field';
 import { QRCodeBox } from '@/components/shared/qr-code';
 import { useQrExport } from '@/hooks/use-qr-export';
 
+import { CopyButton } from '@/components/shared/action-buttons';
 import { ColorField } from '@/components/shared/color-field';
-import { CopyButton } from '@/components/shared/copy-button';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
 import { ArrowDownToLine, Image as ImageIcon, Key, RefreshCw, ScanLine, Upload } from 'lucide-react';

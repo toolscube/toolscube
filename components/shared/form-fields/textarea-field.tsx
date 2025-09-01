@@ -29,6 +29,7 @@ type BaseProps = {
 
   autoResize?: boolean;
   trimOnBlur?: boolean;
+  readOnly?: boolean;
 
   value?: string;
   onValueChange?: (value: string) => void;
@@ -61,6 +62,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
   required = false,
   autoResize = false,
   trimOnBlur = false,
+  readOnly = false,
   value: externalValue,
   onValueChange,
   defaultValue,
@@ -123,6 +125,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
             onChange={handleChange}
             onBlur={handleBlur}
             disabled={disabled}
+            readOnly={readOnly}
             rows={rows}
             maxLength={maxLength}
             className={cn('w-full', minHeight, textareaClassName)}
@@ -194,6 +197,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
                   onChange={handleChange}
                   onBlur={handleBlur}
                   disabled={disabled || field.disabled}
+                  readOnly={readOnly}
                   rows={rows}
                   maxLength={maxLength}
                   className={cn('w-full', minHeight, textareaClassName)}

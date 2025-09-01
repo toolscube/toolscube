@@ -1,6 +1,6 @@
 'use client';
 
-import { CopyButton } from '@/components/shared/copy-button';
+import { CopyButton, ExportFileButton, ImportFileButton, ResetButton, SaveButton } from '@/components/shared/action-buttons';
 import { InputField } from '@/components/shared/form-fields/input-field';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { ClipboardList, Download, Eraser, History, Link2, Plus, RotateCcw, Save, Share2, Trash2, Wand2 } from 'lucide-react';
+import { ClipboardList, Download, Eraser, History, Link2, Plus, Share2, Trash2, Wand2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 /* Constants */
@@ -301,18 +301,10 @@ export default function UTMBuilderClient() {
         description="Create campaign UTM parameters fast"
         actions={
           <>
-            <Button variant="outline" onClick={resetAll} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
-            <Button variant="outline" onClick={savePreset} className="gap-2">
-              <Save className="h-4 w-4" /> Save Preset
-            </Button>
-
-            <InputField type="file" accept="application/json" onFilesChange={importPresetsFromFiles} fileButtonLabel="Import" />
-
-            <Button variant="outline" onClick={exportPresets} className="gap-2">
-              <Download className="h-4 w-4" /> Export
-            </Button>
+            <ResetButton onClick={resetAll} />
+            <SaveButton onClick={savePreset} label="Save Preset" />
+            <ImportFileButton accept="application/json" onFiles={importPresetsFromFiles} label="Import" />
+            <ExportFileButton filename="utm-presets.json" label="Export" variant="outline" mime="application/json;charset=utf-8;" getContent={() => JSON.stringify(presets, null, 2)} />
           </>
         }
       />
