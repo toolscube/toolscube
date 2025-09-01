@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { GlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
@@ -18,7 +17,7 @@ import SelectField from '@/components/shared/form-fields/select-field';
 import { QRCodeBox } from '@/components/shared/qr-code';
 import { useQrExport } from '@/hooks/use-qr-export';
 
-import { CopyButton } from '@/components/shared/action-buttons';
+import { CopyButton, ImportFileButton } from '@/components/shared/action-buttons';
 import { ColorField } from '@/components/shared/color-field';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
@@ -98,7 +97,6 @@ export default function QRClient() {
   const [bg, setBg] = React.useState<string>('#ffffff');
   const [exportScale, setExportScale] = React.useState<number>(2);
   const [quietZone, setQuietZone] = React.useState<boolean>(true);
-
   const [logoEnabled, setLogoEnabled] = React.useState<boolean>(false);
   const [logoDataUrl, setLogoDataUrl] = React.useState<string | null>(null);
   const [logoSizePct, setLogoSizePct] = React.useState<number>(20);
@@ -193,19 +191,6 @@ export default function QRClient() {
   };
 
   const runGenerate = () => setGenTick((t) => t + 1);
-
-  const handleLogoUpload: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setLogoDataUrl(reader.result as string);
-      setLogoEnabled(true);
-    };
-    reader.readAsDataURL(f);
-  };
-
-  /* UI */
 
   return (
     <>
@@ -318,7 +303,22 @@ export default function QRClient() {
                 <div className="space-y-2">
                   <Label htmlFor="logo-upload">Upload Logo (PNG/SVG)</Label>
                   <div className="flex gap-2">
-                    <Input id="logo-upload" type="file" accept="image/*" onChange={handleLogoUpload} />
+                    <ImportFileButton
+                      accept="image/*"
+                      variant="outline"
+                      size="sm"
+                      onFiles={async (files) => {
+                        const f = files?.[0];
+                        if (!f) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setLogoDataUrl(reader.result as string);
+                          setLogoEnabled(true);
+                        };
+                        reader.readAsDataURL(f);
+                      }}
+                    />
+
                     <Button variant="outline" onClick={() => setLogoDataUrl(null)} disabled={!logoDataUrl}>
                       <RefreshCw className="mr-2 h-4 w-4" />
                       Clear
@@ -351,7 +351,7 @@ export default function QRClient() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <CopyButton getText={() => getPngDataUrl(exportScale)} label="Copy PNG Data URL" copiedLabel="Copied PNG Data!" />
+              <CopyButton getText={() => getPngDataUrl(exportScale)} label="Copy PNG Data URL" />
               <Button variant="ghost" onClick={runGenerate}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Regenerate
@@ -398,6 +398,7 @@ export default function QRClient() {
 }
 
 /* Sub-Components */
+
 function DynamicFields({ form, setForm, controlForm }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; controlForm: ReturnType<typeof useForm<ControlValues>> }) {
   if (form.kind === 'url') {
     return (
