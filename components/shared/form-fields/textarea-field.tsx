@@ -39,7 +39,6 @@ type BaseProps = {
 };
 
 export type TextareaFieldProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = BaseProps & {
-  /** If provided, renders as a react-hook-form field; otherwise renders standalone */
   name?: TName;
 };
 

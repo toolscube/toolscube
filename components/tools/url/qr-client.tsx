@@ -91,7 +91,7 @@ function safe(v: string) {
 }
 
 export default function QRClient() {
-  /* ----- Controls ----- */
+  /* Controls */
   const [size, setSize] = React.useState<number>(320);
   const [margin, setMargin] = React.useState<number>(2);
   const [fg, setFg] = React.useState<string>('#0f172a');
@@ -105,7 +105,7 @@ export default function QRClient() {
 
   const [genTick, setGenTick] = React.useState<number>(0);
 
-  /* ----- Dynamic form (content & switches) ----- */
+  /* Dynamic form (content & switches) */
   const [form, setForm] = React.useState<FormState>({
     kind: 'url',
     url: 'https://tariqul.dev',
@@ -136,7 +136,7 @@ export default function QRClient() {
     waText: 'Hello there 👋',
   });
 
-  /* ----- Selects bridge (react-hook-form) ----- */
+  /* Selects bridge */
   const controlForm = useForm<ControlValues>({
     defaultValues: { kind: 'url', ecl: 'M', format: 'png', wifiAuth: 'WPA' },
   });
@@ -155,7 +155,7 @@ export default function QRClient() {
     if (wifiAuth && wifiAuth !== form.wifiAuth) setForm((s) => ({ ...s, wifiAuth }));
   }, [wifiAuth]);
 
-  /* ----- Payload & export helpers ----- */
+  /* Payload & export helpers */
   const payload = React.useMemo(() => buildPayload(form), [form]);
 
   const { downloadPNG, downloadSVG, copyPngDataUrl, getPngDataUrl } = useQrExport({
@@ -351,7 +351,7 @@ export default function QRClient() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <CopyButton getText={() => getPngDataUrl(exportScale)} label="Copy PNG Data URL" />
+              <CopyButton getText={() => getPngDataUrl(exportScale)} label="Copy PNG Data URL" copiedLabel="Copied PNG Data!" />
               <Button variant="ghost" onClick={runGenerate}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Regenerate
@@ -398,7 +398,6 @@ export default function QRClient() {
 }
 
 /* Sub-Components */
-
 function DynamicFields({ form, setForm, controlForm }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; controlForm: ReturnType<typeof useForm<ControlValues>> }) {
   if (form.kind === 'url') {
     return (

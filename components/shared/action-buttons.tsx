@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from '@/lib/utils/download';
-import { ArrowDownToLine, Check, Copy, Download, ExternalLink, FileDown, FileUp, Link as LinkIcon, RefreshCcw, Save } from 'lucide-react';
+import { ArrowDownToLine, Check, Copy as CopyIcon, Download, ExternalLink, FileDown, FileUp, Link as LinkIcon, RefreshCcw, Save } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import toast from 'react-hot-toast';
@@ -11,7 +11,34 @@ import toast from 'react-hot-toast';
 type Variant = 'default' | 'outline' | 'destructive' | 'secondary' | 'ghost' | 'link';
 type Size = 'default' | 'sm' | 'lg' | 'icon';
 type MaybePromise<T> = T | Promise<T>;
+
 type GetText = string | (() => MaybePromise<string | null | undefined>);
+
+type GetRows = () => MaybePromise<(string | number)[][]>;
+
+const resolveValue = async <T,>(val: T | (() => MaybePromise<T>)): Promise<T> => {
+  return typeof val === 'function' ? await (val as () => MaybePromise<T>)() : (val as T);
+};
+
+const useOneShotFlag = (ms: number) => {
+  const [flag, setFlag] = React.useState(false);
+  const timerRef = React.useRef<number | null>(null);
+
+  const clear = () => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+  };
+
+  React.useEffect(() => clear, []);
+
+  const shoot = () => {
+    setFlag(true);
+    clear();
+    timerRef.current = window.setTimeout(() => setFlag(false), ms);
+  };
+
+  return { flag, shoot };
+};
 
 export type CopyButtonProps = {
   getText: GetText;
@@ -52,36 +79,18 @@ export function CopyButton({
   onCopied,
   onError,
 }: CopyButtonProps) {
-  const [copied, setCopied] = React.useState(false);
-  const timerRef = React.useRef<number | null>(null);
-
-  const clearTimer = () => {
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = null;
-  };
-
-  React.useEffect(() => clearTimer, []);
+  const { flag: copied, shoot } = useOneShotFlag(timeoutMs);
 
   const run = async () => {
     try {
-      const raw = typeof getText === 'function' ? await (getText as () => MaybePromise<string | null | undefined>)() : (getText as string);
+      const raw = await resolveValue(getText);
       const val = (raw ?? '').toString();
       if (!val) return;
 
-      const ok = await navigator.clipboard
-        .writeText(val)
-        .then(() => true)
-        .catch(() => false);
-
-      if (ok) {
-        setCopied(true);
-        onCopied?.(val);
-        if (withToast) toast.success(toastText);
-        clearTimer();
-        timerRef.current = window.setTimeout(() => setCopied(false), timeoutMs);
-      } else {
-        if (withToast) toast.error(toastErrorText);
-      }
+      await navigator.clipboard.writeText(val);
+      onCopied?.(val);
+      if (withToast) toast.success(toastText);
+      shoot();
     } catch (err) {
       if (withToast) toast.error(toastErrorText);
       onError?.(err);
@@ -100,7 +109,7 @@ export function CopyButton({
       aria-label={ariaLabel || (copied ? copiedLabel : label)}
       aria-live="polite"
       data-copied={copied ? '' : undefined}>
-      {copied ? leftIconCopied ?? <Check className="h-4 w-4" /> : leftIcon ?? <Copy className="h-4 w-4" />}
+      {copied ? leftIconCopied ?? <Check className="h-4 w-4" /> : leftIcon ?? <CopyIcon className="h-4 w-4" />}
       {copied ? copiedLabel : label}
     </Button>
   );
@@ -161,7 +170,7 @@ export function DownloadTextButton({
   disabled,
 }: {
   filename: string;
-  getText: () => MaybePromise<string>;
+  getText: GetText;
   label?: string;
   mime?: string;
   variant?: Variant;
@@ -170,8 +179,8 @@ export function DownloadTextButton({
   disabled?: boolean;
 }) {
   const run = async () => {
-    const text = await getText();
-    downloadText(filename, text, mime);
+    const content = await resolveValue(getText);
+    downloadText(filename, (content ?? '').toString(), mime);
   };
   return (
     <Button onClick={run} disabled={disabled} variant={variant} size={size} className={cn('gap-2', className)}>
@@ -232,6 +241,8 @@ export function DownloadFromUrlButton({
   );
 }
 
+const toStringRows = (rows: (string | number)[][]): string[][] => rows.map((r) => r.map((c) => (typeof c === 'number' ? String(c) : c)));
+
 export function ExportCSVButton({
   filename,
   getRows,
@@ -242,7 +253,7 @@ export function ExportCSVButton({
   disabled,
 }: {
   filename: string;
-  getRows: () => MaybePromise<(string | number)[][]>;
+  getRows: GetRows;
   label?: string;
   variant?: Variant;
   size?: Size;
@@ -251,7 +262,7 @@ export function ExportCSVButton({
 }) {
   const run = async () => {
     const rows = await getRows();
-    csvDownload(filename, rows);
+    csvDownload(filename, toStringRows(rows));
   };
   return (
     <Button variant={variant} size={size} onClick={run} disabled={disabled} className={cn('gap-2', className)}>
@@ -344,6 +355,7 @@ export function LinkButton({
   size = 'sm',
   className,
   leftIcon = <ExternalLink className="h-4 w-4" />,
+  disabled,
 }: {
   href: string;
   label: string;
@@ -351,9 +363,10 @@ export function LinkButton({
   size?: Size;
   className?: string;
   leftIcon?: React.ReactNode;
+  disabled?: boolean;
 }) {
   return (
-    <Button variant={variant} size={size} className={cn('gap-2', className)}>
+    <Button variant={variant} size={size} className={cn('gap-2', className)} disabled={disabled}>
       <Link href={href} target="_blank" rel="noreferrer" className="flex items-center gap-1">
         {leftIcon}
         {label}
