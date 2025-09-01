@@ -1,19 +1,12 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
+import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
-// app/layout.tsx
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
+const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' });
 
 export const metadata: Metadata = {
   title: {
@@ -97,9 +90,9 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrains.variable}`}>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <div className="mx-auto px-4">{children}</div>
+        <main className="mx-auto px-4">{children}</main>
         <Toaster toastOptions={{ style: darkTheme.style, iconTheme: darkTheme.iconTheme }} position="top-right" />
       </body>
     </html>
