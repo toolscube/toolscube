@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from '@/lib/utils/download';
-import { ArrowDownToLine, Check, Copy as CopyIcon, Download, ExternalLink, FileDown, FileUp, Link as LinkIcon, RefreshCcw, Save } from 'lucide-react';
+import { ArrowDownToLine, Check, ClipboardPaste, Copy, Download, ExternalLink, FileDown, Link as LinkIcon, RefreshCcw, Save, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import toast from 'react-hot-toast';
@@ -11,34 +11,7 @@ import toast from 'react-hot-toast';
 type Variant = 'default' | 'outline' | 'destructive' | 'secondary' | 'ghost' | 'link';
 type Size = 'default' | 'sm' | 'lg' | 'icon';
 type MaybePromise<T> = T | Promise<T>;
-
 type GetText = string | (() => MaybePromise<string | null | undefined>);
-
-type GetRows = () => MaybePromise<(string | number)[][]>;
-
-const resolveValue = async <T,>(val: T | (() => MaybePromise<T>)): Promise<T> => {
-  return typeof val === 'function' ? await (val as () => MaybePromise<T>)() : (val as T);
-};
-
-const useOneShotFlag = (ms: number) => {
-  const [flag, setFlag] = React.useState(false);
-  const timerRef = React.useRef<number | null>(null);
-
-  const clear = () => {
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = null;
-  };
-
-  React.useEffect(() => clear, []);
-
-  const shoot = () => {
-    setFlag(true);
-    clear();
-    timerRef.current = window.setTimeout(() => setFlag(false), ms);
-  };
-
-  return { flag, shoot };
-};
 
 export type CopyButtonProps = {
   getText: GetText;
@@ -79,18 +52,36 @@ export function CopyButton({
   onCopied,
   onError,
 }: CopyButtonProps) {
-  const { flag: copied, shoot } = useOneShotFlag(timeoutMs);
+  const [copied, setCopied] = React.useState(false);
+  const timerRef = React.useRef<number | null>(null);
+
+  const clearTimer = () => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+  };
+
+  React.useEffect(() => clearTimer, []);
 
   const run = async () => {
     try {
-      const raw = await resolveValue(getText);
+      const raw = typeof getText === 'function' ? await (getText as () => MaybePromise<string | null | undefined>)() : (getText as string);
       const val = (raw ?? '').toString();
       if (!val) return;
 
-      await navigator.clipboard.writeText(val);
-      onCopied?.(val);
-      if (withToast) toast.success(toastText);
-      shoot();
+      const ok = await navigator.clipboard
+        .writeText(val)
+        .then(() => true)
+        .catch(() => false);
+
+      if (ok) {
+        setCopied(true);
+        onCopied?.(val);
+        if (withToast) toast.success(toastText);
+        clearTimer();
+        timerRef.current = window.setTimeout(() => setCopied(false), timeoutMs);
+      } else {
+        if (withToast) toast.error(toastErrorText);
+      }
     } catch (err) {
       if (withToast) toast.error(toastErrorText);
       onError?.(err);
@@ -109,8 +100,135 @@ export function CopyButton({
       aria-label={ariaLabel || (copied ? copiedLabel : label)}
       aria-live="polite"
       data-copied={copied ? '' : undefined}>
-      {copied ? leftIconCopied ?? <Check className="h-4 w-4" /> : leftIcon ?? <CopyIcon className="h-4 w-4" />}
+      {copied ? leftIconCopied ?? <Check className="h-4 w-4" /> : leftIcon ?? <Copy className="h-4 w-4" />}
       {copied ? copiedLabel : label}
+    </Button>
+  );
+}
+
+export type PasteButtonProps = {
+  // behavior
+  mode?: 'append' | 'replace';
+  smartNewline?: boolean;
+  getExisting?: () => string;
+  setValue?: (next: string) => void;
+  onText?: (text: string) => void;
+
+  // ui
+  label?: string;
+  pastedLabel?: string;
+  leftIcon?: React.ReactNode;
+  leftIconPasted?: React.ReactNode;
+  variant?: Variant;
+  size?: Size;
+  className?: string;
+  disabled?: boolean;
+
+  // a11y (explicit only; no fallback to label => avoids CSS tooltip selectors)
+  title?: string;
+  'aria-label'?: string;
+
+  // feedback
+  withToast?: boolean;
+  toastText?: string;
+  toastErrorText?: string;
+  timeoutMs?: number;
+
+  // callbacks
+  onPasted?: (nextValue: string, pastedText: string) => void;
+  onError?: (err: unknown) => void;
+};
+
+export function PasteButton({
+  // behavior
+  mode = 'append',
+  smartNewline = true,
+  getExisting,
+  setValue,
+  onText,
+
+  // ui
+  label = 'Paste',
+  pastedLabel = 'Pasted',
+  leftIcon,
+  leftIconPasted,
+  variant = 'outline',
+  size = 'sm',
+  className,
+  disabled,
+
+  // a11y
+  title,
+  'aria-label': ariaLabel,
+
+  // feedback
+  withToast = true,
+  toastText = 'Pasted from clipboard',
+  toastErrorText = 'Could not paste from clipboard',
+  timeoutMs = 1000,
+
+  // callbacks
+  onPasted,
+  onError,
+}: PasteButtonProps) {
+  const [done, setDone] = React.useState(false);
+  const timerRef = React.useRef<number | null>(null);
+
+  const clearTimer = () => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+  };
+  React.useEffect(() => clearTimer, []);
+
+  const run = async () => {
+    try {
+      if (typeof navigator === 'undefined' || !navigator.clipboard?.readText) {
+        if (withToast) toast.error(toastErrorText);
+        onError?.(new Error('Clipboard API not available'));
+        return;
+      }
+
+      const text = await navigator.clipboard.readText();
+      if (!text) {
+        if (withToast) toast.error(toastErrorText);
+        return;
+      }
+
+      let next = text;
+      if (mode === 'append') {
+        const prev = (getExisting?.() ?? '').toString();
+        next = prev ? prev + (smartNewline && !prev.endsWith('\n') ? '\n' : '') + text : text;
+      }
+
+      setValue?.(mode === 'replace' ? text : next);
+      onText?.(text);
+      onPasted?.(mode === 'replace' ? text : next, text);
+
+      if (withToast) toast.success(toastText);
+      setDone(true);
+      clearTimer();
+      timerRef.current = window.setTimeout(() => setDone(false), timeoutMs);
+    } catch (err) {
+      if (withToast) toast.error(toastErrorText);
+      onError?.(err);
+    }
+  };
+
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size={size}
+      onClick={run}
+      disabled={disabled}
+      className={cn('gap-2', className)}
+      // No default tooltip triggers:
+      title={title}
+      aria-label={ariaLabel ?? undefined}
+      aria-live="polite"
+      data-state={done ? 'done' : 'idle'}>
+      {done ? leftIconPasted ?? <Check className="h-4 w-4" /> : leftIcon ?? <ClipboardPaste className="h-4 w-4" />}
+      {done ? pastedLabel : label}
     </Button>
   );
 }
@@ -170,7 +288,7 @@ export function DownloadTextButton({
   disabled,
 }: {
   filename: string;
-  getText: GetText;
+  getText: () => MaybePromise<string>;
   label?: string;
   mime?: string;
   variant?: Variant;
@@ -179,8 +297,8 @@ export function DownloadTextButton({
   disabled?: boolean;
 }) {
   const run = async () => {
-    const content = await resolveValue(getText);
-    downloadText(filename, (content ?? '').toString(), mime);
+    const text = await getText();
+    downloadText(filename, text, mime);
   };
   return (
     <Button onClick={run} disabled={disabled} variant={variant} size={size} className={cn('gap-2', className)}>
@@ -241,8 +359,6 @@ export function DownloadFromUrlButton({
   );
 }
 
-const toStringRows = (rows: (string | number)[][]): string[][] => rows.map((r) => r.map((c) => (typeof c === 'number' ? String(c) : c)));
-
 export function ExportCSVButton({
   filename,
   getRows,
@@ -253,7 +369,7 @@ export function ExportCSVButton({
   disabled,
 }: {
   filename: string;
-  getRows: GetRows;
+  getRows: () => MaybePromise<(string | number)[][]>;
   label?: string;
   variant?: Variant;
   size?: Size;
@@ -262,7 +378,7 @@ export function ExportCSVButton({
 }) {
   const run = async () => {
     const rows = await getRows();
-    csvDownload(filename, toStringRows(rows));
+    csvDownload(filename, rows);
   };
   return (
     <Button variant={variant} size={size} onClick={run} disabled={disabled} className={cn('gap-2', className)}>
@@ -341,7 +457,7 @@ export function ImportFileButton({
     <>
       <input ref={ref} type="file" className="hidden" accept={accept} multiple={multiple} onChange={onChange} disabled={disabled} />
       <Button type="button" variant={variant} size={size} onClick={choose} disabled={disabled} className={cn('gap-2', className)}>
-        <FileUp className="h-4 w-4" />
+        <UploadCloud className="h-4 w-4" />
         {children ?? label}
       </Button>
     </>
@@ -355,7 +471,6 @@ export function LinkButton({
   size = 'sm',
   className,
   leftIcon = <ExternalLink className="h-4 w-4" />,
-  disabled,
 }: {
   href: string;
   label: string;
@@ -363,10 +478,9 @@ export function LinkButton({
   size?: Size;
   className?: string;
   leftIcon?: React.ReactNode;
-  disabled?: boolean;
 }) {
   return (
-    <Button variant={variant} size={size} className={cn('gap-2', className)} disabled={disabled}>
+    <Button variant={variant} size={size} className={cn('gap-2', className)}>
       <Link href={href} target="_blank" rel="noreferrer" className="flex items-center gap-1">
         {leftIcon}
         {label}

@@ -109,7 +109,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
     return (
       <div className={className}>
         {label ? (
-          <label htmlFor={textareaId} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label htmlFor={textareaId} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-2">
             {label}
             {required && <span className="ml-0.5 text-destructive">*</span>}
           </label>
@@ -180,7 +180,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
         return (
           <FormItem className={className}>
             {label ? (
-              <FormLabel htmlFor={textareaId}>
+              <FormLabel className="mb-2" htmlFor={textareaId}>
                 {label}
                 {required && <span className="ml-0.5 text-destructive">*</span>}
               </FormLabel>

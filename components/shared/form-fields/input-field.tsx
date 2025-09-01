@@ -110,13 +110,6 @@ export function InputField({
             onFilesChange?.(fl ? Array.from(fl) : null);
           };
 
-          const clearFilesRHF = () => {
-            if (hiddenFileRef.current) hiddenFileRef.current.value = '';
-            setHasSelection(false);
-            rhfOnChange(null as any);
-            onFilesChange?.(null);
-          };
-
           const handleChangeNonFile: React.ChangeEventHandler<HTMLInputElement> = (e) => {
             const raw = e.target.value;
             const val = shouldParseNumber ? (raw === '' ? '' : Number(raw)) : raw;
@@ -127,7 +120,7 @@ export function InputField({
           return (
             <FormItem className={className}>
               {labelContent ? (
-                <FormLabel htmlFor={inputId}>
+                <FormLabel className="mb-2" htmlFor={inputId}>
                   {labelContent}
                   {requiredMark ? <span className="ml-0.5 text-destructive">*</span> : null}
                 </FormLabel>
@@ -206,7 +199,7 @@ export function InputField({
   return (
     <div className={className}>
       {labelContent ? (
-        <UiLabel htmlFor={inputId}>
+        <UiLabel className="mb-2" htmlFor={inputId}>
           {labelContent}
           {requiredMark ? <span className="ml-0.5 text-destructive">*</span> : null}
         </UiLabel>
