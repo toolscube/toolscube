@@ -33,3 +33,6 @@ type Options = {
 
 // word counter
 type DensityRow = { word: string; count: number; percent: number };
+
+// Text Clear
+type CaseMode = 'none' | 'lower' | 'upper' | 'sentence' | 'title';

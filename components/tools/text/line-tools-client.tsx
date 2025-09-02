@@ -206,7 +206,6 @@ export default function LineToolsClient() {
             <ImportFileButton
               accept=".txt,text/plain"
               variant="outline"
-              size="sm"
               className="gap-2"
               label="Import"
               onFiles={async (files) => {
