@@ -8,15 +8,14 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from '@/component
 import { GlassCard } from '@/components/ui/glass-card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 
 import { CopyButton, DownloadTextButton, ImportFileButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
 import ToolPageHeader from '@/components/shared/tool-page-header';
 
 import { InputField } from '@/components/shared/form-fields/input-field';
 import SelectField from '@/components/shared/form-fields/select-field';
+import SwitchRow from '@/components/shared/form-fields/switch-row';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
-import ToggleLine from '@/components/shared/form-fields/toggle-line';
 import { ArrowLeftRight, Eraser, Info, Replace, Type as TypeIcon, Wand2 } from 'lucide-react';
 
 /* Utilities */
@@ -349,23 +348,17 @@ export default function CaseConverterClient() {
           <div className="space-y-2">
             <Label className="text-sm">Clean-up Pipeline</Label>
             <div className="grid grid-cols-2 gap-2">
-              <ToggleLine label="Trim ends" checked={toggles.trim} onChange={(v) => setToggles((t) => ({ ...t, trim: v }))} />
-              <ToggleLine label="Collapse spaces/lines" checked={toggles.collapseSpaces} onChange={(v) => setToggles((t) => ({ ...t, collapseSpaces: v }))} />
-              <ToggleLine label="Remove punctuation" checked={toggles.removePunctuation} onChange={(v) => setToggles((t) => ({ ...t, removePunctuation: v }))} />
-              <ToggleLine label="Normalize quotes/dashes" checked={toggles.normalizeQuotes} onChange={(v) => setToggles((t) => ({ ...t, normalizeQuotes: v }))} />
-              <ToggleLine label="Remove diacritics" checked={toggles.removeDiacritics} onChange={(v) => setToggles((t) => ({ ...t, removeDiacritics: v }))} />
+              <SwitchRow label="Trim ends" checked={toggles.trim} onChange={(v) => setToggles((t) => ({ ...t, trim: v }))} />
+              <SwitchRow label="Collapse spaces/lines" checked={toggles.collapseSpaces} onChange={(v) => setToggles((t) => ({ ...t, collapseSpaces: v }))} />
+              <SwitchRow label="Remove punctuation" checked={toggles.removePunctuation} onChange={(v) => setToggles((t) => ({ ...t, removePunctuation: v }))} />
+              <SwitchRow label="Normalize quotes/dashes" checked={toggles.normalizeQuotes} onChange={(v) => setToggles((t) => ({ ...t, normalizeQuotes: v }))} />
+              <SwitchRow label="Remove diacritics" checked={toggles.removeDiacritics} onChange={(v) => setToggles((t) => ({ ...t, removeDiacritics: v }))} />
             </div>
           </div>
 
           {/* Extras */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="mr-3">
-                <p className="text-sm font-medium leading-none">Live mode</p>
-                <p className="text-xs text-muted-foreground">Apply changes as you type.</p>
-              </div>
-              <Switch checked={live} onCheckedChange={setLive} />
-            </div>
+            <SwitchRow label="Live mode" hint="Apply changes as you type." checked={live} onChange={setLive} />
 
             <InputField
               label="Replace whitespace with"

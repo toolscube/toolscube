@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from '@/lib/utils/download';
-import { ArrowDownToLine, Check, ClipboardPaste, Copy, Download, ExternalLink, FileDown, Link as LinkIcon, RefreshCcw, Save, UploadCloud } from 'lucide-react';
+import { ArrowDownToLine, Check, ClipboardPaste, Copy, Download, ExternalLink, FileDown, Link as LinkIcon, RotateCcw, Save, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import toast from 'react-hot-toast';
@@ -250,7 +250,7 @@ export function ResetButton({
 }) {
   return (
     <Button variant={variant} size={size} onClick={onClick} disabled={disabled} className={cn('gap-2', className)}>
-      <RefreshCcw className="h-4 w-4" /> {label}
+      <RotateCcw className="h-4 w-4" /> {label}
     </Button>
   );
 }

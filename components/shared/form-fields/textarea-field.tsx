@@ -33,6 +33,8 @@ type BaseProps = {
 
   value?: string;
   onValueChange?: (value: string) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyUp?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 
   defaultValue?: string;
   error?: React.ReactNode;
