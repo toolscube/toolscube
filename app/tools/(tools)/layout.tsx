@@ -1,9 +1,9 @@
 import { MotionGlassCard } from '@/components/ui/glass-card';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import ToolsHeader from '@/components/ui/tools-header';
 import { ToolsSidebar } from '@/components/ui/tools-sidebar';
-import type { ChildrenProps } from '@/types';
+import { ChildrenProps } from '@/types';
 
-// Background FX extracted so layout stays readable
 function BackgroundFX() {
   return (
     <div className="pointer-events-none absolute inset-0 -z-10">
@@ -28,6 +28,8 @@ export default function Layout({ children }: ChildrenProps) {
 
         {/* Main area */}
         <div className="flex flex-1 flex-col">
+          <ToolsHeader />
+
           <main className="flex-1 py-4">
             <MotionGlassCard className="@container/main min-h-screen w-full">{children}</MotionGlassCard>
           </main>
