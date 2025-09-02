@@ -222,7 +222,6 @@ export function PasteButton({
       onClick={run}
       disabled={disabled}
       className={cn('gap-2', className)}
-      // No default tooltip triggers:
       title={title}
       aria-label={ariaLabel ?? undefined}
       aria-live="polite"

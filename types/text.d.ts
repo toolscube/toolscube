@@ -30,3 +30,6 @@ type Options = {
   stopwords: string[];
   customMap: Record<string, string>;
 };
+
+// word counter
+type DensityRow = { word: string; count: number; percent: number };
