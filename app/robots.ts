@@ -1,15 +1,16 @@
-import type { MetadataRoute } from 'next';
+import { MetadataRoute } from 'next';
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://toolshub.dev';
 
 export default function robots(): MetadataRoute.Robots {
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/api/*', '/admin/*', '/preview/*'],
-    },
-    sitemap: `${site}/sitemap.xml`,
-    host: site,
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/api/', '/admin/', '/dashboard/'],
+      },
+    ],
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }
