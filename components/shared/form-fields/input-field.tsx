@@ -149,7 +149,7 @@ export function InputField({
                     </Button>
                   </div>
                 ) : (
-                  <div className="bg-light font-grotesk flex items-center gap-2 overflow-hidden rounded-md dark:bg-transparent">
+                  <div className="flex items-center gap-2 overflow-hidden rounded-md dark:bg-transparent">
                     <Input
                       id={inputId}
                       type={type}

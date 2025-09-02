@@ -117,7 +117,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
           </label>
         ) : null}
 
-        <div className={cn('bg-light dark:bg-transparent overflow-hidden rounded-md', wrapperClassName)}>
+        <div className={cn('dark:bg-transparent overflow-hidden rounded-md', wrapperClassName)}>
           <Textarea
             ref={taRef}
             id={textareaId}
