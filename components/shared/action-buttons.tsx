@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from '@/lib/utils/download';
-import { ArrowDownToLine, Check, ClipboardPaste, Copy, Download, ExternalLink, FileDown, Link as LinkIcon, RotateCcw, Save, UploadCloud } from 'lucide-react';
+import { ArrowDownToLine, Check, ClipboardPaste, CloudDownload, Copy, Download, ExternalLink, Link as LinkIcon, RotateCcw, Save, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import toast from 'react-hot-toast';
@@ -153,7 +153,7 @@ export function PasteButton({
   leftIcon,
   leftIconPasted,
   variant = 'outline',
-  size = 'sm',
+  size = 'default',
   className,
   disabled,
 
@@ -236,7 +236,7 @@ export function ResetButton({
   onClick,
   label = 'Reset',
   variant = 'outline',
-  size = 'sm',
+  size = 'default',
   className,
   disabled,
 }: {
@@ -258,7 +258,7 @@ export function SaveButton({
   onClick,
   label = 'Save',
   variant = 'outline',
-  size = 'sm',
+  size = 'default',
   className,
   disabled,
 }: {
@@ -281,8 +281,8 @@ export function DownloadTextButton({
   getText,
   label = 'Download',
   mime = 'text/plain;charset=utf-8;',
-  variant = 'default',
-  size = 'sm',
+  variant = 'outline',
+  size = 'default',
   className,
   disabled,
 }: {
@@ -329,7 +329,7 @@ export function DownloadBlobButton({
   };
   return (
     <Button onClick={run} disabled={disabled} variant={variant} size={size} className={cn('gap-2', className)}>
-      <FileDown className="h-4 w-4" /> {label}
+      <CloudDownload className="h-4 w-4" /> {label}
     </Button>
   );
 }
@@ -339,7 +339,7 @@ export function DownloadFromUrlButton({
   url,
   label = 'Download',
   variant = 'default',
-  size = 'sm',
+  size = 'default',
   className,
   disabled,
 }: {
@@ -363,7 +363,7 @@ export function ExportCSVButton({
   getRows,
   label = 'Export CSV',
   variant = 'outline',
-  size = 'sm',
+  size = 'default',
   className,
   disabled,
 }: {
@@ -392,7 +392,7 @@ export function ExportFileButton({
   mime = 'text/plain;charset=utf-8;',
   label = 'Export',
   variant = 'outline',
-  size = 'sm',
+  size = 'default',
   className,
   disabled,
 }: {
@@ -416,7 +416,7 @@ export function ExportFileButton({
 
   return (
     <Button variant={variant} size={size} onClick={run} disabled={disabled} className={cn('gap-2', className)}>
-      <FileDown className="h-4 w-4" />
+      <CloudDownload className="h-4 w-4" />
       {label}
     </Button>
   );
@@ -467,7 +467,7 @@ export function LinkButton({
   href,
   label,
   variant = 'outline',
-  size = 'sm',
+  size = 'default',
   className,
   leftIcon = <ExternalLink className="h-4 w-4" />,
 }: {
@@ -492,7 +492,7 @@ export function ActionButton({
   onClick,
   label,
   variant = 'default',
-  size = 'sm',
+  size = 'default',
   className,
   leftIcon = <LinkIcon className="h-4 w-4" />,
   disabled,
