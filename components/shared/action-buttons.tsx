@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from '@/lib/utils/download';
-import { Check, ClipboardPaste, CloudDownload, Copy, Download, ExternalLink, Link as LinkIcon, RotateCcw, Save, UploadCloud } from 'lucide-react';
+import { Check, ClipboardPaste, CloudDownload, Copy, DownloadCloud, ExternalLink, Link as LinkIcon, RotateCcw, Save, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import toast from 'react-hot-toast';
@@ -381,7 +381,7 @@ export function ExportCSVButton({
   };
   return (
     <Button variant={variant} size={size} onClick={run} disabled={disabled} className={cn('gap-2', className)}>
-      <Download className="h-4 w-4" /> {label}
+      <DownloadCloud className="h-4 w-4" /> {label}
     </Button>
   );
 }
