@@ -8,7 +8,8 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ToolsData } from '@/data/tools';
 import type { LucideIcon } from 'lucide-react';
-import { ArrowRight, ExternalLink, GitBranch, Link2, Search, Star } from 'lucide-react';
+import { ArrowRight, GitBranch, Link2, Search, Star } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -153,15 +154,10 @@ export default function ToolsHeader() {
             </TooltipProvider>
 
             <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <a
-                href="https://github.com/shadcn-ui/ui/tree/main/apps/v4/app/(examples)/dashboard"
-                rel="noopener noreferrer"
-                target="_blank"
-                className="dark:text-foreground inline-flex items-center gap-1">
+              <Link href="https://github.com/tariqul420/tools-hub" rel="noopener noreferrer" target="_blank" className="dark:text-foreground inline-flex items-center gap-1">
                 <GitBranch className="h-4 w-4" />
                 GitHub
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
+              </Link>
             </Button>
           </div>
         </div>

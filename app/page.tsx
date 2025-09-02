@@ -8,7 +8,7 @@ import { ToolsData } from '@/data/tools';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
-// ------ helpers ------
+// helpers
 type ToolItem = {
   title: string;
   url: string;
@@ -20,7 +20,6 @@ function getPopularTools(max = 12): ToolItem[] {
   const flat: ToolItem[] = ToolsData.flatMap((cat) => cat.items ?? []);
   const popular = flat.filter((t) => t.popular);
   const pool = popular.length ? popular : flat;
-  // de-dup by url just in case
   const seen = new Set<string>();
   const unique = pool.filter((t) => (seen.has(t.url) ? false : (seen.add(t.url), true)));
   return unique.slice(0, max);
@@ -96,7 +95,7 @@ export default function HomePage() {
         ))}
       </section>
 
-      <Separator className="my-14" />
+      <Separator className="my-8" />
 
       {/* Footer */}
       <footer className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
@@ -110,6 +109,9 @@ export default function HomePage() {
           </Link>
           <Link href="/about" className="hover:underline">
             About
+          </Link>
+          <Link href="/sponsor" className="hover:underline">
+            Sponsor
           </Link>
         </nav>
       </footer>
