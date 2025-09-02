@@ -25,13 +25,6 @@ export const ToolsData = [
         description: 'Unshorten & inspect destination safely',
         popular: false,
       },
-      // ❗ Moved "Open Graph Preview" to SEO (fits better there)
-      // {
-      //   title: 'Open Graph Preview',
-      //   url: '/tools/url/og-preview',
-      //   description: 'Preview OG/Twitter cards for any URL',
-      //   popular: false,
-      // },
       {
         title: 'QR Code',
         url: '/tools/url/qr',

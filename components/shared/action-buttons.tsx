@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from '@/lib/utils/download';
-import { Check, ClipboardPaste, CloudDownload, Copy, DownloadCloud, ExternalLink, Link as LinkIcon, RotateCcw, Save, UploadCloud } from 'lucide-react';
+import { Check, ClipboardPaste, CloudDownload, Copy, DownloadCloud, ExternalLink, RotateCcw, Save, UploadCloud, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import toast from 'react-hot-toast';
@@ -494,7 +494,7 @@ export function ActionButton({
   variant = 'default',
   size = 'default',
   className,
-  leftIcon = <LinkIcon className="h-4 w-4" />,
+  Icon,
   disabled,
 }: {
   onClick: () => void | Promise<void>;
@@ -502,12 +502,12 @@ export function ActionButton({
   variant?: Variant;
   size?: Size;
   className?: string;
-  leftIcon?: React.ReactNode;
+  Icon?: LucideIcon;
   disabled?: boolean;
 }) {
   return (
     <Button onClick={onClick} disabled={disabled} variant={variant} size={size} className={cn('gap-2', className)}>
-      {leftIcon}
+      {Icon ? <Icon className="h-6 w-6" /> : null}
       {label}
     </Button>
   );

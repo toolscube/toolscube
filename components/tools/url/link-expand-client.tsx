@@ -129,12 +129,7 @@ export default function LinkExpandClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ActionButton
-              onClick={expand}
-              label={loading ? 'Expanding...' : 'Expand'}
-              leftIcon={loading ? <Search className="h-4 w-4 animate-pulse" /> : <Unlink2 className="h-4 w-4" />}
-              variant="default"
-            />
+            <ActionButton onClick={expand} label={loading ? 'Expanding...' : 'Expand'} Icon={loading ? Search : Unlink2} variant="default" />
           </>
         }
       />
