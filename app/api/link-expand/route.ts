@@ -72,19 +72,16 @@ export async function POST(req: Request) {
       };
       hops.push(hop);
 
-      // 3xx with Location => follow
       if (res.status >= 300 && res.status < 400 && hop.location) {
         current = new URL(hop.location, current).toString();
         finalUrl = current;
         continue;
       }
 
-      // reached final (non-redirect) or redirect without location
       finalUrl = current;
       break;
     }
 
-    // Try to fetch final for meta (best-effort)
     let meta: Meta | undefined;
     try {
       const finRes = await fetch(finalUrl, { redirect: "follow" });
@@ -114,7 +111,9 @@ export async function POST(req: Request) {
     };
 
     return NextResponse.json(payload, { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Failed to expand link";
+
     return NextResponse.json(
       {
         ok: false,
@@ -122,7 +121,7 @@ export async function POST(req: Request) {
         finalUrl: "",
         totalHops: 0,
         hops: [],
-        error: e?.message ?? "Failed to expand link",
+        error: message,
         startedAt: new Date().toISOString(),
         ms: 0,
       },

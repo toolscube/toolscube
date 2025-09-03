@@ -34,12 +34,13 @@ export default async function InterstitialPage({ params }: { params: { id: strin
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border bg-background/50 backdrop-blur">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  alt={`${hostname} favicon`}
-                  src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
-                  className="h-full w-full object-cover"
-                />
+                <picture>
+                  <img
+                    alt={`${hostname} favicon`}
+                    src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
+                    className="h-full w-full object-cover"
+                  />
+                </picture>
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">

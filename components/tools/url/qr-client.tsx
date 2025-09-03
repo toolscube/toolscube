@@ -149,18 +149,23 @@ export default function QRClient() {
   const format = useWatch({ control: controlForm.control, name: "format" });
   const wifiAuth = useWatch({ control: controlForm.control, name: "wifiAuth" });
 
-  React.useEffect(() => {
-    if (kind && kind !== form.kind) setForm((s) => ({ ...s, kind }));
-  }, [kind]);
+React.useEffect(() => {
+  if (kind) {
+    setForm((s) => (s.kind === kind ? s : { ...s, kind }));
+  }
+}, [kind]);
 
   React.useEffect(() => {
-    if (wifiAuth && wifiAuth !== form.wifiAuth) setForm((s) => ({ ...s, wifiAuth }));
+    if (wifiAuth) {
+      setForm((s) => (s.wifiAuth === wifiAuth ? s : { ...s, wifiAuth }));
+    }
   }, [wifiAuth]);
+
 
   /* Payload & export helpers */
   const payload = React.useMemo(() => buildPayload(form), [form]);
 
-  const { downloadPNG, downloadSVG, copyPngDataUrl, getPngDataUrl } = useQrExport({
+  const { downloadPNG, downloadSVG, getPngDataUrl } = useQrExport({
     value: payload || "Scan me",
     size,
     margin,

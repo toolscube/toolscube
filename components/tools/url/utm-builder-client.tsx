@@ -319,9 +319,7 @@ export default function UTMBuilderClient() {
     ];
     csvDownload("utm-batch.csv", rows);
   }
-
-  const canBuildSingle = baseUrl && isValidUrl(baseUrl) && !opts.batchMode;
-
+  
   return (
     <MotionGlassCard>
       {/* Header */}
@@ -663,7 +661,7 @@ export default function UTMBuilderClient() {
                   <div className="divide-y">
                     {resultBatch.map((r, i) => (
                       <div
-                        key={i}
+                        key={i as number}
                         className="p-3 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center"
                       >
                         <div className="min-w-0">
@@ -788,7 +786,7 @@ function HistoryList() {
     <div className={cn("divide-y", items.length ? "" : "p-3 text-sm text-muted-foreground")}>
       {!items.length && "No history yet."}
       {items.map((h, i) => (
-        <div key={i} className="p-3 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div key={i as number} className="p-3 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
           <div className="min-w-0">
             <div className="text-xs text-muted-foreground">{new Date(h.ts).toLocaleString()}</div>
             {Array.isArray(h.result) ? (

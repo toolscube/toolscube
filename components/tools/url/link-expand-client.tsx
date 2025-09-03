@@ -14,7 +14,6 @@ import { InputField } from "@/components/shared/form-fields/input-field";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
@@ -110,14 +109,16 @@ export default function LinkExpandClient() {
       const final: Result = { ...data, ms: Math.round(t1 - t0) };
       setResult(final);
       setHistory((h) => [final, ...h].slice(0, 20));
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Failed to expand link.";
+
       setResult({
         ok: false,
         inputUrl: clean,
         finalUrl: "",
         totalHops: 0,
         hops: [],
-        error: e?.message ?? "Failed to expand link.",
+        error: message,
         startedAt: new Date().toISOString(),
         ms: 0,
       });
@@ -161,8 +162,9 @@ export default function LinkExpandClient() {
             <ActionButton
               onClick={expand}
               label={loading ? "Expanding..." : "Expand"}
-              Icon={loading ? Search : Unlink2}
+              icon={loading ? Search : Unlink2}
               variant="default"
+              disabled={!url}
             />
           </>
         }
@@ -331,12 +333,13 @@ export default function LinkExpandClient() {
                   <div className="sm:col-span-2">
                     <Label>Preview Image</Label>
                     <div className="mt-2 rounded-lg border p-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={meta.ogImage}
-                        alt="Open Graph"
-                        className="max-h-64 w-full object-contain rounded-md"
-                      />
+                      <picture>
+                        <img
+                          src={meta.ogImage}
+                          alt="Open Graph"
+                          className="max-h-64 w-full object-contain rounded-md"
+                        />
+                      </picture>
                     </div>
                   </div>
                 )}
@@ -374,7 +377,7 @@ export default function LinkExpandClient() {
               <div className="divide-y">
                 {history.map((h, i) => (
                   <div
-                    key={i}
+                    key={i as number}
                     className="p-3 text-sm grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center"
                   >
                     <div className="min-w-0">
@@ -388,16 +391,8 @@ export default function LinkExpandClient() {
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end">
-                      <Button variant="outline" size="sm" onClick={() => setResult(h)}>
-                        View
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(h.finalUrl, "_blank", "noopener")}
-                      >
-                        Open
-                      </Button>
+                      <ActionButton label="View" size="sm" onClick={() => setResult(h)} />
+                      <LinkButton href={h.finalUrl} label="Open" size="sm" />
                     </div>
                   </div>
                 ))}

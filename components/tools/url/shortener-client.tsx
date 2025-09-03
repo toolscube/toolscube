@@ -33,7 +33,7 @@ import { useQrExport } from "@/hooks/use-qr-export";
 import { createShort } from "@/lib/actions/shortener.action";
 import { timeAgo } from "@/lib/utils/time-ago";
 
-/* ---------- Types & LS helpers ---------- */
+/* Types & LS helpers */
 
 type RecentItem = { slug: string; url: string; createdAt: number };
 const RECENT_KEY = "shortener:recent:v1";
@@ -52,8 +52,6 @@ function saveRecent(items: RecentItem[]) {
     localStorage.setItem(RECENT_KEY, JSON.stringify(items));
   } catch {}
 }
-
-/* Component */
 
 export default function ShortenerClient() {
   const [url, setUrl] = useState("");
@@ -322,7 +320,7 @@ export default function ShortenerClient() {
 
       <Separator className="my-6" />
 
-      {/* ===== Create link ===== */}
+      {/* Create link */}
       <GlassCard className="p-4">
         <div className="grid gap-2">
           <Label>Destination URL</Label>
@@ -354,7 +352,7 @@ export default function ShortenerClient() {
 
       <Separator className="my-6" />
 
-      {/* ===== Recent history (local) ===== */}
+      {/* Recent history (local) */}
       <div className="grid gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">Recent</div>
@@ -400,12 +398,13 @@ export default function ShortenerClient() {
                   {/* Left: favicon + URLs */}
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border bg-background/50">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        alt={`${host} favicon`}
-                        src={`https://www.google.com/s2/favicons?domain=${host}&sz=64`}
-                        className="h-full w-full object-cover"
-                      />
+                      <picture>
+                        <img
+                          alt={`${host} favicon`}
+                          src={`https://www.google.com/s2/favicons?domain=${host}&sz=64`}
+                          className="h-full w-full object-cover"
+                        />
+                      </picture>
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
