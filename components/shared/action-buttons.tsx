@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from '@/lib/utils/download';
-import { Check, ClipboardPaste, CloudDownload, Copy, DownloadCloud, ExternalLink, RotateCcw, Save, UploadCloud, type LucideIcon } from 'lucide-react';
+import { Check, ClipboardPaste, CloudDownload, Copy, DownloadCloud, ExternalLink, PiIcon, RotateCcw, Save, UploadCloud, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import toast from 'react-hot-toast';
@@ -17,8 +17,8 @@ export type CopyButtonProps = {
   getText: GetText;
   label?: string;
   copiedLabel?: string;
-  leftIcon?: React.ReactNode;
-  leftIconCopied?: React.ReactNode;
+  Icon?: LucideIcon;
+  IconCopied?: LucideIcon;
   variant?: Variant;
   size?: Size;
   className?: string;
@@ -37,8 +37,8 @@ export function CopyButton({
   getText,
   label = 'Copy',
   copiedLabel = 'Copied',
-  leftIcon,
-  leftIconCopied,
+  Icon,
+  IconCopied,
   variant = 'outline',
   size = 'default',
   className,
@@ -60,11 +60,14 @@ export function CopyButton({
     timerRef.current = null;
   };
 
-  React.useEffect(() => clearTimer, []);
+  React.useEffect(() => {
+    return () => clearTimer();
+  }, []);
 
   const run = async () => {
     try {
       const raw = typeof getText === 'function' ? await (getText as () => MaybePromise<string | null | undefined>)() : (getText as string);
+
       const val = (raw ?? '').toString();
       if (!val) return;
 
@@ -88,6 +91,8 @@ export function CopyButton({
     }
   };
 
+  const LeftIcon: LucideIcon = copied ? IconCopied ?? Check : Icon ?? Copy;
+
   return (
     <Button
       type="button"
@@ -100,7 +105,7 @@ export function CopyButton({
       aria-label={ariaLabel || (copied ? copiedLabel : label)}
       aria-live="polite"
       data-copied={copied ? '' : undefined}>
-      {copied ? leftIconCopied ?? <Check className="h-4 w-4" /> : leftIcon ?? <Copy className="h-4 w-4" />}
+      <LeftIcon className="h-4 w-4" />
       {copied ? copiedLabel : label}
     </Button>
   );
@@ -117,14 +122,13 @@ export type PasteButtonProps = {
   // ui
   label?: string;
   pastedLabel?: string;
-  leftIcon?: React.ReactNode;
-  leftIconPasted?: React.ReactNode;
+  Icon?: LucideIcon;
+  IconPasted?: LucideIcon;
   variant?: Variant;
   size?: Size;
   className?: string;
   disabled?: boolean;
 
-  // a11y (explicit only; no fallback to label => avoids CSS tooltip selectors)
   title?: string;
   'aria-label'?: string;
 
@@ -150,8 +154,8 @@ export function PasteButton({
   // ui
   label = 'Paste',
   pastedLabel = 'Pasted',
-  leftIcon,
-  leftIconPasted,
+  Icon,
+  IconPasted,
   variant = 'outline',
   size = 'default',
   className,
@@ -178,7 +182,10 @@ export function PasteButton({
     if (timerRef.current) window.clearTimeout(timerRef.current);
     timerRef.current = null;
   };
-  React.useEffect(() => clearTimer, []);
+
+  React.useEffect(() => {
+    return () => clearTimer();
+  }, []);
 
   const run = async () => {
     try {
@@ -194,15 +201,13 @@ export function PasteButton({
         return;
       }
 
-      let next = text;
-      if (mode === 'append') {
-        const prev = (getExisting?.() ?? '').toString();
-        next = prev ? prev + (smartNewline && !prev.endsWith('\n') ? '\n' : '') + text : text;
-      }
+      // compute next value
+      const prev = (getExisting?.() ?? '').toString();
+      const next = mode === 'replace' ? text : prev ? prev + (smartNewline && !prev.endsWith('\n') ? '\n' : '') + text : text;
 
-      setValue?.(mode === 'replace' ? text : next);
+      setValue?.(next);
       onText?.(text);
-      onPasted?.(mode === 'replace' ? text : next, text);
+      onPasted?.(next, text);
 
       if (withToast) toast.success(toastText);
       setDone(true);
@@ -214,6 +219,8 @@ export function PasteButton({
     }
   };
 
+  const LeftIcon: LucideIcon = done ? IconPasted ?? Check : Icon ?? ClipboardPaste;
+
   return (
     <Button
       type="button"
@@ -223,10 +230,10 @@ export function PasteButton({
       disabled={disabled}
       className={cn('gap-2', className)}
       title={title}
-      aria-label={ariaLabel ?? undefined}
+      aria-label={ariaLabel || (done ? pastedLabel : label)}
       aria-live="polite"
       data-state={done ? 'done' : 'idle'}>
-      {done ? leftIconPasted ?? <Check className="h-4 w-4" /> : leftIcon ?? <ClipboardPaste className="h-4 w-4" />}
+      <LeftIcon className="h-4 w-4" />
       {done ? pastedLabel : label}
     </Button>
   );
@@ -234,6 +241,7 @@ export function PasteButton({
 
 export function ResetButton({
   onClick,
+  Icon,
   label = 'Reset',
   variant = 'outline',
   size = 'default',
@@ -241,21 +249,25 @@ export function ResetButton({
   disabled,
 }: {
   onClick: () => void;
+  Icon?: LucideIcon;
   label?: string;
   variant?: Variant;
   size?: Size;
   className?: string;
   disabled?: boolean;
 }) {
+  const LeftIcon: LucideIcon = Icon ?? RotateCcw;
+
   return (
     <Button variant={variant} size={size} onClick={onClick} disabled={disabled} className={cn('gap-2', className)}>
-      <RotateCcw className="h-4 w-4" /> {label}
+      <LeftIcon className="h-4 w-4" /> {label}
     </Button>
   );
 }
 
 export function SaveButton({
   onClick,
+  Icon,
   label = 'Save',
   variant = 'outline',
   size = 'default',
@@ -263,15 +275,18 @@ export function SaveButton({
   disabled,
 }: {
   onClick: () => void | Promise<void>;
+  Icon?: LucideIcon;
   label?: string;
   variant?: Variant;
   size?: Size;
   className?: string;
   disabled?: boolean;
 }) {
+  const LeftIcon: LucideIcon = Icon ?? Save;
+
   return (
     <Button variant={variant} size={size} onClick={onClick} disabled={disabled} className={cn('gap-2', className)}>
-      <Save className="h-4 w-4" /> {label}
+      <LeftIcon className="h-4 w-4" /> {label}
     </Button>
   );
 }
@@ -314,6 +329,7 @@ export function DownloadBlobButton({
   size = 'default',
   className,
   disabled,
+  Icon,
 }: {
   filename: string;
   getBlob: () => MaybePromise<Blob>;
@@ -322,14 +338,18 @@ export function DownloadBlobButton({
   size?: Size;
   className?: string;
   disabled?: boolean;
+  Icon?: LucideIcon;
 }) {
   const run = async () => {
     const blob = await getBlob();
     downloadBlob(filename, blob);
   };
+
+  const LeftIcon: LucideIcon = Icon ?? CloudDownload;
+
   return (
     <Button onClick={run} disabled={disabled} variant={variant} size={size} className={cn('gap-2', className)}>
-      <CloudDownload className="h-4 w-4" /> {label}
+      <LeftIcon className="h-4 w-4" /> {label}
     </Button>
   );
 }
@@ -342,6 +362,7 @@ export function DownloadFromUrlButton({
   size = 'default',
   className,
   disabled,
+  Icon,
 }: {
   filename: string;
   url: string;
@@ -350,10 +371,13 @@ export function DownloadFromUrlButton({
   size?: Size;
   className?: string;
   disabled?: boolean;
+  Icon?: LucideIcon;
 }) {
+  const LeftIcon: LucideIcon = Icon ?? CloudDownload;
+
   return (
     <Button onClick={() => downloadFromUrl(filename, url)} disabled={disabled} variant={variant} size={size} className={cn('gap-2', className)}>
-      <CloudDownload className="h-4 w-4" /> {label}
+      <LeftIcon className="h-4 w-4" /> {label}
     </Button>
   );
 }
@@ -366,6 +390,7 @@ export function ExportCSVButton({
   size = 'default',
   className,
   disabled,
+  Icon,
 }: {
   filename: string;
   getRows: () => MaybePromise<(string | number)[][]>;
@@ -374,14 +399,18 @@ export function ExportCSVButton({
   size?: Size;
   className?: string;
   disabled?: boolean;
+  Icon?: LucideIcon;
 }) {
   const run = async () => {
     const rows = await getRows();
     csvDownload(filename, rows);
   };
+
+  const LeftIcon: LucideIcon = Icon ?? DownloadCloud;
+
   return (
     <Button variant={variant} size={size} onClick={run} disabled={disabled} className={cn('gap-2', className)}>
-      <DownloadCloud className="h-4 w-4" /> {label}
+      <LeftIcon className="h-4 w-4" /> {label}
     </Button>
   );
 }
@@ -395,6 +424,7 @@ export function ExportFileButton({
   size = 'default',
   className,
   disabled,
+  Icon,
 }: {
   filename: string;
   getContent: () => MaybePromise<string | Blob>;
@@ -404,6 +434,7 @@ export function ExportFileButton({
   size?: Size;
   className?: string;
   disabled?: boolean;
+  Icon?: LucideIcon;
 }) {
   const run = async () => {
     const content = await getContent();
@@ -414,9 +445,11 @@ export function ExportFileButton({
     }
   };
 
+  const LeftIcon: LucideIcon = Icon ?? CloudDownload;
+
   return (
     <Button variant={variant} size={size} onClick={run} disabled={disabled} className={cn('gap-2', className)}>
-      <CloudDownload className="h-4 w-4" />
+      <LeftIcon className="h-4 w-4" />
       {label}
     </Button>
   );
@@ -432,6 +465,7 @@ export function ImportFileButton({
   className,
   disabled,
   children,
+  Icon,
 }: {
   accept?: string;
   multiple?: boolean;
@@ -442,6 +476,7 @@ export function ImportFileButton({
   className?: string;
   disabled?: boolean;
   children?: React.ReactNode;
+  Icon?: LucideIcon;
 }) {
   const ref = React.useRef<HTMLInputElement | null>(null);
   const choose = () => ref.current?.click();
@@ -452,11 +487,13 @@ export function ImportFileButton({
     if (ref.current) ref.current.value = '';
   };
 
+  const LeftIcon: LucideIcon = Icon ?? UploadCloud;
+
   return (
     <>
       <input ref={ref} type="file" className="hidden" accept={accept} multiple={multiple} onChange={onChange} disabled={disabled} />
       <Button type="button" variant={variant} size={size} onClick={choose} disabled={disabled} className={cn('gap-2', className)}>
-        <UploadCloud className="h-4 w-4" />
+        <LeftIcon className="h-4 w-4" />
         {children ?? label}
       </Button>
     </>
@@ -469,19 +506,21 @@ export function LinkButton({
   variant = 'outline',
   size = 'default',
   className,
-  leftIcon = <ExternalLink className="h-4 w-4" />,
+  Icon,
 }: {
   href: string;
   label: string;
   variant?: Variant;
   size?: Size;
   className?: string;
-  leftIcon?: React.ReactNode;
+  Icon?: LucideIcon;
 }) {
+  const LeftIcon: LucideIcon = Icon ?? ExternalLink;
+
   return (
     <Button variant={variant} size={size} className={cn('gap-2', className)}>
       <Link href={href} target="_blank" rel="noreferrer" className="flex items-center gap-1">
-        {leftIcon}
+        <LeftIcon className="w-4 h-4" />
         {label}
       </Link>
     </Button>
@@ -497,17 +536,19 @@ export function ActionButton({
   Icon,
   disabled,
 }: {
-  onClick: () => void | Promise<void>;
-  label: string;
+  onClick?: () => void | Promise<void>;
+  label?: string;
   variant?: Variant;
   size?: Size;
   className?: string;
   Icon?: LucideIcon;
   disabled?: boolean;
 }) {
+  const LeftIcon: LucideIcon = Icon ?? PiIcon;
+
   return (
     <Button onClick={onClick} disabled={disabled} variant={variant} size={size} className={cn('gap-2', className)}>
-      {Icon ? <Icon className="h-6 w-6" /> : null}
+      <LeftIcon className="h-4 w-4" />
       {label}
     </Button>
   );
