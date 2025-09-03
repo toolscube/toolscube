@@ -348,17 +348,17 @@ export default function CaseConverterClient() {
           <div className="space-y-2">
             <Label className="text-sm">Clean-up Pipeline</Label>
             <div className="grid grid-cols-2 gap-2">
-              <SwitchRow label="Trim ends" checked={toggles.trim} onChange={(v) => setToggles((t) => ({ ...t, trim: v }))} />
-              <SwitchRow label="Collapse spaces/lines" checked={toggles.collapseSpaces} onChange={(v) => setToggles((t) => ({ ...t, collapseSpaces: v }))} />
-              <SwitchRow label="Remove punctuation" checked={toggles.removePunctuation} onChange={(v) => setToggles((t) => ({ ...t, removePunctuation: v }))} />
-              <SwitchRow label="Normalize quotes/dashes" checked={toggles.normalizeQuotes} onChange={(v) => setToggles((t) => ({ ...t, normalizeQuotes: v }))} />
-              <SwitchRow label="Remove diacritics" checked={toggles.removeDiacritics} onChange={(v) => setToggles((t) => ({ ...t, removeDiacritics: v }))} />
+              <SwitchRow label="Trim ends" checked={toggles.trim} onCheckedChange={(v) => setToggles((t) => ({ ...t, trim: v }))} />
+              <SwitchRow label="Collapse spaces/lines" checked={toggles.collapseSpaces} onCheckedChange={(v) => setToggles((t) => ({ ...t, collapseSpaces: v }))} />
+              <SwitchRow label="Remove punctuation" checked={toggles.removePunctuation} onCheckedChange={(v) => setToggles((t) => ({ ...t, removePunctuation: v }))} />
+              <SwitchRow label="Normalize quotes/dashes" checked={toggles.normalizeQuotes} onCheckedChange={(v) => setToggles((t) => ({ ...t, normalizeQuotes: v }))} />
+              <SwitchRow label="Remove diacritics" checked={toggles.removeDiacritics} onCheckedChange={(v) => setToggles((t) => ({ ...t, removeDiacritics: v }))} />
             </div>
           </div>
 
           {/* Extras */}
           <div className="space-y-3">
-            <SwitchRow label="Live mode" hint="Apply changes as you type." checked={live} onChange={setLive} />
+            <SwitchRow label="Live mode" hint="Apply changes as you type." checked={live} onCheckedChange={setLive} />
 
             <InputField
               label="Replace whitespace with"

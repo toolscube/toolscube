@@ -320,11 +320,11 @@ export default function TextCleanerClient() {
                 <FileText className="h-4 w-4" /> Whitespace & Lines
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SwitchRow label="Trim ends" checked={trimEnds} onChange={setTrimEnds} />
-                <SwitchRow label="Collapse spaces" checked={doCollapseSpaces} onChange={setDoCollapseSpaces} />
-                <SwitchRow label="Collapse newlines" checked={doCollapseNewlines} onChange={setDoCollapseNewlines} />
-                <SwitchRow label="Trim each line" checked={doTrimEachLine} onChange={setDoTrimEachLine} />
-                <SwitchRow label="Remove empty lines" checked={doRemoveEmptyLines} onChange={setDoRemoveEmptyLines} />
+                <SwitchRow label="Trim ends" checked={trimEnds} onCheckedChange={setTrimEnds} />
+                <SwitchRow label="Collapse spaces" checked={doCollapseSpaces} onCheckedChange={setDoCollapseSpaces} />
+                <SwitchRow label="Collapse newlines" checked={doCollapseNewlines} onCheckedChange={setDoCollapseNewlines} />
+                <SwitchRow label="Trim each line" checked={doTrimEachLine} onCheckedChange={setDoTrimEachLine} />
+                <SwitchRow label="Remove empty lines" checked={doRemoveEmptyLines} onCheckedChange={setDoRemoveEmptyLines} />
               </div>
             </div>
 
@@ -333,15 +333,15 @@ export default function TextCleanerClient() {
                 <Type className="h-4 w-4" /> Text Normalization
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SwitchRow label="straight “ ” or —" checked={doSmartToStraight} onChange={setDoSmartToStraight} />
-                <SwitchRow label="Strip HTML tags" checked={doStripHtml} onChange={setDoStripHtml} />
-                <SwitchRow label="Decode HTML entities" checked={doDecodeEntities} onChange={setDoDecodeEntities} />
-                <SwitchRow label="Remove URLs" checked={doRemoveUrls} onChange={setDoRemoveUrls} />
-                <SwitchRow label="Remove emails" checked={doRemoveEmails} onChange={setDoRemoveEmails} />
-                <SwitchRow label="Remove emojis" checked={doRemoveEmojis} onChange={setDoRemoveEmojis} />
-                <SwitchRow label="Remove punctuation" checked={doRemovePunct} onChange={setDoRemovePunct} />
-                <SwitchRow label="Remove diacritics" checked={doRemoveDiacritics} onChange={setDoRemoveDiacritics} />
-                <SwitchRow label="ASCII only" checked={doAsciiOnly} onChange={setDoAsciiOnly} />
+                <SwitchRow label="straight “ ” or —" checked={doSmartToStraight} onCheckedChange={setDoSmartToStraight} />
+                <SwitchRow label="Strip HTML tags" checked={doStripHtml} onCheckedChange={setDoStripHtml} />
+                <SwitchRow label="Decode HTML entities" checked={doDecodeEntities} onCheckedChange={setDoDecodeEntities} />
+                <SwitchRow label="Remove URLs" checked={doRemoveUrls} onCheckedChange={setDoRemoveUrls} />
+                <SwitchRow label="Remove emails" checked={doRemoveEmails} onCheckedChange={setDoRemoveEmails} />
+                <SwitchRow label="Remove emojis" checked={doRemoveEmojis} onCheckedChange={setDoRemoveEmojis} />
+                <SwitchRow label="Remove punctuation" checked={doRemovePunct} onCheckedChange={setDoRemovePunct} />
+                <SwitchRow label="Remove diacritics" checked={doRemoveDiacritics} onCheckedChange={setDoRemoveDiacritics} />
+                <SwitchRow label="ASCII only" checked={doAsciiOnly} onCheckedChange={setDoAsciiOnly} />
               </div>
             </div>
           </div>

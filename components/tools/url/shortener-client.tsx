@@ -119,7 +119,7 @@ export default function ShortenerClient() {
         icon={Link2}
         title="URL Shortener"
         description="Shorten links with custom slugs & analytics"
-        actions={<CopyButton getText={() => (typeof window !== 'undefined' ? window.location.href : '')} label="Copy Page" />}
+        actions={<CopyButton getText={() => (typeof window !== 'undefined' ? window.location.href : '')} label="Copy Link" />}
       />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_auto]">

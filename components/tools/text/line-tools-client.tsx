@@ -232,10 +232,10 @@ export default function LineToolsClient() {
           <TextareaField textareaClassName="min-h-[220px]" placeholder={`orange\napple\nBanana\nbanana  \n  grape\n\npear`} value={text} onValueChange={setText} />
 
           <div className="grid gap-3 sm:grid-cols-4">
-            <SwitchRow label="Trim each line" hint="Remove leading & trailing spaces." checked={trimEach} onChange={(v) => setTrimEach(Boolean(v))} />
-            <SwitchRow label="Remove empty lines" hint="Ignore blank lines in processing." checked={removeEmpty} onChange={(v) => setRemoveEmpty(Boolean(v))} />
-            <SwitchRow label="Case sensitive" hint="Affects sort & dedupe." checked={caseSensitive} onChange={(v) => setCaseSensitive(Boolean(v))} />
-            <SwitchRow label="Keep order on dedupe" hint="Preserve first occurrence." checked={keepOrder} onChange={(v) => setKeepOrder(Boolean(v))} />
+            <SwitchRow label="Trim each line" hint="Remove leading & trailing spaces." checked={trimEach} onCheckedChange={(v) => setTrimEach(Boolean(v))} />
+            <SwitchRow label="Remove empty lines" hint="Ignore blank lines in processing." checked={removeEmpty} onCheckedChange={(v) => setRemoveEmpty(Boolean(v))} />
+            <SwitchRow label="Case sensitive" hint="Affects sort & dedupe." checked={caseSensitive} onCheckedChange={(v) => setCaseSensitive(Boolean(v))} />
+            <SwitchRow label="Keep order on dedupe" hint="Preserve first occurrence." checked={keepOrder} onCheckedChange={(v) => setKeepOrder(Boolean(v))} />
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs text-muted-foreground">
@@ -285,8 +285,8 @@ export default function LineToolsClient() {
               <InputField label="Find" value={find} onChange={(e) => setFind(e.target.value)} placeholder={useRegex ? 'regex e.g. ^foo' : 'text'} />
               <InputField label="Replace" value={replace} onChange={(e) => setReplace(e.target.value)} placeholder="with..." />
               <div className="flex items-center gap-4">
-                <SwitchRow label="Regex" checked={useRegex} onChange={(v) => setUseRegex(Boolean(v))} />
-                <SwitchRow label="Whole word" checked={wholeWord} onChange={(v) => setWholeWord(Boolean(v))} disabled={useRegex} />
+                <SwitchRow label="Regex" checked={useRegex} onCheckedChange={(v) => setUseRegex(Boolean(v))} />
+                <SwitchRow label="Whole word" checked={wholeWord} onCheckedChange={(v) => setWholeWord(Boolean(v))} disabled={useRegex} />
               </div>
               <div className="flex justify-end">
                 <Button variant="outline" className="gap-2" onClick={actionFindReplace} disabled={!find}>
@@ -304,7 +304,7 @@ export default function LineToolsClient() {
             <div className="p-3 grid gap-2 sm:grid-cols-2">
               <InputField label="Query" value={filterQuery} onChange={(e) => setFilterQuery(e.target.value)} placeholder={filterRegex ? 'regex e.g. \\d{3}' : 'contains...'} />
               <div className="grid grid-cols-2 gap-2 items-end">
-                <SwitchRow label="Regex" checked={filterRegex} onChange={(v) => setFilterRegex(Boolean(v))} />
+                <SwitchRow label="Regex" checked={filterRegex} onCheckedChange={(v) => setFilterRegex(Boolean(v))} />
                 <SelectField
                   options={[
                     { value: 'keep', label: 'Keep matches' },
@@ -332,7 +332,7 @@ export default function LineToolsClient() {
               <InputField label="Prefix" value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="e.g. - " />
               <InputField label="Suffix" value={suffix} onChange={(e) => setSuffix(e.target.value)} placeholder="e.g. ;" />
               <div className="grid grid-cols-2 gap-2 items-end">
-                <SwitchRow label="Enable numbering" checked={numbering} onChange={(v) => setNumbering(Boolean(v))} />
+                <SwitchRow label="Enable numbering" checked={numbering} onCheckedChange={(v) => setNumbering(Boolean(v))} />
                 <InputField label="Start number" type="number" value={String(startNum)} onChange={(e) => setStartNum(Number(e.target.value) || 1)} disabled={!numbering} />
               </div>
               <InputField label="Number separator" value={numSep} onChange={(e) => setNumSep(e.target.value)} disabled={!numbering} />

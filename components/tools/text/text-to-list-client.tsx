@@ -179,10 +179,10 @@ pear`}
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
-            <SwitchRow label="Trim items" hint="Remove leading/trailing whitespace." checked={trimItems} onChange={setTrimItems} />
-            <SwitchRow label="Collapse spaces" hint="Convert multiple spaces/tabs to single space." checked={collapseSpaces} onChange={setCollapseSpaces} />
-            <SwitchRow label="Remove empty" hint="Drop blank lines or empty segments." checked={removeEmpty} onChange={setRemoveEmpty} />
-            <SwitchRow label="Dedupe" hint="Keep the first occurrence only." checked={dedupe} onChange={setDedupe} />
+            <SwitchRow label="Trim items" hint="Remove leading/trailing whitespace." checked={trimItems} onCheckedChange={setTrimItems} />
+            <SwitchRow label="Collapse spaces" hint="Convert multiple spaces/tabs to single space." checked={collapseSpaces} onCheckedChange={setCollapseSpaces} />
+            <SwitchRow label="Remove empty" hint="Drop blank lines or empty segments." checked={removeEmpty} onCheckedChange={setRemoveEmpty} />
+            <SwitchRow label="Dedupe" hint="Keep the first occurrence only." checked={dedupe} onCheckedChange={setDedupe} />
           </div>
 
           <div className="space-y-4">
@@ -217,7 +217,7 @@ pear`}
               <InputField name="suffix" label="Suffix" value={suffix} onChange={(e) => setSuffix(e.target.value)} placeholder="e.g. ;" />
             </div>
 
-            <SwitchRow label="Numbering" hint="Add incremental numbers to each item." checked={numbering} onChange={setNumbering} />
+            <SwitchRow label="Numbering" hint="Add incremental numbers to each item." checked={numbering} onCheckedChange={setNumbering} />
 
             {numbering && (
               <div className="grid gap-3 sm:grid-cols-3">

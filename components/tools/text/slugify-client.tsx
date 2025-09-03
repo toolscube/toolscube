@@ -256,15 +256,15 @@ export default function SlugifyPage() {
 
             <InputField id="maxLen" label="Max length (0 = off)" type="number" min={0} max={200} value={maxLen || ''} onChange={(e) => setMaxLen(Math.max(0, Number(e.target.value) || 0))} />
 
-            <SwitchRow label="Live mode" hint="Apply changes as you type." checked={live} onChange={setLive} />
+            <SwitchRow label="Live mode" hint="Apply changes as you type." checked={live} onCheckedChange={setLive} />
 
             <div className="grid grid-cols-2 gap-3">
-              <SwitchRow label="Lowercase" checked={lowercase} onChange={setLowercase} />
-              <SwitchRow label="Trim edges" checked={trim} onChange={setTrim} />
-              <SwitchRow label="Transliterate" hint="Remove accents/diacritics" checked={transliterate} onChange={setTransliterate} />
-              <SwitchRow label="Collapse repeats" checked={collapse} onChange={setCollapse} />
-              <SwitchRow label="Keep numbers" checked={keepNumbers} onChange={setKeepNumbers} />
-              <SwitchRow label="Preserve _" checked={preserveUnderscore} onChange={setPreserveUnderscore} />
+              <SwitchRow label="Lowercase" checked={lowercase} onCheckedChange={setLowercase} />
+              <SwitchRow label="Trim edges" checked={trim} onCheckedChange={setTrim} />
+              <SwitchRow label="Transliterate" hint="Remove accents/diacritics" checked={transliterate} onCheckedChange={setTransliterate} />
+              <SwitchRow label="Collapse repeats" checked={collapse} onCheckedChange={setCollapse} />
+              <SwitchRow label="Keep numbers" checked={keepNumbers} onCheckedChange={setKeepNumbers} />
+              <SwitchRow label="Preserve _" checked={preserveUnderscore} onCheckedChange={setPreserveUnderscore} />
             </div>
           </div>
         </GlassCard>

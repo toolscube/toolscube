@@ -262,8 +262,8 @@ export default function WordCounterClient() {
           <CardDescription>Live cleanup & density options.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <SwitchRow label="Live clean-up" hint="Collapse extra spaces and blank lines automatically." checked={liveClean} onChange={setLiveClean} />
-          <SwitchRow label="Exclude stopwords" hint="Ignore common words in keyword density." checked={excludeStopwords} onChange={setExcludeStopwords} />
+          <SwitchRow label="Live clean-up" hint="Collapse extra spaces and blank lines automatically." checked={liveClean} onCheckedChange={setLiveClean} />
+          <SwitchRow label="Exclude stopwords" hint="Ignore common words in keyword density." checked={excludeStopwords} onCheckedChange={setExcludeStopwords} />
         </CardContent>
       </GlassCard>
 
