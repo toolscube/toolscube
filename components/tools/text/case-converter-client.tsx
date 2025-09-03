@@ -9,7 +9,7 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
-import { CopyButton, ExportTextButton, ImportFileButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportTextButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
 import ToolPageHeader from '@/components/shared/tool-page-header';
 
 import { InputField } from '@/components/shared/form-fields/input-field';
@@ -383,13 +383,10 @@ export default function CaseConverterClient() {
             <div className="flex flex-wrap gap-2">
               <PasteButton variant="outline" size="sm" className="gap-2" label="Paste" pastedLabel="Pasted" smartNewline getExisting={() => source} setValue={setSource} />
 
-              <ImportFileButton
+              <InputField
                 accept=".txt,text/plain"
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                label="Import"
-                onFiles={async (files) => {
+                type="file"
+                onFilesChange={async (files) => {
                   const f = files?.[0];
                   if (!f) return;
                   const text = await f.text();

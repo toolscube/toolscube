@@ -1,6 +1,6 @@
 'use client';
 
-import { CopyButton, ExportTextButton, ImportFileButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportTextButton, ResetButton } from '@/components/shared/action-buttons';
 import { InputField } from '@/components/shared/form-fields/input-field';
 import SelectField from '@/components/shared/form-fields/select-field';
 import SwitchRow from '@/components/shared/form-fields/switch-row';
@@ -203,12 +203,10 @@ export default function LineToolsClient() {
         description="Sort, dedupe, trim, find & replace, filter, shuffle, and format lines fast."
         actions={
           <>
-            <ImportFileButton
+            <InputField
               accept=".txt,text/plain"
-              variant="outline"
-              className="gap-2"
-              label="Import"
-              onFiles={async (files) => {
+              type="file"
+              onFilesChange={async (files) => {
                 const f = files?.[0];
                 if (!f) return;
                 const txt = await f.text();

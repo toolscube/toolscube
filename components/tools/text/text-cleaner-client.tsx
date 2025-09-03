@@ -1,6 +1,6 @@
 'use client';
 
-import { CopyButton, ExportTextButton, ImportFileButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportTextButton, ResetButton } from '@/components/shared/action-buttons';
 import ToolPageHeader from '@/components/shared/tool-page-header';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/glass-card';
@@ -10,6 +10,7 @@ import SelectField from '@/components/shared/form-fields/select-field';
 import SwitchRow from '@/components/shared/form-fields/switch-row';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 
+import { InputField } from '@/components/shared/form-fields/input-field';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eraser, FileText, Sparkles, Type } from 'lucide-react';
@@ -270,11 +271,10 @@ export default function TextCleanerClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ImportFileButton
+            <InputField
+              type="file"
               accept=".txt,text/plain"
-              className="gap-2"
-              label="Import"
-              onFiles={async (files) => {
+              onFilesChange={async (files) => {
                 const f = files?.[0];
                 if (!f) return;
                 setInput(await f.text());

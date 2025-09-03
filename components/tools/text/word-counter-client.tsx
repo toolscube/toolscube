@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 
-import { CopyButton, ExportTextButton, ImportFileButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportTextButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
+import { InputField } from '@/components/shared/form-fields/input-field';
 import SwitchRow from '@/components/shared/form-fields/switch-row';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
@@ -277,13 +278,10 @@ export default function WordCounterClient() {
             <div className="flex flex-wrap gap-2">
               <PasteButton variant="outline" size="sm" className="gap-2" label="Paste" pastedLabel="Pasted" smartNewline getExisting={() => text} setValue={setText} />
 
-              <ImportFileButton
+              <InputField
                 accept=".txt,text/plain"
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                label="Import"
-                onFiles={async (files) => {
+                type="file"
+                onFilesChange={async (files) => {
                   const f = files?.[0];
                   if (!f) return;
                   const txt = await f.text();

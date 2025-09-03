@@ -1,6 +1,6 @@
 'use client';
 
-import { CopyButton, ExportFileButton, ImportFileButton, ResetButton, SaveButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportFileButton, ResetButton, SaveButton } from '@/components/shared/action-buttons';
 import { InputField } from '@/components/shared/form-fields/input-field';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
@@ -303,7 +303,7 @@ export default function UTMBuilderClient() {
           <>
             <ResetButton onClick={resetAll} />
             <SaveButton onClick={savePreset} label="Save Preset" />
-            <ImportFileButton accept="application/json" onFiles={importPresetsFromFiles} label="Import" />
+            <InputField type="file" accept="application/json" onFilesChange={importPresetsFromFiles} />
             <ExportFileButton filename="utm-presets.json" label="Export" variant="default" mime="application/json;charset=utf-8;" getContent={() => JSON.stringify(presets, null, 2)} />
           </>
         }

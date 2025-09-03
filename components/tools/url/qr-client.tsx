@@ -17,7 +17,7 @@ import SelectField from '@/components/shared/form-fields/select-field';
 import { QRCodeBox } from '@/components/shared/qr-code';
 import { useQrExport } from '@/hooks/use-qr-export';
 
-import { ActionButton, CopyButton, ImportFileButton, ResetButton } from '@/components/shared/action-buttons';
+import { ActionButton, CopyButton, ResetButton } from '@/components/shared/action-buttons';
 import { ColorField } from '@/components/shared/color-field';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
@@ -201,7 +201,7 @@ export default function QRClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ActionButton variant="default" Icon={Key} onClick={runGenerate} label="Generate" />
+            <ActionButton variant="default" icon={Key} onClick={runGenerate} label="Generate" />
           </>
         }
       />
@@ -299,11 +299,9 @@ export default function QRClient() {
                 <div className="space-y-2">
                   <Label htmlFor="logo-upload">Upload Logo (PNG/SVG)</Label>
                   <div className="flex gap-2">
-                    <ImportFileButton
+                    <InputField
                       accept="image/*"
-                      variant="outline"
-                      size="sm"
-                      onFiles={async (files) => {
+                      onFilesChange={async (files) => {
                         const f = files?.[0];
                         if (!f) return;
                         const reader = new FileReader();
@@ -314,11 +312,7 @@ export default function QRClient() {
                         reader.readAsDataURL(f);
                       }}
                     />
-
-                    <Button variant="outline" onClick={() => setLogoDataUrl(null)} disabled={!logoDataUrl}>
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Clear
-                    </Button>
+                    <ResetButton onClick={() => setLogoDataUrl(null)} disabled={!logoDataUrl} icon={RefreshCw} label="Clear" />
                   </div>
                 </div>
                 <SettingSlider label={`Logo Size: ${logoSizePct}%`} min={10} max={40} step={1} value={[logoSizePct]} onValueChange={(v) => setLogoSizePct(v[0])} disabled={!logoEnabled} />
