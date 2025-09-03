@@ -46,13 +46,14 @@ type BaseProps = {
   allowClear?: boolean;
   clearLabel?: string;
 
-  /** Callbacks / value control */
+  /** Controlled / value control */
   value?: string | number | undefined;
   onValueChange?: (value: string | number | undefined) => void;
 
-  /** If provided in standalone mode */
+  /** Standalone default */
   defaultValue?: string | number | undefined;
 
+  /** Convert string to number on change */
   valueAsNumber?: boolean;
 
   /** Error text for standalone mode */
@@ -67,8 +68,7 @@ export type SelectFieldProps<
   name?: TName;
 };
 
-/** Implementation */
-
+/** Helpers */
 const CLEAR_TOKEN = "__CLEAR__";
 
 function normalizeOut(
@@ -86,6 +86,7 @@ function normalizeIn(v: string | number | undefined | null): string {
   return String(v);
 }
 
+/** Component */
 export default function SelectField<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
@@ -112,12 +113,15 @@ export default function SelectField<
   defaultValue,
   error,
 }: SelectFieldProps<TFieldValues, TName>) {
+  // Hooks must be top-level
   const autoId = React.useId();
   const triggerId = id ?? autoId;
 
-  /** Standalone branch */
-  if (!name) {
-    const [internal, setInternal] = React.useState<string | number | undefined>(defaultValue);
+  // Local state exists regardless of branch, only used in standalone
+  const [internal, setInternal] = React.useState<string | number | undefined>(defaultValue);
+
+  // Renderers
+  const renderStandalone = () => {
     const current = externalValue !== undefined ? externalValue : internal;
     const selectValue = normalizeIn(current);
 
@@ -132,13 +136,14 @@ export default function SelectField<
         {label ? (
           <label
             htmlFor={triggerId}
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-2"
+            className="mb-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             {label}
             {required && <span className="ml-0.5 text-destructive">*</span>}
           </label>
         ) : null}
-        <div className="dark:bg-transparent overflow-hidden rounded-md">
+
+        <div className="overflow-hidden rounded-md dark:bg-transparent">
           <Select value={selectValue} onValueChange={handleChange} disabled={disabled}>
             <SelectTrigger id={triggerId} className={cn("w-full", triggerClassName)}>
               <SelectValue placeholder={placeholder} />
@@ -160,20 +165,20 @@ export default function SelectField<
         </div>
 
         {description ? <p className="text-[0.8rem] text-muted-foreground">{description}</p> : null}
-
         {error ? <p className="text-[0.8rem] font-medium text-destructive">{error}</p> : null}
       </div>
     );
-  }
+  };
 
-  /** react-hook-form branch */
-  return (
+  const renderFormControlled = () => (
     <FormField
-      name={name}
+      name={name as TName}
       render={({ field }) => {
         const effectiveDisabled = disabled || field.disabled;
-        const current = externalValue !== undefined ? externalValue : (field.value ?? undefined);
-
+        const current =
+          externalValue !== undefined
+            ? externalValue
+            : (field.value as string | number | undefined);
         const selectValue = normalizeIn(current);
 
         const handleChange = (raw: string) => {
@@ -192,7 +197,7 @@ export default function SelectField<
             ) : null}
 
             <FormControl>
-              <div className="dark:bg-transparent overflow-hidden rounded-md">
+              <div className="overflow-hidden rounded-md dark:bg-transparent">
                 <Select
                   value={selectValue}
                   onValueChange={handleChange}
@@ -225,4 +230,7 @@ export default function SelectField<
       }}
     />
   );
+
+  const content = name ? renderFormControlled() : renderStandalone();
+  return content;
 }

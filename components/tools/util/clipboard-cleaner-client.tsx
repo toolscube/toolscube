@@ -1,7 +1,7 @@
 "use client";
 
 import { ClipboardType, Eraser, Wand2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CopyButton,
   ExportTextButton,
@@ -121,18 +121,6 @@ function cleanText(input: string, opts: CleanOptions) {
   return s;
 }
 
-function download(filename: string, content: string, mime = "text/plain") {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
 const DEFAULT_OPTS: CleanOptions = {
   trim: true,
   collapseSpaces: true,
@@ -153,7 +141,6 @@ export default function ClipboardCleanerClient() {
   const [raw, setRaw] = useState("");
   const [opts, setOpts] = useState<CleanOptions>(DEFAULT_OPTS);
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const rawRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     try {
@@ -184,15 +171,7 @@ export default function ClipboardCleanerClient() {
 
   const cleaned = useMemo(() => cleanText(raw, opts), [raw, opts]);
 
-  const paste = async () => {
-    try {
-      if (!navigator.clipboard?.readText) throw new Error("CLIP");
-      const t = await navigator.clipboard.readText();
-      setRaw(opts.autoCleanOnPaste ? cleanText(t, opts) : t);
-    } catch {
-      rawRef.current?.focus();
-    }
-  };
+
 
   const pushHistory = (src: string, out: string) => {
     if (!out.trim()) return;
@@ -207,13 +186,6 @@ export default function ClipboardCleanerClient() {
     setRaw("");
     setOpts(DEFAULT_OPTS);
   };
-
-  const importFile = async (f: File) => {
-    const txt = await f.text();
-    setRaw(txt);
-  };
-
-  const exportTxt = () => download("cleaned.txt", cleaned, "text/plain");
 
   // stats
   const stats = useMemo(() => {

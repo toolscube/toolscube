@@ -1,8 +1,9 @@
 "use client";
 
 import { CloudUpload, type LucideIcon } from "lucide-react";
+import type { ChangeEvent, HTMLInputTypeAttribute } from "react";
 import * as React from "react";
-import { useFormContext } from "react-hook-form";
+import type { FieldPath, FieldValues } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ type BaseProps = Omit<
   requiredMark?: boolean;
   hint?: string;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
-  type?: React.HTMLInputTypeAttribute;
+  type?: HTMLInputTypeAttribute;
 
   parseNumber?: boolean;
   preventWheelChange?: boolean;
@@ -47,7 +48,18 @@ type BaseProps = Omit<
   fileButtonSize?: ButtonSize;
 };
 
-export function InputField({
+export type InputFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> = BaseProps & {
+  /** If omitted, runs in standalone mode */
+  name?: TName;
+};
+
+export function InputField<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+>({
   name,
   icon: Icon,
   label,
@@ -77,50 +89,61 @@ export function InputField({
   fileButtonSize = "default",
 
   ...rest
-}: BaseProps) {
+}: InputFieldProps<TFieldValues, TName>) {
+  // ── Derived flags
   const effectiveDisabled = disabled ?? disable ?? false;
   const isFile = type === "file";
   const shouldParseNumber = parseNumber ?? type === "number";
   const shouldPreventWheel = preventWheelChange ?? shouldParseNumber;
-
-  // RHF context (optional)
-  let rhf: ReturnType<typeof useFormContext> | null = null;
-  try {
-    rhf = useFormContext();
-  } catch {
-    rhf = null;
-  }
-
   const labelContent = labelNode ?? label;
 
-  // File helpers (both modes)
-  const [hasSelection, setHasSelection] = React.useState(false);
+  // ── Hooks (must be top-level, unconditional)
   const hiddenFileRef = React.useRef<HTMLInputElement | null>(null);
-  const chooseFile = () => hiddenFileRef.current?.click();
+  const chooseFile = React.useCallback(() => hiddenFileRef.current?.click(), []);
+  const [internal, setInternal] = React.useState<string | number | undefined>(defaultValue);
 
-  const LeftFileIcon: LucideIcon = FileIcon ?? CloudUpload;
+  // Standalone vs RHF
+  const inFormMode = Boolean(name);
 
-  /* RHF MODE */
-  if (name && rhf) {
+  // ── Helpers
+  const toNumberIfNeeded = (raw: string): string | number => {
+    if (!shouldParseNumber) return raw;
+    return raw === "" ? "" : Number(raw);
+  };
+
+  if (inFormMode) {
+    // ── RHF MODE
     return (
       <FormField
-        name={name}
+        name={name as TName}
         render={({ field }) => {
-          const inputId = id ?? name;
-          const { value: fv, onChange: rhfOnChange, ref, ...restField } = field;
+          const inputId = id ?? (name as string);
+          const { value: fieldValue, onChange: rhfOnChange, ref: fieldRef, ...restField } = field;
 
-          const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+          const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
             const fl = e.target.files;
-            setHasSelection(!!fl && fl.length > 0);
-            rhfOnChange(fl as any);
+            rhfOnChange(fl);
             onFilesChange?.(fl ? Array.from(fl) : null);
           };
 
-          const handleChangeNonFile: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+          const handleChangeNonFile = (e: ChangeEvent<HTMLInputElement>) => {
             const raw = e.target.value;
-            const val = shouldParseNumber ? (raw === "" ? "" : Number(raw)) : raw;
-            rhfOnChange(val as any);
+            const val = toNumberIfNeeded(raw);
+            rhfOnChange(val);
             onChange?.(e);
+          };
+
+          // assign both RHF ref and our local ref
+          const assignRefs = (el: HTMLInputElement | null) => {
+            hiddenFileRef.current = el;
+            if (typeof fieldRef === "function") {
+              fieldRef(el);
+            } else if (
+              fieldRef &&
+              "current" in (fieldRef as React.MutableRefObject<HTMLInputElement | null>)
+            ) {
+              (fieldRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
+            }
           };
 
           return (
@@ -138,10 +161,7 @@ export function InputField({
                   <div className="flex items-center gap-2">
                     <input
                       id={inputId}
-                      ref={(el) => {
-                        hiddenFileRef.current = el;
-                        (ref as (instance: HTMLInputElement | null) => void | undefined)?.(el);
-                      }}
+                      ref={assignRefs}
                       type="file"
                       className="hidden"
                       disabled={effectiveDisabled || field.disabled}
@@ -158,7 +178,7 @@ export function InputField({
                       disabled={effectiveDisabled || field.disabled}
                       className="gap-2"
                     >
-                      <LeftFileIcon className="h-4 w-4" />
+                      {(FileIcon ?? CloudUpload)({ className: "h-4 w-4" })}
                       {fileButtonLabel}
                     </Button>
                   </div>
@@ -169,7 +189,7 @@ export function InputField({
                       type={type}
                       placeholder={placeholder}
                       disabled={effectiveDisabled || field.disabled}
-                      value={fv ?? ""}
+                      value={fieldValue ?? ""}
                       onChange={handleChangeNonFile}
                       onWheel={
                         shouldPreventWheel
@@ -177,7 +197,7 @@ export function InputField({
                           : undefined
                       }
                       className={inputClassName}
-                      ref={ref}
+                      ref={fieldRef}
                       {...restField}
                       {...rest}
                     />
@@ -194,9 +214,8 @@ export function InputField({
     );
   }
 
-  /** STANDALONE MODE */
+  // ── STANDALONE MODE
   const isControlled = value !== undefined;
-  const [internal, setInternal] = React.useState<string | number | undefined>(defaultValue);
   const currentValue = isControlled ? value : internal;
 
   const inputId =
@@ -205,14 +224,13 @@ export function InputField({
 
   const handleStandaloneChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const raw = e.target.value;
-    const val = shouldParseNumber ? (raw === "" ? "" : Number(raw)) : raw;
-    if (!isControlled) setInternal(val as any);
+    const val = toNumberIfNeeded(raw);
+    if (!isControlled) setInternal(val);
     onChange?.(e);
   };
 
   const handleStandaloneFileChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const fl = e.target.files;
-    setHasSelection(!!fl && fl.length > 0);
     onFilesChange?.(fl ? Array.from(fl) : null);
   };
 
@@ -239,7 +257,6 @@ export function InputField({
             onChange={handleStandaloneFileChange}
             {...rest}
           />
-
           <Button
             type="button"
             variant={fileButtonVariant}
@@ -248,18 +265,18 @@ export function InputField({
             disabled={effectiveDisabled}
             className="gap-2"
           >
-            <LeftFileIcon className="h-4 w-4" />
+            {(FileIcon ?? CloudUpload)({ className: "h-4 w-4" })}
             {fileButtonLabel}
           </Button>
         </div>
       ) : (
-        <div className="bg-light font-grotesk mt-1 flex items-center gap-2 overflow-hidden rounded-md dark:bg-transparent">
+        <div className="mt-1 flex items-center gap-2 overflow-hidden rounded-md bg-light font-grotesk dark:bg-transparent">
           <Input
             id={inputId}
             type={type}
             placeholder={placeholder}
             disabled={effectiveDisabled}
-            value={(currentValue as any) ?? ""}
+            value={currentValue ?? ""}
             onChange={handleStandaloneChange}
             onWheel={
               shouldPreventWheel ? (e) => (e.currentTarget as HTMLInputElement).blur() : undefined

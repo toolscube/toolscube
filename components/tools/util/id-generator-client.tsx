@@ -1,6 +1,6 @@
 "use client";
 
-import { Hash, Play, Shuffle, Wand2 } from "lucide-react";
+import { Hash, Play, Shuffle } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   ActionButton,
@@ -55,13 +55,9 @@ function ulid({ upper = true }: { upper?: boolean } = {}) {
     timeChars[i] = ENCODING[t % 32];
     t = Math.floor(t / 32);
   }
-  const rand = new Uint8Array(16); // 128 bits; we’ll only use 80 bits (five 16-bit chunks)
+  const rand = new Uint8Array(16);
   crypto.getRandomValues(rand);
-  // 80 bits -> 16 Base32 chars
   const randChars = new Array(16);
-  // pack bits 80 => 16*5 groups
-  // We'll compute by consuming 5 bits at a time across the 80 random bits
-  // Create a bit reader from first 10 bytes (80 bits)
   let acc = 0;
   let bits = 0;
   let idx = 0;
@@ -145,7 +141,13 @@ export default function IdGeneratorClient() {
     let out = rows;
     if (ensureUnique) {
       const seen = new Set<string>();
-      out = out.filter((x) => (seen.has(x) ? false : (seen.add(x), true)));
+      out = out.filter((x) => {
+        if (seen.has(x)) {
+          return false;
+        }
+        seen.add(x);
+        return true;
+      });
     }
     if (sortOut) {
       out = [...out].sort();
@@ -190,8 +192,6 @@ export default function IdGeneratorClient() {
     setRows(res);
   };
 
-  const copyAllText = () => processed.join(sepStr);
-
   const resetAll = () => {
     setMode("uuid");
     setCount(5);
@@ -217,26 +217,29 @@ export default function IdGeneratorClient() {
     setRows([]);
   };
 
+  const isSeparator = (v: unknown): v is Separator =>
+    v === "newline" || v === "comma" || v === "space";
+
   return (
     <>
       <ToolPageHeader
         icon={Hash}
         title="GUID / Order ID"
-        description="Generate UUIDs, ULIDs, NanoIDs, HEX strings, and readable order IDs. Copy, export, and tweak formats."
+        description="Generate UUIDs, ULIDs, NanoIDs, HEX strings, and readable order IDs."
         actions={
           <>
             <ResetButton onClick={resetAll} />
+            <ExportCSVButton
+              filename="ids.csv"
+              getRows={() => processed.map((x, i) => [i + 1, x])}
+              label="Export CSV"
+              disabled={processed.length === 0}
+            />
             <ExportTextButton
               variant="default"
               filename="ids.txt"
               getText={() => processed.join("\n")}
-              label="Export .txt"
-              disabled={processed.length === 0}
-            />
-            <ExportCSVButton
-              filename="ids.csv"
-              getRows={() => processed.map((x, i) => [i + 1, x])}
-              label="Export .csv"
+              label="Export TXT"
               disabled={processed.length === 0}
             />
           </>
@@ -274,7 +277,7 @@ export default function IdGeneratorClient() {
           <SelectField
             label="Copy All Separator"
             value={separator}
-            onValueChange={(v) => setSeparator((v as any) ?? "newline")}
+            onValueChange={(v) => setSeparator(isSeparator(v) ? v : "newline")}
             options={[
               { label: "New line", value: "newline" },
               { label: "Comma", value: "comma" },
@@ -304,24 +307,20 @@ export default function IdGeneratorClient() {
 
           {/* Per-mode options */}
           {mode === "uuid" && (
-            <>
-              <div className="grid gap-2">
-                <SwitchRow label="Uppercase" checked={uuidUpper} onCheckedChange={setUuidUpper} />
-                <SwitchRow
-                  label="Remove hyphens"
-                  checked={uuidNoHyphen}
-                  onCheckedChange={setUuidNoHyphen}
-                />
-              </div>
-            </>
+            <div className="grid gap-2">
+              <SwitchRow label="Uppercase" checked={uuidUpper} onCheckedChange={setUuidUpper} />
+              <SwitchRow
+                label="Remove hyphens"
+                checked={uuidNoHyphen}
+                onCheckedChange={setUuidNoHyphen}
+              />
+            </div>
           )}
 
           {mode === "ulid" && (
-            <>
-              <div className="grid gap-2">
-                <SwitchRow label="Uppercase" checked={ulidUpper} onCheckedChange={setUlidUpper} />
-              </div>
-            </>
+            <div className="grid gap-2">
+              <SwitchRow label="Uppercase" checked={ulidUpper} onCheckedChange={setUlidUpper} />
+            </div>
           )}
 
           {mode === "nanoid" && (
@@ -344,18 +343,14 @@ export default function IdGeneratorClient() {
           )}
 
           {mode === "hex" && (
-            <>
-              <InputField
-                label="Length (chars)"
-                type="number"
-                min={4}
-                max={128}
-                value={hexLen}
-                onChange={(e) =>
-                  setHexLen(Math.max(4, Math.min(128, Number(e.target.value) || 16)))
-                }
-              />
-            </>
+            <InputField
+              label="Length (chars)"
+              type="number"
+              min={4}
+              max={128}
+              value={hexLen}
+              onChange={(e) => setHexLen(Math.max(4, Math.min(128, Number(e.target.value) || 16)))}
+            />
           )}
 
           {mode === "order" && (
@@ -398,17 +393,11 @@ export default function IdGeneratorClient() {
           </div>
 
           <div className="flex gap-2">
-            <ActionButton
-              icon={Wand2}
-              label="Copy All"
-              onClick={() => navigator.clipboard.writeText(copyAllText())}
-              disabled={processed.length === 0}
-              variant="outline"
-            />
+            <CopyButton getText={() => processed.join(sepStr)} />
             <ExportTextButton
               filename="ids.txt"
               getText={() => processed.join("\n")}
-              label="Export .txt"
+              label="Export TXT"
               disabled={processed.length === 0}
             />
           </div>

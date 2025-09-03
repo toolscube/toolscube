@@ -1,5 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from "@/lib/utils/download";
 import {
   Check,
   Clipboard,
@@ -13,9 +16,6 @@ import {
 import Link from "next/link";
 import * as React from "react";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from "@/lib/utils/download";
 
 type Variant = "default" | "outline" | "destructive" | "secondary" | "ghost" | "link";
 type Size = "default" | "sm" | "lg" | "icon";
@@ -64,14 +64,18 @@ export function CopyButton({
   const [copied, setCopied] = React.useState(false);
   const timerRef = React.useRef<number | null>(null);
 
-  const clearTimer = () => {
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = null;
-  };
+  const clearTimer = React.useCallback(() => {
+    if (timerRef.current != null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   React.useEffect(() => {
-    return () => clearTimer();
-  }, []);
+    return () => {
+      clearTimer();
+    };
+  }, [clearTimer]);
 
   const run = async () => {
     try {
@@ -191,14 +195,18 @@ export function PasteButton({
   const [done, setDone] = React.useState(false);
   const timerRef = React.useRef<number | null>(null);
 
-  const clearTimer = () => {
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = null;
-  };
+  const clearTimer = React.useCallback(() => {
+    if (timerRef.current != null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   React.useEffect(() => {
-    return () => clearTimer();
-  }, []);
+    return () => {
+      clearTimer();
+    };
+  }, [clearTimer]);
 
   const run = async () => {
     try {

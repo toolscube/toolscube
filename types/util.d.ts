@@ -14,3 +14,6 @@ type CleanOptions = {
   caseMode: "none" | "lower" | "upper" | "title" | "sentence";
   autoCleanOnPaste: boolean;
 };
+
+type Separator = "newline" | "comma" | "space";
+
