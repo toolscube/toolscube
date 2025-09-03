@@ -1,8 +1,8 @@
 'use client';
 
-import Stat from '@/components/root/stat';
 import { ActionButton, CopyButton, ResetButton } from '@/components/shared/action-buttons';
 import { InputField } from '@/components/shared/form-fields/input-field';
+import Stat from '@/components/shared/stat';
 import ToolPageHeader from '@/components/shared/tool-page-header';
 import { Badge } from '@/components/ui/badge';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -1,6 +1,6 @@
 'use client';
 
-import Stat from '@/components/root/stat';
+import Stat from '@/components/shared/stat';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';

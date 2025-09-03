@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import Stat from '@/components/root/stat';
+import Stat from '@/components/shared/stat';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

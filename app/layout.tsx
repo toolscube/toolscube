@@ -8,28 +8,30 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' });
 
+const siteURL = process.env.NEXT_PUBLIC_SITE_URL || 'toolshub.dev';
+
 export const metadata: Metadata = {
   title: {
     default: 'Tools Hub — Fast, Free, Privacy-Friendly Online Tools',
     template: '%s • Tools Hub',
   },
   description: 'URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators — all in one place.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://naturalsefaa.com'),
-  keywords: ['online tools', 'url shortener', 'pdf tools', 'image converter', 'text utilities', 'developer tools', 'calculators', 'free tools', 'privacy friendly', 'natural sefa'],
+  metadataBase: new URL(siteURL),
+  keywords: ['online tools', 'url shortener', 'pdf tools', 'image converter', 'text utilities', 'developer tools', 'calculators', 'free tools', 'privacy friendly'],
   authors: [{ name: 'Tariqul Islam', url: 'https://tariqul.dev' }],
   creator: 'Tariqul Islam',
   publisher: 'Tariqul Islam',
-  category: 'Utilities',
+  category: 'UtilitiesApplication',
 
   openGraph: {
     title: 'Tools Hub — Fast, Free, Privacy-Friendly Online Tools',
     description: 'Fast, free, privacy-friendly online tools. Shorten links, convert files, optimize images, and more.',
     type: 'website',
-    url: 'https://naturalsefaa.com/tools',
+    url: `${siteURL}/tools`,
     siteName: 'Tools Hub',
     images: [
       {
-        url: 'https://naturalsefaa.com/og/tools-hub-og.png',
+        url: `${siteURL}/og/tools-hub-og.png`,
         width: 1200,
         height: 630,
         alt: 'Tools Hub',
@@ -43,7 +45,7 @@ export const metadata: Metadata = {
     creator: '@toolshub',
     title: 'Tools Hub — Fast, Free, Privacy-Friendly Online Tools',
     description: 'Shorten links, convert files, optimize images, and more. 100% free and privacy-first.',
-    images: ['https://naturalsefaa.com/og/tools-hub-og.png'],
+    images: [`${siteURL}/og/tools-hub-og.png`],
   },
 
   robots: {
@@ -60,16 +62,15 @@ export const metadata: Metadata = {
   },
 
   alternates: {
-    canonical: 'https://toolshub.com/tools',
+    canonical: `${siteURL}/tools`,
   },
 
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    apple: '/favicon.ico',
   },
 
-  themeColor: '#ffffff',
   applicationName: 'Tools Hub',
 };
 

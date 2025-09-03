@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { JSX, useEffect, useMemo, useState } from 'react';
 
-import Stat from '@/components/root/stat';
+import Stat from '@/components/shared/stat';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

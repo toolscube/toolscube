@@ -69,10 +69,9 @@ export function buildMetadata(input: BuildMetaInput): Metadata {
     icons: {
       icon: '/favicon.ico',
       shortcut: '/favicon.ico',
-      apple: '/apple-touch-icon.png',
+      apple: '/favicon.ico',
     },
 
-    themeColor: '#ffffff',
     applicationName: 'Tools Hub',
     other: {
       'og:locale': 'en_US',

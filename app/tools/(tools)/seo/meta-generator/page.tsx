@@ -37,7 +37,7 @@ type State = {
   manifest: string;
 
   // Locale
-  lang: string; // e.g., en, bn, en_US
+  lang: string;
   dir: 'ltr' | 'rtl';
 
   // Open Graph
@@ -120,8 +120,6 @@ function genMeta(state: State) {
   const s = state;
   const L: string[] = [];
 
-  // html language hint (for docs)
-  // <html lang="..."> is set outside <head>, but we include as comment helper
   L.push(`<!-- html lang="${s.lang}" dir="${s.dir}" -->`);
 
   // Basic
