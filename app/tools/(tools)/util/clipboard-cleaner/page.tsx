@@ -1,40 +1,25 @@
 'use client';
 
+import { ActionButton, CopyButton, ExportTextButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
+import { InputField } from '@/components/shared/form-fields/input-field';
+import SelectField from '@/components/shared/form-fields/select-field';
+import SwitchRow from '@/components/shared/form-fields/switch-row';
+import TextareaField from '@/components/shared/form-fields/textarea-field';
+import ToolPageHeader from '@/components/shared/tool-page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
+import { GlassCard } from '@/components/ui/glass-card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, ClipboardCopy, ClipboardPaste, ClipboardType, Download, Eraser, RotateCcw, Upload, Wand2 } from 'lucide-react';
+import { ClipboardType, Eraser, Wand2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-// ---------- Types ----------
-
-type CleanOptions = {
-  trim: boolean;
-  collapseSpaces: boolean;
-  stripLineBreaks: boolean; // if true -> flatten to single spaces
-  stripExtraBlankLines: boolean; // if false -> keep single \n
-  normalizeQuotes: boolean;
-  normalizeDashes: boolean;
-  replaceEllipsis: boolean;
-  tabsToSpaces: boolean;
-  removeZeroWidth: boolean;
-  removeUrls: boolean;
-  removeEmojis: boolean;
-
-  caseMode: 'none' | 'lower' | 'upper' | 'title' | 'sentence';
-  autoCleanOnPaste: boolean;
-};
-
+// Types
 type HistoryItem = { id: string; ts: number; src: string; out: string };
 
-// ---------- Helpers ----------
-
+// Helpers
 function uid(prefix = 'id') {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -44,7 +29,6 @@ function toTitleCase(s: string) {
 }
 
 function toSentenceCase(s: string) {
-  // naive sentence case: capitalize first letter after . ! ? or start
   return s.toLowerCase().replace(/(^\s*[a-z\p{Ll}]|[.!?]\s*[a-z\p{Ll}])/gu, (m) => m.toUpperCase());
 }
 
@@ -55,10 +39,8 @@ function stripUrls(s: string) {
 
 function stripEmojis(s: string) {
   try {
-    // Modern engines: Extended_Pictographic
     return s.replace(/\p{Extended_Pictographic}/gu, '');
   } catch {
-    // Fallback rough range
     return s.replace(/[\u{1F300}-\u{1FAFF}]/gu, '');
   }
 }
@@ -157,8 +139,6 @@ const DEFAULT_OPTS: CleanOptions = {
   autoCleanOnPaste: true,
 };
 
-// ---------- Page ----------
-
 export default function ClipboardCleanerPage() {
   const [raw, setRaw] = useState('');
   const [opts, setOpts] = useState<CleanOptions>(DEFAULT_OPTS);
@@ -167,7 +147,6 @@ export default function ClipboardCleanerPage() {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const rawRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // hydrate from localStorage
   useEffect(() => {
     try {
       const s = localStorage.getItem('tools:clipclean:opts');
@@ -203,7 +182,6 @@ export default function ClipboardCleanerPage() {
       const t = await navigator.clipboard.readText();
       setRaw(opts.autoCleanOnPaste ? cleanText(t, opts) : t);
     } catch {
-      // Fallback: focus textarea and let user Ctrl+V
       rawRef.current?.focus();
     }
   };
@@ -223,7 +201,6 @@ export default function ClipboardCleanerPage() {
   };
 
   const onCleanClick = () => {
-    // If user wants explicit clean action, also push to history
     pushHistory(raw, cleaned);
   };
 
@@ -248,218 +225,160 @@ export default function ClipboardCleanerPage() {
   }, [cleaned]);
 
   return (
-    <div className="space-y-4">
-      <MotionGlassCard>
-        <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-              <ClipboardType className="h-6 w-6" /> Clipboard Cleaner
-            </h1>
-            <p className="text-sm text-muted-foreground">Strip formatting and paste as plain text. Clean punctuation, spaces, emojis & more.</p>
+    <>
+      <ToolPageHeader
+        icon={ClipboardType}
+        title="Clipboard Cleaner"
+        description="Strip formatting and paste as plain text. Clean punctuation, spaces, emojis & more."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <PasteButton />
+            <ActionButton icon={Wand2} onClick={onCleanClick} label="Clean" />
+            <CopyButton variant="default" getText={() => cleaned || ''} disabled={!cleaned} />
+          </>
+        }
+      />
+
+      {/* Settings */}
+      <GlassCard className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Settings</CardTitle>
+          <CardDescription>Choose how text should be cleaned.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 lg:grid-cols-3">
+          <SelectField
+            label="Case"
+            value={opts.caseMode}
+            onValueChange={(v) => setOpts({ ...opts, caseMode: (v as CleanOptions['caseMode']) ?? 'none' })}
+            options={[
+              { label: 'No change', value: 'none' },
+              { label: 'lowercase', value: 'lower' },
+              { label: 'UPPERCASE', value: 'upper' },
+              { label: 'Title Case', value: 'title' },
+              { label: 'Sentence case', value: 'sentence' },
+            ]}
+          />
+
+          <div className="space-y-2">
+            <Label>Whitespace & Behavior</Label>
+            <div className="flex flex-col gap-2 text-sm">
+              <SwitchRow checked={opts.trim} onCheckedChange={(v) => setOpts({ ...opts, trim: v })} label="Trim ends" />
+              <SwitchRow checked={opts.collapseSpaces} onCheckedChange={(v) => setOpts({ ...opts, collapseSpaces: v })} label="Collapse multiple spaces" />
+              <SwitchRow checked={opts.tabsToSpaces} onCheckedChange={(v) => setOpts({ ...opts, tabsToSpaces: v })} label="Tabs → spaces" />
+              <SwitchRow checked={opts.stripLineBreaks} onCheckedChange={(v) => setOpts({ ...opts, stripLineBreaks: v })} label="Flatten line breaks" />
+              <SwitchRow checked={opts.stripExtraBlankLines} onCheckedChange={(v) => setOpts({ ...opts, stripExtraBlankLines: v })} label="Keep max 1 blank line" />
+              <SwitchRow checked={opts.autoCleanOnPaste} onCheckedChange={(v) => setOpts({ ...opts, autoCleanOnPaste: v })} label="Auto‑clean on paste" />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={resetAll} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
-            <Button variant="outline" onClick={paste} className="gap-2">
-              <ClipboardPaste className="h-4 w-4" /> Paste
-            </Button>
-            <Button variant="outline" onClick={onCleanClick} className="gap-2">
-              <Wand2 className="h-4 w-4" /> Clean
-            </Button>
-            <Button onClick={copy} className="gap-2">
-              <ClipboardCopy className="h-4 w-4" /> {copied ? 'Copied' : 'Copy'}
-            </Button>
+
+          <div className="space-y-2">
+            <Label>Characters</Label>
+            <div className="flex flex-col gap-2 text-sm">
+              <SwitchRow checked={opts.normalizeQuotes} onCheckedChange={(v) => setOpts({ ...opts, normalizeQuotes: v })} label="Smart quotes → ' " />
+              <SwitchRow checked={opts.normalizeDashes} onCheckedChange={(v) => setOpts({ ...opts, normalizeDashes: v })} label="En/Em dashes → -" />
+              <SwitchRow checked={opts.replaceEllipsis} onCheckedChange={(v) => setOpts({ ...opts, replaceEllipsis: v })} label="Ellipsis … → ..." />
+              <SwitchRow checked={opts.removeZeroWidth} onCheckedChange={(v) => setOpts({ ...opts, removeZeroWidth: v })} label="Remove zero‑width chars" />
+              <SwitchRow checked={opts.removeEmojis} onCheckedChange={(v) => setOpts({ ...opts, removeEmojis: v })} label="Remove emojis" />
+              <SwitchRow checked={opts.removeUrls} onCheckedChange={(v) => setOpts({ ...opts, removeUrls: v })} label="Remove URLs" />
+            </div>
           </div>
-        </GlassCard>
+        </CardContent>
+      </GlassCard>
 
-        {/* Settings */}
-        <GlassCard className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Settings</CardTitle>
-            <CardDescription>Choose how text should be cleaned.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-3">
-            <div className="space-y-2">
-              <Label>Case</Label>
-              <Select value={opts.caseMode} onValueChange={(v: CleanOptions['caseMode']) => setOpts({ ...opts, caseMode: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Case" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No change</SelectItem>
-                  <SelectItem value="lower">lowercase</SelectItem>
-                  <SelectItem value="upper">UPPERCASE</SelectItem>
-                  <SelectItem value="title">Title Case</SelectItem>
-                  <SelectItem value="sentence">Sentence case</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <Separator />
 
-            <div className="space-y-2">
-              <Label>Whitespace</Label>
-              <div className="flex flex-col gap-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.trim} onCheckedChange={(v) => setOpts({ ...opts, trim: v })} /> Trim ends
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.collapseSpaces} onCheckedChange={(v) => setOpts({ ...opts, collapseSpaces: v })} /> Collapse multiple spaces
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.tabsToSpaces} onCheckedChange={(v) => setOpts({ ...opts, tabsToSpaces: v })} /> Tabs → spaces
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.stripLineBreaks} onCheckedChange={(v) => setOpts({ ...opts, stripLineBreaks: v })} /> Flatten line breaks
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.stripExtraBlankLines} onCheckedChange={(v) => setOpts({ ...opts, stripExtraBlankLines: v })} /> Keep max 1 blank line
-                </label>
+      {/* Editors */}
+      <GlassCard className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Editor</CardTitle>
+          <CardDescription>Paste on the left, get clean text on the right.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Original</Label>
+              <div className="flex gap-2">
+                <InputField
+                  type="file"
+                  accept=".txt,text/plain"
+                  onFilesChange={async (files) => {
+                    const f = files?.[0];
+                    if (!f) return;
+                    const txt = await f.text();
+                    setRaw(txt);
+                  }}
+                />
+
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => setRaw('')}>
+                  <Eraser className="h-4 w-4" /> Clear
+                </Button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Characters</Label>
-              <div className="flex flex-col gap-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.normalizeQuotes} onCheckedChange={(v) => setOpts({ ...opts, normalizeQuotes: v })} /> Smart quotes → ' "
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.normalizeDashes} onCheckedChange={(v) => setOpts({ ...opts, normalizeDashes: v })} /> En/Em dashes → -
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.replaceEllipsis} onCheckedChange={(v) => setOpts({ ...opts, replaceEllipsis: v })} /> Ellipsis … → ...
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.removeZeroWidth} onCheckedChange={(v) => setOpts({ ...opts, removeZeroWidth: v })} /> Remove zero‑width chars
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.removeEmojis} onCheckedChange={(v) => setOpts({ ...opts, removeEmojis: v })} /> Remove emojis
-                </label>
-                <label className="flex items-center gap-2">
-                  <Switch checked={opts.removeUrls} onCheckedChange={(v) => setOpts({ ...opts, removeUrls: v })} /> Remove URLs
-                </label>
+            <TextareaField
+              value={raw}
+              onValueChange={setRaw}
+              onPaste={(e) => {
+                if (!opts.autoCleanOnPaste) return;
+                const pasted = e.clipboardData.getData('text');
+                if (pasted) {
+                  e.preventDefault();
+                  const out = cleanText(pasted, opts);
+                  const ta = e.target as HTMLTextAreaElement;
+                  const selStart = ta.selectionStart || 0;
+                  const selEnd = ta.selectionEnd || 0;
+                  setRaw((prev) => prev.slice(0, selStart) + out + prev.slice(selEnd));
+                }
+              }}
+              placeholder="Paste here (Ctrl/Cmd + V)…"
+              textareaClassName="min-h-[220px] font-mono"
+            />
+            <div className="text-xs text-muted-foreground">Tip: Use the Paste button for one‑click clipboard import.</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Cleaned</Label>
+              <div className="flex gap-2">
+                <ExportTextButton variant="outline" filename="cleaned.txt" getText={() => cleaned} label="Export" disabled={!cleaned} />
+                <CopyButton variant="default" getText={cleaned || ''} />
               </div>
             </div>
-
-            <div className="space-y-2 lg:col-span-3">
-              <Label>Behavior</Label>
-              <div className="flex items-center gap-2 text-sm">
-                <Switch checked={opts.autoCleanOnPaste} onCheckedChange={(v) => setOpts({ ...opts, autoCleanOnPaste: v })} /> Auto‑clean on paste
-              </div>
+            <Textarea readOnly value={cleaned} className="min-h-[220px]" />
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="secondary">{stats.words} words</Badge>
+              <Badge variant="secondary">{stats.chars} chars</Badge>
+              <Badge variant="secondary">{stats.lines} lines</Badge>
             </div>
-          </CardContent>
-        </GlassCard>
+          </div>
+        </CardContent>
+      </GlassCard>
 
-        <Separator />
-
-        {/* Editors */}
-        <GlassCard className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Editor</CardTitle>
-            <CardDescription>Paste on the left, get clean text on the right.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Original</Label>
-                <div className="flex gap-2">
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    className="hidden"
-                    accept="text/*"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) importFile(f);
-                      if (fileRef.current) fileRef.current.value = '';
-                    }}
-                  />
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => fileRef.current?.click()}>
-                    <Upload className="h-4 w-4" /> Load file
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => setRaw('')}>
-                    <Eraser className="h-4 w-4" /> Clear
-                  </Button>
+      {/* History */}
+      <GlassCard className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">History</CardTitle>
+          <CardDescription>Last 20 results (local only)</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {history.length === 0 && <p className="text-sm text-muted-foreground">No history yet. Clean something to see it here.</p>}
+          <div className="grid gap-3 md:grid-cols-2">
+            {history.map((h) => (
+              <div key={h.id} className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{new Date(h.ts).toLocaleString()}</span>
+                  <CopyButton variant="outline" size="sm" getText={() => h.out || ''} />
                 </div>
+                <div className="text-xs text-muted-foreground">Source</div>
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">{h.src}</pre>
+                <div className="text-xs text-muted-foreground">Cleaned</div>
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">{h.out}</pre>
               </div>
-              <Textarea
-                ref={rawRef}
-                value={raw}
-                onChange={(e) => setRaw(e.target.value)}
-                onPaste={(e) => {
-                  if (!opts.autoCleanOnPaste) return;
-                  const pasted = e.clipboardData.getData('text');
-                  if (pasted) {
-                    e.preventDefault();
-                    const out = cleanText(pasted, opts);
-                    const selStart = (e.target as HTMLTextAreaElement).selectionStart || 0;
-                    const selEnd = (e.target as HTMLTextAreaElement).selectionEnd || 0;
-                    setRaw((prev) => prev.slice(0, selStart) + out + prev.slice(selEnd));
-                  }
-                }}
-                placeholder="Paste here (Ctrl/Cmd + V)…"
-                className="min-h-[220px] font-mono"
-              />
-              <div className="text-xs text-muted-foreground">Tip: Use the Paste button for one‑click clipboard import.</div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Cleaned</Label>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-2" onClick={exportTxt}>
-                    <Download className="h-4 w-4" /> .txt
-                  </Button>
-                  <Button size="sm" className="gap-2" onClick={copy}>
-                    <ClipboardCopy className="h-4 w-4" /> {copied ? 'Copied' : 'Copy'}
-                  </Button>
-                </div>
-              </div>
-              <Textarea readOnly value={cleaned} className="min-h-[220px] font-mono" />
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <Badge variant="secondary">{stats.words} words</Badge>
-                <Badge variant="secondary">{stats.chars} chars</Badge>
-                <Badge variant="secondary">{stats.lines} lines</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </GlassCard>
-
-        {/* History */}
-        <GlassCard className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">History</CardTitle>
-            <CardDescription>Last 20 results (local only)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {history.length === 0 && <p className="text-sm text-muted-foreground">No history yet. Clean something to see it here.</p>}
-            <div className="grid gap-3 md:grid-cols-2">
-              {history.map((h) => (
-                <div key={h.id} className="rounded-lg border p-3 space-y-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{new Date(h.ts).toLocaleString()}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 gap-1"
-                      onClick={async () => {
-                        await navigator.clipboard.writeText(h.out);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 1200);
-                      }}>
-                      {copied ? <Check className="h-3.5 w-3.5" /> : <ClipboardCopy className="h-3.5 w-3.5" />} Copy
-                    </Button>
-                  </div>
-                  <div className="text-xs text-muted-foreground">Source</div>
-                  <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">{h.src}</pre>
-                  <div className="text-xs text-muted-foreground">Cleaned</div>
-                  <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">{h.out}</pre>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </GlassCard>
-      </MotionGlassCard>
-    </div>
+            ))}
+          </div>
+        </CardContent>
+      </GlassCard>
+    </>
   );
 }

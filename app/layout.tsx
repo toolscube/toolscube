@@ -79,22 +79,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const darkTheme = {
-    style: {
-      backgroundColor: '#333',
-      color: '#fff',
-    },
-    iconTheme: {
-      primary: '#fff',
-      secondary: '#333',
-    },
-  };
-
   return (
     <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrains.variable}`}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <main className="mx-auto px-4">{children}</main>
-        <Toaster toastOptions={{ style: darkTheme.style, iconTheme: darkTheme.iconTheme }} position="top-right" />
+        <Toaster position="top-right" />
       </body>
     </html>
   );

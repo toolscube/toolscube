@@ -304,7 +304,7 @@ export default function UTMBuilderClient() {
             <ResetButton onClick={resetAll} />
             <SaveButton onClick={savePreset} label="Save Preset" />
             <ImportFileButton accept="application/json" onFiles={importPresetsFromFiles} label="Import" />
-            <ExportFileButton filename="utm-presets.json" label="Export" variant="outline" mime="application/json;charset=utf-8;" getContent={() => JSON.stringify(presets, null, 2)} />
+            <ExportFileButton filename="utm-presets.json" label="Export" variant="default" mime="application/json;charset=utf-8;" getContent={() => JSON.stringify(presets, null, 2)} />
           </>
         }
       />

@@ -7,7 +7,6 @@ import * as React from 'react';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 
 /** Types */
-
 type Option = {
   label: React.ReactNode;
   value: string | number;
@@ -31,7 +30,6 @@ type BaseProps = {
   disabled?: boolean;
   required?: boolean;
 
-  /** Show a "clear" row in the menu (no empty string item to avoid shadcn runtime error) */
   allowClear?: boolean;
   clearLabel?: string;
 
@@ -42,7 +40,6 @@ type BaseProps = {
   /** If provided in standalone mode */
   defaultValue?: string | number | undefined;
 
-  /** Cast the outgoing value to number (when possible) before onChange / RHF setValue */
   valueAsNumber?: boolean;
 
   /** Error text for standalone mode */
@@ -116,21 +113,22 @@ export default function SelectField<TFieldValues extends FieldValues, TName exte
             {required && <span className="ml-0.5 text-destructive">*</span>}
           </label>
         ) : null}
+        <div className="dark:bg-transparent overflow-hidden rounded-md">
+          <Select value={selectValue} onValueChange={handleChange} disabled={disabled}>
+            <SelectTrigger id={triggerId} className={cn('w-full', triggerClassName)}>
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
 
-        <Select value={selectValue} onValueChange={handleChange} disabled={disabled}>
-          <SelectTrigger id={triggerId} className={cn('w-full', triggerClassName)}>
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-
-          <SelectContent className={contentClassName}>
-            {allowClear && <SelectItem value={CLEAR_TOKEN}>{clearLabel}</SelectItem>}
-            {options.map((opt) => (
-              <SelectItem key={String(opt.value)} value={String(opt.value)} disabled={opt.disabled}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <SelectContent className={contentClassName}>
+              {allowClear && <SelectItem value={CLEAR_TOKEN}>{clearLabel}</SelectItem>}
+              {options.map((opt) => (
+                <SelectItem key={String(opt.value)} value={String(opt.value)} disabled={opt.disabled}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {description ? <p className="text-[0.8rem] text-muted-foreground">{description}</p> : null}
 
@@ -165,20 +163,22 @@ export default function SelectField<TFieldValues extends FieldValues, TName exte
             ) : null}
 
             <FormControl>
-              <Select value={selectValue} onValueChange={handleChange} disabled={effectiveDisabled}>
-                <SelectTrigger id={triggerId} className={cn('w-full', triggerClassName)}>
-                  <SelectValue placeholder={placeholder} />
-                </SelectTrigger>
+              <div className="dark:bg-transparent overflow-hidden rounded-md">
+                <Select value={selectValue} onValueChange={handleChange} disabled={effectiveDisabled}>
+                  <SelectTrigger id={triggerId} className={cn('w-full', triggerClassName)}>
+                    <SelectValue placeholder={placeholder} />
+                  </SelectTrigger>
 
-                <SelectContent className={contentClassName}>
-                  {allowClear && <SelectItem value={CLEAR_TOKEN}>{clearLabel}</SelectItem>}
-                  {options.map((opt) => (
-                    <SelectItem key={String(opt.value)} value={String(opt.value)} disabled={opt.disabled}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectContent className={contentClassName}>
+                    {allowClear && <SelectItem value={CLEAR_TOKEN}>{clearLabel}</SelectItem>}
+                    {options.map((opt) => (
+                      <SelectItem key={String(opt.value)} value={String(opt.value)} disabled={opt.disabled}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </FormControl>
 
             {description ? <FormDescription>{description}</FormDescription> : null}

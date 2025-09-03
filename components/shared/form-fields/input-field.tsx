@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label as UiLabel } from '@/components/ui/label';
-import { Upload } from 'lucide-react';
+import { CloudUpload, type LucideIcon } from 'lucide-react';
 
 type ButtonVariant = 'default' | 'outline' | 'destructive' | 'secondary' | 'ghost' | 'link';
 type ButtonSize = 'default' | 'sm' | 'lg' | 'icon';
@@ -15,6 +15,7 @@ type ButtonSize = 'default' | 'sm' | 'lg' | 'icon';
 type BaseProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'type' | 'value'> & {
   name?: string;
 
+  icon?: LucideIcon;
   label?: React.ReactNode;
   labelNode?: React.ReactNode;
   disable?: boolean;
@@ -24,7 +25,7 @@ type BaseProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 
 
   requiredMark?: boolean;
   hint?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   type?: React.HTMLInputTypeAttribute;
 
   parseNumber?: boolean;
@@ -38,7 +39,7 @@ type BaseProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 
   accept?: string;
   onFilesChange?: (files: File[] | null) => void;
 
-  fileIcon?: React.ReactNode;
+  fileIcon?: LucideIcon;
   fileButtonLabel?: string;
   fileButtonVariant?: ButtonVariant;
   fileButtonSize?: ButtonSize;
@@ -46,6 +47,7 @@ type BaseProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 
 
 export function InputField({
   name,
+  icon: Icon,
   label,
   labelNode,
   placeholder,
@@ -67,7 +69,7 @@ export function InputField({
   onFilesChange,
 
   // simple file UI
-  fileIcon,
+  fileIcon: FileIcon,
   fileButtonLabel = 'Import',
   fileButtonVariant = 'outline',
   fileButtonSize = 'default',
@@ -93,6 +95,8 @@ export function InputField({
   const [hasSelection, setHasSelection] = React.useState(false);
   const hiddenFileRef = React.useRef<HTMLInputElement | null>(null);
   const chooseFile = () => hiddenFileRef.current?.click();
+
+  const LeftFileIcon: LucideIcon = FileIcon ?? CloudUpload;
 
   /* RHF MODE */
   if (name && rhf) {
@@ -120,7 +124,8 @@ export function InputField({
           return (
             <FormItem className={className}>
               {labelContent ? (
-                <FormLabel className="mb-2" htmlFor={inputId}>
+                <FormLabel className="mb-2 gap-2" htmlFor={inputId}>
+                  {Icon && <Icon className="h-4 w-4" />}
                   {labelContent}
                   {requiredMark ? <span className="ml-0.5 text-destructive">*</span> : null}
                 </FormLabel>
@@ -144,7 +149,7 @@ export function InputField({
                       {...rest}
                     />
                     <Button type="button" variant={fileButtonVariant} size={fileButtonSize} onClick={chooseFile} disabled={effectiveDisabled || field.disabled} className="gap-2">
-                      {fileIcon ?? <Upload className="h-4 w-4" />}
+                      <LeftFileIcon className="h-4 w-4" />
                       {fileButtonLabel}
                     </Button>
                   </div>
@@ -199,7 +204,8 @@ export function InputField({
   return (
     <div className={className}>
       {labelContent ? (
-        <UiLabel className="mb-2" htmlFor={inputId}>
+        <UiLabel className="mb-2 gap-2" htmlFor={inputId}>
+          {Icon && <Icon className="h-4 w-4" />}
           {labelContent}
           {requiredMark ? <span className="ml-0.5 text-destructive">*</span> : null}
         </UiLabel>
@@ -210,7 +216,7 @@ export function InputField({
           <input id={inputId} ref={hiddenFileRef} type="file" className="hidden" disabled={effectiveDisabled} multiple={multiple} accept={accept} onChange={handleStandaloneFileChange} {...rest} />
 
           <Button type="button" variant={fileButtonVariant} size={fileButtonSize} onClick={chooseFile} disabled={effectiveDisabled} className="gap-2">
-            {fileIcon ?? <Upload className="h-4 w-4" />}
+            <LeftFileIcon className="h-4 w-4" />
             {fileButtonLabel}
           </Button>
         </div>

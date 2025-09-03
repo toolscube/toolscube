@@ -318,11 +318,9 @@ export default function CountdownTimerClient() {
         title="Countdown / Timer"
         description="Pomodoro cycles, quick meeting timers, or a countdown to any date — all in one place."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={onDeleteAll} className="gap-2">
-              <Trash2 className="h-4 w-4" /> Clear all
-            </Button>
-          </div>
+          <>
+            <ActionButton variant="default" Icon={Trash2} label="Clear all" onClick={onDeleteAll} disabled={timers.length === 0} />
+          </>
         }
       />
 

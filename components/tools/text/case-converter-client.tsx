@@ -9,7 +9,7 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
-import { CopyButton, DownloadTextButton, ImportFileButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportTextButton, ImportFileButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
 import ToolPageHeader from '@/components/shared/tool-page-header';
 
 import { InputField } from '@/components/shared/form-fields/input-field';
@@ -292,7 +292,7 @@ export default function CaseConverterClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <CopyButton label="Copy converted" getText={() => transformed || ''} />
+            <CopyButton variant="default" label="Copy converted" getText={() => transformed || ''} />
           </>
         }
       />
@@ -397,7 +397,7 @@ export default function CaseConverterClient() {
                 }}
               />
 
-              <DownloadTextButton filename="original.txt" getText={() => source} label="Export" size="sm" disabled={!source} />
+              <ExportTextButton filename="original.txt" getText={() => source} label="Export" size="sm" disabled={!source} />
             </div>
           </div>
 
@@ -439,7 +439,7 @@ export default function CaseConverterClient() {
 
           <div className="mt-4 flex flex-wrap gap-2">
             <CopyButton label="Copy converted" getText={() => transformed || ''} />
-            <DownloadTextButton filename="transformed.txt" getText={() => transformed} label="Export" size="sm" disabled={!transformed} />
+            <ExportTextButton filename="transformed.txt" getText={() => transformed} label="Export" size="sm" disabled={!transformed} />
             {!live && (
               <Button className="gap-2" onClick={() => setSource(transformed)}>
                 <ArrowLeftRight className="h-4 w-4" /> Apply to source

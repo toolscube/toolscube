@@ -1,6 +1,6 @@
 'use client';
 
-import { CopyButton, DownloadTextButton, ImportFileButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportTextButton, ImportFileButton, ResetButton } from '@/components/shared/action-buttons';
 import { InputField } from '@/components/shared/form-fields/input-field';
 import SelectField from '@/components/shared/form-fields/select-field';
 import SwitchRow from '@/components/shared/form-fields/switch-row';
@@ -215,7 +215,7 @@ export default function LineToolsClient() {
                 setText(txt);
               }}
             />
-            <DownloadTextButton variant="outline" filename="text.txt" getText={() => text} label="Export" disabled={!text} />
+            <ExportTextButton variant="outline" filename="text.txt" getText={() => text} label="Export" disabled={!text} />
             <ResetButton onClick={resetAll} />
             <CopyButton variant="default" getText={() => output || text || ''} disabled={!text && !output} />
           </>
@@ -357,7 +357,7 @@ export default function LineToolsClient() {
         <CardContent className="space-y-3">
           <TextareaField readOnly value={output} onValueChange={() => {}} textareaClassName="min-h-[200px] font-mono" placeholder="Run an operation to see results here..." />
           <div className="flex flex-wrap gap-2">
-            <DownloadTextButton variant="default" filename="lines-output.txt" getText={() => output} disabled={!output} />
+            <ExportTextButton variant="default" filename="lines-output.txt" getText={() => output} disabled={!output} />
             <CopyButton getText={() => output || ''} disabled={!output} label="Copy Output" copiedLabel="Copied Output" />
             <Button variant="outline" className="gap-2" onClick={() => setText(output)} disabled={!output}>
               <Replace className="h-4 w-4" /> Replace Input

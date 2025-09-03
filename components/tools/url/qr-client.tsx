@@ -17,7 +17,7 @@ import SelectField from '@/components/shared/form-fields/select-field';
 import { QRCodeBox } from '@/components/shared/qr-code';
 import { useQrExport } from '@/hooks/use-qr-export';
 
-import { CopyButton, ImportFileButton } from '@/components/shared/action-buttons';
+import { ActionButton, CopyButton, ImportFileButton, ResetButton } from '@/components/shared/action-buttons';
 import { ColorField } from '@/components/shared/color-field';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
@@ -200,12 +200,8 @@ export default function QRClient() {
         description="Flowing design with dynamic content types (URL, Wi-Fi, vCard, Email, SMS, WhatsApp)."
         actions={
           <>
-            <Button variant="outline" onClick={resetAll} className="gap-2">
-              <RefreshCw className="h-4 w-4" /> Reset
-            </Button>
-            <Button onClick={runGenerate} className="gap-2">
-              <Key className="h-4 w-4" /> Generate
-            </Button>
+            <ResetButton onClick={resetAll} />
+            <ActionButton variant="default" Icon={Key} onClick={runGenerate} label="Generate" />
           </>
         }
       />

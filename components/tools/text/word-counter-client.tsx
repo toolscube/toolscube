@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { CopyButton, DownloadTextButton, ImportFileButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportTextButton, ImportFileButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
 import SwitchRow from '@/components/shared/form-fields/switch-row';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
@@ -291,7 +291,7 @@ export default function WordCounterClient() {
                 }}
               />
 
-              <DownloadTextButton filename="text.txt" getText={() => displayText} label="Export" size="sm" disabled={!displayText} />
+              <ExportTextButton filename="text.txt" getText={() => displayText} label="Export" size="sm" disabled={!displayText} />
             </div>
           </div>
 

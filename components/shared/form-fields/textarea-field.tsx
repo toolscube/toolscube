@@ -7,7 +7,6 @@ import * as React from 'react';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 
 /* Types */
-
 type BaseProps = {
   id?: string;
 
@@ -33,16 +32,18 @@ type BaseProps = {
 
   value?: string;
   onValueChange?: (value: string) => void;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onKeyUp?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+
+  /** Correct textarea event types */
+  onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
+  onKeyUp?: React.KeyboardEventHandler<HTMLTextAreaElement>;
+  onPaste?: React.ClipboardEventHandler<HTMLTextAreaElement>;
+  onBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
 
   defaultValue?: string;
   error?: React.ReactNode;
 };
 
-export type TextareaFieldProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = BaseProps & {
-  name?: TName;
-};
+export type TextareaFieldProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = BaseProps & { name?: TName };
 
 /* Component */
 
@@ -66,6 +67,10 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
   readOnly = false,
   value: externalValue,
   onValueChange,
+  onChange,
+  onKeyUp,
+  onPaste,
+  onBlur,
   defaultValue,
   error,
 }: TextareaFieldProps<TFieldValues, TName>) {
@@ -94,6 +99,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
     const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
       const next = e.target.value;
       onValueChange ? onValueChange(next) : setInternal(next);
+      onChange?.(e);
       resizeNow(e.currentTarget);
     };
 
@@ -104,6 +110,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
           onValueChange ? onValueChange(trimmed) : setInternal(trimmed);
         }
       }
+      onBlur?.(e);
     };
 
     const count = typeof value === 'string' ? value.length : 0;
@@ -125,6 +132,8 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
             value={value}
             onChange={handleChange}
             onBlur={handleBlur}
+            onKeyUp={onKeyUp}
+            onPaste={onPaste}
             disabled={disabled}
             readOnly={readOnly}
             rows={rows}
@@ -163,6 +172,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
           const next = e.target.value;
           field.onChange(next);
           onValueChange?.(next);
+          onChange?.(e);
           resizeNow(e.currentTarget);
         };
 
@@ -175,6 +185,7 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
             }
           }
           field.onBlur();
+          onBlur?.(e);
         };
 
         const count = typeof value === 'string' ? value.length : 0;
@@ -197,6 +208,8 @@ export default function TextareaField<TFieldValues extends FieldValues, TName ex
                   value={value}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  onKeyUp={onKeyUp}
+                  onPaste={onPaste}
                   disabled={disabled || field.disabled}
                   readOnly={readOnly}
                   rows={rows}

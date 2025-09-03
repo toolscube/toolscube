@@ -215,7 +215,7 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
           <>
             <ResetButton onClick={resetAll} />
             <ActionButton variant="outline" Icon={Calendar} label="Use today" onClick={applyToday} />
-            <CopyButton variant="default" getText={() => link || ''} label="Copy link" disabled={!params || !link} />
+            <CopyButton variant="default" getText={() => link || ''} label="Copy link" disabled={!params || !link || !summary} />
           </>
         }
       />

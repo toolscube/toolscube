@@ -1,6 +1,6 @@
 'use client';
 
-import { CopyButton, DownloadTextButton, ImportFileButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportTextButton, ImportFileButton, ResetButton } from '@/components/shared/action-buttons';
 import ToolPageHeader from '@/components/shared/tool-page-header';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/glass-card';
@@ -269,9 +269,9 @@ export default function TextCleanerClient() {
         description="Remove extra spaces, emojis, HTML, etc."
         actions={
           <>
+            <ResetButton onClick={resetAll} />
             <ImportFileButton
               accept=".txt,text/plain"
-              variant="outline"
               className="gap-2"
               label="Import"
               onFiles={async (files) => {
@@ -280,8 +280,7 @@ export default function TextCleanerClient() {
                 setInput(await f.text());
               }}
             />
-            <DownloadTextButton variant="outline" filename="cleaned.txt" getText={() => output || input || ''} label="Export" disabled={!input && !output} />
-            <ResetButton onClick={resetAll} />
+            <ExportTextButton variant="default" filename="cleaned.txt" getText={() => output || input || ''} label="Export" disabled={!input && !output} />
           </>
         }
       />
@@ -375,7 +374,7 @@ export default function TextCleanerClient() {
         <CardContent className="space-y-3">
           <TextareaField readOnly value={output} onValueChange={() => {}} textareaClassName="min-h-[220px] font-mono" />
           <div className="flex flex-wrap gap-2">
-            <DownloadTextButton filename="cleaned.txt" getText={() => output} disabled={!output} />
+            <ExportTextButton filename="cleaned.txt" getText={() => output} disabled={!output} />
             <CopyButton label="Copy Output" copiedLabel="Copied Output" getText={() => output} disabled={!output} />
             <Button variant="outline" className="gap-2" onClick={() => setInput(output)} disabled={!output}>
               <Eraser className="h-4 w-4" /> Replace Input

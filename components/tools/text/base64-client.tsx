@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { CopyButton, DownloadFromUrlButton, DownloadTextButton, LinkButton, ResetButton } from '@/components/shared/action-buttons';
+import { CopyButton, ExportFromUrlButton, ExportTextButton, LinkButton, ResetButton } from '@/components/shared/action-buttons';
 import { InputField } from '@/components/shared/form-fields/input-field';
 import TextareaField from '@/components/shared/form-fields/textarea-field';
 import ToolPageHeader from '@/components/shared/tool-page-header';
@@ -340,7 +340,7 @@ export default function Base64Client() {
                 <div className="flex items-center gap-2">
                   <CopyButton getText={() => outputText || ''} />
 
-                  {mode === 'encode' && outputText && <DownloadTextButton filename="encoded-base64.txt" getText={outputText} />}
+                  {mode === 'encode' && outputText && <ExportTextButton filename="encoded-base64.txt" getText={outputText} />}
                 </div>
               </div>
 
@@ -401,9 +401,9 @@ export default function Base64Client() {
                   <div className="mt-1 text-xs">{outFileInfo.name}</div>
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {outBlobUrl && <DownloadFromUrlButton filename={outFileInfo.name} url={outBlobUrl} label="Download" variant="default" size="sm" className="gap-2 mb-2" />}
+                    {outBlobUrl && <ExportFromUrlButton filename={outFileInfo.name} url={outBlobUrl} label="Download" variant="default" size="sm" className="gap-2 mb-2" />}
                     {outBlobUrl && inferPreviewKind(outFileInfo.type) === 'image' && (
-                      <LinkButton href={outBlobUrl} label="Open preview" variant="outline" size="sm" className="gap-2" leftIcon={<ImageIcon className="h-4 w-4" />} />
+                      <LinkButton href={outBlobUrl} label="Open preview" variant="outline" size="sm" className="gap-2" icon={ImageIcon} />
                     )}
                   </div>
 

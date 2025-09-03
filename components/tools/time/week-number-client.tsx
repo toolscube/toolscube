@@ -10,7 +10,7 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { CalendarDays, CalendarSearch, ChevronLeft, ChevronRight, Download, Info, Keyboard, type LucideIcon } from 'lucide-react';
+import { CalendarDays, CalendarRange, CalendarSearch, ChevronLeft, ChevronRight, Download, Info, Keyboard, type LucideIcon } from 'lucide-react';
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -230,8 +230,8 @@ export default function WeekNumberClient() {
           <>
             <ResetButton label="Week start" onClick={() => setDateStr(fmtDateInput(fromISOYearWeek(iso.isoYear, iso.week)))} />
             <CopyButton label="Copy summary" copiedLabel="Copied" getText={() => summary} />
-            <CopyButton variant="default" label="Copy link" copiedLabel="Copied" getText={() => link} />
-            <ActionButton variant="outline" Icon={Download} label="Download" onClick={downloadICS} />
+            <CopyButton label="Copy link" copiedLabel="Copied" getText={() => link} />
+            <ActionButton variant="default" Icon={Download} label="Download" onClick={downloadICS} />
           </>
         }
       />
@@ -248,9 +248,9 @@ export default function WeekNumberClient() {
             <InputField id="wk-date" label="Date" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} />
 
             <div className="flex flex-wrap items-center gap-2">
-              <ActionButton variant="outline" Icon={ChevronLeft} label="Prev" size="sm" onClick={() => gotoDelta(-1)} />
-              <ActionButton variant="outline" label="Today" size="sm" onClick={setToday} />
-              <ActionButton variant="outline" Icon={ChevronRight} label="Next" size="sm" onClick={() => gotoDelta(1)} />
+              <ActionButton Icon={ChevronLeft} label="Prev" size="sm" onClick={() => gotoDelta(-1)} />
+              <ActionButton Icon={CalendarRange} label="Today" size="sm" onClick={setToday} />
+              <ActionButton Icon={ChevronRight} label="Next" size="sm" onClick={() => gotoDelta(1)} />
               <Badge variant="secondary" className="ml-auto flex items-center gap-1 text-xs" title="Shortcuts: ← / → (prev/next), T (today), C (copy summary)">
                 <Keyboard className="h-3.5 w-3.5" />← / →, T, C
               </Badge>
@@ -295,7 +295,6 @@ export default function WeekNumberClient() {
                 />
                 <div className="flex gap-2">
                   <ActionButton
-                    variant="outline"
                     label="Go"
                     onClick={() => {
                       if (isoYearInput && isoWeekInput) {
