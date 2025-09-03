@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from '@/lib/utils/download';
-import { Check, ClipboardPaste, CloudDownload, Copy, DownloadCloud, ExternalLink, PiIcon, RotateCcw, Save, UploadCloud, type LucideIcon } from 'lucide-react';
+import { Check, ClipboardPaste, CloudDownload, Copy, DownloadCloud, ExternalLink, RotateCcw, Save, SquareDashed, UploadCloud, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import toast from 'react-hot-toast';
@@ -544,7 +544,7 @@ export function ActionButton({
   Icon?: LucideIcon;
   disabled?: boolean;
 }) {
-  const LeftIcon: LucideIcon = Icon ?? PiIcon;
+  const LeftIcon: LucideIcon = Icon ?? SquareDashed;
 
   return (
     <Button onClick={onClick} disabled={disabled} variant={variant} size={size} className={cn('gap-2', className)}>

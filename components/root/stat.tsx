@@ -1,8 +1,16 @@
-export default function Stat({ label, value }: { label: string; value: string }) {
+import { HeartPulse, type LucideIcon } from 'lucide-react';
+
+export default function Stat({ label, value, hint, Icon }: { label: string; value: React.ReactNode; hint?: string; Icon?: LucideIcon }) {
+  const TopIcon = Icon ?? HeartPulse;
+
   return (
-    <div className="rounded-xl border bg-card/80 p-4 shadow-sm transition hover:shadow-md hover:border-primary/40">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-foreground">{value}</div>
+    <div className="rounded-md border p-3">
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">{label}</div>
+        <TopIcon className="h-4 w-4 text-muted-foreground" />
+      </div>
+      <div className="mt-1 text-2xl font-semibold tracking-tight">{value}</div>
+      {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
     </div>
   );
 }

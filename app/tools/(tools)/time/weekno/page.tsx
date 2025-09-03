@@ -23,9 +23,9 @@ export default function Page() {
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     featureList: ['Today/Reset controls', 'Copy results', 'ISO week-year', 'Date range (Mon–Sun)'],
     creator: {
-      '@type': 'Organization',
-      name: 'Tools Hub',
-      url: site,
+      '@type': 'Personal',
+      name: 'Tariqul Islam',
+      url: 'https://tariqul.dev',
     },
   };
 

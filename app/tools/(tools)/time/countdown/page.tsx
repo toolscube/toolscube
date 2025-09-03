@@ -22,9 +22,9 @@ export default function Page() {
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     featureList: ['Pomodoro phases', 'Meeting presets', 'Event countdown', 'Sound + title blink', 'Local save'],
     creator: {
-      '@type': 'Organization',
-      name: 'Tools Hub',
-      url: site,
+      '@type': 'Personal',
+      name: 'Tariqul Islam',
+      url: 'https://tariqul.dev',
     },
   };
 
