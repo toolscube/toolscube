@@ -1,8 +1,8 @@
-import { MotionGlassCard } from '@/components/ui/glass-card';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import ToolsHeader from '@/components/ui/tools-header';
-import { ToolsSidebar } from '@/components/ui/tools-sidebar';
-import { ChildrenProps } from '@/types';
+import { MotionGlassCard } from "@/components/ui/glass-card";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import ToolsHeader from "@/components/ui/tools-header";
+import { ToolsSidebar } from "@/components/ui/tools-sidebar";
+import type { ChildrenProps } from "@/types";
 
 function BackgroundFX() {
   return (
@@ -31,7 +31,9 @@ export default function Layout({ children }: ChildrenProps) {
           <ToolsHeader />
 
           <main className="flex-1 py-4">
-            <MotionGlassCard className="@container/main min-h-screen w-full">{children}</MotionGlassCard>
+            <MotionGlassCard className="@container/main min-h-screen w-full">
+              {children}
+            </MotionGlassCard>
           </main>
         </div>
       </div>

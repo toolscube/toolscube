@@ -1,21 +1,34 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-
-import { Calculator, Calendar as CalendarIcon, Check, Copy, Download, History, Link2, RotateCcw } from 'lucide-react';
+import {
+  Calculator,
+  Calendar as CalendarIcon,
+  Check,
+  Copy,
+  Download,
+  History,
+  Link2,
+  RotateCcw,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 // ---------- Types ----------
-type TermMode = 'years' | 'months';
-type Currency = 'BDT' | 'USD' | 'INR';
+type TermMode = "years" | "months";
+type Currency = "BDT" | "USD" | "INR";
 
 type Row = {
   month: number;
@@ -30,18 +43,22 @@ type Row = {
 
 // ---------- Utils ----------
 function parseNum(n: string | number): number {
-  const v = typeof n === 'number' ? n : Number(String(n).replace(/,/g, '').trim());
+  const v = typeof n === "number" ? n : Number(String(n).replace(/,/g, "").trim());
   return Number.isFinite(v) ? v : 0;
 }
 
 function fmt(n: number, currency: Currency) {
-  const code = currency === 'BDT' ? 'BDT' : currency === 'INR' ? 'INR' : 'USD';
-  const locale = currency === 'USD' ? 'en-US' : 'en-IN';
-  return new Intl.NumberFormat(locale, { style: 'currency', currency: code, maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100);
+  const code = currency === "BDT" ? "BDT" : currency === "INR" ? "INR" : "USD";
+  const locale = currency === "USD" ? "en-US" : "en-IN";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: code,
+    maximumFractionDigits: 2,
+  }).format(Math.round(n * 100) / 100);
 }
 
 function fmtInt(n: number) {
-  return new Intl.NumberFormat('en-US').format(Math.round(n));
+  return new Intl.NumberFormat("en-US").format(Math.round(n));
 }
 
 function addMonths(date: Date, m: number) {
@@ -52,21 +69,23 @@ function addMonths(date: Date, m: number) {
 
 function yyyymm(date: Date) {
   const y = date.getFullYear();
-  const m = `${date.getMonth() + 1}`.padStart(2, '0');
-  const d = `${date.getDate()}`.padStart(2, '0');
+  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  const d = `${date.getDate()}`.padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
 
 function toCSV(rows: Row[]) {
-  const head = ['Month', 'Date', 'Opening', 'Interest', 'Principal', 'Extra', 'Payment', 'Closing'];
-  const lines = rows.map((r) => [r.month, r.date, r.opening, r.interest, r.principal, r.extra, r.payment, r.closing].join(','));
-  return [head.join(','), ...lines].join('\n');
+  const head = ["Month", "Date", "Opening", "Interest", "Principal", "Extra", "Payment", "Closing"];
+  const lines = rows.map((r) =>
+    [r.month, r.date, r.opening, r.interest, r.principal, r.extra, r.payment, r.closing].join(","),
+  );
+  return [head.join(","), ...lines].join("\n");
 }
 
-function download(filename: string, content: string, type = 'text/csv;charset=utf-8;') {
+function download(filename: string, content: string, type = "text/csv;charset=utf-8;") {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -79,7 +98,7 @@ function download(filename: string, content: string, type = 'text/csv;charset=ut
 function computeEMI(P: number, annualRatePct: number, months: number) {
   const r = annualRatePct / 12 / 100;
   if (r === 0) return months > 0 ? P / months : 0;
-  const factor = Math.pow(1 + r, months);
+  const factor = (1 + r) ** months;
   return (P * r * factor) / (factor - 1);
 }
 
@@ -107,7 +126,7 @@ function buildSchedule(
   while (bal > 0 && i < 1200) {
     const opening = bal;
     const interest = r * opening;
-    let principalPay = baseEmi - interest;
+    const principalPay = baseEmi - interest;
     let extraPay = Math.max(0, extra);
 
     // If near end, adjust so we don't overpay
@@ -148,7 +167,7 @@ function useQueryParams() {
     Object.entries(params).forEach(([k, v]) => {
       url.searchParams.set(k, String(v));
     });
-    window.history.replaceState({}, '', url.toString());
+    window.history.replaceState({}, "", url.toString());
   };
   const get = (key: string, fallback?: string) => {
     if (!ready) return fallback;
@@ -162,16 +181,20 @@ export default function EmiCalculatorPage() {
   // Defaults tuned for BDT market
   const qp = useQueryParams();
 
-  const [currency, setCurrency] = useState<Currency>('BDT');
+  const [currency, setCurrency] = useState<Currency>("BDT");
 
-  const [principal, setPrincipal] = useState<string>(qp.get('p', '500000') || '500000');
-  const [rate, setRate] = useState<string>(qp.get('r', '9.5') || '9.5');
-  const [termMode, setTermMode] = useState<TermMode>((qp.get('mode', 'years') as TermMode) || 'years');
-  const [term, setTerm] = useState<string>(qp.get('t', '3') || '3'); // years by default
-  const [extra, setExtra] = useState<string>(qp.get('x', '0') || '0');
-  const [startDate, setStartDate] = useState<string>(qp.get('d', yyyymm(new Date())) || yyyymm(new Date()));
+  const [principal, setPrincipal] = useState<string>(qp.get("p", "500000") || "500000");
+  const [rate, setRate] = useState<string>(qp.get("r", "9.5") || "9.5");
+  const [termMode, setTermMode] = useState<TermMode>(
+    (qp.get("mode", "years") as TermMode) || "years",
+  );
+  const [term, setTerm] = useState<string>(qp.get("t", "3") || "3"); // years by default
+  const [extra, setExtra] = useState<string>(qp.get("x", "0") || "0");
+  const [startDate, setStartDate] = useState<string>(
+    qp.get("d", yyyymm(new Date())) || yyyymm(new Date()),
+  );
 
-  const [copied, setCopied] = useState<'link' | 'emi' | null>(null);
+  const [copied, setCopied] = useState<"link" | "emi" | null>(null);
 
   // Keep URL in sync
   useEffect(() => {
@@ -189,7 +212,7 @@ export default function EmiCalculatorPage() {
 
   const months = useMemo(() => {
     const t = parseNum(term);
-    return termMode === 'years' ? t * 12 : t;
+    return termMode === "years" ? t * 12 : t;
   }, [term, termMode]);
 
   const numericPrincipal = useMemo(() => Math.max(0, parseNum(principal)), [principal]);
@@ -201,11 +224,14 @@ export default function EmiCalculatorPage() {
     [numericPrincipal, numericRate, months, startDate, numericExtra],
   );
 
-  const baseEmi = useMemo(() => computeEMI(numericPrincipal, numericRate, months), [numericPrincipal, numericRate, months]);
+  const baseEmi = useMemo(
+    () => computeEMI(numericPrincipal, numericRate, months),
+    [numericPrincipal, numericRate, months],
+  );
 
   const payoffDate = useMemo(() => {
-    if (schedule.length === 0) return '';
-    return schedule[schedule.length - 1]?.date ?? '';
+    if (schedule.length === 0) return "";
+    return schedule[schedule.length - 1]?.date ?? "";
   }, [schedule]);
 
   function run() {
@@ -214,17 +240,17 @@ export default function EmiCalculatorPage() {
   }
 
   function resetAll() {
-    setCurrency('BDT');
-    setPrincipal('500000');
-    setRate('9.5');
-    setTermMode('years');
-    setTerm('3');
-    setExtra('0');
+    setCurrency("BDT");
+    setPrincipal("500000");
+    setRate("9.5");
+    setTermMode("years");
+    setTerm("3");
+    setExtra("0");
     setStartDate(yyyymm(new Date()));
     setCopied(null);
   }
 
-  function copy(text: string, key: 'link' | 'emi') {
+  function copy(text: string, key: "link" | "emi") {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(key);
       setTimeout(() => setCopied(null), 1200);
@@ -233,10 +259,10 @@ export default function EmiCalculatorPage() {
 
   function downloadCSV() {
     if (!schedule.length) return;
-    download('emi-amortization.csv', toCSV(schedule));
+    download("emi-amortization.csv", toCSV(schedule));
   }
 
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   return (
     <div className="container mx-auto max-w-6xl px-3 py-6 sm:py-10">
@@ -247,7 +273,9 @@ export default function EmiCalculatorPage() {
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               <Calculator className="h-6 w-6" /> Loan / EMI Calculator
             </h1>
-            <p className="text-sm text-muted-foreground">Monthly installment, total interest & amortization schedule.</p>
+            <p className="text-sm text-muted-foreground">
+              Monthly installment, total interest & amortization schedule.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={resetAll} className="gap-2">
@@ -282,26 +310,52 @@ export default function EmiCalculatorPage() {
 
             <div className="space-y-2">
               <Label htmlFor="principal">Loan Amount</Label>
-              <Input id="principal" inputMode="decimal" value={principal} onChange={(e) => setPrincipal(e.target.value)} placeholder="e.g. 500000" />
+              <Input
+                id="principal"
+                inputMode="decimal"
+                value={principal}
+                onChange={(e) => setPrincipal(e.target.value)}
+                placeholder="e.g. 500000"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="rate">Annual Interest Rate (%)</Label>
-              <Input id="rate" inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="e.g. 9.5" />
+              <Input
+                id="rate"
+                inputMode="decimal"
+                value={rate}
+                onChange={(e) => setRate(e.target.value)}
+                placeholder="e.g. 9.5"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="term">Term ({termMode === 'years' ? 'years' : 'months'})</Label>
-              <Input id="term" inputMode="numeric" value={term} onChange={(e) => setTerm(e.target.value)} placeholder="e.g. 3" />
+              <Label htmlFor="term">Term ({termMode === "years" ? "years" : "months"})</Label>
+              <Input
+                id="term"
+                inputMode="numeric"
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
+                placeholder="e.g. 3"
+              />
             </div>
 
             <div className="space-y-2">
               <Label>Term Mode</Label>
               <div className="flex items-center gap-3 rounded-md border px-3 py-2">
-                <Badge variant={termMode === 'years' ? 'default' : 'outline'} className="cursor-pointer" onClick={() => setTermMode('years')}>
+                <Badge
+                  variant={termMode === "years" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setTermMode("years")}
+                >
                   Years
                 </Badge>
-                <Badge variant={termMode === 'months' ? 'default' : 'outline'} className="cursor-pointer" onClick={() => setTermMode('months')}>
+                <Badge
+                  variant={termMode === "months" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setTermMode("months")}
+                >
                   Months
                 </Badge>
               </div>
@@ -310,7 +364,12 @@ export default function EmiCalculatorPage() {
             <div className="space-y-2">
               <Label htmlFor="start">Start Date</Label>
               <div className="flex items-center gap-2">
-                <Input id="start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input
+                  id="start"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
                 <CalendarIcon className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
@@ -318,8 +377,16 @@ export default function EmiCalculatorPage() {
             <div className="space-y-2 lg:col-span-3">
               <Label htmlFor="extra">Extra Monthly Payment (Optional)</Label>
               <div className="flex items-center gap-3">
-                <Input id="extra" inputMode="decimal" value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="e.g. 1000" />
-                <div className="text-xs text-muted-foreground">Paying extra each month can reduce total interest and end date.</div>
+                <Input
+                  id="extra"
+                  inputMode="decimal"
+                  value={extra}
+                  onChange={(e) => setExtra(e.target.value)}
+                  placeholder="e.g. 1000"
+                />
+                <div className="text-xs text-muted-foreground">
+                  Paying extra each month can reduce total interest and end date.
+                </div>
               </div>
             </div>
           </CardContent>
@@ -334,11 +401,19 @@ export default function EmiCalculatorPage() {
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border p-4">
               <div className="text-xs text-muted-foreground">EMI (without extra)</div>
-              <div className="mt-1 flex items-center gap-2 text-xl font-semibold">{fmt(baseEmi, currency)}</div>
+              <div className="mt-1 flex items-center gap-2 text-xl font-semibold">
+                {fmt(baseEmi, currency)}
+              </div>
               <div className="mt-1 text-xs text-muted-foreground">Base monthly installment</div>
               <div className="mt-2">
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => copy(fmt(baseEmi, currency), 'emi')}>
-                  {copied === 'emi' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => copy(fmt(baseEmi, currency), "emi")}
+                >
+                  {copied === "emi" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{" "}
+                  Copy
                 </Button>
               </div>
             </div>
@@ -357,8 +432,10 @@ export default function EmiCalculatorPage() {
 
             <div className="rounded-xl border p-4">
               <div className="text-xs text-muted-foreground">Payoff Date</div>
-              <div className="mt-1 text-xl font-semibold">{payoffDate || '—'}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{actualMonths ? `${fmtInt(actualMonths)} months` : ''}</div>
+              <div className="mt-1 text-xl font-semibold">{payoffDate || "—"}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {actualMonths ? `${fmtInt(actualMonths)} months` : ""}
+              </div>
             </div>
           </CardContent>
         </GlassCard>
@@ -367,11 +444,21 @@ export default function EmiCalculatorPage() {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2" onClick={downloadCSV} disabled={!schedule.length}>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={downloadCSV}
+            disabled={!schedule.length}
+          >
             <Download className="h-4 w-4" /> Download CSV
           </Button>
-          <Button variant="outline" className="gap-2" onClick={() => shareUrl && copy(shareUrl, 'link')}>
-            {copied === 'link' ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />} Copy Share Link
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => shareUrl && copy(shareUrl, "link")}
+          >
+            {copied === "link" ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />} Copy
+            Share Link
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => window.print()}>
             <History className="h-4 w-4" /> Print
@@ -386,7 +473,9 @@ export default function EmiCalculatorPage() {
           </CardHeader>
           <CardContent>
             {schedule.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Enter loan details to see the schedule.</p>
+              <p className="text-sm text-muted-foreground">
+                Enter loan details to see the schedule.
+              </p>
             ) : (
               <div className="overflow-auto rounded-md border">
                 <table className="w-full min-w-[720px] border-collapse text-sm">

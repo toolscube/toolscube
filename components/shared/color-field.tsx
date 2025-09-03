@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { InputField } from '@/components/shared/form-fields/input-field';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { InputField } from "@/components/shared/form-fields/input-field";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type ColorFieldProps = {
   id: string;
@@ -15,12 +15,12 @@ type ColorFieldProps = {
 
 export function ColorField({ id, value, onChange, label, labelNode, className }: ColorFieldProps) {
   const normalizeHex = (v: string) => {
-    const next = v.startsWith('#') ? v : `#${v}`;
+    const next = v.startsWith("#") ? v : `#${v}`;
     return next.slice(0, 7);
   };
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       {(labelNode || label) && (
         <Label htmlFor={`${id}-hex`} className="block">
           {labelNode ?? label}
@@ -39,7 +39,15 @@ export function ColorField({ id, value, onChange, label, labelNode, className }:
         />
 
         {/* Hex input */}
-        <InputField id={`${id}-hex`} type="text" placeholder="#000000" value={value} onChange={(e) => onChange(normalizeHex(e.target.value))} className="m-0 flex-1" inputClassName="font-mono" />
+        <InputField
+          id={`${id}-hex`}
+          type="text"
+          placeholder="#000000"
+          value={value}
+          onChange={(e) => onChange(normalizeHex(e.target.value))}
+          className="m-0 flex-1"
+          inputClassName="font-mono"
+        />
       </div>
     </div>
   );

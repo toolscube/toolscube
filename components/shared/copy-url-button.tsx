@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { CheckCircle2, Copy } from 'lucide-react';
-import * as React from 'react';
+import { CheckCircle2, Copy } from "lucide-react";
+import * as React from "react";
+import { Button } from "@/components/ui/button";
 
 export default function CopyUrlButton({ url }: { url: string }) {
   const [copied, setCopied] = React.useState(false);
@@ -16,9 +16,10 @@ export default function CopyUrlButton({ url }: { url: string }) {
           setCopied(true);
           setTimeout(() => setCopied(false), 1000);
         } catch {}
-      }}>
+      }}
+    >
       {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-      {copied ? 'Copied' : 'Copy URL'}
+      {copied ? "Copied" : "Copy URL"}
     </Button>
   );
 }

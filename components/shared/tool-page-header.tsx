@@ -1,5 +1,5 @@
-import { GlassCard } from '@/components/ui/glass-card';
-import { ScanFace, type LucideIcon } from 'lucide-react';
+import { type LucideIcon, ScanFace } from "lucide-react";
+import { GlassCard } from "@/components/ui/glass-card";
 
 type ToolPageHeaderProps = {
   title: string;
@@ -9,11 +9,19 @@ type ToolPageHeaderProps = {
   className?: string;
 };
 
-export default function ToolPageHeader({ title, description, icon: Icon, actions, className = '' }: ToolPageHeaderProps) {
+export default function ToolPageHeader({
+  title,
+  description,
+  icon: Icon,
+  actions,
+  className = "",
+}: ToolPageHeaderProps) {
   const LeftIcon: LucideIcon = Icon ?? ScanFace;
 
   return (
-    <GlassCard className={`mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-5 ${className}`}>
+    <GlassCard
+      className={`mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-5 ${className}`}
+    >
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
           <LeftIcon className="h-6 w-6" />

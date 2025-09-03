@@ -1,21 +1,48 @@
-'use client';
+"use client";
 
-import { Bell, Check, Clock4, Coffee, History, Pause, Play, RotateCcw, Settings2, SkipForward, Timer, Volume2, VolumeX, Zap } from 'lucide-react';
-import * as React from 'react';
+import {
+  Bell,
+  Check,
+  Clock4,
+  Coffee,
+  History,
+  Pause,
+  Play,
+  RotateCcw,
+  Settings2,
+  SkipForward,
+  Timer,
+  Volume2,
+  VolumeX,
+  Zap,
+} from "lucide-react";
+import * as React from "react";
 
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 // ---------------- Types ----------------
-type Mode = 'work' | 'short' | 'long';
-type HistoryItem = { id: string; startedAt: number; endedAt: number; mode: Mode; durationMs: number };
+type Mode = "work" | "short" | "long";
+type HistoryItem = {
+  id: string;
+  startedAt: number;
+  endedAt: number;
+  mode: Mode;
+  durationMs: number;
+};
 
 // ---------------- Helpers ----------------
 const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
@@ -32,11 +59,11 @@ function clamp(n: number, min: number, max: number) {
 }
 
 function makeBeep(volume = 0.4, durationMs = 220, freq = 880) {
-  if (typeof window === 'undefined' || !('AudioContext' in window)) return;
+  if (typeof window === "undefined" || !("AudioContext" in window)) return;
   const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
   const o = ctx.createOscillator();
   const g = ctx.createGain();
-  o.type = 'sine';
+  o.type = "sine";
   o.frequency.value = freq;
   g.gain.value = volume;
   o.connect(g);
@@ -61,7 +88,7 @@ export default function PomodoroPage() {
   const [volume, setVolume] = React.useState<number>(70);
 
   // Runtime
-  const [mode, setMode] = React.useState<Mode>('work');
+  const [mode, setMode] = React.useState<Mode>("work");
   const [running, setRunning] = React.useState<boolean>(false);
   const [remainingMs, setRemainingMs] = React.useState<number>(workMin * 60 * 1000);
   const [cycleCount, setCycleCount] = React.useState<number>(0); // completed work sessions
@@ -70,12 +97,15 @@ export default function PomodoroPage() {
 
   // Derived
   const targetMs = React.useMemo(() => {
-    if (mode === 'work') return workMin * 60 * 1000;
-    if (mode === 'short') return shortMin * 60 * 1000;
+    if (mode === "work") return workMin * 60 * 1000;
+    if (mode === "short") return shortMin * 60 * 1000;
     return longMin * 60 * 1000;
   }, [mode, workMin, shortMin, longMin]);
 
-  const progress = React.useMemo(() => 100 - Math.round((remainingMs / targetMs) * 100), [remainingMs, targetMs]);
+  const progress = React.useMemo(
+    () => 100 - Math.round((remainingMs / targetMs) * 100),
+    [remainingMs, targetMs],
+  );
 
   // Initialize when mode or settings change (if not running)
   React.useEffect(() => {
@@ -102,37 +132,46 @@ export default function PomodoroPage() {
       if (t) window.clearInterval(t);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, mode, workMin, shortMin, longMin, sessionsUntilLong, autoStartBreaks, autoStartWork]);
+  }, [
+    running,
+    mode,
+    workMin,
+    shortMin,
+    longMin,
+    sessionsUntilLong,
+    autoStartBreaks,
+    autoStartWork,
+  ]);
 
   // Visibility: optional pause (kept running for simplicity)
   // Keyboard shortcuts
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
+      if (e.code === "Space") {
         e.preventDefault();
         toggle();
-      } else if (e.key.toLowerCase() === 'r') {
+      } else if (e.key.toLowerCase() === "r") {
         resetTimer();
-      } else if (e.key.toLowerCase() === 'n') {
+      } else if (e.key.toLowerCase() === "n") {
         skip();
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [running, mode, remainingMs]);
 
   // Notifications permission (ask once after first interaction)
   const askedRef = React.useRef(false);
   React.useEffect(() => {
     const onFirstClick = () => {
-      if (!askedRef.current && 'Notification' in window && Notification.permission === 'default') {
+      if (!askedRef.current && "Notification" in window && Notification.permission === "default") {
         Notification.requestPermission().catch(() => {});
       }
       askedRef.current = true;
-      window.removeEventListener('pointerdown', onFirstClick);
+      window.removeEventListener("pointerdown", onFirstClick);
     };
-    window.addEventListener('pointerdown', onFirstClick);
-    return () => window.removeEventListener('pointerdown', onFirstClick);
+    window.addEventListener("pointerdown", onFirstClick);
+    return () => window.removeEventListener("pointerdown", onFirstClick);
   }, []);
 
   function start() {
@@ -149,7 +188,13 @@ export default function PomodoroPage() {
     setRunning(false);
     const m = nextMode ?? mode;
     setMode(m);
-    setRemainingMs(m === 'work' ? workMin * 60 * 1000 : m === 'short' ? shortMin * 60 * 1000 : longMin * 60 * 1000);
+    setRemainingMs(
+      m === "work"
+        ? workMin * 60 * 1000
+        : m === "short"
+          ? shortMin * 60 * 1000
+          : longMin * 60 * 1000,
+    );
     setStartedAt(null);
   }
   function skip() {
@@ -159,7 +204,11 @@ export default function PomodoroPage() {
 
   function ping(title: string, body: string) {
     if (soundOn) makeBeep(volume / 100, 220, 920);
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      Notification.permission === "granted"
+    ) {
       try {
         new Notification(title, { body });
       } catch {}
@@ -174,7 +223,10 @@ export default function PomodoroPage() {
     setHistory((prev) => [
       {
         id: crypto.randomUUID(),
-        startedAt: prev.length && prev[prev.length - 1].endedAt > (startedAt ?? 0) ? Date.now() - (targetMs - remainingMs) : startedAt ?? Date.now(),
+        startedAt:
+          prev.length && prev[prev.length - 1].endedAt > (startedAt ?? 0)
+            ? Date.now() - (targetMs - remainingMs)
+            : (startedAt ?? Date.now()),
         endedAt: Date.now(),
         mode,
         durationMs: targetMs - Math.max(0, remainingMs),
@@ -183,47 +235,47 @@ export default function PomodoroPage() {
     ]);
 
     if (!skipped) {
-      if (mode === 'work') {
+      if (mode === "work") {
         const newCount = cycleCount + 1;
         setCycleCount(newCount);
         // decide break
         if (newCount % sessionsUntilLong === 0) {
-          setMode('long');
+          setMode("long");
           setRemainingMs(longMin * 60 * 1000);
-          ping('Long break 🎉', `Great job! Take ${longMin} minutes.`);
+          ping("Long break 🎉", `Great job! Take ${longMin} minutes.`);
           if (autoStartBreaks) setRunning(true);
           return;
         } else {
-          setMode('short');
+          setMode("short");
           setRemainingMs(shortMin * 60 * 1000);
-          ping('Break time ☕', `Take ${shortMin} minutes.`);
+          ping("Break time ☕", `Take ${shortMin} minutes.`);
           if (autoStartBreaks) setRunning(true);
           return;
         }
       } else {
         // finished a break -> back to work
-        setMode('work');
+        setMode("work");
         setRemainingMs(workMin * 60 * 1000);
-        ping('Focus time 🔥', `Back to work for ${workMin} minutes.`);
+        ping("Focus time 🔥", `Back to work for ${workMin} minutes.`);
         if (autoStartWork) setRunning(true);
         return;
       }
     } else {
       // Skip logic: jump immediately to next suggested mode without logging completion toast
-      if (mode === 'work') {
+      if (mode === "work") {
         const newCount = cycleCount + 1;
         setCycleCount(newCount);
         if (newCount % sessionsUntilLong === 0) {
-          setMode('long');
+          setMode("long");
           setRemainingMs(longMin * 60 * 1000);
           if (autoStartBreaks) setRunning(true);
         } else {
-          setMode('short');
+          setMode("short");
           setRemainingMs(shortMin * 60 * 1000);
           if (autoStartBreaks) setRunning(true);
         }
       } else {
-        setMode('work');
+        setMode("work");
         setRemainingMs(workMin * 60 * 1000);
         if (autoStartWork) setRunning(true);
       }
@@ -232,7 +284,7 @@ export default function PomodoroPage() {
 
   function resetAll() {
     setRunning(false);
-    setMode('work');
+    setMode("work");
     setRemainingMs(workMin * 60 * 1000);
     setCycleCount(0);
     setHistory([]);
@@ -240,7 +292,11 @@ export default function PomodoroPage() {
   }
 
   // UI bits
-  const modeLabel: Record<Mode, string> = { work: 'Focus', short: 'Short Break', long: 'Long Break' };
+  const modeLabel: Record<Mode, string> = {
+    work: "Focus",
+    short: "Short Break",
+    long: "Long Break",
+  };
   const modeIcon: Record<Mode, React.ReactNode> = {
     work: <Zap className="h-5 w-5" />,
     short: <Coffee className="h-5 w-5" />,
@@ -255,7 +311,9 @@ export default function PomodoroPage() {
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Timer className="h-6 w-6" /> Pomodoro Focus
           </h1>
-          <p className="text-sm text-muted-foreground">Work / break cycles with sound, history, and auto-start options.</p>
+          <p className="text-sm text-muted-foreground">
+            Work / break cycles with sound, history, and auto-start options.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={resetAll} className="gap-2">
@@ -266,7 +324,7 @@ export default function PomodoroPage() {
           </Button>
           <Button onClick={toggle} className="gap-2">
             {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            {running ? 'Pause' : 'Start'}
+            {running ? "Pause" : "Start"}
           </Button>
         </div>
       </GlassCard>
@@ -285,7 +343,11 @@ export default function PomodoroPage() {
             </div>
           </div>
           <CardDescription>
-            {mode === 'work' ? `Focus for ${workMin} minute${workMin > 1 ? 's' : ''}` : mode === 'short' ? `Take a short ${shortMin}-minute break` : `Enjoy a long ${longMin}-minute break`}
+            {mode === "work"
+              ? `Focus for ${workMin} minute${workMin > 1 ? "s" : ""}`
+              : mode === "short"
+                ? `Take a short ${shortMin}-minute break`
+                : `Enjoy a long ${longMin}-minute break`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -295,7 +357,14 @@ export default function PomodoroPage() {
               <div className="relative h-48 w-48">
                 {/* progress ring (CSS) */}
                 <svg viewBox="0 0 100 100" className="h-full w-full">
-                  <circle cx="50" cy="50" r="44" stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="44"
+                    stroke="hsl(var(--muted))"
+                    strokeWidth="8"
+                    fill="none"
+                  />
                   <circle
                     cx="50"
                     cy="50"
@@ -310,18 +379,25 @@ export default function PomodoroPage() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="text-4xl font-semibold tabular-nums">{msToClock(remainingMs)}</div>
+                  <div className="text-4xl font-semibold tabular-nums">
+                    {msToClock(remainingMs)}
+                  </div>
                   <div className="text-xs text-muted-foreground">{progress}%</div>
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => resetTimer(mode)} className="gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => resetTimer(mode)}
+                  className="gap-2"
+                >
                   <RotateCcw className="h-4 w-4" /> Reset
                 </Button>
                 <Button size="sm" onClick={toggle} className="gap-2">
                   {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  {running ? 'Pause' : 'Start'}
+                  {running ? "Pause" : "Start"}
                 </Button>
               </div>
 
@@ -335,15 +411,33 @@ export default function PomodoroPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">
                   <Label>Work (min)</Label>
-                  <Input type="number" min={1} max={180} value={workMin} onChange={(e) => setWorkMin(clamp(parseInt(e.target.value || '0', 10), 1, 180))} />
+                  <Input
+                    type="number"
+                    min={1}
+                    max={180}
+                    value={workMin}
+                    onChange={(e) => setWorkMin(clamp(parseInt(e.target.value || "0", 10), 1, 180))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Short (min)</Label>
-                  <Input type="number" min={1} max={60} value={shortMin} onChange={(e) => setShortMin(clamp(parseInt(e.target.value || '0', 10), 1, 60))} />
+                  <Input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={shortMin}
+                    onChange={(e) => setShortMin(clamp(parseInt(e.target.value || "0", 10), 1, 60))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Long (min)</Label>
-                  <Input type="number" min={5} max={90} value={longMin} onChange={(e) => setLongMin(clamp(parseInt(e.target.value || '0', 10), 5, 90))} />
+                  <Input
+                    type="number"
+                    min={5}
+                    max={90}
+                    value={longMin}
+                    onChange={(e) => setLongMin(clamp(parseInt(e.target.value || "0", 10), 5, 90))}
+                  />
                 </div>
               </div>
 
@@ -355,8 +449,15 @@ export default function PomodoroPage() {
                     onValueChange={(v: Mode) => {
                       setMode(v);
                       setRunning(false);
-                      setRemainingMs(v === 'work' ? workMin * 60 * 1000 : v === 'short' ? shortMin * 60 * 1000 : longMin * 60 * 1000);
-                    }}>
+                      setRemainingMs(
+                        v === "work"
+                          ? workMin * 60 * 1000
+                          : v === "short"
+                            ? shortMin * 60 * 1000
+                            : longMin * 60 * 1000,
+                      );
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select mode" />
                     </SelectTrigger>
@@ -369,7 +470,15 @@ export default function PomodoroPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Until Long Break</Label>
-                  <Input type="number" min={2} max={12} value={sessionsUntilLong} onChange={(e) => setSessionsUntilLong(clamp(parseInt(e.target.value || '0', 10), 2, 12))} />
+                  <Input
+                    type="number"
+                    min={2}
+                    max={12}
+                    value={sessionsUntilLong}
+                    onChange={(e) =>
+                      setSessionsUntilLong(clamp(parseInt(e.target.value || "0", 10), 2, 12))
+                    }
+                  />
                 </div>
               </div>
 
@@ -380,8 +489,21 @@ export default function PomodoroPage() {
                     <span className="text-sm">Sound on session change</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <input type="range" min={0} max={100} step={1} value={volume} onChange={(e) => setVolume(parseInt(e.target.value || '0', 10))} className="w-28" />
-                    <Button variant="outline" size="icon" onClick={() => setSoundOn((s) => !s)} aria-label="Toggle sound">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={volume}
+                      onChange={(e) => setVolume(parseInt(e.target.value || "0", 10))}
+                      className="w-28"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setSoundOn((s) => !s)}
+                      aria-label="Toggle sound"
+                    >
                       {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                     </Button>
                   </div>
@@ -396,10 +518,12 @@ export default function PomodoroPage() {
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm">
                     <label className="flex items-center gap-2">
-                      <Switch checked={autoStartBreaks} onCheckedChange={setAutoStartBreaks} /> Auto-start breaks
+                      <Switch checked={autoStartBreaks} onCheckedChange={setAutoStartBreaks} />{" "}
+                      Auto-start breaks
                     </label>
                     <label className="flex items-center gap-2">
-                      <Switch checked={autoStartWork} onCheckedChange={setAutoStartWork} /> Auto-start work
+                      <Switch checked={autoStartWork} onCheckedChange={setAutoStartWork} />{" "}
+                      Auto-start work
                     </label>
                   </div>
                 </div>
@@ -422,14 +546,32 @@ export default function PomodoroPage() {
         </CardHeader>
         <CardContent className="grid gap-3">
           {history.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No sessions yet. Start your first pomodoro!</p>
+            <p className="text-sm text-muted-foreground">
+              No sessions yet. Start your first pomodoro!
+            </p>
           ) : (
             <ul className="grid gap-2">
               {history.slice(0, 20).map((h) => (
-                <li key={h.id} className={cn('flex items-center justify-between rounded-md border p-3', h.mode === 'work' ? 'bg-primary/5' : 'bg-muted/50')}>
+                <li
+                  key={h.id}
+                  className={cn(
+                    "flex items-center justify-between rounded-md border p-3",
+                    h.mode === "work" ? "bg-primary/5" : "bg-muted/50",
+                  )}
+                >
                   <div className="flex items-center gap-2">
-                    {h.mode === 'work' ? <Zap className="h-4 w-4" /> : <Coffee className="h-4 w-4" />}
-                    <span className="text-sm font-medium">{h.mode === 'work' ? 'Focus' : h.mode === 'short' ? 'Short Break' : 'Long Break'}</span>
+                    {h.mode === "work" ? (
+                      <Zap className="h-4 w-4" />
+                    ) : (
+                      <Coffee className="h-4 w-4" />
+                    )}
+                    <span className="text-sm font-medium">
+                      {h.mode === "work"
+                        ? "Focus"
+                        : h.mode === "short"
+                          ? "Short Break"
+                          : "Long Break"}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       • {msToClock(h.durationMs)} • {new Date(h.endedAt).toLocaleTimeString()}
                     </span>

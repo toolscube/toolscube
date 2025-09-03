@@ -11,6 +11,6 @@ type CleanOptions = {
   removeUrls: boolean;
   removeEmojis: boolean;
 
-  caseMode: 'none' | 'lower' | 'upper' | 'title' | 'sentence';
+  caseMode: "none" | "lower" | "upper" | "title" | "sentence";
   autoCleanOnPaste: boolean;
 };

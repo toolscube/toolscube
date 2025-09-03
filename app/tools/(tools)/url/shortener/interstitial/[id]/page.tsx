@@ -1,12 +1,12 @@
-import { CopyButton } from '@/components/shared/action-buttons';
-import ContinueForm from '@/components/tools/url/continue-form';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { getLink, recordClickAndRedirect } from '@/lib/actions/shortener.action';
-import { ExternalLink, Link as LinkIcon, Lock, ShieldCheck, TriangleAlert } from 'lucide-react';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { ExternalLink, Link as LinkIcon, Lock, ShieldCheck, TriangleAlert } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { CopyButton } from "@/components/shared/action-buttons";
+import ContinueForm from "@/components/tools/url/continue-form";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { getLink, recordClickAndRedirect } from "@/lib/actions/shortener.action";
 
 export default async function InterstitialPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -14,15 +14,15 @@ export default async function InterstitialPage({ params }: { params: { id: strin
   if (!link) notFound();
 
   async function continueAction() {
-    'use server';
+    "use server";
     await recordClickAndRedirect(id);
   }
 
   const target = new URL(link.targetUrl);
   const hostname = target.hostname;
   const pathAndQuery = `${target.pathname}${target.search}`;
-  const isHttps = target.protocol === 'https:';
-  const tld = hostname.split('.').slice(-1)[0]?.toUpperCase() || '';
+  const isHttps = target.protocol === "https:";
+  const tld = hostname.split(".").slice(-1)[0]?.toUpperCase() || "";
   const analyticsHref = `/tools/url/shortener/analytics/${id}`;
   const createdAt = new Date(link.createdAt).toLocaleString();
 
@@ -35,7 +35,11 @@ export default async function InterstitialPage({ params }: { params: { id: strin
             <div className="flex items-center gap-2">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border bg-background/50 backdrop-blur">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img alt={`${hostname} favicon`} src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`} className="h-full w-full object-cover" />
+                <img
+                  alt={`${hostname} favicon`}
+                  src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -57,7 +61,7 @@ export default async function InterstitialPage({ params }: { params: { id: strin
                   {tld && <Badge variant="outline">{tld}</Badge>}
                 </div>
                 <div className="mt-1 truncate text-xl font-semibold leading-tight">{hostname}</div>
-                <div className="truncate text-xs text-muted-foreground">{pathAndQuery || '/'}</div>
+                <div className="truncate text-xs text-muted-foreground">{pathAndQuery || "/"}</div>
               </div>
             </div>
 
@@ -72,7 +76,9 @@ export default async function InterstitialPage({ params }: { params: { id: strin
           {/* Full URL + actions */}
           <GlassCard className="p-4">
             <div className="text-xs text-muted-foreground">Full URL</div>
-            <code className="mt-1 block max-w-[58ch] truncate rounded-md bg-muted px-2 py-1 text-sm">{link.targetUrl}</code>
+            <code className="mt-1 block max-w-[58ch] truncate rounded-md bg-muted px-2 py-1 text-sm">
+              {link.targetUrl}
+            </code>
             <div className="mt-3 flex flex-wrap gap-2">
               <CopyButton getText={link.targetUrl} />
               <Button asChild variant="outline" className="gap-2">
@@ -93,7 +99,7 @@ export default async function InterstitialPage({ params }: { params: { id: strin
               </div>
               <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
                 <li>Confirm the domain matches what you expect.</li>
-                <li>{isHttps ? 'HTTPS is present.' : 'No HTTPS — avoid entering passwords.'}</li>
+                <li>{isHttps ? "HTTPS is present." : "No HTTPS — avoid entering passwords."}</li>
                 <li>Be careful with downloads and unfamiliar forms.</li>
               </ul>
             </GlassCard>
@@ -106,7 +112,10 @@ export default async function InterstitialPage({ params }: { params: { id: strin
                 Created: <span className="font-medium">{createdAt}</span>
               </div>
               <div className="mt-3 text-xs">
-                <Link href="/tools/url/shortener" className="inline-flex items-center gap-2 underline underline-offset-4 hover:text-foreground">
+                <Link
+                  href="/tools/url/shortener"
+                  className="inline-flex items-center gap-2 underline underline-offset-4 hover:text-foreground"
+                >
                   Make another short link
                 </Link>
               </div>

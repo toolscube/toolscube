@@ -1,23 +1,27 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard } from '@/components/ui/glass-card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-
-import { ActionButton, CopyButton, ResetButton } from '@/components/shared/action-buttons';
-import { InputField } from '@/components/shared/form-fields/input-field';
-import ToolPageHeader from '@/components/shared/tool-page-header';
-import { Clock, Diff, Globe, MapPin, Plus, Replace, Trash2 } from 'lucide-react';
+import { Clock, Diff, Globe, MapPin, Plus, Replace, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 
 // Utils
-const pad = (n: number, w = 2) => n.toString().padStart(w, '0');
+const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
 
 function formatDateInput(d: Date): string {
   const y = d.getFullYear();
@@ -43,22 +47,23 @@ function wallTimeToUTC(
   let guess = Date.UTC(y, m - 1, d, h, min, 0, 0);
 
   for (let i = 0; i < 4; i++) {
-    const parts = new Intl.DateTimeFormat('en-CA', {
+    const parts = new Intl.DateTimeFormat("en-CA", {
       timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
     }).formatToParts(new Date(guess));
 
-    const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value || '00';
-    const zy = Number(get('year'));
-    const zm = Number(get('month'));
-    const zd = Number(get('day'));
-    const zh = Number(get('hour'));
-    const zmin = Number(get('minute'));
+    const get = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((p) => p.type === type)?.value || "00";
+    const zy = Number(get("year"));
+    const zm = Number(get("month"));
+    const zd = Number(get("day"));
+    const zh = Number(get("hour"));
+    const zmin = Number(get("minute"));
 
     const mappedUTC = Date.UTC(zy, zm - 1, zd, zh, zmin, 0, 0);
     const desiredUTC = Date.UTC(y, m - 1, d, h, min, 0, 0);
@@ -77,26 +82,26 @@ function wallTimeToUTC(
 /** Pretty print a timestamp in a zone */
 function formatInZone(ts: number, timeZone: string, opts?: { hour12?: boolean; withTz?: boolean }) {
   const { hour12 = false, withTz = true } = opts || {};
-  const formatter = new Intl.DateTimeFormat('en-GB', {
+  const formatter = new Intl.DateTimeFormat("en-GB", {
     timeZone,
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
     hour12,
-    timeZoneName: withTz ? 'short' : undefined,
+    timeZoneName: withTz ? "short" : undefined,
   });
   return formatter.format(new Date(ts));
 }
 
 function tzAbbr(ts: number, timeZone: string): string {
-  const s = new Intl.DateTimeFormat('en-US', {
+  const s = new Intl.DateTimeFormat("en-US", {
     timeZone,
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short',
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
     hour12: false,
   }).format(new Date(ts));
   const m = /\b([A-Z]{1,5}|GMT[+−-]\d{1,2})\b/.exec(s);
@@ -105,22 +110,23 @@ function tzAbbr(ts: number, timeZone: string): string {
 
 /** Offset in minutes at a UTC timestamp for a given zone */
 function getOffsetMinutes(tsUtc: number, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat('en-CA', {
+  const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: false,
   }).formatToParts(new Date(tsUtc));
 
-  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value || '00';
-  const zy = Number(get('year'));
-  const zm = Number(get('month'));
-  const zd = Number(get('day'));
-  const zh = Number(get('hour'));
-  const zmin = Number(get('minute'));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value || "00";
+  const zy = Number(get("year"));
+  const zm = Number(get("month"));
+  const zd = Number(get("day"));
+  const zh = Number(get("hour"));
+  const zmin = Number(get("minute"));
 
   const asUtc = Date.UTC(zy, zm - 1, zd, zh, zmin, 0, 0);
 
@@ -129,7 +135,7 @@ function getOffsetMinutes(tsUtc: number, timeZone: string): number {
 }
 
 function fmtOffset(mins: number) {
-  const sign = mins >= 0 ? '+' : '-';
+  const sign = mins >= 0 ? "+" : "-";
   const abs = Math.abs(mins);
   const hh = Math.floor(abs / 60);
   const mm = abs % 60;
@@ -138,57 +144,57 @@ function fmtOffset(mins: number) {
 
 function getLocalTimeZone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   } catch {
-    return 'UTC';
+    return "UTC";
   }
 }
 
 function getAllTimeZones(): { value: string; label: string }[] {
   let zones: string[] | undefined;
   try {
-    zones = Intl.supportedValuesOf?.('timeZone');
+    zones = Intl.supportedValuesOf?.("timeZone");
   } catch {
     zones = undefined;
   }
 
   const curated = [
     // Asia
-    'Asia/Dhaka',
-    'Asia/Kolkata',
-    'Asia/Karachi',
-    'Asia/Singapore',
-    'Asia/Tokyo',
-    'Asia/Dubai',
-    'Asia/Bangkok',
-    'Asia/Shanghai',
-    'Asia/Hong_Kong',
+    "Asia/Dhaka",
+    "Asia/Kolkata",
+    "Asia/Karachi",
+    "Asia/Singapore",
+    "Asia/Tokyo",
+    "Asia/Dubai",
+    "Asia/Bangkok",
+    "Asia/Shanghai",
+    "Asia/Hong_Kong",
     // Europe
-    'Europe/London',
-    'Europe/Paris',
-    'Europe/Berlin',
-    'Europe/Madrid',
-    'Europe/Amsterdam',
-    'Europe/Rome',
-    'Europe/Stockholm',
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Europe/Madrid",
+    "Europe/Amsterdam",
+    "Europe/Rome",
+    "Europe/Stockholm",
     // Americas
-    'America/New_York',
-    'America/Chicago',
-    'America/Denver',
-    'America/Los_Angeles',
-    'America/Toronto',
-    'America/Mexico_City',
-    'America/Sao_Paulo',
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "America/Toronto",
+    "America/Mexico_City",
+    "America/Sao_Paulo",
     // Oceania & Africa
-    'Australia/Sydney',
-    'Pacific/Auckland',
-    'Africa/Nairobi',
-    'Africa/Cairo',
+    "Australia/Sydney",
+    "Pacific/Auckland",
+    "Africa/Nairobi",
+    "Africa/Cairo",
   ];
 
   const list = (zones && zones.length ? zones : curated).map((z) => ({
     value: z,
-    label: `${z.split('/').at(-1)?.replace('_', ' ') || z} (${z})`,
+    label: `${z.split("/").at(-1)?.replace("_", " ") || z} (${z})`,
   }));
 
   // sort alphabetically by label for nicer UX
@@ -224,7 +230,7 @@ function TimeZoneSelect({
       {label && <Label>{label}</Label>}
       <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger>
-          <SelectValue placeholder={placeholder || 'Select time zone'} />
+          <SelectValue placeholder={placeholder || "Select time zone"} />
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
           {items.map((z) => (
@@ -238,7 +244,21 @@ function TimeZoneSelect({
   );
 }
 
-function CityRow({ tz, utcTs, srcTz, is12h, onRemove, onSwap }: { tz: string; utcTs: number; srcTz: string; is12h: boolean; onRemove: () => void; onSwap: () => void }) {
+function CityRow({
+  tz,
+  utcTs,
+  srcTz,
+  is12h,
+  onRemove,
+  onSwap,
+}: {
+  tz: string;
+  utcTs: number;
+  srcTz: string;
+  is12h: boolean;
+  onRemove: () => void;
+  onSwap: () => void;
+}) {
   const text = formatInZone(utcTs, tz, { hour12: is12h, withTz: true });
   const abbr = tzAbbr(utcTs, tz);
   const offMin = getOffsetMinutes(utcTs, tz);
@@ -246,8 +266,9 @@ function CityRow({ tz, utcTs, srcTz, is12h, onRemove, onSwap }: { tz: string; ut
 
   const srcOffMin = getOffsetMinutes(utcTs, srcTz);
   const diffMin = offMin - srcOffMin;
-  const diffHr = (Math.abs(diffMin) / 60).toFixed(1).replace(/\.0$/, '');
-  const diffPretty = diffMin === 0 ? 'Same as source' : `${diffMin > 0 ? '+' : '−'}${diffHr}h vs source`;
+  const diffHr = (Math.abs(diffMin) / 60).toFixed(1).replace(/\.0$/, "");
+  const diffPretty =
+    diffMin === 0 ? "Same as source" : `${diffMin > 0 ? "+" : "−"}${diffHr}h vs source`;
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border p-3 hover:ring-1 hover:ring-primary/20 transition">
@@ -273,7 +294,13 @@ function CityRow({ tz, utcTs, srcTz, is12h, onRemove, onSwap }: { tz: string; ut
       <div className="text-sm text-muted-foreground">{text}</div>
 
       <div className="flex flex-wrap gap-2">
-        <ActionButton Icon={Replace} label="Set as source" size="sm" variant="outline" onClick={onSwap} />
+        <ActionButton
+          Icon={Replace}
+          label="Set as source"
+          size="sm"
+          variant="outline"
+          onClick={onSwap}
+        />
         <CopyButton size="sm" getText={`${text} — ${tz}`} />
         <ActionButton Icon={Trash2} label="Remove" size="sm" variant="outline" onClick={onRemove} />
       </div>
@@ -284,7 +311,7 @@ function CityRow({ tz, utcTs, srcTz, is12h, onRemove, onSwap }: { tz: string; ut
 export default function TimezoneConverterClient() {
   const localTz = useMemo(() => getLocalTimeZone(), []);
   const ALL_ZONES = useMemo(() => getAllTimeZones(), []);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const debSearch = useDebounced(search, 200);
 
   // Source
@@ -295,37 +322,43 @@ export default function TimezoneConverterClient() {
 
   // Targets
   const [targets, setTargets] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const qs = params.get('zones');
-      if (qs) return qs.split(',').filter(Boolean);
-      const saved = localStorage.getItem('tzc:targets');
+      const qs = params.get("zones");
+      if (qs) return qs.split(",").filter(Boolean);
+      const saved = localStorage.getItem("tzc:targets");
       if (saved) return JSON.parse(saved);
     }
-    const defaults = ['Asia/Dhaka', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo'];
+    const defaults = [
+      "Asia/Dhaka",
+      "Europe/London",
+      "America/New_York",
+      "America/Los_Angeles",
+      "Asia/Tokyo",
+    ];
     const unique = Array.from(new Set([localTz, ...defaults]));
     return unique;
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('tzc:targets', JSON.stringify(targets));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("tzc:targets", JSON.stringify(targets));
     }
   }, [targets]);
 
   // Compute UTC from source wall time
   const utcTs = useMemo(() => {
-    const [yy, mm, dd] = dateStr.split('-').map((n) => Number(n));
-    const [hh, min] = timeStr.split(':').map((n) => Number(n));
+    const [yy, mm, dd] = dateStr.split("-").map((n) => Number(n));
+    const [hh, min] = timeStr.split(":").map((n) => Number(n));
     return wallTimeToUTC(yy, mm, dd, hh, min, sourceTz);
   }, [dateStr, timeStr, sourceTz]);
 
   // Share link copy
   const params = new URLSearchParams();
-  params.set('src', sourceTz);
-  params.set('date', dateStr);
-  params.set('time', timeStr);
-  params.set('zones', targets.join(','));
+  params.set("src", sourceTz);
+  params.set("date", dateStr);
+  params.set("time", timeStr);
+  params.set("zones", targets.join(","));
   const link = `${window.location.href}?${params.toString()}`;
 
   const applyNow = () => {
@@ -339,7 +372,13 @@ export default function TimezoneConverterClient() {
     setDateStr(formatDateInput(new Date()));
     setTimeStr(formatTimeInput(new Date()));
     setSourceTz(localTz);
-    setTargets(['Asia/Dhaka', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo']);
+    setTargets([
+      "Asia/Dhaka",
+      "Europe/London",
+      "America/New_York",
+      "America/Los_Angeles",
+      "Asia/Tokyo",
+    ]);
   };
 
   const addTarget = (tz: string) => setTargets((arr) => (arr.includes(tz) ? arr : [...arr, tz]));
@@ -348,29 +387,34 @@ export default function TimezoneConverterClient() {
 
   // Parse ?src= & ?date= & ?time= on mount
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const src = params.get('src');
-    const date = params.get('date');
-    const time = params.get('time');
+    const src = params.get("src");
+    const date = params.get("date");
+    const time = params.get("time");
     if (src) setSourceTz(src);
     if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) setDateStr(date);
     if (time && /^\d{2}:\d{2}$/.test(time)) setTimeStr(time);
   }, []);
 
   const sourceCandidates = ALL_ZONES;
-  const targetCandidates = useMemo(() => ALL_ZONES.filter((z) => z.value !== sourceTz && !targets.includes(z.value)), [ALL_ZONES, sourceTz, targets]);
+  const targetCandidates = useMemo(
+    () => ALL_ZONES.filter((z) => z.value !== sourceTz && !targets.includes(z.value)),
+    [ALL_ZONES, sourceTz, targets],
+  );
 
   const filteredTargets = useMemo(() => {
     if (!debSearch.trim()) return targetCandidates;
     const q = debSearch.toLowerCase();
-    return targetCandidates.filter((z) => z.value.toLowerCase().includes(q) || z.label.toLowerCase().includes(q));
+    return targetCandidates.filter(
+      (z) => z.value.toLowerCase().includes(q) || z.label.toLowerCase().includes(q),
+    );
   }, [debSearch, targetCandidates]);
 
   const utcBadge = useMemo(() => {
-    const s = formatInZone(utcTs, 'UTC', { hour12: false, withTz: true });
-    const tzPart = s.split(', ').at(-1);
-    return `UTC ${tzPart?.replace('UTC', '').trim() || ''}`;
+    const s = formatInZone(utcTs, "UTC", { hour12: false, withTz: true });
+    const tzPart = s.split(", ").at(-1);
+    return `UTC ${tzPart?.replace("UTC", "").trim() || ""}`;
   }, [utcTs]);
 
   return (
@@ -397,15 +441,35 @@ export default function TimezoneConverterClient() {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
-            <TimeZoneSelect label="Source City / Time Zone" value={sourceTz} onValueChange={setSourceTz} items={sourceCandidates} placeholder="Select source time zone" />
+            <TimeZoneSelect
+              label="Source City / Time Zone"
+              value={sourceTz}
+              onValueChange={setSourceTz}
+              items={sourceCandidates}
+              placeholder="Select source time zone"
+            />
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" /> Your device zone: <span className="font-medium">{localTz}</span>
+              <MapPin className="h-3.5 w-3.5" /> Your device zone:{" "}
+              <span className="font-medium">{localTz}</span>
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <InputField fileIcon id="date" label="Date" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} />
-            <InputField id="time" label="Time" type="time" value={timeStr} onChange={(e) => setTimeStr(e.target.value)} />
+            <InputField
+              fileIcon
+              id="date"
+              label="Date"
+              type="date"
+              value={dateStr}
+              onChange={(e) => setDateStr(e.target.value)}
+            />
+            <InputField
+              id="time"
+              label="Time"
+              type="time"
+              value={timeStr}
+              onChange={(e) => setTimeStr(e.target.value)}
+            />
             <div className="col-span-2 flex items-center justify-between rounded-md border p-2">
               <div className="flex items-center gap-2">
                 <Switch checked={is12h} onCheckedChange={setIs12h} id="fmt" />
@@ -431,7 +495,11 @@ export default function TimezoneConverterClient() {
           <div className="space-y-3">
             <Label>Pick a city</Label>
             <div className="grid gap-2">
-              <InputField placeholder="Search or paste IANA zone (e.g., Europe/Paris)" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <InputField
+                placeholder="Search or paste IANA zone (e.g., Europe/Paris)"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
               <Select onValueChange={(v) => v && addTarget(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Add a time zone" />
@@ -442,7 +510,11 @@ export default function TimezoneConverterClient() {
                       {z.label}
                     </SelectItem>
                   ))}
-                  {filteredTargets.length === 0 && <div className="px-3 py-2 text-sm text-muted-foreground">No match in list. Paste a valid IANA zone above, then click “Add”.</div>}
+                  {filteredTargets.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No match in list. Paste a valid IANA zone above, then click “Add”.
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
               <div className="flex flex-wrap gap-2">
@@ -452,12 +524,15 @@ export default function TimezoneConverterClient() {
                   onClick={() => {
                     const v = debSearch.trim();
                     if (v && !targets.includes(v)) addTarget(v);
-                  }}>
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-1" /> Add typed zone
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Tip: Try zones like <span className="font-mono">Asia/Dhaka</span>, <span className="font-mono">Europe/London</span>, <span className="font-mono">America/Los_Angeles</span>.
+                Tip: Try zones like <span className="font-mono">Asia/Dhaka</span>,{" "}
+                <span className="font-mono">Europe/London</span>,{" "}
+                <span className="font-mono">America/Los_Angeles</span>.
               </p>
             </div>
           </div>
@@ -465,9 +540,16 @@ export default function TimezoneConverterClient() {
           <div className="space-y-2">
             <Label>Quick presets</Label>
             <div className="flex flex-wrap gap-2">
-              {['Asia/Dhaka', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo', 'Australia/Sydney'].map((v) => (
+              {[
+                "Asia/Dhaka",
+                "Europe/London",
+                "America/New_York",
+                "America/Los_Angeles",
+                "Asia/Tokyo",
+                "Australia/Sydney",
+              ].map((v) => (
                 <Button key={v} size="sm" variant="outline" onClick={() => addTarget(v)}>
-                  <Plus className="h-4 w-4 mr-1" /> {v.split('/').at(-1)}
+                  <Plus className="h-4 w-4 mr-1" /> {v.split("/").at(-1)}
                 </Button>
               ))}
             </div>
@@ -479,12 +561,26 @@ export default function TimezoneConverterClient() {
       <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Converted Times</CardTitle>
-          <CardDescription>Times are computed exactly for the above source — daylight saving aware.</CardDescription>
+          <CardDescription>
+            Times are computed exactly for the above source — daylight saving aware.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
-          {targets.length === 0 && <p className="text-sm text-muted-foreground">No cities yet. Add a city to see results.</p>}
+          {targets.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No cities yet. Add a city to see results.
+            </p>
+          )}
           {targets.map((tz) => (
-            <CityRow key={tz} tz={tz} utcTs={utcTs} srcTz={sourceTz} is12h={is12h} onRemove={() => removeTarget(tz)} onSwap={() => swapWithSource(tz)} />
+            <CityRow
+              key={tz}
+              tz={tz}
+              utcTs={utcTs}
+              srcTz={sourceTz}
+              is12h={is12h}
+              onRemove={() => removeTarget(tz)}
+              onSwap={() => swapWithSource(tz)}
+            />
           ))}
         </CardContent>
       </GlassCard>

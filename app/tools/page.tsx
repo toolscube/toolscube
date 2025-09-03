@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { ToolsData } from '@/data/tools';
-import Link from 'next/link';
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ToolsData } from "@/data/tools";
 
 const categories = ToolsData.map((cat) => ({
   key: cat.url,
@@ -27,13 +27,20 @@ export default function ToolsIndexPage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl border bg-background/60 p-6 md:p-10">
-        <div aria-hidden className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
+        />
         <div className="relative flex flex-col gap-4">
           <Badge variant="secondary" className="w-fit">
             Explore tools
           </Badge>
-          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight md:text-5xl">All Tools</h1>
-          <p className="max-w-2xl text-pretty text-muted-foreground">Utilities for links, text, PDF, images, development, SEO, and quick calculations.</p>
+          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
+            All Tools
+          </h1>
+          <p className="max-w-2xl text-pretty text-muted-foreground">
+            Utilities for links, text, PDF, images, development, SEO, and quick calculations.
+          </p>
           <div className="flex gap-3 pt-1">
             <Button asChild>
               <Link href="/">Home</Link>
@@ -52,16 +59,25 @@ export default function ToolsIndexPage() {
         {categories.map((c) => (
           <Link key={c.key} href={`#cat-${c.key}`} className="group focus:outline-none">
             <Card className="relative h-full overflow-hidden rounded-2xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 transition-all hover:border-primary/50 hover:shadow-[0_8px_30px_rgba(2,132,199,0.08)] focus-within:ring-2 focus-within:ring-primary/40">
-              <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+              <div
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+              />
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   {c.icon && <c.icon className="h-4 w-4 text-muted-foreground" />}
                   {c.label}
                 </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">{c.items.length} tools</CardDescription>
+                <CardDescription className="text-sm text-muted-foreground">
+                  {c.items.length} tools
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <Button size="sm" variant="secondary" className="transition-transform group-hover:-translate-y-0.5">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="transition-transform group-hover:-translate-y-0.5"
+                >
                   Open
                 </Button>
               </CardContent>
@@ -85,15 +101,29 @@ export default function ToolsIndexPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {c.items.map((t) => (
-                <Link key={t.url} href={t.url} className="group focus:outline-none" aria-label={t.title}>
+                <Link
+                  key={t.url}
+                  href={t.url}
+                  className="group focus:outline-none"
+                  aria-label={t.title}
+                >
                   <Card className="relative h-full overflow-hidden rounded-2xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 transition-all hover:border-primary/50 hover:shadow-[0_8px_30px_rgba(2,132,199,0.08)] focus-within:ring-2 focus-within:ring-primary/40">
-                    <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+                    <div
+                      aria-hidden
+                      className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+                    />
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base">{t.title}</CardTitle>
-                      <CardDescription className="text-sm text-muted-foreground">{t.description}</CardDescription>
+                      <CardDescription className="text-sm text-muted-foreground">
+                        {t.description}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <Button size="sm" variant="secondary" className="transition-transform group-hover:-translate-y-0.5">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="transition-transform group-hover:-translate-y-0.5"
+                      >
                         Open
                       </Button>
                     </CardContent>

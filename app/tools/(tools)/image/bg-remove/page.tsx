@@ -1,24 +1,45 @@
 // app/tools/(tools)/image/bg-remove/page.tsx
-'use client';
+"use client";
 
-import { Check, Copy, Download, Eraser, Highlighter, ImageOff, Info, Layers, Loader2, Palette, Pipette, RotateCcw, Upload, Wand } from 'lucide-react';
-import * as React from 'react';
-import { useDropzone } from 'react-dropzone';
+import {
+  Check,
+  Copy,
+  Download,
+  Eraser,
+  Highlighter,
+  ImageOff,
+  Info,
+  Layers,
+  Loader2,
+  Palette,
+  Pipette,
+  RotateCcw,
+  Upload,
+  Wand,
+} from "lucide-react";
+import * as React from "react";
+import { useDropzone } from "react-dropzone";
 
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 /* ---------------- types ---------------- */
-type Mode = 'auto' | 'chroma' | 'manual';
+type Mode = "auto" | "chroma" | "manual";
 
 interface LoadedImage {
   file: File;
@@ -33,14 +54,14 @@ export default function BgRemovePage() {
   const [img, setImg] = React.useState<LoadedImage | null>(null);
 
   // Mode & params
-  const [mode, setMode] = React.useState<Mode>('auto');
+  const [mode, setMode] = React.useState<Mode>("auto");
   const [tolerance, setTolerance] = React.useState(28); // 0..255 color distance
   const [feather, setFeather] = React.useState(2); // px blur on alpha edge
   const [cleanup, setCleanup] = React.useState(1); // 0..3 (morphology rounds)
   const [invert, setInvert] = React.useState(false);
 
   // Chroma
-  const [keyHex, setKeyHex] = React.useState('#ffffff');
+  const [keyHex, setKeyHex] = React.useState("#ffffff");
   const [pickerActive, setPickerActive] = React.useState(false);
 
   // Manual brush
@@ -49,7 +70,7 @@ export default function BgRemovePage() {
 
   // UI
   const [running, setRunning] = React.useState(false);
-  const [log, setLog] = React.useState('');
+  const [log, setLog] = React.useState("");
   const [copied, setCopied] = React.useState(false);
 
   // canvases
@@ -75,14 +96,14 @@ export default function BgRemovePage() {
   React.useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       const item = e.clipboardData?.files?.[0];
-      if (item && item.type.startsWith('image/')) onDrop([item]);
+      if (item && item.type.startsWith("image/")) onDrop([item]);
     }
-    window.addEventListener('paste', onPaste);
-    return () => window.removeEventListener('paste', onPaste);
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
   }, [onDrop]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'image/*': [] },
+    accept: { "image/*": [] },
     multiple: false,
     onDrop,
   });
@@ -90,17 +111,17 @@ export default function BgRemovePage() {
   function resetAll() {
     if (img?.url) URL.revokeObjectURL(img.url);
     setImg(null);
-    setMode('auto');
+    setMode("auto");
     setTolerance(28);
     setFeather(2);
     setCleanup(1);
     setInvert(false);
-    setKeyHex('#ffffff');
+    setKeyHex("#ffffff");
     setPickerActive(false);
     setBrushErase(true);
     setBrushSize(28);
     setRunning(false);
-    setLog('');
+    setLog("");
     if (canvasRef.current) clearCanvas(canvasRef.current);
     if (overlayRef.current) clearCanvas(overlayRef.current);
   }
@@ -109,7 +130,7 @@ export default function BgRemovePage() {
     if (!img || !canvasRef.current) return;
     try {
       setRunning(true);
-      setLog('Removing background…');
+      setLog("Removing background…");
 
       // Ensure base is drawn
       const base = await ensureBaseDrawn(img.url, canvasRef.current);
@@ -117,9 +138,9 @@ export default function BgRemovePage() {
       // Build mask (0 keep, 255 remove)
       let mask: Uint8ClampedArray = new Uint8ClampedArray(base.width * base.height);
 
-      if (mode === 'auto') {
+      if (mode === "auto") {
         mask = floodMask(base, tolerance);
-      } else if (mode === 'chroma') {
+      } else if (mode === "chroma") {
         const key = hexToRgb(keyHex);
         mask = chromaMask(base, key, tolerance);
       } else {
@@ -145,15 +166,15 @@ export default function BgRemovePage() {
       applyMaskToBase(base, mask);
 
       // redraw canvas
-      const ctx = canvasRef.current.getContext('2d');
-      if (!ctx) throw new Error('2D context unavailable');
+      const ctx = canvasRef.current.getContext("2d");
+      if (!ctx) throw new Error("2D context unavailable");
       ctx.putImageData(base, 0, 0);
 
       // clear overlay after apply (optional)
-      if (overlayRef.current && mode === 'manual') clearCanvas(overlayRef.current);
+      if (overlayRef.current && mode === "manual") clearCanvas(overlayRef.current);
 
       // download
-      const blob = await canvasToBlob(canvasRef.current, 'image/png', 1);
+      const blob = await canvasToBlob(canvasRef.current, "image/png", 1);
       const filename = suggestName(img.file.name);
       triggerDownload(blob, filename);
       setLog(`Done → ${filename} (${formatBytes(blob.size)})`);
@@ -170,7 +191,7 @@ export default function BgRemovePage() {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = Math.floor(((e.clientX - rect.left) / rect.width) * canvasRef.current.width);
     const y = Math.floor(((e.clientY - rect.top) / rect.height) * canvasRef.current.height);
-    const ctx = canvasRef.current.getContext('2d');
+    const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
     const { data } = ctx.getImageData(x, y, 1, 1);
     setKeyHex(rgbToHex({ r: data[0], g: data[1], b: data[2] }));
@@ -185,25 +206,25 @@ export default function BgRemovePage() {
     let drawing = false;
 
     function isTouchEvent(e: MouseEvent | TouchEvent): e is TouchEvent {
-      return 'touches' in e;
+      return "touches" in e;
     }
 
     function pos(e: MouseEvent | TouchEvent) {
       const rect = ov.getBoundingClientRect();
-      const cx = isTouchEvent(e) ? e.touches[0]?.clientX ?? 0 : e.clientX;
-      const cy = isTouchEvent(e) ? e.touches[0]?.clientY ?? 0 : e.clientY;
+      const cx = isTouchEvent(e) ? (e.touches[0]?.clientX ?? 0) : e.clientX;
+      const cy = isTouchEvent(e) ? (e.touches[0]?.clientY ?? 0) : e.clientY;
       const x = ((cx - rect.left) / rect.width) * ov.width;
       const y = ((cy - rect.top) / rect.height) * ov.height;
       return { x, y };
     }
 
     const start = (e: MouseEvent | TouchEvent) => {
-      if (mode !== 'manual') return;
+      if (mode !== "manual") return;
       drawing = true;
       drawDot(pos(e));
     };
     const move = (e: MouseEvent | TouchEvent) => {
-      if (!drawing || mode !== 'manual') return;
+      if (!drawing || mode !== "manual") return;
       drawDot(pos(e));
     };
     const end = () => {
@@ -211,33 +232,33 @@ export default function BgRemovePage() {
     };
 
     function drawDot(p: { x: number; y: number }) {
-      const ctx = ov.getContext('2d');
+      const ctx = ov.getContext("2d");
       if (!ctx) return;
       // erase = paint white (alpha>0 becomes mask); restore = erase painted area
-      ctx.globalCompositeOperation = brushErase ? 'source-over' : 'destination-out';
-      ctx.fillStyle = 'rgba(255,255,255,1)';
+      ctx.globalCompositeOperation = brushErase ? "source-over" : "destination-out";
+      ctx.fillStyle = "rgba(255,255,255,1)";
       ctx.beginPath();
       ctx.arc(p.x, p.y, brushSize / 2, 0, Math.PI * 2);
       ctx.fill();
     }
 
     // listeners bound to the narrowed element
-    ov.addEventListener('mousedown', start as EventListener);
-    ov.addEventListener('mousemove', move as EventListener);
-    window.addEventListener('mouseup', end as EventListener);
+    ov.addEventListener("mousedown", start as EventListener);
+    ov.addEventListener("mousemove", move as EventListener);
+    window.addEventListener("mouseup", end as EventListener);
 
-    ov.addEventListener('touchstart', start as EventListener, { passive: true });
-    ov.addEventListener('touchmove', move as EventListener, { passive: true });
-    window.addEventListener('touchend', end as EventListener);
+    ov.addEventListener("touchstart", start as EventListener, { passive: true });
+    ov.addEventListener("touchmove", move as EventListener, { passive: true });
+    window.addEventListener("touchend", end as EventListener);
 
     return () => {
-      ov.removeEventListener('mousedown', start as EventListener);
-      ov.removeEventListener('mousemove', move as EventListener);
-      window.removeEventListener('mouseup', end as EventListener);
+      ov.removeEventListener("mousedown", start as EventListener);
+      ov.removeEventListener("mousemove", move as EventListener);
+      window.removeEventListener("mouseup", end as EventListener);
 
-      ov.removeEventListener('touchstart', start as EventListener);
-      ov.removeEventListener('touchmove', move as EventListener);
-      window.removeEventListener('touchend', end as EventListener);
+      ov.removeEventListener("touchstart", start as EventListener);
+      ov.removeEventListener("touchmove", move as EventListener);
+      window.removeEventListener("touchend", end as EventListener);
     };
   }, [mode, brushErase, brushSize]);
 
@@ -250,15 +271,21 @@ export default function BgRemovePage() {
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               <Wand className="h-6 w-6" /> Background Remover
             </h1>
-            <p className="text-sm text-muted-foreground">Erase backgrounds in the browser. Drag & drop, paste (Ctrl/Cmd+V), or click to upload.</p>
+            <p className="text-sm text-muted-foreground">
+              Erase backgrounds in the browser. Drag & drop, paste (Ctrl/Cmd+V), or click to upload.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={resetAll} className="gap-2">
               <RotateCcw className="h-4 w-4" /> Reset
             </Button>
             <Button onClick={run} className="gap-2" disabled={!img || running}>
-              {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {running ? 'Processing…' : 'Remove & Download'}
+              {running ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {running ? "Processing…" : "Remove & Download"}
             </Button>
           </div>
         </GlassCard>
@@ -274,16 +301,19 @@ export default function BgRemovePage() {
             <div
               {...getRootProps()}
               className={cn(
-                'group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition',
-                isDragActive ? 'border-primary bg-primary/5' : 'hover:bg-muted/40',
-              )}>
+                "group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition",
+                isDragActive ? "border-primary bg-primary/5" : "hover:bg-muted/40",
+              )}
+            >
               <input {...getInputProps()} />
               <div className="pointer-events-none flex flex-col items-center gap-2 text-center">
                 <div className="rounded-full bg-primary/10 p-3">
                   <Upload className="h-6 w-6 text-primary" />
                 </div>
                 <p className="text-sm font-medium">Drop image here, or click to browse</p>
-                <p className="text-xs text-muted-foreground">PNG, JPEG, WEBP, GIF, SVG (GIF/SVG will be rasterized)</p>
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPEG, WEBP, GIF, SVG (GIF/SVG will be rasterized)
+                </p>
               </div>
             </div>
 
@@ -299,18 +329,31 @@ export default function BgRemovePage() {
                   </div>
                 ) : (
                   <div className="relative z-10 h-full w-full">
-                    <canvas ref={canvasRef} onClick={handleCanvasClick} className={cn('absolute inset-0 h-full w-full', pickerActive && 'cursor-crosshair')} />
+                    <canvas
+                      ref={canvasRef}
+                      onClick={handleCanvasClick}
+                      className={cn(
+                        "absolute inset-0 h-full w-full",
+                        pickerActive && "cursor-crosshair",
+                      )}
+                    />
                     {/* brush overlay */}
-                    <canvas ref={overlayRef} className={cn('absolute inset-0 h-full w-full', mode === 'manual' ? 'cursor-crosshair' : 'pointer-events-none')} />
+                    <canvas
+                      ref={overlayRef}
+                      className={cn(
+                        "absolute inset-0 h-full w-full",
+                        mode === "manual" ? "cursor-crosshair" : "pointer-events-none",
+                      )}
+                    />
                   </div>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <InfoPill label="Source Size" value={img ? formatBytes(img.size) : '—'} />
-                <InfoPill label="Source Type" value={img ? img.type || '—' : '—'} />
-                <InfoPill label="Width" value={img ? `${img.width}px` : '—'} />
-                <InfoPill label="Height" value={img ? `${img.height}px` : '—'} />
+                <InfoPill label="Source Size" value={img ? formatBytes(img.size) : "—"} />
+                <InfoPill label="Source Type" value={img ? img.type || "—" : "—"} />
+                <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
+                <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
               </div>
             </div>
           </CardContent>
@@ -337,17 +380,29 @@ export default function BgRemovePage() {
                     <SelectItem value="manual">Manual Brush</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">Auto works best for solid/simple backgrounds. Use Chroma if you know the background color. Manual for fine control.</p>
+                <p className="text-xs text-muted-foreground">
+                  Auto works best for solid/simple backgrounds. Use Chroma if you know the
+                  background color. Manual for fine control.
+                </p>
               </div>
 
-              {mode !== 'manual' && (
+              {mode !== "manual" && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="tol">Tolerance</Label>
                     <span className="text-xs text-muted-foreground">{tolerance}</span>
                   </div>
-                  <Slider id="tol" min={0} max={128} step={1} value={[tolerance]} onValueChange={([v]) => setTolerance(v)} />
-                  <p className="text-xs text-muted-foreground">Higher removes a wider color range.</p>
+                  <Slider
+                    id="tol"
+                    min={0}
+                    max={128}
+                    step={1}
+                    value={[tolerance]}
+                    onValueChange={([v]) => setTolerance(v)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Higher removes a wider color range.
+                  </p>
                 </div>
               )}
 
@@ -356,8 +411,17 @@ export default function BgRemovePage() {
                   <Label htmlFor="feather">Feather</Label>
                   <span className="text-xs text-muted-foreground">{feather}px</span>
                 </div>
-                <Slider id="feather" min={0} max={8} step={1} value={[feather]} onValueChange={([v]) => setFeather(v)} />
-                <p className="text-xs text-muted-foreground">Softens the edge for a smoother cutout.</p>
+                <Slider
+                  id="feather"
+                  min={0}
+                  max={8}
+                  step={1}
+                  value={[feather]}
+                  onValueChange={([v]) => setFeather(v)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Softens the edge for a smoother cutout.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -365,8 +429,17 @@ export default function BgRemovePage() {
                   <Label htmlFor="clean">Edge Cleanup</Label>
                   <span className="text-xs text-muted-foreground">{cleanup}</span>
                 </div>
-                <Slider id="clean" min={0} max={3} step={1} value={[cleanup]} onValueChange={([v]) => setCleanup(v)} />
-                <p className="text-xs text-muted-foreground">Removes speckles/holes (morphological refine).</p>
+                <Slider
+                  id="clean"
+                  min={0}
+                  max={3}
+                  step={1}
+                  value={[cleanup]}
+                  onValueChange={([v]) => setCleanup(v)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Removes speckles/holes (morphological refine).
+                </p>
               </div>
 
               <div className="flex items-center gap-3">
@@ -379,29 +452,58 @@ export default function BgRemovePage() {
 
             {/* Chroma / Manual controls */}
             <div className="space-y-4">
-              {mode === 'chroma' && (
+              {mode === "chroma" && (
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Palette className="h-4 w-4" /> Chroma Key Color
                   </Label>
                   <div className="flex items-center gap-3">
-                    <Input type="color" className="h-9 w-16 p-1" value={keyHex} onChange={(e) => setKeyHex(e.target.value)} />
-                    <Input value={keyHex} onChange={(e) => setKeyHex(e.target.value)} className="w-36" placeholder="#ffffff" />
-                    <Button type="button" variant="outline" size="sm" className={cn('gap-2', pickerActive && 'ring-2 ring-primary')} onClick={() => setPickerActive((s) => !s)}>
-                      <Pipette className="h-4 w-4" /> {pickerActive ? 'Pick (active)' : 'Pick from image'}
+                    <Input
+                      type="color"
+                      className="h-9 w-16 p-1"
+                      value={keyHex}
+                      onChange={(e) => setKeyHex(e.target.value)}
+                    />
+                    <Input
+                      value={keyHex}
+                      onChange={(e) => setKeyHex(e.target.value)}
+                      className="w-36"
+                      placeholder="#ffffff"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className={cn("gap-2", pickerActive && "ring-2 ring-primary")}
+                      onClick={() => setPickerActive((s) => !s)}
+                    >
+                      <Pipette className="h-4 w-4" />{" "}
+                      {pickerActive ? "Pick (active)" : "Pick from image"}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Tip: click anywhere on the preview to sample the color.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Tip: click anywhere on the preview to sample the color.
+                  </p>
                 </div>
               )}
 
-              {mode === 'manual' && (
+              {mode === "manual" && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <Button type="button" variant={brushErase ? 'default' : 'outline'} className="gap-2" onClick={() => setBrushErase(true)}>
+                    <Button
+                      type="button"
+                      variant={brushErase ? "default" : "outline"}
+                      className="gap-2"
+                      onClick={() => setBrushErase(true)}
+                    >
                       <Eraser className="h-4 w-4" /> Erase
                     </Button>
-                    <Button type="button" variant={!brushErase ? 'default' : 'outline'} className="gap-2" onClick={() => setBrushErase(false)}>
+                    <Button
+                      type="button"
+                      variant={!brushErase ? "default" : "outline"}
+                      className="gap-2"
+                      onClick={() => setBrushErase(false)}
+                    >
                       <Highlighter className="h-4 w-4" /> Restore
                     </Button>
                   </div>
@@ -410,10 +512,18 @@ export default function BgRemovePage() {
                       <Label htmlFor="bsize">Brush Size</Label>
                       <span className="text-xs text-muted-foreground">{brushSize}px</span>
                     </div>
-                    <Slider id="bsize" min={6} max={120} step={2} value={[brushSize]} onValueChange={([v]) => setBrushSize(v)} />
+                    <Slider
+                      id="bsize"
+                      min={6}
+                      max={120}
+                      step={2}
+                      value={[brushSize]}
+                      onValueChange={([v]) => setBrushSize(v)}
+                    />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Paint on the image: <span className="font-medium">Erase</span> marks background, <span className="font-medium">Restore</span> protects foreground.
+                    Paint on the image: <span className="font-medium">Erase</span> marks background,{" "}
+                    <span className="font-medium">Restore</span> protects foreground.
                   </p>
                 </div>
               )}
@@ -449,16 +559,17 @@ export default function BgRemovePage() {
                 size="sm"
                 className="gap-2"
                 onClick={() =>
-                  navigator.clipboard.writeText(log || '').then(() => {
+                  navigator.clipboard.writeText(log || "").then(() => {
                     setCopied(true);
                     setTimeout(() => setCopied(false), 1100);
                   })
                 }
-                disabled={!log}>
+                disabled={!log}
+              >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 Copy
               </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog('')}>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog("")}>
                 Clear
               </Button>
             </div>
@@ -472,7 +583,7 @@ export default function BgRemovePage() {
 /* ---------------- helpers & image ops ---------------- */
 
 function formatBytes(bytes: number) {
-  const units = ['B', 'KB', 'MB', 'GB'];
+  const units = ["B", "KB", "MB", "GB"];
   let i = 0;
   let n = bytes;
   while (n >= 1024 && i < units.length - 1) {
@@ -492,7 +603,13 @@ function loadImageMeta(url: string): Promise<{ width: number; height: number }> 
 }
 
 // change the function signature only
-async function initCanvases(srcUrl: string, w: number, h: number, baseRef: React.RefObject<HTMLCanvasElement | null>, overlayRef: React.RefObject<HTMLCanvasElement | null>) {
+async function initCanvases(
+  srcUrl: string,
+  w: number,
+  h: number,
+  baseRef: React.RefObject<HTMLCanvasElement | null>,
+  overlayRef: React.RefObject<HTMLCanvasElement | null>,
+) {
   const base = baseRef.current;
   const overlay = overlayRef.current;
   if (!base || !overlay) return;
@@ -501,7 +618,7 @@ async function initCanvases(srcUrl: string, w: number, h: number, baseRef: React
 
   base.width = imgEl.naturalWidth;
   base.height = imgEl.naturalHeight;
-  const bctx = base.getContext('2d');
+  const bctx = base.getContext("2d");
   if (!bctx) return;
   bctx.clearRect(0, 0, base.width, base.height);
   bctx.drawImage(imgEl, 0, 0);
@@ -512,7 +629,7 @@ async function initCanvases(srcUrl: string, w: number, h: number, baseRef: React
 }
 
 async function ensureBaseDrawn(srcUrl: string, canvas: HTMLCanvasElement) {
-  const ctxExisting = canvas.getContext('2d');
+  const ctxExisting = canvas.getContext("2d");
   if (ctxExisting) {
     const w = canvas.width;
     const h = canvas.height;
@@ -521,20 +638,20 @@ async function ensureBaseDrawn(srcUrl: string, canvas: HTMLCanvasElement) {
   const imgEl = await createImageElement(srcUrl);
   canvas.width = imgEl.naturalWidth;
   canvas.height = imgEl.naturalHeight;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('2D context unavailable');
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D context unavailable");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(imgEl, 0, 0);
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 function suggestName(name: string) {
-  const base = name.replace(/\.[^.]+$/, '');
+  const base = name.replace(/\.[^.]+$/, "");
   return `${base}-bg-removed.png`;
 }
 
 function clearCanvas(c: HTMLCanvasElement) {
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext("2d");
   if (!ctx) return;
   ctx.clearRect(0, 0, c.width, c.height);
 }
@@ -542,7 +659,7 @@ function clearCanvas(c: HTMLCanvasElement) {
 function createImageElement(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = url;
@@ -551,13 +668,13 @@ function createImageElement(url: string): Promise<HTMLImageElement> {
 
 function canvasToBlob(canvas: HTMLCanvasElement, mime: string, q: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Failed to encode image'))), mime, q);
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode image"))), mime, q);
   });
 }
 
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -623,7 +740,11 @@ function floodMask(base: ImageData, tol: number): Uint8ClampedArray {
 }
 
 // Chroma: remove pixels close to a chosen color
-function chromaMask(base: ImageData, key: { r: number; g: number; b: number }, tol: number): Uint8ClampedArray {
+function chromaMask(
+  base: ImageData,
+  key: { r: number; g: number; b: number },
+  tol: number,
+): Uint8ClampedArray {
   const { width: w, height: h, data } = base;
   const out = new Uint8ClampedArray(w * h);
   for (let y = 0; y < h; y++) {
@@ -640,7 +761,7 @@ function chromaMask(base: ImageData, key: { r: number; g: number; b: number }, t
 function overlayEraseMask(overlay: HTMLCanvasElement): Uint8ClampedArray {
   const w = overlay.width;
   const h = overlay.height;
-  const ctx = overlay.getContext('2d');
+  const ctx = overlay.getContext("2d");
   if (!ctx) return new Uint8ClampedArray(w * h);
   const { data } = ctx.getImageData(0, 0, w, h);
   const out = new Uint8ClampedArray(w * h);
@@ -750,13 +871,13 @@ function colorDist(a: { r: number; g: number; b: number }, b: { r: number; g: nu
 }
 
 function hexToRgb(hex: string) {
-  const h = hex.replace('#', '');
+  const h = hex.replace("#", "");
   const n = parseInt(
     h.length === 3
       ? h
-          .split('')
+          .split("")
           .map((c) => c + c)
-          .join('')
+          .join("")
       : h,
     16,
   );
@@ -764,7 +885,7 @@ function hexToRgb(hex: string) {
 }
 
 function rgbToHex({ r, g, b }: { r: number; g: number; b: number }) {
-  const to = (v: number) => v.toString(16).padStart(2, '0');
+  const to = (v: number) => v.toString(16).padStart(2, "0");
   return `#${to(r)}${to(g)}${to(b)}`;
 }
 

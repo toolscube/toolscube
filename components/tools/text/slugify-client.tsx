@@ -1,30 +1,29 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import { Eraser, Info, List, Type, Wand2 as Wand } from "lucide-react";
+import * as React from "react";
+import toast from "react-hot-toast";
+import { CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { Button } from '@/components/ui/button';
-import { GlassCard } from '@/components/ui/glass-card';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+type Mode = "single" | "batch";
 
-import { CopyButton, ResetButton } from '@/components/shared/action-buttons';
-import { InputField } from '@/components/shared/form-fields/input-field';
-import SelectField from '@/components/shared/form-fields/select-field';
-import SwitchRow from '@/components/shared/form-fields/switch-row';
-import TextareaField from '@/components/shared/form-fields/textarea-field';
-import ToolPageHeader from '@/components/shared/tool-page-header';
-import { Badge } from '@/components/ui/badge';
-import { Eraser, Info, List, Type, Wand2 as Wand } from 'lucide-react';
-import toast from 'react-hot-toast';
-
-type Mode = 'single' | 'batch';
-
-const delimiterFromKey = (k: DelimiterKey): DelimiterChar => (k === 'dash' ? '-' : k === 'underscore' ? '_' : '');
+const delimiterFromKey = (k: DelimiterKey): DelimiterChar =>
+  k === "dash" ? "-" : k === "underscore" ? "_" : "";
 
 /* Slugify Core */
 function deburr(input: string) {
-  return input.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return input.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function applyCustomMap(text: string, map: Record<string, string>) {
@@ -33,14 +32,14 @@ function applyCustomMap(text: string, map: Record<string, string>) {
     .sort((a, b) => b[0].length - a[0].length);
 
   for (const [from, to] of entries) {
-    const re = new RegExp(escapeRegExp(from), 'g');
+    const re = new RegExp(escapeRegExp(from), "g");
     text = text.replace(re, to);
   }
   return text;
 }
 
 function escapeRegExp(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function tokenize(text: string) {
@@ -54,39 +53,43 @@ function removeStopwords(tokens: string[], stop: string[]) {
 }
 
 function toWordsFromCamel(text: string) {
-  return text.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Za-z])(\d+)/g, '$1 $2');
+  return text.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/([A-Za-z])(\d+)/g, "$1 $2");
 }
 
 function slugify(input: string, o: Options): string {
-  let s = input ?? '';
+  let s = input ?? "";
 
   s = toWordsFromCamel(s);
   s = applyCustomMap(s, o.customMap);
   if (o.transliterate) s = deburr(s);
   if (o.trim) s = s.trim();
 
-  s = s.replace(/[^\p{Letter}\p{Number}_]+/gu, ' ');
+  s = s.replace(/[^\p{Letter}\p{Number}_]+/gu, " ");
 
   let tokens = tokenize(s);
   tokens = removeStopwords(tokens, o.stopwords);
 
   if (!o.keepNumbers) tokens = tokens.filter((t) => !/^\d+$/.test(t));
 
-  let out = tokens.join(o.delimiter || '');
+  let out = tokens.join(o.delimiter || "");
 
   if (o.collapse && o.delimiter) {
-    const re = new RegExp(`${escapeRegExp(o.delimiter)}{2,}`, 'g');
+    const re = new RegExp(`${escapeRegExp(o.delimiter)}{2,}`, "g");
     out = out.replace(re, o.delimiter);
   }
 
-  if (o.delimiter) out = out.replace(new RegExp(`^${escapeRegExp(o.delimiter)}|${escapeRegExp(o.delimiter)}$`, 'g'), '');
+  if (o.delimiter)
+    out = out.replace(
+      new RegExp(`^${escapeRegExp(o.delimiter)}|${escapeRegExp(o.delimiter)}$`, "g"),
+      "",
+    );
 
   if (o.lowercase) out = out.toLowerCase();
 
   if (o.maxLen > 0 && out.length > o.maxLen) {
     if (o.delimiter && out.includes(o.delimiter)) {
       const parts = out.split(o.delimiter);
-      let keep: string[] = [];
+      const keep: string[] = [];
       let len = 0;
       for (const p of parts) {
         const add = (len ? o.delimiter.length : 0) + p.length;
@@ -101,24 +104,24 @@ function slugify(input: string, o: Options): string {
   }
 
   if (o.preserveUnderscore) {
-    if (o.delimiter && o.delimiter !== '_') out = out.replace(/_+/g, o.delimiter);
+    if (o.delimiter && o.delimiter !== "_") out = out.replace(/_+/g, o.delimiter);
   } else {
-    if (o.delimiter && o.delimiter !== '_') out = out.replace(/_+/g, o.delimiter);
-    else if (!o.delimiter) out = out.replace(/_+/g, '');
+    if (o.delimiter && o.delimiter !== "_") out = out.replace(/_+/g, o.delimiter);
+    else if (!o.delimiter) out = out.replace(/_+/g, "");
   }
 
   return out;
 }
 
 export default function SlugifyPage() {
-  const [mode, setMode] = React.useState<Mode>('single');
-  const [input, setInput] = React.useState<string>('');
-  const [batchInput, setBatchInput] = React.useState<string>('');
-  const [output, setOutput] = React.useState<string>('');
-  const [batchOutput, setBatchOutput] = React.useState<string>('');
+  const [mode, setMode] = React.useState<Mode>("single");
+  const [input, setInput] = React.useState<string>("");
+  const [batchInput, setBatchInput] = React.useState<string>("");
+  const [output, setOutput] = React.useState<string>("");
+  const [batchOutput, setBatchOutput] = React.useState<string>("");
   const [live, setLive] = React.useState<boolean>(true);
 
-  const [delimiterKey, setDelimiterKey] = React.useState<DelimiterKey>('dash');
+  const [delimiterKey, setDelimiterKey] = React.useState<DelimiterKey>("dash");
   const [lowercase, setLowercase] = React.useState(true);
   const [trim, setTrim] = React.useState(true);
   const [transliterate, setTransliterate] = React.useState(true);
@@ -126,8 +129,10 @@ export default function SlugifyPage() {
   const [preserveUnderscore, setPreserveUnderscore] = React.useState(false);
   const [keepNumbers, setKeepNumbers] = React.useState(true);
   const [maxLen, setMaxLen] = React.useState<number>(0);
-  const [stopwordText, setStopwordText] = React.useState<string>('a, an, the, and, or, of, for, with');
-  const [customMapText, setCustomMapText] = React.useState<string>('™ =>\n& => and\n@ => at');
+  const [stopwordText, setStopwordText] = React.useState<string>(
+    "a, an, the, and, or, of, for, with",
+  );
+  const [customMapText, setCustomMapText] = React.useState<string>("™ =>\n& => and\n@ => at");
 
   const opts: Options = React.useMemo(
     () => ({
@@ -142,7 +147,18 @@ export default function SlugifyPage() {
       stopwords: parseStopwords(stopwordText),
       customMap: parseCustomMap(customMapText),
     }),
-    [delimiterKey, lowercase, trim, transliterate, collapse, preserveUnderscore, keepNumbers, maxLen, stopwordText, customMapText],
+    [
+      delimiterKey,
+      lowercase,
+      trim,
+      transliterate,
+      collapse,
+      preserveUnderscore,
+      keepNumbers,
+      maxLen,
+      stopwordText,
+      customMapText,
+    ],
   );
 
   const runSingle = React.useCallback(() => {
@@ -150,31 +166,31 @@ export default function SlugifyPage() {
   }, [input, opts]);
 
   const runBatch = React.useCallback(() => {
-    const lines = (batchInput || '').split(/\r?\n/);
+    const lines = (batchInput || "").split(/\r?\n/);
     const slugs = lines.map((l) => slugify(l, opts));
-    setBatchOutput(slugs.join('\n'));
+    setBatchOutput(slugs.join("\n"));
   }, [batchInput, opts]);
 
   // Live/Manual behavior
   React.useEffect(() => {
     if (!live) return;
-    if (mode === 'single') runSingle();
+    if (mode === "single") runSingle();
     else runBatch();
   }, [live, mode, input, batchInput, opts, runSingle, runBatch]);
 
   React.useEffect(() => {
     if (live) {
-      if (mode === 'single') runSingle();
+      if (mode === "single") runSingle();
       else runBatch();
     }
   }, [live]);
 
   const resetAll = () => {
-    setInput('');
-    setBatchInput('');
-    setOutput('');
-    setBatchOutput('');
-    setDelimiterKey('dash');
+    setInput("");
+    setBatchInput("");
+    setOutput("");
+    setBatchOutput("");
+    setDelimiterKey("dash");
     setLowercase(true);
     setTrim(true);
     setTransliterate(true);
@@ -182,34 +198,34 @@ export default function SlugifyPage() {
     setPreserveUnderscore(false);
     setKeepNumbers(true);
     setMaxLen(0);
-    setStopwordText('a, an, the, and, or, of, for, with');
-    setCustomMapText('™ =>\n& => and\n@ => at');
-    toast.success('Reset complete');
+    setStopwordText("a, an, the, and, or, of, for, with");
+    setCustomMapText("™ =>\n& => and\n@ => at");
+    toast.success("Reset complete");
   };
 
-  const applyPreset = (key: 'seo' | 'github' | 'id' | 'raw') => {
-    if (key === 'seo') {
-      setDelimiterKey('dash');
+  const applyPreset = (key: "seo" | "github" | "id" | "raw") => {
+    if (key === "seo") {
+      setDelimiterKey("dash");
       setLowercase(true);
       setTransliterate(true);
       setCollapse(true);
       setMaxLen(80);
-    } else if (key === 'github') {
-      setDelimiterKey('dash');
+    } else if (key === "github") {
+      setDelimiterKey("dash");
       setLowercase(true);
       setTransliterate(true);
       setCollapse(true);
       setPreserveUnderscore(false);
       setMaxLen(100);
-    } else if (key === 'id') {
-      setDelimiterKey('none');
+    } else if (key === "id") {
+      setDelimiterKey("none");
       setLowercase(true);
       setTransliterate(true);
       setCollapse(true);
       setKeepNumbers(true);
       setMaxLen(32);
     } else {
-      setDelimiterKey('dash');
+      setDelimiterKey("dash");
       setLowercase(false);
       setTransliterate(false);
       setCollapse(true);
@@ -220,22 +236,26 @@ export default function SlugifyPage() {
   return (
     <>
       {/* Header */}
-      <ToolPageHeader icon={Type} title="Slugify" description="Convert titles and phrases into clean, URL-safe slugs." />
+      <ToolPageHeader
+        icon={Type}
+        title="Slugify"
+        description="Convert titles and phrases into clean, URL-safe slugs."
+      />
 
       {/* Presets + Controls */}
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <GlassCard className="p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => applyPreset('seo')}>
+            <Button size="sm" variant="outline" onClick={() => applyPreset("seo")}>
               SEO Blog
             </Button>
-            <Button size="sm" variant="outline" onClick={() => applyPreset('github')}>
+            <Button size="sm" variant="outline" onClick={() => applyPreset("github")}>
               GitHub Anchor
             </Button>
-            <Button size="sm" variant="outline" onClick={() => applyPreset('id')}>
+            <Button size="sm" variant="outline" onClick={() => applyPreset("id")}>
               Compact ID
             </Button>
-            <Button size="sm" variant="outline" onClick={() => applyPreset('raw')}>
+            <Button size="sm" variant="outline" onClick={() => applyPreset("raw")}>
               Raw
             </Button>
             <ResetButton className="ml-auto" onClick={resetAll} />
@@ -248,30 +268,65 @@ export default function SlugifyPage() {
               value={delimiterKey}
               onValueChange={(v) => setDelimiterKey(v as DelimiterKey)}
               options={[
-                { label: 'Dash (-)', value: 'dash' },
-                { label: 'Underscore (_)', value: 'underscore' },
-                { label: 'None (concat)', value: 'none' },
+                { label: "Dash (-)", value: "dash" },
+                { label: "Underscore (_)", value: "underscore" },
+                { label: "None (concat)", value: "none" },
               ]}
             />
 
-            <InputField id="maxLen" label="Max length (0 = off)" type="number" min={0} max={200} value={maxLen || ''} onChange={(e) => setMaxLen(Math.max(0, Number(e.target.value) || 0))} />
+            <InputField
+              id="maxLen"
+              label="Max length (0 = off)"
+              type="number"
+              min={0}
+              max={200}
+              value={maxLen || ""}
+              onChange={(e) => setMaxLen(Math.max(0, Number(e.target.value) || 0))}
+            />
 
-            <SwitchRow label="Live mode" hint="Apply changes as you type." checked={live} onCheckedChange={setLive} />
+            <SwitchRow
+              label="Live mode"
+              hint="Apply changes as you type."
+              checked={live}
+              onCheckedChange={setLive}
+            />
 
             <div className="grid grid-cols-2 gap-3">
               <SwitchRow label="Lowercase" checked={lowercase} onCheckedChange={setLowercase} />
               <SwitchRow label="Trim edges" checked={trim} onCheckedChange={setTrim} />
-              <SwitchRow label="Transliterate" hint="Remove accents/diacritics" checked={transliterate} onCheckedChange={setTransliterate} />
-              <SwitchRow label="Collapse repeats" checked={collapse} onCheckedChange={setCollapse} />
-              <SwitchRow label="Keep numbers" checked={keepNumbers} onCheckedChange={setKeepNumbers} />
-              <SwitchRow label="Preserve _" checked={preserveUnderscore} onCheckedChange={setPreserveUnderscore} />
+              <SwitchRow
+                label="Transliterate"
+                hint="Remove accents/diacritics"
+                checked={transliterate}
+                onCheckedChange={setTransliterate}
+              />
+              <SwitchRow
+                label="Collapse repeats"
+                checked={collapse}
+                onCheckedChange={setCollapse}
+              />
+              <SwitchRow
+                label="Keep numbers"
+                checked={keepNumbers}
+                onCheckedChange={setKeepNumbers}
+              />
+              <SwitchRow
+                label="Preserve _"
+                checked={preserveUnderscore}
+                onCheckedChange={setPreserveUnderscore}
+              />
             </div>
           </div>
         </GlassCard>
 
         <GlassCard className="p-5">
           <div className="grid gap-4">
-            <InputField label="Stopwords (comma-separated)" value={stopwordText} onChange={(e) => setStopwordText(e.target.value)} placeholder="a, an, the, and…" />
+            <InputField
+              label="Stopwords (comma-separated)"
+              value={stopwordText}
+              onChange={(e) => setStopwordText(e.target.value)}
+              placeholder="a, an, the, and…"
+            />
 
             <TextareaField
               label="Custom replacements (one per line, “from - to”)"
@@ -306,7 +361,7 @@ export default function SlugifyPage() {
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Input</Label>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="gap-2" onClick={() => setInput('')}>
+                  <Button variant="ghost" size="sm" className="gap-2" onClick={() => setInput("")}>
                     <Eraser className="h-4 w-4" /> Clear
                   </Button>
                   <CopyButton variant="ghost" getText={() => input} />
@@ -317,11 +372,13 @@ export default function SlugifyPage() {
                 value={input}
                 onValueChange={setInput}
                 onKeyUp={(e) => {
-                  if (!live && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                  if (!live && e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                     runSingle();
                   }
                 }}
-                placeholder={live ? 'Write a title to slugify…' : 'Write a title… (Ctrl/Cmd + Enter to run)'}
+                placeholder={
+                  live ? "Write a title to slugify…" : "Write a title… (Ctrl/Cmd + Enter to run)"
+                }
                 textareaClassName="min-h-[160px]"
               />
 
@@ -341,23 +398,29 @@ export default function SlugifyPage() {
                   <Label className="text-sm font-medium">Output</Label>
                   <Badge variant="secondary" className="gap-1">
                     <Info className="h-3.5 w-3.5" />
-                    {live ? 'Live' : 'Manual'}
+                    {live ? "Live" : "Manual"}
                   </Badge>
                 </div>
                 <CopyButton variant="ghost" getText={() => output} />
               </div>
 
-              <TextareaField readOnly value={output} placeholder="Result will appear here…" textareaClassName="mt-2 min-h-[120px] font-mono" autoResize />
+              <TextareaField
+                readOnly
+                value={output}
+                placeholder="Result will appear here…"
+                textareaClassName="mt-2 min-h-[120px] font-mono"
+                autoResize
+              />
               <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <span>
                   Length: <code className="rounded bg-muted px-1">{output.length}</code>
                 </span>
                 <span>
-                  Delimiter:{' '}
+                  Delimiter:{" "}
                   <code className="rounded bg-muted px-1">
                     {(() => {
                       const d = delimiterFromKey(delimiterKey);
-                      return d || '(none)';
+                      return d || "(none)";
                     })()}
                   </code>
                 </span>
@@ -373,7 +436,12 @@ export default function SlugifyPage() {
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Input (one title per line)</Label>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="gap-2" onClick={() => setBatchInput('')}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setBatchInput("")}
+                  >
                     <Eraser className="h-4 w-4" /> Clear
                   </Button>
                   <CopyButton variant="ghost" getText={() => batchInput} />
@@ -383,9 +451,13 @@ export default function SlugifyPage() {
               <TextareaField
                 value={batchInput}
                 onValueChange={setBatchInput}
-                placeholder={live ? 'My First Post\n10 Tips for SEO\nবাংলা শিরোনামও সমর্থিত' : 'My First Post\n10 Tips for SEO\nবাংলা শিরোনামও সমর্থিত\n(Ctrl/Cmd + Enter to run)'}
+                placeholder={
+                  live
+                    ? "My First Post\n10 Tips for SEO\nবাংলা শিরোনামও সমর্থিত"
+                    : "My First Post\n10 Tips for SEO\nবাংলা শিরোনামও সমর্থিত\n(Ctrl/Cmd + Enter to run)"
+                }
                 onKeyUp={(e) => {
-                  if (!live && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runBatch();
+                  if (!live && e.key === "Enter" && (e.ctrlKey || e.metaKey)) runBatch();
                 }}
                 textareaClassName="mt-2 min-h-[220px]"
                 autoResize
@@ -407,10 +479,19 @@ export default function SlugifyPage() {
                 <CopyButton variant="ghost" getText={() => batchOutput} />
               </div>
 
-              <TextareaField readOnly value={batchOutput} placeholder="result-one\nresult-two\nresult-three" textareaClassName="mt-2 min-h-[220px] font-mono" autoResize />
+              <TextareaField
+                readOnly
+                value={batchOutput}
+                placeholder="result-one\nresult-two\nresult-three"
+                textareaClassName="mt-2 min-h-[220px] font-mono"
+                autoResize
+              />
 
               <div className="mt-3 text-xs text-muted-foreground">
-                Lines: <code className="rounded bg-muted px-1">{batchOutput ? batchOutput.split('\n').length : 0}</code>
+                Lines:{" "}
+                <code className="rounded bg-muted px-1">
+                  {batchOutput ? batchOutput.split("\n").length : 0}
+                </code>
               </div>
             </GlassCard>
           </div>
@@ -424,7 +505,7 @@ export default function SlugifyPage() {
 
 function parseStopwords(text: string): string[] {
   return text
-    .split(',')
+    .split(",")
     .map((w) => w.trim())
     .filter(Boolean);
 }
@@ -435,8 +516,8 @@ function parseCustomMap(text: string): Record<string, string> {
   for (const line of lines) {
     const m = line.match(/^(.*?)(?:\s*=>\s*)(.*)$/);
     if (!m) continue;
-    const from = (m[1] ?? '').trim();
-    const to = (m[2] ?? '').trim();
+    const from = (m[1] ?? "").trim();
+    const to = (m[2] ?? "").trim();
     if (from.length) map[from] = to;
   }
   return map;

@@ -16,6 +16,6 @@ type Timer = {
   workMs?: number;
   breakMs?: number;
   cycles?: number;
-  phase?: 'work' | 'break' | 'done';
+  phase?: "work" | "break" | "done";
   currentCycle?: number; // 1-based
 };

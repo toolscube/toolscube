@@ -1,12 +1,12 @@
-'use server';
+"use server";
 
-import { normalizeUrl } from '@/lib/normalize-url';
-import { headers } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
-import crypto from 'node:crypto';
-import prisma from '../prisma';
+import crypto from "node:crypto";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
+import { normalizeUrl } from "@/lib/normalize-url";
+import prisma from "../prisma";
 
-const ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 async function slugExists(slug: string) {
   const link = await prisma.link.findUnique({ where: { short: slug } });
@@ -16,28 +16,36 @@ async function slugExists(slug: string) {
 export async function generateUniqueSlug() {
   for (let len = 4; len <= 8; len++) {
     for (let tries = 0; tries < 4; tries++) {
-      let s = '';
+      let s = "";
       for (let i = 0; i < len; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
       if (!(await slugExists(s))) return s;
     }
   }
-  return crypto.randomBytes(6).toString('base64url');
+  return crypto.randomBytes(6).toString("base64url");
 }
 
-export async function createShort({ url, preferredSlug, userId }: { url: string; preferredSlug?: string | null; userId?: string | null }) {
+export async function createShort({
+  url,
+  preferredSlug,
+  userId,
+}: {
+  url: string;
+  preferredSlug?: string | null;
+  userId?: string | null;
+}) {
   const targetUrl = normalizeUrl(url);
-  if (!targetUrl) return { ok: false as const, error: 'INVALID_URL' };
+  if (!targetUrl) return { ok: false as const, error: "INVALID_URL" };
 
   const existing = await prisma.link.findFirst({ where: { targetUrl } });
   if (existing) {
     return { ok: true as const, existed: true, link: existing };
   }
 
-  let short = preferredSlug?.trim() || '';
+  let short = preferredSlug?.trim() || "";
   if (short) {
-    short = short.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+    short = short.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32);
     const taken = await prisma.link.findUnique({ where: { short } });
-    if (taken) short = '';
+    if (taken) short = "";
   }
   if (!short) short = await generateUniqueSlug();
 
@@ -71,7 +79,7 @@ export async function getAnalytics(short: string): Promise<AnalyticsResponse | n
   const byDay = new Map<string, number>();
   for (const c of link.clicks) {
     const d = new Date(c.ts);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     byDay.set(key, (byDay.get(key) ?? 0) + 1);
   }
 
@@ -98,16 +106,17 @@ export async function getAnalytics(short: string): Promise<AnalyticsResponse | n
 export async function recordClickAndRedirect(short: string) {
   const h = await headers();
 
-  const referrer = h.get('referer') ?? h.get('referrer') ?? undefined;
-  const country = h.get('x-vercel-ip-country') ?? h.get('cf-ipcountry') ?? undefined;
-  const ua = h.get('user-agent') ?? '';
-  const ipHeader = h.get('x-forwarded-for') ?? '';
-  const ip = ipHeader.split(',')[0]?.trim() || '';
+  const referrer = h.get("referer") ?? h.get("referrer") ?? undefined;
+  const country = h.get("x-vercel-ip-country") ?? h.get("cf-ipcountry") ?? undefined;
+  const ua = h.get("user-agent") ?? "";
+  const ipHeader = h.get("x-forwarded-for") ?? "";
+  const ip = ipHeader.split(",")[0]?.trim() || "";
 
   const link = await prisma.link.findUnique({ where: { short } });
   if (!link) notFound();
 
-  const sha = (x?: string) => (x ? crypto.createHash('sha256').update(x).digest('base64url') : undefined);
+  const sha = (x?: string) =>
+    x ? crypto.createHash("sha256").update(x).digest("base64url") : undefined;
 
   await prisma.click.create({
     data: {

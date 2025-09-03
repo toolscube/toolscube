@@ -1,5 +1,7 @@
 "use client";
 
+import { Hash, Play, Shuffle, Wand2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   ActionButton,
   CopyButton,
@@ -12,16 +14,9 @@ import SelectField from "@/components/shared/form-fields/select-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-import { Hash, Play, Shuffle, Wand2 } from "lucide-react";
-import { useMemo, useState } from "react";
 
 type Mode = "uuid" | "ulid" | "nanoid" | "hex" | "order";
 
@@ -34,17 +29,8 @@ function todayYmd() {
 }
 
 /** Generators */
-function uuidV4({
-  upper = false,
-  noHyphen = false,
-}: {
-  upper?: boolean;
-  noHyphen?: boolean;
-} = {}) {
-  let s =
-    typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : fallbackUuidV4();
+function uuidV4({ upper = false, noHyphen = false }: { upper?: boolean; noHyphen?: boolean } = {}) {
+  let s = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : fallbackUuidV4();
   if (noHyphen) s = s.replace(/-/g, "");
   if (upper) s = s.toUpperCase();
   return s;
@@ -134,9 +120,7 @@ export default function IdGeneratorClient() {
   // global post-processing
   const [prefix, setPrefix] = useState("");
   const [suffix, setSuffix] = useState("");
-  const [separator, setSeparator] = useState<"newline" | "comma" | "space">(
-    "newline",
-  );
+  const [separator, setSeparator] = useState<"newline" | "comma" | "space">("newline");
 
   // per-mode options
   const [uuidUpper, setUuidUpper] = useState(false);
@@ -156,8 +140,7 @@ export default function IdGeneratorClient() {
 
   const [rows, setRows] = useState<string[]>([]);
 
-  const sepStr =
-    separator === "newline" ? "\n" : separator === "comma" ? "," : " ";
+  const sepStr = separator === "newline" ? "\n" : separator === "comma" ? "," : " ";
   const processed = useMemo(() => {
     let out = rows;
     if (ensureUnique) {
@@ -187,8 +170,7 @@ export default function IdGeneratorClient() {
           res.push(
             nanoId(
               Math.max(4, Math.min(64, nanoLen)),
-              nanoAlphabet ||
-                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+              nanoAlphabet || "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
             ),
           );
           break;
@@ -225,9 +207,7 @@ export default function IdGeneratorClient() {
     setUlidUpper(true);
 
     setNanoLen(12);
-    setNanoAlphabet(
-      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-    );
+    setNanoAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 
     setHexLen(16);
 
@@ -267,9 +247,7 @@ export default function IdGeneratorClient() {
       <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
-          <CardDescription>
-            Pick the ID type and customize generation.
-          </CardDescription>
+          <CardDescription>Pick the ID type and customize generation.</CardDescription>
         </CardHeader>
 
         <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -291,9 +269,7 @@ export default function IdGeneratorClient() {
             min={1}
             max={1000}
             value={count}
-            onChange={(e) =>
-              setCount(Math.max(1, Math.min(1000, Number(e.target.value) || 1)))
-            }
+            onChange={(e) => setCount(Math.max(1, Math.min(1000, Number(e.target.value) || 1)))}
           />
           <SelectField
             label="Copy All Separator"
@@ -323,22 +299,14 @@ export default function IdGeneratorClient() {
               checked={ensureUnique}
               onCheckedChange={setEnsureUnique}
             />
-            <SwitchRow
-              label="Sort output"
-              checked={sortOut}
-              onCheckedChange={setSortOut}
-            />
+            <SwitchRow label="Sort output" checked={sortOut} onCheckedChange={setSortOut} />
           </div>
 
           {/* Per-mode options */}
           {mode === "uuid" && (
             <>
               <div className="grid gap-2">
-                <SwitchRow
-                  label="Uppercase"
-                  checked={uuidUpper}
-                  onCheckedChange={setUuidUpper}
-                />
+                <SwitchRow label="Uppercase" checked={uuidUpper} onCheckedChange={setUuidUpper} />
                 <SwitchRow
                   label="Remove hyphens"
                   checked={uuidNoHyphen}
@@ -351,11 +319,7 @@ export default function IdGeneratorClient() {
           {mode === "ulid" && (
             <>
               <div className="grid gap-2">
-                <SwitchRow
-                  label="Uppercase"
-                  checked={ulidUpper}
-                  onCheckedChange={setUlidUpper}
-                />
+                <SwitchRow label="Uppercase" checked={ulidUpper} onCheckedChange={setUlidUpper} />
               </div>
             </>
           )}
@@ -368,11 +332,7 @@ export default function IdGeneratorClient() {
                 min={4}
                 max={64}
                 value={nanoLen}
-                onChange={(e) =>
-                  setNanoLen(
-                    Math.max(4, Math.min(64, Number(e.target.value) || 4)),
-                  )
-                }
+                onChange={(e) => setNanoLen(Math.max(4, Math.min(64, Number(e.target.value) || 4)))}
               />
               <InputField
                 label="Alphabet"
@@ -392,9 +352,7 @@ export default function IdGeneratorClient() {
                 max={128}
                 value={hexLen}
                 onChange={(e) =>
-                  setHexLen(
-                    Math.max(4, Math.min(128, Number(e.target.value) || 16)),
-                  )
+                  setHexLen(Math.max(4, Math.min(128, Number(e.target.value) || 16)))
                 }
               />
             </>
@@ -418,17 +376,8 @@ export default function IdGeneratorClient() {
           )}
 
           <div className="flex items-end gap-2">
-            <ActionButton
-              icon={Play}
-              label="Generate"
-              onClick={generate}
-              variant="default"
-            />
-            <ActionButton
-              icon={Shuffle}
-              label="Regenerate"
-              onClick={generate}
-            />
+            <ActionButton icon={Play} label="Generate" onClick={generate} variant="default" />
+            <ActionButton icon={Shuffle} label="Regenerate" onClick={generate} />
           </div>
         </CardContent>
       </GlassCard>
@@ -439,9 +388,7 @@ export default function IdGeneratorClient() {
       <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Generated IDs</CardTitle>
-          <CardDescription>
-            Copy individual IDs or use “Copy All”.
-          </CardDescription>
+          <CardDescription>Copy individual IDs or use “Copy All”.</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-3">
@@ -473,10 +420,7 @@ export default function IdGeneratorClient() {
           ) : (
             <div className="grid gap-3 md:grid-cols-2">
               {processed.map((id) => (
-                <div
-                  key={id}
-                  className="flex items-center justify-between rounded-md border p-3"
-                >
+                <div key={id} className="flex items-center justify-between rounded-md border p-3">
                   <span className="font-mono text-sm break-all">{id}</span>
                   <CopyButton getText={() => id} />
                 </div>

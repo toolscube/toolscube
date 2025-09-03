@@ -1,20 +1,35 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-
-import { AlignCenter, AlignLeft, AlignRight, Check, Copy, Download, Grid as GridIcon, Image, Image as ImageIcon, Layers, LayoutGrid, Palette, RotateCcw, Sparkles, Type, Upload } from 'lucide-react';
+import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Check,
+  Copy,
+  Download,
+  Grid as GridIcon,
+  Image,
+  Image as ImageIcon,
+  Layers,
+  LayoutGrid,
+  Palette,
+  RotateCcw,
+  Sparkles,
+  Type,
+  Upload,
+} from "lucide-react";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 // ---------------- Types ----------------
-type Align = 'left' | 'center' | 'right';
+type Align = "left" | "center" | "right";
 
 type State = {
   // Canvas size
@@ -58,7 +73,7 @@ type State = {
   bgBlur: number; // px (simple blur via shadow draws)
   logo?: string; // objectURL
   logoSize: number; // px
-  logoCorner: 'tl' | 'tr' | 'bl' | 'br';
+  logoCorner: "tl" | "tr" | "bl" | "br";
   logoRound: number; // radius
 
   // Effects
@@ -79,31 +94,31 @@ const DEFAULT: State = {
   w: 1200,
   h: 630,
 
-  title: 'Your Catchy Post Title',
-  subtitle: 'Optional subtitle goes here to add context for social previews.',
-  badge: 'Tools Hub',
-  brand: 'naturalsefaa.com',
+  title: "Your Catchy Post Title",
+  subtitle: "Optional subtitle goes here to add context for social previews.",
+  badge: "Tools Hub",
+  brand: "naturalsefaa.com",
 
   titleSize: 92,
   subtitleSize: 36,
   titleWeight: 800,
   subtitleWeight: 500,
   lineHeight: 1.2,
-  fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto',
+  fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto",
 
-  align: 'left',
+  align: "left",
   padX: 96,
   padY: 96,
   gap: 18,
   showGrid: false,
   showSafe: false,
 
-  fg: '#0f172a',
-  accent: '#22c55e',
+  fg: "#0f172a",
+  accent: "#22c55e",
 
   useGradient: true,
-  bg1: '#f8fafc',
-  bg2: '#e2e8f0',
+  bg1: "#f8fafc",
+  bg2: "#e2e8f0",
   gradAngle: 135,
 
   bgImage: undefined,
@@ -111,12 +126,12 @@ const DEFAULT: State = {
   bgBlur: 0,
   logo: undefined,
   logoSize: 120,
-  logoCorner: 'tr',
+  logoCorner: "tr",
   logoRound: 24,
 
   dropShadow: true,
   shadowStrength: 24,
-  overlayTint: 'rgba(255,255,255,0.0)',
+  overlayTint: "rgba(255,255,255,0.0)",
   overlayOn: false,
 
   watermarkOn: true,
@@ -134,10 +149,16 @@ function degToRad(d: number) {
   return (d * Math.PI) / 180;
 }
 
-function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, lineHeightPx: number, maxLines?: number) {
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  lineHeightPx: number,
+  maxLines?: number,
+) {
   const words = text.split(/\s+/);
   const lines: string[] = [];
-  let line = '';
+  let line = "";
 
   for (let i = 0; i < words.length; i++) {
     const test = line ? `${line} ${words[i]}` : words[i];
@@ -170,10 +191,11 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number,
 }
 
 async function canvasToClipboard(canvas: HTMLCanvasElement) {
-  if (!('clipboard' in navigator) || !(window as any).ClipboardItem) throw new Error('Clipboard API not supported.');
+  if (!("clipboard" in navigator) || !(window as any).ClipboardItem)
+    throw new Error("Clipboard API not supported.");
   return new Promise<void>((resolve, reject) => {
     canvas.toBlob(async (blob) => {
-      if (!blob) return reject(new Error('Failed to create image blob.'));
+      if (!blob) return reject(new Error("Failed to create image blob."));
       try {
         const item = new (window as any).ClipboardItem({ [blob.type]: blob });
         await navigator.clipboard.write([item]);
@@ -181,13 +203,13 @@ async function canvasToClipboard(canvas: HTMLCanvasElement) {
       } catch (e) {
         reject(e);
       }
-    }, 'image/png');
+    }, "image/png");
   });
 }
 
 function downloadBlob(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -199,9 +221,9 @@ function downloadBlob(filename: string, blob: Blob) {
 // ---------------- Main Page ----------------
 export default function OGBuilderPage() {
   const [s, setS] = React.useState<State>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
-        const raw = localStorage.getItem('og-builder-v1');
+        const raw = localStorage.getItem("og-builder-v1");
         if (raw) return { ...DEFAULT, ...JSON.parse(raw) } as State;
       } catch {}
     }
@@ -216,7 +238,7 @@ export default function OGBuilderPage() {
   // Persist settings
   React.useEffect(() => {
     const { bgImage, logo, ...toSave } = s; // skip volatile objectURLs (we still save boolean info)
-    localStorage.setItem('og-builder-v1', JSON.stringify(toSave));
+    localStorage.setItem("og-builder-v1", JSON.stringify(toSave));
   }, [s]);
 
   // Load images whenever objectURL changes
@@ -228,7 +250,7 @@ export default function OGBuilderPage() {
     }
     const url = s.bgImage;
     const img: HTMLImageElement = new window.Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       bgImgRef.current = img;
       draw(); // ensure one more paint after load
@@ -248,7 +270,7 @@ export default function OGBuilderPage() {
     }
     const url = s.logo;
     const img: HTMLImageElement = new window.Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       logoRef.current = img;
       draw();
@@ -276,7 +298,7 @@ export default function OGBuilderPage() {
     if (!canvas) return;
     canvas.width = s.w;
     canvas.height = s.h;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     // Background (solid or gradient)
@@ -331,7 +353,7 @@ export default function OGBuilderPage() {
     // Safe area
     if (s.showSafe) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
       ctx.setLineDash([6, 6]);
       ctx.lineWidth = 2;
       ctx.strokeRect(s.padX, s.padY, s.w - s.padX * 2, s.h - s.padY * 2);
@@ -341,7 +363,7 @@ export default function OGBuilderPage() {
     // Grid overlay
     if (s.showGrid) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+      ctx.strokeStyle = "rgba(0,0,0,0.06)";
       for (let x = 0; x <= s.w; x += 60) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
@@ -380,8 +402,8 @@ export default function OGBuilderPage() {
       roundRect(ctx, bx, by, bw, bh, 999);
       ctx.fill();
 
-      ctx.fillStyle = '#0a0a0a';
-      ctx.textBaseline = 'middle';
+      ctx.fillStyle = "#0a0a0a";
+      ctx.textBaseline = "middle";
       ctx.fillText(s.badge, bx + badgePadX, by + bh / 2 + 1);
       ctx.restore();
     }
@@ -392,20 +414,22 @@ export default function OGBuilderPage() {
     // Title
     ctx.save();
     ctx.fillStyle = s.fg;
-    ctx.textBaseline = 'top';
+    ctx.textBaseline = "top";
     ctx.font = `${s.titleWeight} ${s.titleSize}px ${s.fontFamily}`;
     if (s.dropShadow) {
-      ctx.shadowColor = 'rgba(0,0,0,0.18)';
+      ctx.shadowColor = "rgba(0,0,0,0.18)";
       ctx.shadowBlur = s.shadowStrength;
       ctx.shadowOffsetY = Math.max(4, Math.round(s.shadowStrength / 3));
     }
     const titleWrap = wrapText(ctx, s.title, areaW, s.titleSize * s.lineHeight, 4);
-    const titleX = s.align === 'left' ? areaX : s.align === 'center' ? areaX + areaW / 2 : areaX + areaW;
+    const titleX =
+      s.align === "left" ? areaX : s.align === "center" ? areaX + areaW / 2 : areaX + areaW;
 
     for (let i = 0; i < titleWrap.lines.length; i++) {
       const line = titleWrap.lines[i];
       const w = ctx.measureText(line).width;
-      const drawX = s.align === 'left' ? titleX : s.align === 'center' ? titleX - w / 2 : titleX - w;
+      const drawX =
+        s.align === "left" ? titleX : s.align === "center" ? titleX - w / 2 : titleX - w;
       ctx.fillText(line, drawX, curY + i * s.titleSize * s.lineHeight);
     }
     curY += titleWrap.height + s.gap;
@@ -414,22 +438,23 @@ export default function OGBuilderPage() {
     // Subtitle
     if (s.subtitle.trim()) {
       ctx.save();
-      ctx.fillStyle = s.fg + 'cc'; // slight transparency
-      ctx.textBaseline = 'top';
+      ctx.fillStyle = s.fg + "cc"; // slight transparency
+      ctx.textBaseline = "top";
       ctx.font = `${s.subtitleWeight} ${s.subtitleSize}px ${s.fontFamily}`;
       if (s.dropShadow) {
-        ctx.shadowColor = 'rgba(0,0,0,0.12)';
+        ctx.shadowColor = "rgba(0,0,0,0.12)";
         ctx.shadowBlur = Math.max(8, Math.round(s.shadowStrength / 1.8));
         ctx.shadowOffsetY = Math.max(3, Math.round(s.shadowStrength / 4));
       }
 
       const subWrap = wrapText(ctx, s.subtitle, areaW, s.subtitleSize * 1.35, 5);
-      const subX = s.align === 'left' ? areaX : s.align === 'center' ? areaX + areaW / 2 : areaX + areaW;
+      const subX =
+        s.align === "left" ? areaX : s.align === "center" ? areaX + areaW / 2 : areaX + areaW;
 
       for (let i = 0; i < subWrap.lines.length; i++) {
         const line = subWrap.lines[i];
         const w = ctx.measureText(line).width;
-        const drawX = s.align === 'left' ? subX : s.align === 'center' ? subX - w / 2 : subX - w;
+        const drawX = s.align === "left" ? subX : s.align === "center" ? subX - w / 2 : subX - w;
         ctx.fillText(line, drawX, curY + i * s.subtitleSize * 1.35);
       }
       curY += subWrap.height;
@@ -441,7 +466,7 @@ export default function OGBuilderPage() {
       ctx.save();
       ctx.font = `600 26px ${s.fontFamily}`;
       ctx.fillStyle = `rgba(0,0,0,${clamp(s.watermarkOpacity, 0, 1)})`;
-      ctx.textBaseline = 'alphabetic';
+      ctx.textBaseline = "alphabetic";
       const tw = ctx.measureText(s.brand).width;
       const x = s.w - s.padX - tw;
       const y = s.h - s.padY;
@@ -455,11 +480,11 @@ export default function OGBuilderPage() {
       const size = s.logoSize;
       let x = s.padX;
       let y = s.padY;
-      if (s.logoCorner === 'tr') {
+      if (s.logoCorner === "tr") {
         x = s.w - s.padX - size;
-      } else if (s.logoCorner === 'bl') {
+      } else if (s.logoCorner === "bl") {
         y = s.h - s.padY - size;
-      } else if (s.logoCorner === 'br') {
+      } else if (s.logoCorner === "br") {
         x = s.w - s.padX - size;
         y = s.h - s.padY - size;
       }
@@ -473,7 +498,14 @@ export default function OGBuilderPage() {
   }
 
   // Rounded rectangle helper
-  function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  function roundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number,
+  ) {
     const rr = Math.min(r, w / 2, h / 2);
     ctx.beginPath();
     ctx.moveTo(x + rr, y);
@@ -504,8 +536,8 @@ export default function OGBuilderPage() {
     if (!canvas) return;
     canvas.toBlob((blob) => {
       if (!blob) return;
-      downloadBlob('og-image.png', blob);
-    }, 'image/png');
+      downloadBlob("og-image.png", blob);
+    }, "image/png");
   }
   function downloadJPG() {
     const canvas = canvasRef.current;
@@ -513,9 +545,9 @@ export default function OGBuilderPage() {
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
-        downloadBlob('og-image.jpg', blob);
+        downloadBlob("og-image.jpg", blob);
       },
-      'image/jpeg',
+      "image/jpeg",
       clamp(s.jpgQuality, 0.1, 1),
     );
   }
@@ -543,7 +575,10 @@ export default function OGBuilderPage() {
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Sparkles className="h-6 w-6" /> OG Image Builder
           </h1>
-          <p className="text-sm text-muted-foreground">Create crisp Open Graph images for social platforms — solid/gradient backgrounds, text, logo, and exports.</p>
+          <p className="text-sm text-muted-foreground">
+            Create crisp Open Graph images for social platforms — solid/gradient backgrounds, text,
+            logo, and exports.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={resetAll} className="gap-2">
@@ -578,13 +613,19 @@ export default function OGBuilderPage() {
                 </Label>
                 <div className="flex gap-2">
                   {[
-                    [1200, 630, '1200×630'],
-                    [1200, 628, '1200×628'],
-                    [1024, 512, '1024×512'],
-                    [800, 418, '800×418'],
-                    [1080, 1080, '1080×1080'],
+                    [1200, 630, "1200×630"],
+                    [1200, 628, "1200×628"],
+                    [1024, 512, "1024×512"],
+                    [800, 418, "800×418"],
+                    [1080, 1080, "1080×1080"],
                   ].map(([w, h, label]) => (
-                    <Button key={label} type="button" variant={s.w === w && s.h === h ? 'default' : 'outline'} size="sm" onClick={() => setS((p) => ({ ...p, w: w as number, h: h as number }))}>
+                    <Button
+                      key={label}
+                      type="button"
+                      variant={s.w === w && s.h === h ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setS((p) => ({ ...p, w: w as number, h: h as number }))}
+                    >
                       {label}
                     </Button>
                   ))}
@@ -593,11 +634,25 @@ export default function OGBuilderPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="w">Width</Label>
-                  <Input id="w" type="number" value={s.w} onChange={(e) => setS((p) => ({ ...p, w: clamp(Number(e.target.value) || 1200, 400, 4096) }))} />
+                  <Input
+                    id="w"
+                    type="number"
+                    value={s.w}
+                    onChange={(e) =>
+                      setS((p) => ({ ...p, w: clamp(Number(e.target.value) || 1200, 400, 4096) }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="h">Height</Label>
-                  <Input id="h" type="number" value={s.h} onChange={(e) => setS((p) => ({ ...p, h: clamp(Number(e.target.value) || 630, 400, 4096) }))} />
+                  <Input
+                    id="h"
+                    type="number"
+                    value={s.h}
+                    onChange={(e) =>
+                      setS((p) => ({ ...p, h: clamp(Number(e.target.value) || 630, 400, 4096) }))
+                    }
+                  />
                 </div>
               </div>
             </div>
@@ -611,68 +666,167 @@ export default function OGBuilderPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
-                <Textarea id="title" value={s.title} onChange={(e) => setS((p) => ({ ...p, title: e.target.value }))} className="min-h-[88px]" placeholder="Write a short, bold headline…" />
+                <Textarea
+                  id="title"
+                  value={s.title}
+                  onChange={(e) => setS((p) => ({ ...p, title: e.target.value }))}
+                  className="min-h-[88px]"
+                  placeholder="Write a short, bold headline…"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="subtitle">Subtitle</Label>
-                <Textarea id="subtitle" value={s.subtitle} onChange={(e) => setS((p) => ({ ...p, subtitle: e.target.value }))} placeholder="Optional subheading for context…" />
+                <Textarea
+                  id="subtitle"
+                  value={s.subtitle}
+                  onChange={(e) => setS((p) => ({ ...p, subtitle: e.target.value }))}
+                  placeholder="Optional subheading for context…"
+                />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="badge">Badge</Label>
-                  <Input id="badge" value={s.badge} onChange={(e) => setS((p) => ({ ...p, badge: e.target.value }))} placeholder="e.g. Tools Hub" />
+                  <Input
+                    id="badge"
+                    value={s.badge}
+                    onChange={(e) => setS((p) => ({ ...p, badge: e.target.value }))}
+                    placeholder="e.g. Tools Hub"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="brand">Brand/Watermark</Label>
-                  <Input id="brand" value={s.brand} onChange={(e) => setS((p) => ({ ...p, brand: e.target.value }))} placeholder="your-domain.com" />
+                  <Input
+                    id="brand"
+                    value={s.brand}
+                    onChange={(e) => setS((p) => ({ ...p, brand: e.target.value }))}
+                    placeholder="your-domain.com"
+                  />
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="titleSize">Title Size</Label>
-                  <Input id="titleSize" type="number" value={s.titleSize} onChange={(e) => setS((p) => ({ ...p, titleSize: clamp(Number(e.target.value) || 64, 24, 180) }))} />
+                  <Input
+                    id="titleSize"
+                    type="number"
+                    value={s.titleSize}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        titleSize: clamp(Number(e.target.value) || 64, 24, 180),
+                      }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="subtitleSize">Subtitle Size</Label>
-                  <Input id="subtitleSize" type="number" value={s.subtitleSize} onChange={(e) => setS((p) => ({ ...p, subtitleSize: clamp(Number(e.target.value) || 28, 16, 96) }))} />
+                  <Input
+                    id="subtitleSize"
+                    type="number"
+                    value={s.subtitleSize}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        subtitleSize: clamp(Number(e.target.value) || 28, 16, 96),
+                      }))
+                    }
+                  />
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="titleWeight">Title Weight</Label>
-                  <Input id="titleWeight" type="number" value={s.titleWeight} onChange={(e) => setS((p) => ({ ...p, titleWeight: clamp(Number(e.target.value) || 800, 300, 900) }))} />
+                  <Input
+                    id="titleWeight"
+                    type="number"
+                    value={s.titleWeight}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        titleWeight: clamp(Number(e.target.value) || 800, 300, 900),
+                      }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="subtitleWeight">Subtitle Weight</Label>
-                  <Input id="subtitleWeight" type="number" value={s.subtitleWeight} onChange={(e) => setS((p) => ({ ...p, subtitleWeight: clamp(Number(e.target.value) || 500, 300, 900) }))} />
+                  <Input
+                    id="subtitleWeight"
+                    type="number"
+                    value={s.subtitleWeight}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        subtitleWeight: clamp(Number(e.target.value) || 500, 300, 900),
+                      }))
+                    }
+                  />
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="lineHeight">Line Height</Label>
-                  <Input id="lineHeight" type="number" step="0.05" value={s.lineHeight} onChange={(e) => setS((p) => ({ ...p, lineHeight: clamp(Number(e.target.value) || 1.2, 1, 1.6) }))} />
+                  <Input
+                    id="lineHeight"
+                    type="number"
+                    step="0.05"
+                    value={s.lineHeight}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        lineHeight: clamp(Number(e.target.value) || 1.2, 1, 1.6),
+                      }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="gap">Gap</Label>
-                  <Input id="gap" type="number" value={s.gap} onChange={(e) => setS((p) => ({ ...p, gap: clamp(Number(e.target.value) || 18, 0, 80) }))} />
+                  <Input
+                    id="gap"
+                    type="number"
+                    value={s.gap}
+                    onChange={(e) =>
+                      setS((p) => ({ ...p, gap: clamp(Number(e.target.value) || 18, 0, 80) }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="font">Font Family</Label>
-                  <Input id="font" value={s.fontFamily} onChange={(e) => setS((p) => ({ ...p, fontFamily: e.target.value }))} placeholder="Inter, Poppins, Playfair Display, …" />
+                  <Input
+                    id="font"
+                    value={s.fontFamily}
+                    onChange={(e) => setS((p) => ({ ...p, fontFamily: e.target.value }))}
+                    placeholder="Inter, Poppins, Playfair Display, …"
+                  />
                 </div>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-3">
-                <Button type="button" variant={s.align === 'left' ? 'default' : 'outline'} onClick={() => setS((p) => ({ ...p, align: 'left' }))} className="gap-2">
+                <Button
+                  type="button"
+                  variant={s.align === "left" ? "default" : "outline"}
+                  onClick={() => setS((p) => ({ ...p, align: "left" }))}
+                  className="gap-2"
+                >
                   <AlignLeft className="h-4 w-4" /> Left
                 </Button>
-                <Button type="button" variant={s.align === 'center' ? 'default' : 'outline'} onClick={() => setS((p) => ({ ...p, align: 'center' }))} className="gap-2">
+                <Button
+                  type="button"
+                  variant={s.align === "center" ? "default" : "outline"}
+                  onClick={() => setS((p) => ({ ...p, align: "center" }))}
+                  className="gap-2"
+                >
                   <AlignCenter className="h-4 w-4" /> Center
                 </Button>
-                <Button type="button" variant={s.align === 'right' ? 'default' : 'outline'} onClick={() => setS((p) => ({ ...p, align: 'right' }))} className="gap-2">
+                <Button
+                  type="button"
+                  variant={s.align === "right" ? "default" : "outline"}
+                  onClick={() => setS((p) => ({ ...p, align: "right" }))}
+                  className="gap-2"
+                >
                   <AlignRight className="h-4 w-4" /> Right
                 </Button>
               </div>
@@ -680,11 +834,25 @@ export default function OGBuilderPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="padX">Padding X</Label>
-                  <Input id="padX" type="number" value={s.padX} onChange={(e) => setS((p) => ({ ...p, padX: clamp(Number(e.target.value) || 96, 24, 240) }))} />
+                  <Input
+                    id="padX"
+                    type="number"
+                    value={s.padX}
+                    onChange={(e) =>
+                      setS((p) => ({ ...p, padX: clamp(Number(e.target.value) || 96, 24, 240) }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="padY">Padding Y</Label>
-                  <Input id="padY" type="number" value={s.padY} onChange={(e) => setS((p) => ({ ...p, padY: clamp(Number(e.target.value) || 96, 24, 240) }))} />
+                  <Input
+                    id="padY"
+                    type="number"
+                    value={s.padY}
+                    onChange={(e) =>
+                      setS((p) => ({ ...p, padY: clamp(Number(e.target.value) || 96, 24, 240) }))
+                    }
+                  />
                 </div>
               </div>
             </div>
@@ -697,30 +865,56 @@ export default function OGBuilderPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="fg">Text</Label>
-                  <Input id="fg" type="color" value={s.fg} onChange={(e) => setS((p) => ({ ...p, fg: e.target.value }))} />
+                  <Input
+                    id="fg"
+                    type="color"
+                    value={s.fg}
+                    onChange={(e) => setS((p) => ({ ...p, fg: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="accent">Accent</Label>
-                  <Input id="accent" type="color" value={s.accent} onChange={(e) => setS((p) => ({ ...p, accent: e.target.value }))} />
+                  <Input
+                    id="accent"
+                    type="color"
+                    value={s.accent}
+                    onChange={(e) => setS((p) => ({ ...p, accent: e.target.value }))}
+                  />
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Gradient Background</Label>
-                  <p className="text-xs text-muted-foreground">Toggle solid/gradient background fill.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Toggle solid/gradient background fill.
+                  </p>
                 </div>
-                <Switch checked={s.useGradient} onCheckedChange={(v) => setS((p) => ({ ...p, useGradient: v }))} />
+                <Switch
+                  checked={s.useGradient}
+                  onCheckedChange={(v) => setS((p) => ({ ...p, useGradient: v }))}
+                />
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="bg1">{s.useGradient ? 'Color 1' : 'Background'}</Label>
-                  <Input id="bg1" type="color" value={s.bg1} onChange={(e) => setS((p) => ({ ...p, bg1: e.target.value }))} />
+                  <Label htmlFor="bg1">{s.useGradient ? "Color 1" : "Background"}</Label>
+                  <Input
+                    id="bg1"
+                    type="color"
+                    value={s.bg1}
+                    onChange={(e) => setS((p) => ({ ...p, bg1: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="bg2">Color 2</Label>
-                  <Input id="bg2" type="color" disabled={!s.useGradient} value={s.bg2} onChange={(e) => setS((p) => ({ ...p, bg2: e.target.value }))} />
+                  <Input
+                    id="bg2"
+                    type="color"
+                    disabled={!s.useGradient}
+                    value={s.bg2}
+                    onChange={(e) => setS((p) => ({ ...p, bg2: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="angle">Angle</Label>
@@ -729,7 +923,12 @@ export default function OGBuilderPage() {
                     type="number"
                     disabled={!s.useGradient}
                     value={s.gradAngle}
-                    onChange={(e) => setS((p) => ({ ...p, gradAngle: (((Number(e.target.value) || 0) % 360) + 360) % 360 }))}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        gradAngle: (((Number(e.target.value) || 0) % 360) + 360) % 360,
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -748,7 +947,12 @@ export default function OGBuilderPage() {
                   </Label>
                   <div className="flex gap-2">
                     <Input type="file" accept="image/*" onChange={onBgUpload} />
-                    <Button type="button" variant="outline" onClick={() => setS((p) => ({ ...p, bgImage: undefined }))} disabled={!s.bgImage}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setS((p) => ({ ...p, bgImage: undefined }))}
+                      disabled={!s.bgImage}
+                    >
                       Remove
                     </Button>
                   </div>
@@ -759,7 +963,12 @@ export default function OGBuilderPage() {
                   </Label>
                   <div className="flex gap-2">
                     <Input type="file" accept="image/*" onChange={onLogoUpload} />
-                    <Button type="button" variant="outline" onClick={() => setS((p) => ({ ...p, logo: undefined }))} disabled={!s.logo}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setS((p) => ({ ...p, logo: undefined }))}
+                      disabled={!s.logo}
+                    >
                       Remove
                     </Button>
                   </div>
@@ -769,28 +978,72 @@ export default function OGBuilderPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="bgOpacity">BG Opacity</Label>
-                  <Input id="bgOpacity" type="number" step="0.05" value={s.bgImageOpacity} onChange={(e) => setS((p) => ({ ...p, bgImageOpacity: clamp(Number(e.target.value) || 0.25, 0, 1) }))} />
+                  <Input
+                    id="bgOpacity"
+                    type="number"
+                    step="0.05"
+                    value={s.bgImageOpacity}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        bgImageOpacity: clamp(Number(e.target.value) || 0.25, 0, 1),
+                      }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="bgBlur">BG Blur</Label>
-                  <Input id="bgBlur" type="number" value={s.bgBlur} onChange={(e) => setS((p) => ({ ...p, bgBlur: clamp(Number(e.target.value) || 0, 0, 60) }))} />
+                  <Input
+                    id="bgBlur"
+                    type="number"
+                    value={s.bgBlur}
+                    onChange={(e) =>
+                      setS((p) => ({ ...p, bgBlur: clamp(Number(e.target.value) || 0, 0, 60) }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="logoSize">Logo Size</Label>
-                  <Input id="logoSize" type="number" value={s.logoSize} onChange={(e) => setS((p) => ({ ...p, logoSize: clamp(Number(e.target.value) || 120, 48, 300) }))} />
+                  <Input
+                    id="logoSize"
+                    type="number"
+                    value={s.logoSize}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        logoSize: clamp(Number(e.target.value) || 120, 48, 300),
+                      }))
+                    }
+                  />
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="logoRound">Logo Radius</Label>
-                  <Input id="logoRound" type="number" value={s.logoRound} onChange={(e) => setS((p) => ({ ...p, logoRound: clamp(Number(e.target.value) || 24, 0, 150) }))} />
+                  <Input
+                    id="logoRound"
+                    type="number"
+                    value={s.logoRound}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        logoRound: clamp(Number(e.target.value) || 24, 0, 150),
+                      }))
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Logo Corner</Label>
                   <div className="grid grid-cols-4 gap-2">
-                    {(['tl', 'tr', 'bl', 'br'] as const).map((c) => (
-                      <Button key={c} type="button" variant={s.logoCorner === c ? 'default' : 'outline'} size="sm" onClick={() => setS((p) => ({ ...p, logoCorner: c }))}>
+                    {(["tl", "tr", "bl", "br"] as const).map((c) => (
+                      <Button
+                        key={c}
+                        type="button"
+                        variant={s.logoCorner === c ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setS((p) => ({ ...p, logoCorner: c }))}
+                      >
                         {c.toUpperCase()}
                       </Button>
                     ))}
@@ -799,7 +1052,10 @@ export default function OGBuilderPage() {
                 <div className="space-y-1.5">
                   <Label>Watermark</Label>
                   <div className="flex items-center justify-between">
-                    <Switch checked={s.watermarkOn} onCheckedChange={(v) => setS((p) => ({ ...p, watermarkOn: v }))} />
+                    <Switch
+                      checked={s.watermarkOn}
+                      onCheckedChange={(v) => setS((p) => ({ ...p, watermarkOn: v }))}
+                    />
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">Opacity</span>
                       <Input
@@ -807,7 +1063,12 @@ export default function OGBuilderPage() {
                         step="0.05"
                         className="w-24"
                         value={s.watermarkOpacity}
-                        onChange={(e) => setS((p) => ({ ...p, watermarkOpacity: clamp(Number(e.target.value) || 0.35, 0, 1) }))}
+                        onChange={(e) =>
+                          setS((p) => ({
+                            ...p,
+                            watermarkOpacity: clamp(Number(e.target.value) || 0.35, 0, 1),
+                          }))
+                        }
                       />
                     </div>
                   </div>
@@ -824,18 +1085,40 @@ export default function OGBuilderPage() {
                 <div className="space-y-1.5">
                   <Label>Drop Shadow</Label>
                   <div className="flex items-center justify-between">
-                    <Switch checked={s.dropShadow} onCheckedChange={(v) => setS((p) => ({ ...p, dropShadow: v }))} />
+                    <Switch
+                      checked={s.dropShadow}
+                      onCheckedChange={(v) => setS((p) => ({ ...p, dropShadow: v }))}
+                    />
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">Strength</span>
-                      <Input type="number" className="w-24" value={s.shadowStrength} onChange={(e) => setS((p) => ({ ...p, shadowStrength: clamp(Number(e.target.value) || 24, 0, 80) }))} />
+                      <Input
+                        type="number"
+                        className="w-24"
+                        value={s.shadowStrength}
+                        onChange={(e) =>
+                          setS((p) => ({
+                            ...p,
+                            shadowStrength: clamp(Number(e.target.value) || 24, 0, 80),
+                          }))
+                        }
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Overlay Tint</Label>
                   <div className="flex items-center justify-between">
-                    <Switch checked={s.overlayOn} onCheckedChange={(v) => setS((p) => ({ ...p, overlayOn: v }))} />
-                    <Input type="text" placeholder="rgba(0,0,0,0.15)" className="w-40" value={s.overlayTint} onChange={(e) => setS((p) => ({ ...p, overlayTint: e.target.value }))} />
+                    <Switch
+                      checked={s.overlayOn}
+                      onCheckedChange={(v) => setS((p) => ({ ...p, overlayOn: v }))}
+                    />
+                    <Input
+                      type="text"
+                      placeholder="rgba(0,0,0,0.15)"
+                      className="w-40"
+                      value={s.overlayTint}
+                      onChange={(e) => setS((p) => ({ ...p, overlayTint: e.target.value }))}
+                    />
                   </div>
                 </div>
               </div>
@@ -848,7 +1131,10 @@ export default function OGBuilderPage() {
                     </Label>
                     <p className="text-xs text-muted-foreground">Design-time alignment grid.</p>
                   </div>
-                  <Switch checked={s.showGrid} onCheckedChange={(v) => setS((p) => ({ ...p, showGrid: v }))} />
+                  <Switch
+                    checked={s.showGrid}
+                    onCheckedChange={(v) => setS((p) => ({ ...p, showGrid: v }))}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -857,11 +1143,25 @@ export default function OGBuilderPage() {
                     </Label>
                     <p className="text-xs text-muted-foreground">Shows content padding bounds.</p>
                   </div>
-                  <Switch checked={s.showSafe} onCheckedChange={(v) => setS((p) => ({ ...p, showSafe: v }))} />
+                  <Switch
+                    checked={s.showSafe}
+                    onCheckedChange={(v) => setS((p) => ({ ...p, showSafe: v }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="jpgQ">JPG Quality</Label>
-                  <Input id="jpgQ" type="number" step="0.01" value={s.jpgQuality} onChange={(e) => setS((p) => ({ ...p, jpgQuality: clamp(Number(e.target.value) || 0.92, 0.1, 1) }))} />
+                  <Input
+                    id="jpgQ"
+                    type="number"
+                    step="0.01"
+                    value={s.jpgQuality}
+                    onChange={(e) =>
+                      setS((p) => ({
+                        ...p,
+                        jpgQuality: clamp(Number(e.target.value) || 0.92, 0.1, 1),
+                      }))
+                    }
+                  />
                 </div>
               </div>
             </div>
@@ -872,7 +1172,9 @@ export default function OGBuilderPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Live Preview</Label>
-                <p className="text-xs text-muted-foreground">Scaled preview (export renders full resolution).</p>
+                <p className="text-xs text-muted-foreground">
+                  Scaled preview (export renders full resolution).
+                </p>
               </div>
               <Badge variant="secondary">
                 {s.w}×{s.h}
@@ -884,19 +1186,23 @@ export default function OGBuilderPage() {
                 style={{
                   width: Math.round(s.w * previewScale),
                   height: Math.round(s.h * previewScale),
-                }}>
+                }}
+              >
                 <canvas
                   ref={canvasRef}
                   className="h-full w-full rounded-lg shadow-sm"
                   style={{
                     width: Math.round(s.w * previewScale),
                     height: Math.round(s.h * previewScale),
-                    imageRendering: 'auto',
+                    imageRendering: "auto",
                   }}
                 />
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">Tips: Keep titles concise (3–5 words). Use high-contrast colors. Test multiple sizes (1200×630, 1024×512, 1080×1080).</div>
+            <div className="text-xs text-muted-foreground">
+              Tips: Keep titles concise (3–5 words). Use high-contrast colors. Test multiple sizes
+              (1200×630, 1024×512, 1080×1080).
+            </div>
           </div>
         </CardContent>
       </GlassCard>

@@ -1,26 +1,43 @@
-'use client';
+"use client";
 
-import dynamic from 'next/dynamic';
-import { JSX, useEffect, useMemo, useState } from 'react';
-
-import Stat from '@/components/shared/stat';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-
-import { Bike, Car, Copy, Crosshair, Footprints, Map as MapIcon, MapPin, MoveRight, Navigation2, RefreshCcw, Route, Sparkles } from 'lucide-react';
-import toast from 'react-hot-toast';
+import {
+  Bike,
+  Car,
+  Copy,
+  Crosshair,
+  Footprints,
+  Map as MapIcon,
+  MapPin,
+  MoveRight,
+  Navigation2,
+  RefreshCcw,
+  Route,
+  Sparkles,
+} from "lucide-react";
+import dynamic from "next/dynamic";
+import { type JSX, useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import Stat from "@/components/shared/stat";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 /* ---------------- Types & constants ---------------- */
 
-type Mode = 'driving' | 'cycling' | 'walking';
-type Unit = 'km' | 'mi';
-type Traffic = 'light' | 'normal' | 'heavy';
-type Pin = 'from' | 'to';
+type Mode = "driving" | "cycling" | "walking";
+type Unit = "km" | "mi";
+type Traffic = "light" | "normal" | "heavy";
+type Pin = "from" | "to";
 
 const MODE_ICON: Record<Mode, JSX.Element> = {
   driving: <Car className="h-4 w-4" />,
@@ -58,11 +75,28 @@ function initialBearing(a: { lat: number; lon: number }, b: { lat: number; lon: 
   return ((θ * 180) / Math.PI + 360) % 360;
 }
 function degToCompass(b: number) {
-  const d = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  const d = [
+    "N",
+    "NNE",
+    "NE",
+    "ENE",
+    "E",
+    "ESE",
+    "SE",
+    "SSE",
+    "S",
+    "SSW",
+    "SW",
+    "WSW",
+    "W",
+    "WNW",
+    "NW",
+    "NNW",
+  ];
   return d[Math.round((b % 360) / 22.5) % 16];
 }
 function formatHoursToHM(hours: number) {
-  if (!Number.isFinite(hours) || hours < 0) return '—';
+  if (!Number.isFinite(hours) || hours < 0) return "—";
   const h = Math.floor(hours),
     m = Math.round((hours - h) * 60);
   if (!h) return `${m}m`;
@@ -75,15 +109,17 @@ function formatHoursToHM(hours: number) {
    একটি ছোট কম্পোনেন্ট বানিয়ে সেটাকেই dynamic করা হয়েছে।
 ------------------------------------------------------------------- */
 
-const MapContainer = dynamic(async () => (await import('react-leaflet')).MapContainer, { ssr: false });
-const TileLayer = dynamic(async () => (await import('react-leaflet')).TileLayer, { ssr: false });
-const Marker = dynamic(async () => (await import('react-leaflet')).Marker, { ssr: false });
-const Polyline = dynamic(async () => (await import('react-leaflet')).Polyline, { ssr: false });
+const MapContainer = dynamic(async () => (await import("react-leaflet")).MapContainer, {
+  ssr: false,
+});
+const TileLayer = dynamic(async () => (await import("react-leaflet")).TileLayer, { ssr: false });
+const Marker = dynamic(async () => (await import("react-leaflet")).Marker, { ssr: false });
+const Polyline = dynamic(async () => (await import("react-leaflet")).Polyline, { ssr: false });
 
 // ✅ useMapEvents-ভিত্তিক component
 const MapClickHandler = dynamic(
   async () => {
-    const { useMapEvents } = await import('react-leaflet');
+    const { useMapEvents } = await import("react-leaflet");
     return function Handler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
       useMapEvents({
         click(e) {
@@ -100,13 +136,13 @@ const MapClickHandler = dynamic(
 function useLeafletDefaultIcon() {
   useEffect(() => {
     (async () => {
-      const L = await import('leaflet');
-      // @ts-ignore
+      const L = await import("leaflet");
+      // @ts-expect-error
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
     })();
   }, []);
@@ -120,11 +156,11 @@ export default function DistanceETAPage() {
   const [center, setCenter] = useState<[number, number]>([23.8103, 90.4125]); // Dhaka area
   const [fromCoord, setFromCoord] = useState<{ lat: number; lon: number } | null>(null);
   const [toCoord, setToCoord] = useState<{ lat: number; lon: number } | null>(null);
-  const [activePin, setActivePin] = useState<Pin>('from');
+  const [activePin, setActivePin] = useState<Pin>("from");
 
-  const [unit, setUnit] = useState<Unit>('km');
-  const [mode, setMode] = useState<Mode>('driving');
-  const [traffic, setTraffic] = useState<Traffic>('normal');
+  const [unit, setUnit] = useState<Unit>("km");
+  const [mode, setMode] = useState<Mode>("driving");
+  const [traffic, setTraffic] = useState<Traffic>("normal");
 
   const out = useMemo(() => {
     if (!fromCoord || !toCoord) return null;
@@ -134,8 +170,8 @@ export default function DistanceETAPage() {
     const bearing = initialBearing(fromCoord, toCoord);
     const compass = degToCompass(bearing);
     return {
-      straight: unit === 'km' ? straightKm : straightKm * 0.621371,
-      distance: unit === 'km' ? roadKm : roadKm * 0.621371,
+      straight: unit === "km" ? straightKm : straightKm * 0.621371,
+      distance: unit === "km" ? roadKm : roadKm * 0.621371,
       eta: hours,
       bearing,
       compass,
@@ -151,14 +187,14 @@ export default function DistanceETAPage() {
   };
 
   const useMyLocation = () => {
-    if (!navigator.geolocation) return toast.error('Geolocation not supported');
+    if (!navigator.geolocation) return toast.error("Geolocation not supported");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude: lat, longitude: lon } = pos.coords;
         setCenter([lat, lon]);
-        (activePin === 'from' ? setFromCoord : setToCoord)({ lat, lon });
+        (activePin === "from" ? setFromCoord : setToCoord)({ lat, lon });
       },
-      () => toast.error('Unable to fetch location'),
+      () => toast.error("Unable to fetch location"),
       { enableHighAccuracy: true, timeout: 8000 },
     );
   };
@@ -172,12 +208,12 @@ export default function DistanceETAPage() {
       `Estimated route distance: ${nf.format(out.distance)} ${unit}`,
       `ETA: ${formatHoursToHM(out.eta)}`,
       `Initial bearing: ${nf.format(out.bearing)}° (${out.compass})`,
-    ].join('\n');
+    ].join("\n");
     try {
       await navigator.clipboard.writeText(lines);
-      toast.success('Summary copied!');
+      toast.success("Summary copied!");
     } catch {
-      toast.error('Copy failed');
+      toast.error("Copy failed");
     }
   };
 
@@ -198,11 +234,18 @@ export default function DistanceETAPage() {
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               <Route className="h-6 w-6" /> Distance & ETA
             </h1>
-            <p className="text-sm text-muted-foreground">Pick start & destination from the map. Estimate uses straight-line math with road/traffic factors.</p>
+            <p className="text-sm text-muted-foreground">
+              Pick start & destination from the map. Estimate uses straight-line math with
+              road/traffic factors.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setActivePin(activePin === 'from' ? 'to' : 'from')} className="gap-2">
-              <MapIcon className="h-4 w-4" /> Active: {activePin === 'from' ? 'From' : 'To'}
+            <Button
+              variant="outline"
+              onClick={() => setActivePin(activePin === "from" ? "to" : "from")}
+              className="gap-2"
+            >
+              <MapIcon className="h-4 w-4" /> Active: {activePin === "from" ? "From" : "To"}
             </Button>
             <Button variant="outline" onClick={useMyLocation} className="gap-2">
               <Crosshair className="h-4 w-4" /> Use my location
@@ -225,7 +268,9 @@ export default function DistanceETAPage() {
                 <Sparkles className="h-3.5 w-3.5" /> Click to place pins
               </Badge>
             </div>
-            <CardDescription>Select unit, mode, and traffic — then click the map to set From/To.</CardDescription>
+            <CardDescription>
+              Select unit, mode, and traffic — then click the map to set From/To.
+            </CardDescription>
           </CardHeader>
 
           <CardContent className="grid gap-6 lg:grid-cols-3">
@@ -236,16 +281,21 @@ export default function DistanceETAPage() {
                 {/* @ts-ignore */}
                 <MapContainer center={center} zoom={7} className="h-[420px] md:h-[500px] w-full">
                   {/* @ts-ignore */}
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution="&copy; OpenStreetMap contributors"
+                  />
                   {/* clicks */}
                   <MapClickHandler
                     onClick={(lat, lon) => {
-                      if (activePin === 'from') setFromCoord({ lat, lon });
+                      if (activePin === "from") setFromCoord({ lat, lon });
                       else setToCoord({ lat, lon });
                     }}
                   />
                   {/* markers & line */}
-                  {fromCoord && /* @ts-ignore */ <Marker position={[fromCoord.lat, fromCoord.lon]} />}
+                  {fromCoord && (
+                    /* @ts-expect-error */ <Marker position={[fromCoord.lat, fromCoord.lon]} />
+                  )}
                   {toCoord && /* @ts-ignore */ <Marker position={[toCoord.lat, toCoord.lon]} />}
                   {polyline.length === 2 && /* @ts-ignore */ <Polyline positions={polyline} />}
                 </MapContainer>
@@ -257,13 +307,17 @@ export default function DistanceETAPage() {
                   <div className="text-xs text-muted-foreground flex items-center gap-2">
                     <MapPin className="h-3.5 w-3.5" /> From
                   </div>
-                  <div className="mt-1 font-mono text-sm">{fromCoord ? `${fromCoord.lat.toFixed(5)}, ${fromCoord.lon.toFixed(5)}` : '—'}</div>
+                  <div className="mt-1 font-mono text-sm">
+                    {fromCoord ? `${fromCoord.lat.toFixed(5)}, ${fromCoord.lon.toFixed(5)}` : "—"}
+                  </div>
                 </GlassCard>
                 <GlassCard className="p-3">
                   <div className="text-xs text-muted-foreground flex items-center gap-2">
                     <Navigation2 className="h-3.5 w-3.5" /> To
                   </div>
-                  <div className="mt-1 font-mono text-sm">{toCoord ? `${toCoord.lat.toFixed(5)}, ${toCoord.lon.toFixed(5)}` : '—'}</div>
+                  <div className="mt-1 font-mono text-sm">
+                    {toCoord ? `${toCoord.lat.toFixed(5)}, ${toCoord.lon.toFixed(5)}` : "—"}
+                  </div>
                 </GlassCard>
               </div>
             </div>
@@ -273,10 +327,18 @@ export default function DistanceETAPage() {
               <div className="grid gap-2">
                 <Label>Active pin</Label>
                 <div className="flex gap-2">
-                  <Button variant={activePin === 'from' ? 'default' : 'outline'} onClick={() => setActivePin('from')} className="w-full">
+                  <Button
+                    variant={activePin === "from" ? "default" : "outline"}
+                    onClick={() => setActivePin("from")}
+                    className="w-full"
+                  >
                     <MapPin className="h-4 w-4 mr-2" /> From
                   </Button>
-                  <Button variant={activePin === 'to' ? 'default' : 'outline'} onClick={() => setActivePin('to')} className="w-full">
+                  <Button
+                    variant={activePin === "to" ? "default" : "outline"}
+                    onClick={() => setActivePin("to")}
+                    className="w-full"
+                  >
                     <Navigation2 className="h-4 w-4 mr-2" /> To
                   </Button>
                 </div>
@@ -338,31 +400,43 @@ export default function DistanceETAPage() {
         <GlassCard className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Results</CardTitle>
-            <CardDescription>Estimate based on straight-line math + mode road-factor & traffic-factor.</CardDescription>
+            <CardDescription>
+              Estimate based on straight-line math + mode road-factor & traffic-factor.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
               <GlassCard className="p-4">
-                <Stat label="Straight-line" value={out ? `${nf.format(out.straight)} ${unit}` : '—'} />
+                <Stat
+                  label="Straight-line"
+                  value={out ? `${nf.format(out.straight)} ${unit}` : "—"}
+                />
               </GlassCard>
               <GlassCard className="p-4">
-                <Stat label="Est. route distance" value={out ? `${nf.format(out.distance)} ${unit}` : '—'} />
+                <Stat
+                  label="Est. route distance"
+                  value={out ? `${nf.format(out.distance)} ${unit}` : "—"}
+                />
               </GlassCard>
               <GlassCard className="p-4">
-                <Stat label="ETA" value={out ? formatHoursToHM(out.eta) : '—'} />
+                <Stat label="ETA" value={out ? formatHoursToHM(out.eta) : "—"} />
               </GlassCard>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               <GlassCard className="p-4">
                 <div className="text-sm text-muted-foreground">Initial bearing</div>
-                <div className="mt-1 text-lg font-medium">{out ? `${nf.format(out.bearing)}° (${out.compass})` : '—'}</div>
+                <div className="mt-1 text-lg font-medium">
+                  {out ? `${nf.format(out.bearing)}° (${out.compass})` : "—"}
+                </div>
               </GlassCard>
               <GlassCard className="p-4 md:col-span-2 text-xs text-muted-foreground">
-                Speeds: {BASE_SPEED_KMH[mode]} km/h. Road factor: {ROAD_FACTOR[mode]}×. Traffic: {TRAFFIC_FACTOR[traffic]}× on time. For exact routing, use a maps app.
+                Speeds: {BASE_SPEED_KMH[mode]} km/h. Road factor: {ROAD_FACTOR[mode]}×. Traffic:{" "}
+                {TRAFFIC_FACTOR[traffic]}× on time. For exact routing, use a maps app.
               </GlassCard>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <MoveRight className="h-3.5 w-3.5" /> Tip: Toggle the active pin to decide which point the next map click will set.
+              <MoveRight className="h-3.5 w-3.5" /> Tip: Toggle the active pin to decide which point
+              the next map click will set.
             </div>
           </CardContent>
         </GlassCard>

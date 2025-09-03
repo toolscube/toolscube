@@ -1,30 +1,38 @@
-'use client';
+"use client";
 
-import { CopyButton, ExportTextButton, PasteButton, ResetButton } from '@/components/shared/action-buttons';
-import { InputField } from '@/components/shared/form-fields/input-field';
-import SelectField from '@/components/shared/form-fields/select-field';
-import SwitchRow from '@/components/shared/form-fields/switch-row';
-import TextareaField from '@/components/shared/form-fields/textarea-field';
-import ToolPageHeader from '@/components/shared/tool-page-header';
-import { Badge } from '@/components/ui/badge';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard } from '@/components/ui/glass-card';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import { ClipboardType, Eraser, Wand2 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ClipboardType, Eraser, Wand2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  CopyButton,
+  ExportTextButton,
+  PasteButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 
 // Types
 type HistoryItem = { id: string; ts: number; src: string; out: string };
 
 // Helpers
-function uid(prefix = 'id') {
+function uid(prefix = "id") {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 function toTitleCase(s: string) {
-  return s.replace(/[\w\p{L}][^\s-]*/gu, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  return s.replace(
+    /[\w\p{L}][^\s-]*/gu,
+    (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+  );
 }
 
 function toSentenceCase(s: string) {
@@ -33,18 +41,21 @@ function toSentenceCase(s: string) {
 
 function stripUrls(s: string) {
   const urlRe = /(https?:\/\/|www\.)[^\s]+/gi;
-  return s.replace(urlRe, '');
+  return s.replace(urlRe, "");
 }
 
 function stripEmojis(s: string) {
   try {
-    return s.replace(/\p{Extended_Pictographic}/gu, '');
+    return s.replace(/\p{Extended_Pictographic}/gu, "");
   } catch {
-    return s.replace(/[\u{1F300}-\u{1FAFF}]/gu, '');
+    return s.replace(/[\u{1F300}-\u{1FAFF}]/gu, "");
   }
 }
 
-function normalizeSmartChars(s: string, opts: Pick<CleanOptions, 'normalizeQuotes' | 'normalizeDashes' | 'replaceEllipsis'>) {
+function normalizeSmartChars(
+  s: string,
+  opts: Pick<CleanOptions, "normalizeQuotes" | "normalizeDashes" | "replaceEllipsis">,
+) {
   let r = s;
   if (opts.normalizeQuotes) {
     r = r
@@ -53,10 +64,10 @@ function normalizeSmartChars(s: string, opts: Pick<CleanOptions, 'normalizeQuote
       .replace(/\u00AB|\u00BB/g, '"');
   }
   if (opts.normalizeDashes) {
-    r = r.replace(/[\u2013\u2014]/g, '-');
+    r = r.replace(/[\u2013\u2014]/g, "-");
   }
   if (opts.replaceEllipsis) {
-    r = r.replace(/\u2026/g, '...');
+    r = r.replace(/\u2026/g, "...");
   }
   return r;
 }
@@ -65,14 +76,14 @@ function cleanText(input: string, opts: CleanOptions) {
   let s = input;
 
   // normalize NBSP & tabs
-  s = s.replace(/\u00A0/g, ' ');
-  if (opts.tabsToSpaces) s = s.replace(/\t/g, ' ');
+  s = s.replace(/\u00A0/g, " ");
+  if (opts.tabsToSpaces) s = s.replace(/\t/g, " ");
 
   // normalize smart punctuation
   s = normalizeSmartChars(s, opts);
 
   // remove zero-width
-  if (opts.removeZeroWidth) s = s.replace(/[\u200B-\u200D\uFEFF]/g, '');
+  if (opts.removeZeroWidth) s = s.replace(/[\u200B-\u200D\uFEFF]/g, "");
 
   // remove URLs
   if (opts.removeUrls) s = stripUrls(s);
@@ -82,27 +93,27 @@ function cleanText(input: string, opts: CleanOptions) {
 
   // line-handling
   if (opts.stripLineBreaks) {
-    s = s.replace(/[\r\n]+/g, ' ');
+    s = s.replace(/[\r\n]+/g, " ");
   } else if (opts.stripExtraBlankLines) {
-    s = s.replace(/\n{3,}/g, '\n\n');
+    s = s.replace(/\n{3,}/g, "\n\n");
   }
 
   // spaces
-  if (opts.collapseSpaces) s = s.replace(/[ \t]{2,}/g, ' ');
+  if (opts.collapseSpaces) s = s.replace(/[ \t]{2,}/g, " ");
   if (opts.trim) s = s.trim();
 
   // case
   switch (opts.caseMode) {
-    case 'lower':
+    case "lower":
       s = s.toLowerCase();
       break;
-    case 'upper':
+    case "upper":
       s = s.toUpperCase();
       break;
-    case 'title':
+    case "title":
       s = toTitleCase(s);
       break;
-    case 'sentence':
+    case "sentence":
       s = toSentenceCase(s);
       break;
   }
@@ -110,10 +121,10 @@ function cleanText(input: string, opts: CleanOptions) {
   return s;
 }
 
-function download(filename: string, content: string, mime = 'text/plain') {
+function download(filename: string, content: string, mime = "text/plain") {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -134,40 +145,40 @@ const DEFAULT_OPTS: CleanOptions = {
   removeZeroWidth: true,
   removeUrls: false,
   removeEmojis: false,
-  caseMode: 'none',
+  caseMode: "none",
   autoCleanOnPaste: true,
 };
 
 export default function ClipboardCleanerClient() {
-  const [raw, setRaw] = useState('');
+  const [raw, setRaw] = useState("");
   const [opts, setOpts] = useState<CleanOptions>(DEFAULT_OPTS);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const rawRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem('tools:clipclean:opts');
+      const s = localStorage.getItem("tools:clipclean:opts");
       if (s) setOpts({ ...DEFAULT_OPTS, ...(JSON.parse(s) as CleanOptions) });
-      const h = localStorage.getItem('tools:clipclean:history');
+      const h = localStorage.getItem("tools:clipclean:history");
       if (h) setHistory(JSON.parse(h));
-      const r = localStorage.getItem('tools:clipclean:raw');
+      const r = localStorage.getItem("tools:clipclean:raw");
       if (r) setRaw(r);
     } catch {}
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem('tools:clipclean:opts', JSON.stringify(opts));
+      localStorage.setItem("tools:clipclean:opts", JSON.stringify(opts));
     } catch {}
   }, [opts]);
   useEffect(() => {
     try {
-      localStorage.setItem('tools:clipclean:history', JSON.stringify(history.slice(0, 20)));
+      localStorage.setItem("tools:clipclean:history", JSON.stringify(history.slice(0, 20)));
     } catch {}
   }, [history]);
   useEffect(() => {
     try {
-      localStorage.setItem('tools:clipclean:raw', raw);
+      localStorage.setItem("tools:clipclean:raw", raw);
     } catch {}
   }, [raw]);
 
@@ -175,7 +186,7 @@ export default function ClipboardCleanerClient() {
 
   const paste = async () => {
     try {
-      if (!navigator.clipboard?.readText) throw new Error('CLIP');
+      if (!navigator.clipboard?.readText) throw new Error("CLIP");
       const t = await navigator.clipboard.readText();
       setRaw(opts.autoCleanOnPaste ? cleanText(t, opts) : t);
     } catch {
@@ -185,7 +196,7 @@ export default function ClipboardCleanerClient() {
 
   const pushHistory = (src: string, out: string) => {
     if (!out.trim()) return;
-    setHistory((h) => [{ id: uid('h'), ts: Date.now(), src, out }, ...h].slice(0, 20));
+    setHistory((h) => [{ id: uid("h"), ts: Date.now(), src, out }, ...h].slice(0, 20));
   };
 
   const onCleanClick = () => {
@@ -193,7 +204,7 @@ export default function ClipboardCleanerClient() {
   };
 
   const resetAll = () => {
-    setRaw('');
+    setRaw("");
     setOpts(DEFAULT_OPTS);
   };
 
@@ -202,7 +213,7 @@ export default function ClipboardCleanerClient() {
     setRaw(txt);
   };
 
-  const exportTxt = () => download('cleaned.txt', cleaned, 'text/plain');
+  const exportTxt = () => download("cleaned.txt", cleaned, "text/plain");
 
   // stats
   const stats = useMemo(() => {
@@ -223,7 +234,7 @@ export default function ClipboardCleanerClient() {
             <ResetButton onClick={resetAll} />
             <PasteButton />
             <ResetButton icon={Wand2} onClick={onCleanClick} label="Clean" />
-            <CopyButton variant="default" getText={() => cleaned || ''} disabled={!cleaned} />
+            <CopyButton variant="default" getText={() => cleaned || ""} disabled={!cleaned} />
           </>
         }
       />
@@ -238,37 +249,87 @@ export default function ClipboardCleanerClient() {
           <SelectField
             label="Case"
             value={opts.caseMode}
-            onValueChange={(v) => setOpts({ ...opts, caseMode: (v as CleanOptions['caseMode']) ?? 'none' })}
+            onValueChange={(v) =>
+              setOpts({ ...opts, caseMode: (v as CleanOptions["caseMode"]) ?? "none" })
+            }
             options={[
-              { label: 'No change', value: 'none' },
-              { label: 'lowercase', value: 'lower' },
-              { label: 'UPPERCASE', value: 'upper' },
-              { label: 'Title Case', value: 'title' },
-              { label: 'Sentence case', value: 'sentence' },
+              { label: "No change", value: "none" },
+              { label: "lowercase", value: "lower" },
+              { label: "UPPERCASE", value: "upper" },
+              { label: "Title Case", value: "title" },
+              { label: "Sentence case", value: "sentence" },
             ]}
           />
 
           <div className="space-y-2">
             <Label>Whitespace & Behavior</Label>
             <div className="flex flex-col gap-2 text-sm">
-              <SwitchRow checked={opts.trim} onCheckedChange={(v) => setOpts({ ...opts, trim: v })} label="Trim ends" />
-              <SwitchRow checked={opts.collapseSpaces} onCheckedChange={(v) => setOpts({ ...opts, collapseSpaces: v })} label="Collapse multiple spaces" />
-              <SwitchRow checked={opts.tabsToSpaces} onCheckedChange={(v) => setOpts({ ...opts, tabsToSpaces: v })} label="Tabs → spaces" />
-              <SwitchRow checked={opts.stripLineBreaks} onCheckedChange={(v) => setOpts({ ...opts, stripLineBreaks: v })} label="Flatten line breaks" />
-              <SwitchRow checked={opts.stripExtraBlankLines} onCheckedChange={(v) => setOpts({ ...opts, stripExtraBlankLines: v })} label="Keep max 1 blank line" />
-              <SwitchRow checked={opts.autoCleanOnPaste} onCheckedChange={(v) => setOpts({ ...opts, autoCleanOnPaste: v })} label="Auto‑clean on paste" />
+              <SwitchRow
+                checked={opts.trim}
+                onCheckedChange={(v) => setOpts({ ...opts, trim: v })}
+                label="Trim ends"
+              />
+              <SwitchRow
+                checked={opts.collapseSpaces}
+                onCheckedChange={(v) => setOpts({ ...opts, collapseSpaces: v })}
+                label="Collapse multiple spaces"
+              />
+              <SwitchRow
+                checked={opts.tabsToSpaces}
+                onCheckedChange={(v) => setOpts({ ...opts, tabsToSpaces: v })}
+                label="Tabs → spaces"
+              />
+              <SwitchRow
+                checked={opts.stripLineBreaks}
+                onCheckedChange={(v) => setOpts({ ...opts, stripLineBreaks: v })}
+                label="Flatten line breaks"
+              />
+              <SwitchRow
+                checked={opts.stripExtraBlankLines}
+                onCheckedChange={(v) => setOpts({ ...opts, stripExtraBlankLines: v })}
+                label="Keep max 1 blank line"
+              />
+              <SwitchRow
+                checked={opts.autoCleanOnPaste}
+                onCheckedChange={(v) => setOpts({ ...opts, autoCleanOnPaste: v })}
+                label="Auto‑clean on paste"
+              />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Characters</Label>
             <div className="flex flex-col gap-2 text-sm">
-              <SwitchRow checked={opts.normalizeQuotes} onCheckedChange={(v) => setOpts({ ...opts, normalizeQuotes: v })} label="Smart quotes → ' " />
-              <SwitchRow checked={opts.normalizeDashes} onCheckedChange={(v) => setOpts({ ...opts, normalizeDashes: v })} label="En/Em dashes → -" />
-              <SwitchRow checked={opts.replaceEllipsis} onCheckedChange={(v) => setOpts({ ...opts, replaceEllipsis: v })} label="Ellipsis … → ..." />
-              <SwitchRow checked={opts.removeZeroWidth} onCheckedChange={(v) => setOpts({ ...opts, removeZeroWidth: v })} label="Remove zero‑width chars" />
-              <SwitchRow checked={opts.removeEmojis} onCheckedChange={(v) => setOpts({ ...opts, removeEmojis: v })} label="Remove emojis" />
-              <SwitchRow checked={opts.removeUrls} onCheckedChange={(v) => setOpts({ ...opts, removeUrls: v })} label="Remove URLs" />
+              <SwitchRow
+                checked={opts.normalizeQuotes}
+                onCheckedChange={(v) => setOpts({ ...opts, normalizeQuotes: v })}
+                label="Smart quotes → ' "
+              />
+              <SwitchRow
+                checked={opts.normalizeDashes}
+                onCheckedChange={(v) => setOpts({ ...opts, normalizeDashes: v })}
+                label="En/Em dashes → -"
+              />
+              <SwitchRow
+                checked={opts.replaceEllipsis}
+                onCheckedChange={(v) => setOpts({ ...opts, replaceEllipsis: v })}
+                label="Ellipsis … → ..."
+              />
+              <SwitchRow
+                checked={opts.removeZeroWidth}
+                onCheckedChange={(v) => setOpts({ ...opts, removeZeroWidth: v })}
+                label="Remove zero‑width chars"
+              />
+              <SwitchRow
+                checked={opts.removeEmojis}
+                onCheckedChange={(v) => setOpts({ ...opts, removeEmojis: v })}
+                label="Remove emojis"
+              />
+              <SwitchRow
+                checked={opts.removeUrls}
+                onCheckedChange={(v) => setOpts({ ...opts, removeUrls: v })}
+                label="Remove URLs"
+              />
             </div>
           </div>
         </CardContent>
@@ -297,7 +358,7 @@ export default function ClipboardCleanerClient() {
                     setRaw(txt);
                   }}
                 />
-                <ResetButton icon={Eraser} label="Clear" onClick={() => setRaw('')} />
+                <ResetButton icon={Eraser} label="Clear" onClick={() => setRaw("")} />
               </div>
             </div>
 
@@ -306,7 +367,7 @@ export default function ClipboardCleanerClient() {
               onValueChange={setRaw}
               onPaste={(e) => {
                 if (!opts.autoCleanOnPaste) return;
-                const pasted = e.clipboardData.getData('text');
+                const pasted = e.clipboardData.getData("text");
                 if (pasted) {
                   e.preventDefault();
                   const out = cleanText(pasted, opts);
@@ -319,15 +380,23 @@ export default function ClipboardCleanerClient() {
               placeholder="Paste here (Ctrl/Cmd + V)…"
               textareaClassName="min-h-[220px] font-mono"
             />
-            <div className="text-xs text-muted-foreground">Tip: Use the Paste button for one‑click clipboard import.</div>
+            <div className="text-xs text-muted-foreground">
+              Tip: Use the Paste button for one‑click clipboard import.
+            </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Cleaned</Label>
               <div className="flex gap-2">
-                <ExportTextButton variant="outline" filename="cleaned.txt" getText={() => cleaned} label="Export" disabled={!cleaned} />
-                <CopyButton variant="default" getText={cleaned || ''} />
+                <ExportTextButton
+                  variant="outline"
+                  filename="cleaned.txt"
+                  getText={() => cleaned}
+                  label="Export"
+                  disabled={!cleaned}
+                />
+                <CopyButton variant="default" getText={cleaned || ""} />
               </div>
             </div>
             <Textarea readOnly value={cleaned} className="min-h-[220px]" />
@@ -347,18 +416,26 @@ export default function ClipboardCleanerClient() {
           <CardDescription>Last 20 results (local only)</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {history.length === 0 && <p className="text-sm text-muted-foreground">No history yet. Clean something to see it here.</p>}
+          {history.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No history yet. Clean something to see it here.
+            </p>
+          )}
           <div className="grid gap-3 md:grid-cols-2">
             {history.map((h) => (
               <div key={h.id} className="rounded-lg border p-3 space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{new Date(h.ts).toLocaleString()}</span>
-                  <CopyButton variant="outline" size="sm" getText={() => h.out || ''} />
+                  <CopyButton variant="outline" size="sm" getText={() => h.out || ""} />
                 </div>
                 <div className="text-xs text-muted-foreground">Source</div>
-                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">{h.src}</pre>
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">
+                  {h.src}
+                </pre>
                 <div className="text-xs text-muted-foreground">Cleaned</div>
-                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">{h.out}</pre>
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">
+                  {h.out}
+                </pre>
               </div>
             ))}
           </div>

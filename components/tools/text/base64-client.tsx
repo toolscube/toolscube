@@ -1,30 +1,43 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { GlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-import { CopyButton, ExportFromUrlButton, ExportTextButton, LinkButton, ResetButton } from '@/components/shared/action-buttons';
-import { InputField } from '@/components/shared/form-fields/input-field';
-import TextareaField from '@/components/shared/form-fields/textarea-field';
-import ToolPageHeader from '@/components/shared/tool-page-header';
-import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeftRight, File as FileIcon, FileText, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  File as FileIcon,
+  FileText,
+  Image as ImageIcon,
+  UploadCloud,
+} from "lucide-react";
+import * as React from "react";
+import {
+  CopyButton,
+  ExportFromUrlButton,
+  ExportTextButton,
+  LinkButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 /** Base64 Utilities */
 // Convert Uint8Array to base64 (standard)
 function u8ToBase64(u8: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   const chunk = 0x8000;
   for (let i = 0; i < u8.length; i += chunk) {
-    binary += String.fromCharCode.apply(null, Array.from(u8.subarray(i, i + chunk)) as unknown as number[]);
+    binary += String.fromCharCode.apply(
+      null,
+      Array.from(u8.subarray(i, i + chunk)) as unknown as number[],
+    );
   }
   return btoa(binary);
 }
@@ -40,14 +53,14 @@ function base64ToU8(b64: string): Uint8Array {
 
 // URL-safe transform
 function toUrlSafe(b64: string, noPadding: boolean): string {
-  let s = b64.replace(/\+/g, '-').replace(/\//g, '_');
-  if (noPadding) s = s.replace(/=+$/g, '');
+  let s = b64.replace(/\+/g, "-").replace(/\//g, "_");
+  if (noPadding) s = s.replace(/=+$/g, "");
   return s;
 }
 function fromUrlSafe(b64: string): string {
-  let s = b64.replace(/-/g, '+').replace(/_/g, '/');
+  let s = b64.replace(/-/g, "+").replace(/_/g, "/");
   const pad = s.length % 4;
-  if (pad) s += '='.repeat(4 - pad);
+  if (pad) s += "=".repeat(4 - pad);
   return s;
 }
 
@@ -56,7 +69,7 @@ function wrapLines(text: string, col: number): string {
   if (!col || col <= 0) return text;
   const chunks: string[] = [];
   for (let i = 0; i < text.length; i += col) chunks.push(text.slice(i, i + col));
-  return chunks.join('\n');
+  return chunks.join("\n");
 }
 
 function fileToU8(file: File): Promise<Uint8Array> {
@@ -69,12 +82,12 @@ function fileToU8(file: File): Promise<Uint8Array> {
 }
 
 function inferPreviewKind(type: string) {
-  if (type.startsWith('image/')) return 'image';
-  if (type.startsWith('text/') || type === 'application/json') return 'text';
-  return 'binary';
+  if (type.startsWith("image/")) return "image";
+  if (type.startsWith("text/") || type === "application/json") return "text";
+  return "binary";
 }
 // Put this near your other utils
-function u8ToBlob(u8: Uint8Array, type = 'application/octet-stream'): Blob {
+function u8ToBlob(u8: Uint8Array, type = "application/octet-stream"): Blob {
   const copy = new Uint8Array(u8.byteLength);
   copy.set(u8);
   return new Blob([copy], { type });
@@ -82,8 +95,8 @@ function u8ToBlob(u8: Uint8Array, type = 'application/octet-stream'): Blob {
 
 /** Component  */
 export default function Base64Client() {
-  const [tab, setTab] = React.useState<TabKey>('text');
-  const [mode, setMode] = React.useState<Mode>('encode');
+  const [tab, setTab] = React.useState<TabKey>("text");
+  const [mode, setMode] = React.useState<Mode>("encode");
 
   // options
   const [urlSafe, setUrlSafe] = React.useState<boolean>(false);
@@ -91,15 +104,15 @@ export default function Base64Client() {
   const [wrapCol, setWrapCol] = React.useState<number>(0); // 0 = no wrap
 
   // text
-  const [inputText, setInputText] = React.useState<string>('');
-  const [outputText, setOutputText] = React.useState<string>('');
-  const [copied, setCopied] = React.useState<'in' | 'out' | null>(null);
+  const [inputText, setInputText] = React.useState<string>("");
+  const [outputText, setOutputText] = React.useState<string>("");
+  const [copied, setCopied] = React.useState<"in" | "out" | null>(null);
 
   // files
   const [inFile, setInFile] = React.useState<File | null>(null);
   const [inInfo, setInInfo] = React.useState<FileInfo | null>(null);
   const [outFileInfo, setOutFileInfo] = React.useState<FileInfo | null>(null);
-  const [outBlobUrl, setOutBlobUrl] = React.useState<string>('');
+  const [outBlobUrl, setOutBlobUrl] = React.useState<string>("");
 
   const dropRef = React.useRef<HTMLLabelElement | null>(null);
 
@@ -110,45 +123,45 @@ export default function Base64Client() {
   }, [outBlobUrl]);
 
   const resetAll = () => {
-    setMode('encode');
+    setMode("encode");
     setUrlSafe(false);
     setNoPadding(false);
     setWrapCol(0);
-    setInputText('');
-    setOutputText('');
+    setInputText("");
+    setOutputText("");
     setCopied(null);
     setInFile(null);
     setInInfo(null);
     setOutFileInfo(null);
     if (outBlobUrl) {
       URL.revokeObjectURL(outBlobUrl);
-      setOutBlobUrl('');
+      setOutBlobUrl("");
     }
   };
 
   /** Actions */
   const runText = async () => {
     try {
-      if (mode === 'encode') {
+      if (mode === "encode") {
         const u8 = new TextEncoder().encode(inputText);
         let b64 = u8ToBase64(u8);
         if (urlSafe) b64 = toUrlSafe(b64, noPadding);
         const wrapped = wrapCol > 0 ? wrapLines(b64, wrapCol) : b64;
         setOutputText(wrapped);
       } else {
-        const cleaned = inputText.replace(/\s+/g, '');
+        const cleaned = inputText.replace(/\s+/g, "");
         const restored = urlSafe ? fromUrlSafe(cleaned) : cleaned;
         const u8 = base64ToU8(restored);
         const text = new TextDecoder().decode(u8);
         setOutputText(text);
       }
     } catch {
-      setOutputText('⚠️ Failed to process. Check your input and options.');
+      setOutputText("⚠️ Failed to process. Check your input and options.");
     }
   };
 
-  const copyValue = async (kind: 'in' | 'out') => {
-    const val = kind === 'in' ? inputText : outputText;
+  const copyValue = async (kind: "in" | "out") => {
+    const val = kind === "in" ? inputText : outputText;
     try {
       await navigator.clipboard.writeText(val);
       setCopied(kind);
@@ -166,14 +179,14 @@ export default function Base64Client() {
     if (urlSafe) b64 = toUrlSafe(b64, noPadding);
     const wrapped = wrapCol > 0 ? wrapLines(b64, wrapCol) : b64;
 
-    const out = new Blob([wrapped], { type: 'text/plain;charset=utf-8' });
+    const out = new Blob([wrapped], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(out);
     if (outBlobUrl) URL.revokeObjectURL(outBlobUrl);
     setOutBlobUrl(url);
     setOutFileInfo({
       name: `${inFile.name}.base64.txt`,
       size: out.size,
-      type: 'text/plain',
+      type: "text/plain",
     });
   };
 
@@ -181,39 +194,39 @@ export default function Base64Client() {
   const decodeFile = async () => {
     if (!inFile) return;
     const text = await inFile.text();
-    const cleaned = text.replace(/\s+/g, '');
+    const cleaned = text.replace(/\s+/g, "");
     const restored = urlSafe ? fromUrlSafe(cleaned) : cleaned;
 
     try {
       const u8 = base64ToU8(restored);
-      let type = '';
-      if (u8[0] === 0x89 && String.fromCharCode(...u8.slice(1, 4)) === 'PNG') type = 'image/png';
-      else if (u8[0] === 0xff && u8[1] === 0xd8) type = 'image/jpeg';
-      else if (String.fromCharCode(...u8.slice(0, 3)) === 'GIF') type = 'image/gif';
-      else if (String.fromCharCode(...u8.slice(0, 4)) === '%PDF') type = 'application/pdf';
+      let type = "";
+      if (u8[0] === 0x89 && String.fromCharCode(...u8.slice(1, 4)) === "PNG") type = "image/png";
+      else if (u8[0] === 0xff && u8[1] === 0xd8) type = "image/jpeg";
+      else if (String.fromCharCode(...u8.slice(0, 3)) === "GIF") type = "image/gif";
+      else if (String.fromCharCode(...u8.slice(0, 4)) === "%PDF") type = "application/pdf";
       else {
         const sample = new TextDecoder().decode(u8.slice(0, 64));
-        if (/^[\x09\x0A\x0D\x20-\x7E]/.test(sample)) type = 'text/plain';
+        if (/^[\x09\x0A\x0D\x20-\x7E]/.test(sample)) type = "text/plain";
       }
 
-      const out = u8ToBlob(u8, type || 'application/octet-stream');
+      const out = u8ToBlob(u8, type || "application/octet-stream");
       const url = URL.createObjectURL(out);
       if (outBlobUrl) URL.revokeObjectURL(outBlobUrl);
       setOutBlobUrl(url);
       setOutFileInfo({
-        name: inFile.name.replace(/\.base64(\.txt)?$/i, '') || 'decoded.bin',
+        name: inFile.name.replace(/\.base64(\.txt)?$/i, "") || "decoded.bin",
         size: out.size,
-        type: type || 'application/octet-stream',
+        type: type || "application/octet-stream",
       });
     } catch {
       if (outBlobUrl) {
         URL.revokeObjectURL(outBlobUrl);
-        setOutBlobUrl('');
+        setOutBlobUrl("");
       }
       setOutFileInfo({
-        name: 'decode-error.txt',
+        name: "decode-error.txt",
         size: 0,
-        type: 'text/plain',
+        type: "text/plain",
       });
     }
   };
@@ -222,18 +235,22 @@ export default function Base64Client() {
     const f = e.target.files?.[0];
     if (!f) return;
     setInFile(f);
-    setInInfo({ name: f.name, size: f.size, type: f.type || 'application/octet-stream' });
+    setInInfo({ name: f.name, size: f.size, type: f.type || "application/octet-stream" });
     setOutFileInfo(null);
     if (outBlobUrl) {
       URL.revokeObjectURL(outBlobUrl);
-      setOutBlobUrl('');
+      setOutBlobUrl("");
     }
   };
 
   return (
     <>
       {/* Header */}
-      <ToolPageHeader icon={ArrowLeftRight} title="Base64 Encoder / Decoder" description="Encode or decode strings & files in Base64" />
+      <ToolPageHeader
+        icon={ArrowLeftRight}
+        title="Base64 Encoder / Decoder"
+        description="Encode or decode strings & files in Base64"
+      />
 
       {/* Mode + Options */}
       <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr] mt-4">
@@ -242,10 +259,18 @@ export default function Base64Client() {
             <div className="flex items-center gap-3">
               <Label className="text-sm">Mode</Label>
               <div className="flex items-center gap-2">
-                <Button variant={mode === 'encode' ? 'default' : 'outline'} size="sm" onClick={() => setMode('encode')}>
+                <Button
+                  variant={mode === "encode" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMode("encode")}
+                >
                   Encode
                 </Button>
-                <Button variant={mode === 'decode' ? 'default' : 'outline'} size="sm" onClick={() => setMode('decode')}>
+                <Button
+                  variant={mode === "decode" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMode("decode")}
+                >
                   Decode
                 </Button>
               </div>
@@ -279,7 +304,7 @@ export default function Base64Client() {
                   type="number"
                   min={0}
                   placeholder="0 (off)"
-                  value={wrapCol || ''}
+                  value={wrapCol || ""}
                   onChange={(e) => setWrapCol(Math.max(0, Number(e.target.value) || 0))}
                   className="w-28"
                 />
@@ -317,18 +342,20 @@ export default function Base64Client() {
             <GlassCard className="p-5">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Input</Label>
-                <CopyButton getText={() => inputText || ''} />
+                <CopyButton getText={() => inputText || ""} />
               </div>
               <TextareaField
                 value={inputText}
                 onValueChange={setInputText}
-                placeholder={mode === 'encode' ? 'Type or paste text to encode…' : 'Paste Base64 to decode…'}
+                placeholder={
+                  mode === "encode" ? "Type or paste text to encode…" : "Paste Base64 to decode…"
+                }
                 textareaClassName="min-h-[200px]"
                 autoResize
               />
               <div className="flex flex-wrap gap-2">
                 <Button onClick={runText} className="gap-2">
-                  {mode === 'encode' ? 'Encode →' : 'Decode →'}
+                  {mode === "encode" ? "Encode →" : "Decode →"}
                 </Button>
               </div>
             </GlassCard>
@@ -338,13 +365,21 @@ export default function Base64Client() {
                 <Label className="text-sm font-medium">Output</Label>
 
                 <div className="flex items-center gap-2">
-                  <CopyButton getText={() => outputText || ''} />
+                  <CopyButton getText={() => outputText || ""} />
 
-                  {mode === 'encode' && outputText && <ExportTextButton filename="encoded-base64.txt" getText={outputText} />}
+                  {mode === "encode" && outputText && (
+                    <ExportTextButton filename="encoded-base64.txt" getText={outputText} />
+                  )}
                 </div>
               </div>
 
-              <TextareaField value={outputText} readOnly placeholder="Result will appear here…" textareaClassName="min-h-[250px]" autoResize />
+              <TextareaField
+                value={outputText}
+                readOnly
+                placeholder="Result will appear here…"
+                textareaClassName="min-h-[250px]"
+                autoResize
+              />
             </GlassCard>
           </div>
         </TabsContent>
@@ -359,27 +394,36 @@ export default function Base64Client() {
               <label
                 ref={dropRef}
                 htmlFor="file-input"
-                className="mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-center transition hover:bg-muted/50">
+                className="mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-center transition hover:bg-muted/50"
+              >
                 <UploadCloud className="h-7 w-7" />
                 <div className="text-sm font-medium">Drag & drop or click to upload</div>
-                <div className="text-xs text-muted-foreground">Any file type • Max depends on browser memory</div>
+                <div className="text-xs text-muted-foreground">
+                  Any file type • Max depends on browser memory
+                </div>
                 <Input id="file-input" type="file" className="hidden" onChange={onDropFiles} />
               </label>
 
               {inInfo && (
                 <div className="mt-3 rounded-lg border p-3 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{inInfo.type || 'application/octet-stream'}</Badge>
-                    <span className="text-muted-foreground">{(inInfo.size / 1024).toFixed(1)} KB</span>
+                    <Badge variant="secondary">{inInfo.type || "application/octet-stream"}</Badge>
+                    <span className="text-muted-foreground">
+                      {(inInfo.size / 1024).toFixed(1)} KB
+                    </span>
                   </div>
                   <div className="mt-1 font-mono text-xs">{inInfo.name}</div>
                 </div>
               )}
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button onClick={mode === 'encode' ? encodeFile : decodeFile} disabled={!inFile} className="gap-2">
+                <Button
+                  onClick={mode === "encode" ? encodeFile : decodeFile}
+                  disabled={!inFile}
+                  className="gap-2"
+                >
                   <ArrowLeftRight className="h-4 w-4" />
-                  {mode === 'encode' ? 'Encode file → Base64' : 'Decode Base64 file → Binary'}
+                  {mode === "encode" ? "Encode file → Base64" : "Decode Base64 file → Binary"}
                 </Button>
 
                 <ResetButton onClick={resetAll} />
@@ -390,38 +434,62 @@ export default function Base64Client() {
             <GlassCard className="p-5">
               <Label className="text-sm font-medium">Output</Label>
 
-              {!outFileInfo && <div className="text-xs text-muted-foreground">After processing, your downloadable file will appear here.</div>}
+              {!outFileInfo && (
+                <div className="text-xs text-muted-foreground">
+                  After processing, your downloadable file will appear here.
+                </div>
+              )}
 
               {outFileInfo && (
                 <div className="mb-2 rounded-lg border p-3">
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <Badge variant="secondary">{outFileInfo.type}</Badge>
-                    <span className="text-muted-foreground">{(outFileInfo.size / 1024).toFixed(1)} KB</span>
+                    <span className="text-muted-foreground">
+                      {(outFileInfo.size / 1024).toFixed(1)} KB
+                    </span>
                   </div>
                   <div className="mt-1 text-xs">{outFileInfo.name}</div>
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {outBlobUrl && <ExportFromUrlButton filename={outFileInfo.name} url={outBlobUrl} label="Download" variant="default" size="sm" className="gap-2 mb-2" />}
-                    {outBlobUrl && inferPreviewKind(outFileInfo.type) === 'image' && (
-                      <LinkButton href={outBlobUrl} label="Open preview" variant="outline" size="sm" className="gap-2" icon={ImageIcon} />
+                    {outBlobUrl && (
+                      <ExportFromUrlButton
+                        filename={outFileInfo.name}
+                        url={outBlobUrl}
+                        label="Download"
+                        variant="default"
+                        size="sm"
+                        className="gap-2 mb-2"
+                      />
+                    )}
+                    {outBlobUrl && inferPreviewKind(outFileInfo.type) === "image" && (
+                      <LinkButton
+                        href={outBlobUrl}
+                        label="Open preview"
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        icon={ImageIcon}
+                      />
                     )}
                   </div>
 
-                  {outBlobUrl && inferPreviewKind(outFileInfo.type) === 'text' && outFileInfo.size < 200 * 1024 && (
-                    <>
-                      <Label className="text-xs text-muted-foreground mb-1">Preview</Label>
-                      <Textarea
-                        readOnly
-                        className="min-h-[180px]"
-                        defaultValue={''}
-                        onFocus={async (e) => {
-                          const resp = await fetch(outBlobUrl);
-                          const txt = await resp.text();
-                          e.currentTarget.value = txt.slice(0, 20000);
-                        }}
-                      />
-                    </>
-                  )}
+                  {outBlobUrl &&
+                    inferPreviewKind(outFileInfo.type) === "text" &&
+                    outFileInfo.size < 200 * 1024 && (
+                      <>
+                        <Label className="text-xs text-muted-foreground mb-1">Preview</Label>
+                        <Textarea
+                          readOnly
+                          className="min-h-[180px]"
+                          defaultValue={""}
+                          onFocus={async (e) => {
+                            const resp = await fetch(outBlobUrl);
+                            const txt = await resp.text();
+                            e.currentTarget.value = txt.slice(0, 20000);
+                          }}
+                        />
+                      </>
+                    )}
                 </div>
               )}
             </GlassCard>

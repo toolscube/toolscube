@@ -1,18 +1,27 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-
-import { Bot, Check, Copy, Download, Globe, Link as LinkIcon, Plus, RotateCcw, Trash2, Wand2 } from 'lucide-react';
+import {
+  Bot,
+  Check,
+  Copy,
+  Download,
+  Globe,
+  Link as LinkIcon,
+  Plus,
+  RotateCcw,
+  Trash2,
+  Wand2,
+} from "lucide-react";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 // ---------------- Types ----------------
 type Rule = { id: string; path: string; allow: boolean };
@@ -20,7 +29,7 @@ type Agent = {
   id: string;
   name: string; // e.g., *, Googlebot
   rules: Rule[];
-  crawlDelay?: number | '';
+  crawlDelay?: number | "";
   cleanParams: string[]; // e.g., ['utm_source','fbclid']
 };
 
@@ -40,9 +49,9 @@ type State = {
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 function downloadTxt(filename: string, content: string) {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -53,7 +62,7 @@ function downloadTxt(filename: string, content: string) {
 
 function trimSlash(s: string) {
   const x = s.trim();
-  return x.startsWith('/') || x === '' ? x : '/' + x;
+  return x.startsWith("/") || x === "" ? x : "/" + x;
 }
 
 function genRobots(s: State) {
@@ -65,12 +74,12 @@ function genRobots(s: State) {
       .map((l) => l.trim())
       .filter(Boolean)
       .forEach((l) => lines.push(`# ${l}`));
-    if (lines.length) lines.push('');
+    if (lines.length) lines.push("");
   }
 
   // Agents
   s.agents.forEach((ag, i) => {
-    const name = ag.name.trim() || '*';
+    const name = ag.name.trim() || "*";
     lines.push(`User-agent: ${name}`);
 
     const allowLines: string[] = [];
@@ -89,13 +98,13 @@ function genRobots(s: State) {
 
     // If no rules at all, add "Disallow:" (empty) to mean allow all
     if (allowLines.length === 0 && disallowLines.length === 0) {
-      lines.push('Disallow:');
+      lines.push("Disallow:");
     } else {
       lines.push(...disallowLines);
       lines.push(...allowLines);
     }
 
-    if (ag.crawlDelay !== '' && ag.crawlDelay != null) {
+    if (ag.crawlDelay !== "" && ag.crawlDelay != null) {
       lines.push(`Crawl-delay: ${ag.crawlDelay}`);
     }
 
@@ -108,19 +117,19 @@ function genRobots(s: State) {
         lines.push(`Clean-param: ${p} /`);
       });
 
-    if (i < s.agents.length - 1) lines.push('');
+    if (i < s.agents.length - 1) lines.push("");
   });
 
   // Global Host
   if (s.host.trim()) {
-    if (lines.length && lines[lines.length - 1] !== '') lines.push('');
+    if (lines.length && lines[lines.length - 1] !== "") lines.push("");
     lines.push(`Host: ${s.host.trim()}`);
   }
 
   // Sitemaps
   const sitemaps = s.sitemaps.map((u) => u.trim()).filter(Boolean);
   if (sitemaps.length) {
-    if (lines.length && lines[lines.length - 1] !== '') lines.push('');
+    if (lines.length && lines[lines.length - 1] !== "") lines.push("");
     sitemaps.forEach((u) => lines.push(`Sitemap: ${u}`));
   }
 
@@ -130,96 +139,98 @@ function genRobots(s: State) {
     .map((l) => l.trim())
     .filter(Boolean);
   if (custom.length) {
-    if (lines.length && lines[lines.length - 1] !== '') lines.push('');
+    if (lines.length && lines[lines.length - 1] !== "") lines.push("");
     lines.push(...custom);
   }
 
-  const out = lines.join('\n');
-  return s.pretty ? out + '\n' : out;
+  const out = lines.join("\n");
+  return s.pretty ? out + "\n" : out;
 }
 
 // ---------------- Defaults & Presets ----------------
 const DEFAULT_AGENT = (): Agent => ({
   id: uid(),
-  name: '*',
+  name: "*",
   rules: [],
-  crawlDelay: '',
+  crawlDelay: "",
   cleanParams: [],
 });
 
 const DEFAULT: State = {
-  host: '',
-  sitemaps: ['https://example.com/sitemap.xml'],
-  comment: 'robots.txt generated by Tools Hub',
-  customDirectives: '',
+  host: "",
+  sitemaps: ["https://example.com/sitemap.xml"],
+  comment: "robots.txt generated by Tools Hub",
+  customDirectives: "",
   agents: [DEFAULT_AGENT()],
   pretty: true,
 };
 
-function applyPreset(name: 'AllowAll' | 'DisallowAll' | 'Blog' | 'Ecommerce' | 'NextJS' | 'WordPress'): State {
+function applyPreset(
+  name: "AllowAll" | "DisallowAll" | "Blog" | "Ecommerce" | "NextJS" | "WordPress",
+): State {
   const base = { ...DEFAULT, agents: [DEFAULT_AGENT()] } as State;
   const a = base.agents[0];
 
   switch (name) {
-    case 'AllowAll':
+    case "AllowAll":
       a.rules = []; // implicit allow (Disallow: empty)
-      base.comment = 'All bots allowed';
+      base.comment = "All bots allowed";
       break;
 
-    case 'DisallowAll':
-      a.rules = [{ id: uid(), path: '/', allow: false }];
-      base.comment = 'All bots disallowed sitewide';
+    case "DisallowAll":
+      a.rules = [{ id: uid(), path: "/", allow: false }];
+      base.comment = "All bots disallowed sitewide";
       break;
 
-    case 'Blog':
+    case "Blog":
       a.rules = [
-        { id: uid(), path: '/wp-admin/', allow: false },
-        { id: uid(), path: '/wp-includes/', allow: false },
-        { id: uid(), path: '/cgi-bin/', allow: false },
-        { id: uid(), path: '/search', allow: false },
-        { id: uid(), path: '/?s=', allow: false },
-        { id: uid(), path: '/comments', allow: false },
+        { id: uid(), path: "/wp-admin/", allow: false },
+        { id: uid(), path: "/wp-includes/", allow: false },
+        { id: uid(), path: "/cgi-bin/", allow: false },
+        { id: uid(), path: "/search", allow: false },
+        { id: uid(), path: "/?s=", allow: false },
+        { id: uid(), path: "/comments", allow: false },
       ];
-      base.comment = 'Common blog paths restricted';
-      base.sitemaps = ['https://example.com/sitemap.xml', 'https://example.com/post-sitemap.xml'];
+      base.comment = "Common blog paths restricted";
+      base.sitemaps = ["https://example.com/sitemap.xml", "https://example.com/post-sitemap.xml"];
       break;
 
-    case 'Ecommerce':
+    case "Ecommerce":
       a.rules = [
-        { id: uid(), path: '/cart', allow: false },
-        { id: uid(), path: '/checkout', allow: false },
-        { id: uid(), path: '/account', allow: false },
-        { id: uid(), path: '/orders', allow: false },
-        { id: uid(), path: '/compare', allow: false },
-        { id: uid(), path: '/wishlist', allow: false },
-        { id: uid(), path: '/search', allow: false },
-        { id: uid(), path: '/*?*sort=*', allow: false },
+        { id: uid(), path: "/cart", allow: false },
+        { id: uid(), path: "/checkout", allow: false },
+        { id: uid(), path: "/account", allow: false },
+        { id: uid(), path: "/orders", allow: false },
+        { id: uid(), path: "/compare", allow: false },
+        { id: uid(), path: "/wishlist", allow: false },
+        { id: uid(), path: "/search", allow: false },
+        { id: uid(), path: "/*?*sort=*", allow: false },
       ];
-      base.comment = 'E-commerce noisy URLs blocked';
-      base.sitemaps = ['https://shop.example.com/sitemap.xml'];
+      base.comment = "E-commerce noisy URLs blocked";
+      base.sitemaps = ["https://shop.example.com/sitemap.xml"];
       break;
 
-    case 'NextJS':
+    case "NextJS":
       a.rules = [
-        { id: uid(), path: '/_next/', allow: true }, // static chunks are fine
-        { id: uid(), path: '/api', allow: false },
-        { id: uid(), path: '/private', allow: false },
-        { id: uid(), path: '/drafts', allow: false },
-        { id: uid(), path: '/search', allow: false },
+        { id: uid(), path: "/_next/", allow: true }, // static chunks are fine
+        { id: uid(), path: "/api", allow: false },
+        { id: uid(), path: "/private", allow: false },
+        { id: uid(), path: "/drafts", allow: false },
+        { id: uid(), path: "/search", allow: false },
       ];
-      base.comment = 'Next.js app typical paths';
-      base.sitemaps = ['https://example.com/sitemap.xml'];
+      base.comment = "Next.js app typical paths";
+      base.sitemaps = ["https://example.com/sitemap.xml"];
       break;
 
-    case 'WordPress':
+    case "WordPress":
       a.rules = [
-        { id: uid(), path: '/wp-admin/', allow: false },
-        { id: uid(), path: '/wp-includes/', allow: false },
-        { id: uid(), path: '/*?*replytocom=*', allow: false },
-        { id: uid(), path: '/xmlrpc.php', allow: false },
+        { id: uid(), path: "/wp-admin/", allow: false },
+        { id: uid(), path: "/wp-includes/", allow: false },
+        { id: uid(), path: "/*?*replytocom=*", allow: false },
+        { id: uid(), path: "/xmlrpc.php", allow: false },
       ];
-      base.comment = 'WordPress defaults';
-      base.sitemaps = ['https://example.com/sitemap.xml'];
+      base.comment = "WordPress defaults";
+      base.sitemaps = ["https://example.com/sitemap.xml"];
       break;
   }
   return base;
@@ -228,9 +239,9 @@ function applyPreset(name: 'AllowAll' | 'DisallowAll' | 'Blog' | 'Ecommerce' | '
 // ---------------- Page ----------------
 export default function RobotsGeneratorPage() {
   const [s, setS] = React.useState<State>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
-        const raw = localStorage.getItem('robots-gen-v1');
+        const raw = localStorage.getItem("robots-gen-v1");
         if (raw) return { ...DEFAULT, ...JSON.parse(raw) } as State;
       } catch {}
     }
@@ -242,7 +253,7 @@ export default function RobotsGeneratorPage() {
 
   React.useEffect(() => {
     // Persist (lightweight)
-    localStorage.setItem('robots-gen-v1', JSON.stringify(s));
+    localStorage.setItem("robots-gen-v1", JSON.stringify(s));
   }, [s]);
 
   function resetAll() {
@@ -276,7 +287,7 @@ export default function RobotsGeneratorPage() {
   }
   function addRule(agentId: string, allow = false) {
     updateAgent(agentId, {
-      rules: [...s.agents.find((a) => a.id === agentId)!.rules, { id: uid(), path: '', allow }],
+      rules: [...s.agents.find((a) => a.id === agentId)!.rules, { id: uid(), path: "", allow }],
     });
   }
   function updateRule(agentId: string, ruleId: string, patch: Partial<Rule>) {
@@ -292,7 +303,7 @@ export default function RobotsGeneratorPage() {
     });
   }
   function addSitemap() {
-    setS((p) => ({ ...p, sitemaps: [...p.sitemaps, ''] }));
+    setS((p) => ({ ...p, sitemaps: [...p.sitemaps, ""] }));
   }
   function updateSitemap(i: number, val: string) {
     setS((p) => {
@@ -306,7 +317,7 @@ export default function RobotsGeneratorPage() {
   }
 
   // Quick toggles for common noisy paths
-  const commonBlocks = ['/admin', '/api', '/search', '/cart', '/checkout'];
+  const commonBlocks = ["/admin", "/api", "/search", "/cart", "/checkout"];
 
   return (
     <MotionGlassCard>
@@ -316,7 +327,10 @@ export default function RobotsGeneratorPage() {
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Bot className="h-6 w-6" /> robots.txt Generator
           </h1>
-          <p className="text-sm text-muted-foreground">Generate a clean robots.txt with multiple user-agents, rules, sitemaps, and helpful presets.</p>
+          <p className="text-sm text-muted-foreground">
+            Generate a clean robots.txt with multiple user-agents, rules, sitemaps, and helpful
+            presets.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={resetAll} className="gap-2">
@@ -325,7 +339,7 @@ export default function RobotsGeneratorPage() {
           <Button variant="outline" onClick={copyOut} className="gap-2">
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
           </Button>
-          <Button onClick={() => downloadTxt('robots.txt', output)} className="gap-2">
+          <Button onClick={() => downloadTxt("robots.txt", output)} className="gap-2">
             <Download className="h-4 w-4" /> Download
           </Button>
         </div>
@@ -339,14 +353,21 @@ export default function RobotsGeneratorPage() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {[
-            ['Allow All', 'AllowAll'],
-            ['Disallow All', 'DisallowAll'],
-            ['Blog', 'Blog'],
-            ['E-commerce', 'Ecommerce'],
-            ['Next.js', 'NextJS'],
-            ['WordPress', 'WordPress'],
+            ["Allow All", "AllowAll"],
+            ["Disallow All", "DisallowAll"],
+            ["Blog", "Blog"],
+            ["E-commerce", "Ecommerce"],
+            ["Next.js", "NextJS"],
+            ["WordPress", "WordPress"],
           ].map(([label, key]) => (
-            <Button key={key} type="button" variant="outline" size="sm" className="gap-2" onClick={() => setS(applyPreset(key as any))}>
+            <Button
+              key={key}
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setS(applyPreset(key as any))}
+            >
               <Wand2 className="h-4 w-4" /> {label}
             </Button>
           ))}
@@ -354,7 +375,11 @@ export default function RobotsGeneratorPage() {
             <Label htmlFor="pretty" className="text-xs text-muted-foreground">
               Pretty print
             </Label>
-            <Switch id="pretty" checked={s.pretty} onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))} />
+            <Switch
+              id="pretty"
+              checked={s.pretty}
+              onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))}
+            />
           </div>
         </CardContent>
       </GlassCard>
@@ -371,7 +396,12 @@ export default function RobotsGeneratorPage() {
               <Label htmlFor="host" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" /> Host (optional)
               </Label>
-              <Input id="host" placeholder="example.com" value={s.host} onChange={(e) => setS((p) => ({ ...p, host: e.target.value.trim() }))} />
+              <Input
+                id="host"
+                placeholder="example.com"
+                value={s.host}
+                onChange={(e) => setS((p) => ({ ...p, host: e.target.value.trim() }))}
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -381,13 +411,23 @@ export default function RobotsGeneratorPage() {
               <div className="space-y-2">
                 {s.sitemaps.map((u, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <Input placeholder="https://example.com/sitemap.xml" value={u} onChange={(e) => updateSitemap(i, e.target.value)} />
+                    <Input
+                      placeholder="https://example.com/sitemap.xml"
+                      value={u}
+                      onChange={(e) => updateSitemap(i, e.target.value)}
+                    />
                     <Button variant="outline" size="icon" onClick={() => removeSitemap(i)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
-                <Button type="button" variant="outline" size="sm" className="gap-2" onClick={addSitemap}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={addSitemap}
+                >
                   <Plus className="h-4 w-4" /> Add sitemap
                 </Button>
               </div>
@@ -395,7 +435,13 @@ export default function RobotsGeneratorPage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="comment">Comment (appears as # lines)</Label>
-              <Textarea id="comment" placeholder="robots.txt generated by Tools Hub" value={s.comment} onChange={(e) => setS((p) => ({ ...p, comment: e.target.value }))} className="min-h-[84px]" />
+              <Textarea
+                id="comment"
+                placeholder="robots.txt generated by Tools Hub"
+                value={s.comment}
+                onChange={(e) => setS((p) => ({ ...p, comment: e.target.value }))}
+                className="min-h-[84px]"
+              />
             </div>
           </div>
 
@@ -409,7 +455,9 @@ export default function RobotsGeneratorPage() {
                 onChange={(e) => setS((p) => ({ ...p, customDirectives: e.target.value }))}
                 className="min-h-[180px] font-mono"
               />
-              <p className="text-xs text-muted-foreground">These lines will be appended as-is. Use carefully.</p>
+              <p className="text-xs text-muted-foreground">
+                These lines will be appended as-is. Use carefully.
+              </p>
             </div>
           </div>
         </CardContent>
@@ -419,7 +467,9 @@ export default function RobotsGeneratorPage() {
       <GlassCard className="shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">User-Agents & Rules</CardTitle>
-          <CardDescription>Add allow/disallow paths, delay, and clean parameters per bot.</CardDescription>
+          <CardDescription>
+            Add allow/disallow paths, delay, and clean parameters per bot.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {s.agents.map((ag) => (
@@ -427,7 +477,12 @@ export default function RobotsGeneratorPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Label className="min-w-24">User-agent</Label>
-                  <Input value={ag.name} onChange={(e) => updateAgent(ag.id, { name: e.target.value })} placeholder="*, Googlebot, Bingbot…" className="max-w-sm" />
+                  <Input
+                    value={ag.name}
+                    onChange={(e) => updateAgent(ag.id, { name: e.target.value })}
+                    placeholder="*, Googlebot, Bingbot…"
+                    className="max-w-sm"
+                  />
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -437,12 +492,21 @@ export default function RobotsGeneratorPage() {
                     size="sm"
                     onClick={() =>
                       updateAgent(ag.id, {
-                        rules: [...ag.rules, ...commonBlocks.map((p) => ({ id: uid(), path: p, allow: false }))],
+                        rules: [
+                          ...ag.rules,
+                          ...commonBlocks.map((p) => ({ id: uid(), path: p, allow: false })),
+                        ],
                       })
-                    }>
+                    }
+                  >
                     Block common paths
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => removeAgent(ag.id)} disabled={s.agents.length === 1}>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeAgent(ag.id)}
+                    disabled={s.agents.length === 1}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -458,26 +522,48 @@ export default function RobotsGeneratorPage() {
 
                 {ag.rules.length === 0 ? (
                   <div className="p-3 text-sm text-muted-foreground">
-                    No explicit rules. This means <span className="font-medium">allow all</span> for this agent (equivalent to <code>Disallow:</code>).
+                    No explicit rules. This means <span className="font-medium">allow all</span> for
+                    this agent (equivalent to <code>Disallow:</code>).
                   </div>
                 ) : (
                   ag.rules.map((r) => (
-                    <div key={r.id} className="grid grid-cols-12 items-center gap-2 px-3 py-2 border-t">
+                    <div
+                      key={r.id}
+                      className="grid grid-cols-12 items-center gap-2 px-3 py-2 border-t"
+                    >
                       <div className="col-span-3">
                         <div className="flex gap-2">
-                          <Button size="sm" type="button" variant={r.allow ? 'default' : 'outline'} onClick={() => updateRule(ag.id, r.id, { allow: true })}>
+                          <Button
+                            size="sm"
+                            type="button"
+                            variant={r.allow ? "default" : "outline"}
+                            onClick={() => updateRule(ag.id, r.id, { allow: true })}
+                          >
                             Allow
                           </Button>
-                          <Button size="sm" type="button" variant={!r.allow ? 'default' : 'outline'} onClick={() => updateRule(ag.id, r.id, { allow: false })}>
+                          <Button
+                            size="sm"
+                            type="button"
+                            variant={!r.allow ? "default" : "outline"}
+                            onClick={() => updateRule(ag.id, r.id, { allow: false })}
+                          >
                             Disallow
                           </Button>
                         </div>
                       </div>
                       <div className="col-span-8">
-                        <Input value={r.path} onChange={(e) => updateRule(ag.id, r.id, { path: e.target.value })} placeholder="/admin, /search, /*.json$" />
+                        <Input
+                          value={r.path}
+                          onChange={(e) => updateRule(ag.id, r.id, { path: e.target.value })}
+                          placeholder="/admin, /search, /*.json$"
+                        />
                       </div>
                       <div className="col-span-1 text-right">
-                        <Button variant="outline" size="icon" onClick={() => removeRule(ag.id, r.id)}>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeRule(ag.id, r.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -486,10 +572,20 @@ export default function RobotsGeneratorPage() {
                 )}
 
                 <div className="flex gap-2 border-t p-3">
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => addRule(ag.id, false)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => addRule(ag.id, false)}
+                  >
                     <Plus className="h-4 w-4" /> Disallow
                   </Button>
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => addRule(ag.id, true)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => addRule(ag.id, true)}
+                  >
                     <Plus className="h-4 w-4" /> Allow
                   </Button>
                 </div>
@@ -504,10 +600,11 @@ export default function RobotsGeneratorPage() {
                     type="number"
                     min={0}
                     placeholder="e.g., 5"
-                    value={ag.crawlDelay === '' ? '' : ag.crawlDelay}
+                    value={ag.crawlDelay === "" ? "" : ag.crawlDelay}
                     onChange={(e) =>
                       updateAgent(ag.id, {
-                        crawlDelay: e.target.value === '' ? '' : Math.max(0, Number(e.target.value) || 0),
+                        crawlDelay:
+                          e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || 0),
                       })
                     }
                   />
@@ -516,17 +613,19 @@ export default function RobotsGeneratorPage() {
                   <Label>Clean parameters (comma-separated)</Label>
                   <Input
                     placeholder="utm_source, utm_medium, fbclid"
-                    value={ag.cleanParams.join(', ')}
+                    value={ag.cleanParams.join(", ")}
                     onChange={(e) =>
                       updateAgent(ag.id, {
                         cleanParams: e.target.value
-                          .split(',')
+                          .split(",")
                           .map((x) => x.trim())
                           .filter(Boolean),
                       })
                     }
                   />
-                  <p className="text-xs text-muted-foreground">Used by some crawlers to ignore tracking params (legacy).</p>
+                  <p className="text-xs text-muted-foreground">
+                    Used by some crawlers to ignore tracking params (legacy).
+                  </p>
                 </div>
               </div>
             </div>
@@ -541,7 +640,7 @@ export default function RobotsGeneratorPage() {
                 {s.agents.length} agent(s)
               </Badge>
               <Badge variant="outline" className="font-normal">
-                {output.split('\n').filter(Boolean).length} lines
+                {output.split("\n").filter(Boolean).length} lines
               </Badge>
             </div>
           </div>
@@ -563,7 +662,7 @@ export default function RobotsGeneratorPage() {
               <Button variant="outline" size="sm" className="gap-2" onClick={copyOut}>
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
               </Button>
-              <Button size="sm" className="gap-2" onClick={() => downloadTxt('robots.txt', output)}>
+              <Button size="sm" className="gap-2" onClick={() => downloadTxt("robots.txt", output)}>
                 <Download className="h-4 w-4" /> Download
               </Button>
             </div>
@@ -574,7 +673,8 @@ export default function RobotsGeneratorPage() {
               <div className="space-y-0.5">
                 <Label>Tips</Label>
                 <p className="text-xs text-muted-foreground">
-                  Use wildcards (<code>*</code>) and end-anchors (<code>$</code>) for patterns. Keep sensitive content off the web; robots.txt is public.
+                  Use wildcards (<code>*</code>) and end-anchors (<code>$</code>) for patterns. Keep
+                  sensitive content off the web; robots.txt is public.
                 </p>
               </div>
               <Badge variant="secondary">robots.txt</Badge>
@@ -583,16 +683,19 @@ export default function RobotsGeneratorPage() {
             <div className="rounded-md border p-3 text-sm">
               <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                 <li>
-                  <span className="text-foreground">Disallow</span> prevents compliant bots from crawling; it doesn’t hide URLs.
+                  <span className="text-foreground">Disallow</span> prevents compliant bots from
+                  crawling; it doesn’t hide URLs.
                 </li>
                 <li>
                   Place robots.txt at the root: <code>https://your-domain.com/robots.txt</code>.
                 </li>
                 <li>
-                  Add <code>Sitemap:</code> lines for each sitemap URL (XML index or individual files).
+                  Add <code>Sitemap:</code> lines for each sitemap URL (XML index or individual
+                  files).
                 </li>
                 <li>
-                  Prefer <code>Allow:</code> exceptions before broad <code>Disallow</code> patterns for clarity.
+                  Prefer <code>Allow:</code> exceptions before broad <code>Disallow</code> patterns
+                  for clarity.
                 </li>
                 <li>Test with Google Search Console’s robots tester where available.</li>
               </ul>

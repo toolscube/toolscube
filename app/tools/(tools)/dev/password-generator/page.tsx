@@ -1,30 +1,33 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Check, Copy, Key, RotateCcw } from 'lucide-react';
-import React from 'react';
+import { Check, Copy, Key, RotateCcw } from "lucide-react";
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
-function generatePassword(length: number, opts: { upper: boolean; lower: boolean; numbers: boolean; symbols: boolean }): string {
-  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const lower = 'abcdefghijklmnopqrstuvwxyz';
-  const numbers = '0123456789';
-  const symbols = '!@#$%^&*()-_=+[]{};:,.<>/?';
+function generatePassword(
+  length: number,
+  opts: { upper: boolean; lower: boolean; numbers: boolean; symbols: boolean },
+): string {
+  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lower = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const symbols = "!@#$%^&*()-_=+[]{};:,.<>/?";
 
-  let chars = '';
+  let chars = "";
   if (opts.upper) chars += upper;
   if (opts.lower) chars += lower;
   if (opts.numbers) chars += numbers;
   if (opts.symbols) chars += symbols;
   if (!chars) chars = lower;
 
-  let pwd = '';
+  let pwd = "";
   const array = new Uint32Array(length);
   crypto.getRandomValues(array);
   for (let i = 0; i < length; i++) {
@@ -75,7 +78,9 @@ export default function PasswordGeneratorPage() {
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Key className="h-6 w-6" /> Password Generator
           </h1>
-          <p className="text-sm text-muted-foreground">Generate secure random passwords with custom rules.</p>
+          <p className="text-sm text-muted-foreground">
+            Generate secure random passwords with custom rules.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={resetAll} className="gap-2">
@@ -95,11 +100,25 @@ export default function PasswordGeneratorPage() {
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="length">Length</Label>
-            <Input id="length" type="number" min={4} max={128} value={length} onChange={(e) => setLength(Number(e.target.value) || 4)} />
+            <Input
+              id="length"
+              type="number"
+              min={4}
+              max={128}
+              value={length}
+              onChange={(e) => setLength(Number(e.target.value) || 4)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="count">Count</Label>
-            <Input id="count" type="number" min={1} max={50} value={count} onChange={(e) => setCount(Number(e.target.value) || 1)} />
+            <Input
+              id="count"
+              type="number"
+              min={1}
+              max={50}
+              value={count}
+              onChange={(e) => setCount(Number(e.target.value) || 1)}
+            />
           </div>
           <div className="col-span-2 space-y-2">
             <Label>Character Sets</Label>
@@ -129,7 +148,9 @@ export default function PasswordGeneratorPage() {
           <CardDescription>Click copy to save a password.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
-          {passwords.length === 0 && <p className="text-sm text-muted-foreground">No passwords yet. Click Generate.</p>}
+          {passwords.length === 0 && (
+            <p className="text-sm text-muted-foreground">No passwords yet. Click Generate.</p>
+          )}
           {passwords.map((pwd, i) => (
             <div key={i} className="flex flex-col gap-2 rounded-md border p-3">
               <div className="flex items-center justify-between">

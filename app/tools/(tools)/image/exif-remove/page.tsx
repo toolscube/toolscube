@@ -1,23 +1,43 @@
 // app/tools/(tools)/image/exif-remove/page.tsx
-'use client';
+"use client";
 
-import { Camera, Check, Clock, Copy, Download, FileType2, Image as ImageIcon, Info, Loader2, MapPin, RotateCcw, Shield, Upload } from 'lucide-react';
-import Image from 'next/image';
-import * as React from 'react';
-import { useDropzone } from 'react-dropzone';
+import {
+  Camera,
+  Check,
+  Clock,
+  Copy,
+  Download,
+  FileType2,
+  Image as ImageIcon,
+  Info,
+  Loader2,
+  MapPin,
+  RotateCcw,
+  Shield,
+  Upload,
+} from "lucide-react";
+import Image from "next/image";
+import * as React from "react";
+import { useDropzone } from "react-dropzone";
 
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
-type OutFormat = 'jpeg' | 'png' | 'webp';
+type OutFormat = "jpeg" | "png" | "webp";
 
 interface LoadedImage {
   file: File;
@@ -49,11 +69,11 @@ type ExifData = {
 
 export default function ExifRemovePage() {
   const [img, setImg] = React.useState<LoadedImage | null>(null);
-  const [fmt, setFmt] = React.useState<OutFormat>('jpeg');
+  const [fmt, setFmt] = React.useState<OutFormat>("jpeg");
   const [quality, setQuality] = React.useState(90); // lossy only
   const [fixOrientation, setFixOrientation] = React.useState(true);
   const [running, setRunning] = React.useState(false);
-  const [log, setLog] = React.useState('');
+  const [log, setLog] = React.useState("");
   const [copied, setCopied] = React.useState(false);
 
   const onDrop = React.useCallback(async (files: File[]) => {
@@ -76,7 +96,11 @@ export default function ExifRemovePage() {
     });
 
     // choose default output format based on source
-    const defaultFmt: OutFormat = file.type.includes('png') ? 'png' : file.type.includes('webp') ? 'webp' : 'jpeg';
+    const defaultFmt: OutFormat = file.type.includes("png")
+      ? "png"
+      : file.type.includes("webp")
+        ? "webp"
+        : "jpeg";
     setFmt(defaultFmt);
     setLog(`Loaded ${file.name} (${formatBytes(file.size)})`);
   }, []);
@@ -84,14 +108,14 @@ export default function ExifRemovePage() {
   React.useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       const item = e.clipboardData?.files?.[0];
-      if (item && item.type.startsWith('image/')) onDrop([item]);
+      if (item && item.type.startsWith("image/")) onDrop([item]);
     }
-    window.addEventListener('paste', onPaste);
-    return () => window.removeEventListener('paste', onPaste);
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
   }, [onDrop]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'image/*': [] },
+    accept: { "image/*": [] },
     multiple: false,
     onDrop,
   });
@@ -99,11 +123,11 @@ export default function ExifRemovePage() {
   function resetAll() {
     if (img?.url) URL.revokeObjectURL(img.url);
     setImg(null);
-    setFmt('jpeg');
+    setFmt("jpeg");
     setQuality(90);
     setFixOrientation(true);
     setRunning(false);
-    setLog('');
+    setLog("");
   }
 
   async function run() {
@@ -111,7 +135,7 @@ export default function ExifRemovePage() {
 
     try {
       setRunning(true);
-      setLog('Removing EXIF and re-encoding…');
+      setLog("Removing EXIF and re-encoding…");
 
       const result = await reencodeWithoutMetadata({
         srcUrl: img.url,
@@ -122,7 +146,9 @@ export default function ExifRemovePage() {
 
       const filename = suggestNameNoExif(img.file.name, fmt);
       triggerDownload(result.blob, filename);
-      setLog(`Done → ${filename} (${formatBytes(result.blob.size)}). All EXIF/metadata stripped; orientation ${fixOrientation ? 'fixed if needed' : 'not adjusted'}.`);
+      setLog(
+        `Done → ${filename} (${formatBytes(result.blob.size)}). All EXIF/metadata stripped; orientation ${fixOrientation ? "fixed if needed" : "not adjusted"}.`,
+      );
     } catch (e: any) {
       setLog(`Error: ${e?.message || String(e)}`);
     } finally {
@@ -131,7 +157,7 @@ export default function ExifRemovePage() {
   }
 
   function copyLog() {
-    navigator.clipboard.writeText(log || '').then(() => {
+    navigator.clipboard.writeText(log || "").then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1100);
     });
@@ -146,15 +172,22 @@ export default function ExifRemovePage() {
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               <Shield className="h-6 w-6" /> EXIF Remove
             </h1>
-            <p className="text-sm text-muted-foreground">Remove sensitive metadata (camera, GPS, dates) from images. Drag & drop, paste (Ctrl/Cmd+V), or click to upload.</p>
+            <p className="text-sm text-muted-foreground">
+              Remove sensitive metadata (camera, GPS, dates) from images. Drag & drop, paste
+              (Ctrl/Cmd+V), or click to upload.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={resetAll} className="gap-2">
               <RotateCcw className="h-4 w-4" /> Reset
             </Button>
             <Button onClick={run} className="gap-2" disabled={!img || running}>
-              {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {running ? 'Processing…' : 'Remove & Download'}
+              {running ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {running ? "Processing…" : "Remove & Download"}
             </Button>
           </div>
         </GlassCard>
@@ -170,16 +203,19 @@ export default function ExifRemovePage() {
             <div
               {...getRootProps()}
               className={cn(
-                'group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition',
-                isDragActive ? 'border-primary bg-primary/5' : 'hover:bg-muted/40',
-              )}>
+                "group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition",
+                isDragActive ? "border-primary bg-primary/5" : "hover:bg-muted/40",
+              )}
+            >
               <input {...getInputProps()} />
               <div className="pointer-events-none flex flex-col items-center gap-2 text-center">
                 <div className="rounded-full bg-primary/10 p-3">
                   <Upload className="h-6 w-6 text-primary" />
                 </div>
                 <p className="text-sm font-medium">Drop image here, or click to browse</p>
-                <p className="text-xs text-muted-foreground">JPEG, PNG, WEBP, GIF, SVG (GIF/SVG will be rasterized)</p>
+                <p className="text-xs text-muted-foreground">
+                  JPEG, PNG, WEBP, GIF, SVG (GIF/SVG will be rasterized)
+                </p>
               </div>
             </div>
 
@@ -192,15 +228,22 @@ export default function ExifRemovePage() {
                     No image selected
                   </div>
                 ) : (
-                  <Image src={img.url} alt="preview" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-contain" priority />
+                  <Image
+                    src={img.url}
+                    alt="preview"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-contain"
+                    priority
+                  />
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <InfoPill label="Source Size" value={img ? formatBytes(img.size) : '—'} />
-                <InfoPill label="Source Type" value={img ? img.type || '—' : '—'} />
-                <InfoPill label="Width" value={img ? `${img.width}px` : '—'} />
-                <InfoPill label="Height" value={img ? `${img.height}px` : '—'} />
+                <InfoPill label="Source Size" value={img ? formatBytes(img.size) : "—"} />
+                <InfoPill label="Source Type" value={img ? img.type || "—" : "—"} />
+                <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
+                <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
               </div>
             </div>
           </CardContent>
@@ -210,7 +253,9 @@ export default function ExifRemovePage() {
         <GlassCard className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Settings</CardTitle>
-            <CardDescription>Choose output format, quality, and orientation handling.</CardDescription>
+            <CardDescription>
+              Choose output format, quality, and orientation handling.
+            </CardDescription>
           </CardHeader>
 
           <CardContent className="grid gap-6 md:grid-cols-2">
@@ -229,21 +274,35 @@ export default function ExifRemovePage() {
               <p className="text-xs text-muted-foreground">Re-encoding strips EXIF/metadata.</p>
             </div>
 
-            {fmt !== 'png' && (
+            {fmt !== "png" && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="quality">Quality</Label>
                   <span className="text-xs text-muted-foreground">{quality}</span>
                 </div>
-                <Slider id="quality" min={1} max={100} step={1} value={[quality]} onValueChange={([q]) => setQuality(q)} />
-                <p className="text-xs text-muted-foreground">Higher = larger file size (lossy formats).</p>
+                <Slider
+                  id="quality"
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={[quality]}
+                  onValueChange={([q]) => setQuality(q)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Higher = larger file size (lossy formats).
+                </p>
               </div>
             )}
 
             <div className="col-span-2 flex items-center gap-3">
-              <Switch id="fix-orient" checked={fixOrientation} onCheckedChange={setFixOrientation} />
+              <Switch
+                id="fix-orient"
+                checked={fixOrientation}
+                onCheckedChange={setFixOrientation}
+              />
               <Label htmlFor="fix-orient" className="flex items-center gap-2">
-                <FileType2 className="h-4 w-4" /> Auto-fix orientation (uses EXIF Orientation if present)
+                <FileType2 className="h-4 w-4" /> Auto-fix orientation (uses EXIF Orientation if
+                present)
               </Label>
             </div>
           </CardContent>
@@ -255,7 +314,9 @@ export default function ExifRemovePage() {
         <GlassCard className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Detected Metadata</CardTitle>
-            <CardDescription>Quick view of common EXIF fields (camera, date, GPS, etc.).</CardDescription>
+            <CardDescription>
+              Quick view of common EXIF fields (camera, date, GPS, etc.).
+            </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <div className="space-y-3">
@@ -266,38 +327,82 @@ export default function ExifRemovePage() {
                 </div>
               ) : (
                 <div className="rounded-lg border p-3 text-sm">
-                  <MetaRow icon={<Camera className="h-3.5 w-3.5" />} label="Camera" value={joinVals(img.exif.make, img.exif.model)} />
-                  <MetaRow icon={<Clock className="h-3.5 w-3.5" />} label="Taken" value={img.exif.dateTimeOriginal} />
-                  <MetaRow icon={<Info className="h-3.5 w-3.5" />} label="Orientation" value={orientName(img.exif.orientation)} />
-                  <MetaRow icon={<Info className="h-3.5 w-3.5" />} label="Exposure" value={img.exif.exposureTime} />
-                  <MetaRow icon={<Info className="h-3.5 w-3.5" />} label="Aperture" value={img.exif.fNumber} />
-                  <MetaRow icon={<Info className="h-3.5 w-3.5" />} label="ISO" value={img.exif.iso?.toString()} />
+                  <MetaRow
+                    icon={<Camera className="h-3.5 w-3.5" />}
+                    label="Camera"
+                    value={joinVals(img.exif.make, img.exif.model)}
+                  />
+                  <MetaRow
+                    icon={<Clock className="h-3.5 w-3.5" />}
+                    label="Taken"
+                    value={img.exif.dateTimeOriginal}
+                  />
+                  <MetaRow
+                    icon={<Info className="h-3.5 w-3.5" />}
+                    label="Orientation"
+                    value={orientName(img.exif.orientation)}
+                  />
+                  <MetaRow
+                    icon={<Info className="h-3.5 w-3.5" />}
+                    label="Exposure"
+                    value={img.exif.exposureTime}
+                  />
+                  <MetaRow
+                    icon={<Info className="h-3.5 w-3.5" />}
+                    label="Aperture"
+                    value={img.exif.fNumber}
+                  />
+                  <MetaRow
+                    icon={<Info className="h-3.5 w-3.5" />}
+                    label="ISO"
+                    value={img.exif.iso?.toString()}
+                  />
                   <MetaRow
                     icon={<MapPin className="h-3.5 w-3.5" />}
                     label="GPS"
-                    value={img.exif.gps?.lat !== undefined && img.exif.gps?.lon !== undefined ? `${img.exif.gps.lat.toFixed(6)}, ${img.exif.gps.lon.toFixed(6)}` : undefined}
+                    value={
+                      img.exif.gps?.lat !== undefined && img.exif.gps?.lon !== undefined
+                        ? `${img.exif.gps.lat.toFixed(6)}, ${img.exif.gps.lon.toFixed(6)}`
+                        : undefined
+                    }
                   />
 
                   {/* extra rows */}
                   {img.exif._raw &&
                     Object.entries(img.exif._raw)
                       .slice(0, 8)
-                      .map(([k, v]) => <MetaRow key={k} icon={<Info className="h-3.5 w-3.5" />} label={k} value={String(v)} />)}
+                      .map(([k, v]) => (
+                        <MetaRow
+                          key={k}
+                          icon={<Info className="h-3.5 w-3.5" />}
+                          label={k}
+                          value={String(v)}
+                        />
+                      ))}
                 </div>
               )}
 
-              <p className="text-xs text-muted-foreground">Note: This tool re-encodes the image in-browser; Canvas export removes EXIF/metadata by default.</p>
+              <p className="text-xs text-muted-foreground">
+                Note: This tool re-encodes the image in-browser; Canvas export removes EXIF/metadata
+                by default.
+              </p>
             </div>
 
             <div className="space-y-2">
               <Label className="text-sm">Process Log</Label>
               <Textarea readOnly value={log} className="min-h-[120px] font-mono" />
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="gap-2" onClick={copyLog} disabled={!log}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={copyLog}
+                  disabled={!log}
+                >
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   Copy
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog('')}>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog("")}>
                   Clear
                 </Button>
               </div>
@@ -312,17 +417,17 @@ export default function ExifRemovePage() {
 /* ------------------- helpers & EXIF parsing ------------------- */
 
 function joinVals(...vals: (string | undefined)[]) {
-  return vals.filter(Boolean).join(' ') || undefined;
+  return vals.filter(Boolean).join(" ") || undefined;
 }
 
 function suggestNameNoExif(name: string, fmt: OutFormat) {
-  const base = name.replace(/\.[^.]+$/, '');
-  return `${base}-no-exif.${fmt === 'jpeg' ? 'jpg' : fmt}`;
+  const base = name.replace(/\.[^.]+$/, "");
+  return `${base}-no-exif.${fmt === "jpeg" ? "jpg" : fmt}`;
 }
 
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -332,7 +437,7 @@ function triggerDownload(blob: Blob, filename: string) {
 }
 
 function formatBytes(bytes: number) {
-  const units = ['B', 'KB', 'MB', 'GB'];
+  const units = ["B", "KB", "MB", "GB"];
   let i = 0;
   let n = bytes;
   while (n >= 1024 && i < units.length - 1) {
@@ -344,14 +449,14 @@ function formatBytes(bytes: number) {
 
 function orientName(o?: number) {
   const map: Record<number, string> = {
-    1: 'Normal',
-    2: 'Mirror horizontal',
-    3: 'Rotate 180°',
-    4: 'Mirror vertical',
-    5: 'Mirror + rotate 90° CW',
-    6: 'Rotate 90° CW',
-    7: 'Mirror + rotate 90° CCW',
-    8: 'Rotate 90° CCW',
+    1: "Normal",
+    2: "Mirror horizontal",
+    3: "Rotate 180°",
+    4: "Mirror vertical",
+    5: "Mirror + rotate 90° CW",
+    6: "Rotate 90° CW",
+    7: "Mirror + rotate 90° CCW",
+    8: "Rotate 90° CCW",
   };
   return o ? `${map[o] || `Unknown (${o})`}` : undefined;
 }
@@ -377,19 +482,19 @@ async function reencodeWithoutMetadata(opts: {
   // apply EXIF orientation if requested
   const { canvas, ctx } = createOrientedCanvas(imgEl, orientation ?? 1);
 
-  const mime = format === 'png' ? 'image/png' : format === 'jpeg' ? 'image/jpeg' : 'image/webp';
+  const mime = format === "png" ? "image/png" : format === "jpeg" ? "image/jpeg" : "image/webp";
   const q = Math.min(1, Math.max(0.01, quality / 100));
 
   const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Failed to encode image'))), mime, q);
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode image"))), mime, q);
   });
 
   return { blob };
 }
 
 function createOrientedCanvas(img: HTMLImageElement, orientation: number) {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d')!;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
 
   const w = img.naturalWidth;
   const h = img.naturalHeight;
@@ -450,7 +555,7 @@ function createOrientedCanvas(img: HTMLImageElement, orientation: number) {
 function createImageElement(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = url;
@@ -465,7 +570,7 @@ function MetaRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         {icon}
         <span className="text-muted-foreground">{label}</span>
       </div>
-      <span className="ml-4 truncate text-right font-medium">{value ?? '—'}</span>
+      <span className="ml-4 truncate text-right font-medium">{value ?? "—"}</span>
     </div>
   );
 }
@@ -484,7 +589,7 @@ function InfoPill({ label, value }: { label: string; value: string }) {
 
 function parseExifSafe(buf: ArrayBuffer, mime: string): ExifData | null {
   try {
-    if (!mime.includes('jpeg') && !mime.includes('jpg')) return null; // minimal parser for JPEG
+    if (!mime.includes("jpeg") && !mime.includes("jpg")) return null; // minimal parser for JPEG
     return parseExifFromJpeg(buf);
   } catch {
     return null;
@@ -543,7 +648,13 @@ function parseTiffIFDs(dv: DataView, tiffOffset: number): ExifData | null {
   const ifd0Offset = get32(tiffOffset + 4) + tiffOffset;
   const data: ExifData = { _raw: {} };
 
-  const { nextIFDOffset, exifIFDOffset, gpsIFDOffset } = readIFD0(dv, tiffOffset, ifd0Offset, little, data);
+  const { nextIFDOffset, exifIFDOffset, gpsIFDOffset } = readIFD0(
+    dv,
+    tiffOffset,
+    ifd0Offset,
+    little,
+    data,
+  );
 
   if (exifIFDOffset) readExifIFD(dv, tiffOffset, exifIFDOffset, little, data);
   if (gpsIFDOffset) readGPSIFD(dv, tiffOffset, gpsIFDOffset, little, data);
@@ -552,7 +663,13 @@ function parseTiffIFDs(dv: DataView, tiffOffset: number): ExifData | null {
   return data;
 }
 
-function readIFD0(dv: DataView, tiffBase: number, ifdOffset: number, little: boolean, data: ExifData): { nextIFDOffset?: number; exifIFDOffset?: number; gpsIFDOffset?: number } {
+function readIFD0(
+  dv: DataView,
+  tiffBase: number,
+  ifdOffset: number,
+  little: boolean,
+  data: ExifData,
+): { nextIFDOffset?: number; exifIFDOffset?: number; gpsIFDOffset?: number } {
   const get16 = (o: number) => dv.getUint16(o, little);
   const get32 = (o: number) => dv.getUint32(o, little);
 
@@ -589,7 +706,7 @@ function readIFD0(dv: DataView, tiffBase: number, ifdOffset: number, little: boo
         break;
       default:
         // store small set to _raw
-        if (typeof value !== 'object') data._raw![`IFD0 0x${tag.toString(16)}`] = value as any;
+        if (typeof value !== "object") data._raw![`IFD0 0x${tag.toString(16)}`] = value as any;
     }
   }
 
@@ -601,7 +718,13 @@ function readIFD0(dv: DataView, tiffBase: number, ifdOffset: number, little: boo
   };
 }
 
-function readExifIFD(dv: DataView, tiffBase: number, ifdOffset: number, little: boolean, data: ExifData) {
+function readExifIFD(
+  dv: DataView,
+  tiffBase: number,
+  ifdOffset: number,
+  little: boolean,
+  data: ExifData,
+) {
   const get16 = (o: number) => dv.getUint16(o, little);
   const get32 = (o: number) => dv.getUint32(o, little);
 
@@ -631,12 +754,18 @@ function readExifIFD(dv: DataView, tiffBase: number, ifdOffset: number, little: 
         data.focalLength = `${formatRational(value)}mm`;
         break;
       default:
-        if (typeof value !== 'object') data._raw![`EXIF 0x${tag.toString(16)}`] = value as any;
+        if (typeof value !== "object") data._raw![`EXIF 0x${tag.toString(16)}`] = value as any;
     }
   }
 }
 
-function readGPSIFD(dv: DataView, tiffBase: number, ifdOffset: number, little: boolean, data: ExifData) {
+function readGPSIFD(
+  dv: DataView,
+  tiffBase: number,
+  ifdOffset: number,
+  little: boolean,
+  data: ExifData,
+) {
   const get16 = (o: number) => dv.getUint16(o, little);
   const get32 = (o: number) => dv.getUint32(o, little);
 
@@ -668,19 +797,26 @@ function readGPSIFD(dv: DataView, tiffBase: number, ifdOffset: number, little: b
         lon = rationalToDeg(value);
         break;
       default:
-        if (typeof value !== 'object') data._raw![`GPS 0x${tag.toString(16)}`] = value as any;
+        if (typeof value !== "object") data._raw![`GPS 0x${tag.toString(16)}`] = value as any;
     }
   }
 
   if (lat !== undefined && lon !== undefined) {
-    if (latRef === 'S') lat = -lat;
-    if (lonRef === 'W') lon = -lon;
+    if (latRef === "S") lat = -lat;
+    if (lonRef === "W") lon = -lon;
     data.gps = { lat, lon };
   }
 }
 
 /* ----- TIFF/EXIF value readers ----- */
-function getTagValue(dv: DataView, tiffBase: number, type: number, count: number, valueOffset: number, little: boolean): any {
+function getTagValue(
+  dv: DataView,
+  tiffBase: number,
+  type: number,
+  count: number,
+  valueOffset: number,
+  little: boolean,
+): any {
   const get16 = (o: number) => dv.getUint16(o, little);
   const get32 = (o: number) => dv.getUint32(o, little);
 
@@ -703,7 +839,7 @@ function getTagValue(dv: DataView, tiffBase: number, type: number, count: number
   switch (type) {
     case 2: {
       // ASCII
-      let s = '';
+      let s = "";
       for (let i = 0; i < count; i++) {
         const c = dv.getUint8(valuePtr + i);
         if (c === 0) break;
@@ -766,12 +902,12 @@ function getTagValue(dv: DataView, tiffBase: number, type: number, count: number
 }
 
 function formatRational(v: any): string {
-  if (Array.isArray(v) && v.length === 2 && typeof v[0] === 'number' && typeof v[1] === 'number') {
+  if (Array.isArray(v) && v.length === 2 && typeof v[0] === "number" && typeof v[1] === "number") {
     if (v[1] === 0) return `${v[0]}/0`;
     // Try to show fractions like 1/125s if small
     const dec = v[0] / v[1];
     if (dec < 1) return `1/${Math.round(1 / dec)}`;
-    return dec.toFixed(3).replace(/\.?0+$/, '');
+    return dec.toFixed(3).replace(/\.?0+$/, "");
   }
   if (Array.isArray(v) && Array.isArray(v[0])) return formatRational(v[0]);
   return String(v);

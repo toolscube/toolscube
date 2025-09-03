@@ -1,11 +1,11 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export const metadata = {
-  title: 'Privacy Policy — Tools Hub',
-  description: 'Our commitment to privacy and data handling practices.',
+  title: "Privacy Policy — Tools Hub",
+  description: "Our commitment to privacy and data handling practices.",
 };
 
 export default function PrivacyPage() {
@@ -23,8 +23,13 @@ export default function PrivacyPage() {
           <Badge variant="secondary" className="w-fit">
             Privacy-first by design
           </Badge>
-          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight md:text-4xl">Privacy Policy</h1>
-          <p className="max-w-2xl text-pretty text-muted-foreground">We design Tools Hub to be privacy-friendly. This page explains what we collect, how we use it, and the choices you have.</p>
+          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            Privacy Policy
+          </h1>
+          <p className="max-w-2xl text-pretty text-muted-foreground">
+            We design Tools Hub to be privacy-friendly. This page explains what we collect, how we
+            use it, and the choices you have.
+          </p>
           <div className="mt-2 text-sm text-muted-foreground">Last updated: {lastUpdated}</div>
         </div>
       </section>
@@ -33,23 +38,34 @@ export default function PrivacyPage() {
 
       {/* Data we process */}
       <Card className="relative mb-4 overflow-hidden bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+        />
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Data we may process</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>• Basic, anonymous usage metrics to improve reliability and performance.</p>
-          <p>• For URL shortener: salted/hashed IP and user-agent fingerprints for anti-abuse analytics.</p>
+          <p>
+            • For URL shortener: salted/hashed IP and user-agent fingerprints for anti-abuse
+            analytics.
+          </p>
           <p>
             • We do <span className="font-medium text-foreground">not</span> sell personal data.
           </p>
-          <p>• No tracking cookies for using tools. Some optional features may require account login.</p>
+          <p>
+            • No tracking cookies for using tools. Some optional features may require account login.
+          </p>
         </CardContent>
       </Card>
 
       {/* Cookies & Ads */}
       <Card className="relative mb-4 overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+        />
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Cookies & advertising</CardTitle>
         </CardHeader>
@@ -62,12 +78,18 @@ export default function PrivacyPage() {
 
       {/* Third-party services */}
       <Card className="relative mb-4 overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+        />
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Third-party services</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>• Privacy-respecting analytics and error monitoring (aggregate, non-identifying where possible).</p>
+          <p>
+            • Privacy-respecting analytics and error monitoring (aggregate, non-identifying where
+            possible).
+          </p>
           <p>• Optional storage/CDN providers for media processing (e.g., Cloudinary/S3).</p>
           <p>• Authentication (if enabled) via a trusted identity provider.</p>
         </CardContent>
@@ -75,7 +97,10 @@ export default function PrivacyPage() {
 
       {/* Retention & security */}
       <Card className="relative mb-4 overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+        />
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Data retention & security</CardTitle>
         </CardHeader>
@@ -88,7 +113,10 @@ export default function PrivacyPage() {
 
       {/* Your choices */}
       <Card className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+        />
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Your choices & contact</CardTitle>
         </CardHeader>
@@ -96,7 +124,7 @@ export default function PrivacyPage() {
           <p>• You may use tools without an account; optional features can be skipped.</p>
           <p>• You can request removal of any account-bound data you control.</p>
           <p>
-            • Contact us for privacy requests:{' '}
+            • Contact us for privacy requests:{" "}
             <a className="underline" href="mailto:support@your-domain.com">
               support@your-domain.com
             </a>

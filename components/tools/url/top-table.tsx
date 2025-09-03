@@ -1,6 +1,12 @@
-'use client';
+"use client";
 
-export default function TopTable({ rows, labelClassName = '' }: { rows: { label: string; value: number }[]; labelClassName?: string }) {
+export default function TopTable({
+  rows,
+  labelClassName = "",
+}: {
+  rows: { label: string; value: number }[];
+  labelClassName?: string;
+}) {
   const total = rows.reduce((a, b) => a + b.value, 0) || 1;
 
   return (

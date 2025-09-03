@@ -1,21 +1,31 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-
-import { Calendar, Check, Copy, Download, FileCode, Files, Link as LinkIcon, ListChecks, RotateCcw, Settings, Wand2 } from 'lucide-react';
+import {
+  Calendar,
+  Check,
+  Copy,
+  Download,
+  FileCode,
+  Files,
+  Link as LinkIcon,
+  ListChecks,
+  RotateCcw,
+  Settings,
+  Wand2,
+} from "lucide-react";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 // ---------------- Types ----------------
-type ChangeFreq = '' | 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+type ChangeFreq = "" | "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
 
 type Row = {
   loc: string;
@@ -34,8 +44,8 @@ type State = {
   // Defaults
   defaultChangefreq: ChangeFreq;
   defaultPriority: string; // '', '0.80', etc.
-  lastmodMode: 'none' | 'today' | 'fromCSV'; // CSV or pipe format
-  dateFormat: 'iso'; // reserved for future formats
+  lastmodMode: "none" | "today" | "fromCSV"; // CSV or pipe format
+  dateFormat: "iso"; // reserved for future formats
 
   // Output
   pretty: boolean;
@@ -57,18 +67,18 @@ https://example.com/about
 /blog/my-post,2025-01-20,daily,0.8
 /products
 `,
-  baseUrl: 'https://example.com',
+  baseUrl: "https://example.com",
   keepTrailingSlash: false,
   forceHttps: true,
 
-  defaultChangefreq: 'weekly',
-  defaultPriority: '',
-  lastmodMode: 'fromCSV',
-  dateFormat: 'iso',
+  defaultChangefreq: "weekly",
+  defaultPriority: "",
+  lastmodMode: "fromCSV",
+  dateFormat: "iso",
 
   pretty: true,
   maxUrlsPerFile: 50000,
-  filename: 'sitemap.xml',
+  filename: "sitemap.xml",
   makeIndex: true,
 
   includeSampleHeaders: false,
@@ -88,7 +98,7 @@ function isAbsolute(url: string) {
 }
 
 function ensureAbsolute(url: string, base: string) {
-  if (!url) return '';
+  if (!url) return "";
   if (!isAbsolute(url)) {
     try {
       const u = new URL(url, base);
@@ -103,19 +113,22 @@ function ensureAbsolute(url: string, base: string) {
 function normalizeUrl(u: string, opts: { keepSlash: boolean; forceHttps: boolean }) {
   try {
     const url = new URL(u);
-    if (opts.forceHttps) url.protocol = 'https:';
+    if (opts.forceHttps) url.protocol = "https:";
     // normalize trailing slash
-    const isRoot = url.pathname === '' || url.pathname === '/';
+    const isRoot = url.pathname === "" || url.pathname === "/";
     if (!isRoot) {
       if (opts.keepSlash) {
-        if (!url.pathname.endsWith('/')) url.pathname += '/';
+        if (!url.pathname.endsWith("/")) url.pathname += "/";
       } else {
-        if (url.pathname.endsWith('/')) url.pathname = url.pathname.replace(/\/+$/, '');
+        if (url.pathname.endsWith("/")) url.pathname = url.pathname.replace(/\/+$/, "");
       }
     }
     // remove default ports
-    if ((url.protocol === 'https:' && url.port === '443') || (url.protocol === 'http:' && url.port === '80')) {
-      url.port = '';
+    if (
+      (url.protocol === "https:" && url.port === "443") ||
+      (url.protocol === "http:" && url.port === "80")
+    ) {
+      url.port = "";
     }
     return url.toString();
   } catch {
@@ -125,21 +138,26 @@ function normalizeUrl(u: string, opts: { keepSlash: boolean; forceHttps: boolean
 
 // very small, safe escaper for XML text nodes/attrs
 function x(s: string) {
-  return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 function parseLineToRow(line: string, baseUrl: string): Row | null {
-  let raw = line.trim();
+  const raw = line.trim();
   if (!raw) return null;
-  if (raw.startsWith('#')) return null;
+  if (raw.startsWith("#")) return null;
 
   // Accept 3 formats:
   // 1) plain URL or path
   // 2) pipe-separated: url | lastmod | changefreq | priority
   // 3) csv-like: url,lastmod,changefreq,priority
   let parts: string[] = [];
-  if (raw.includes('|')) parts = raw.split('|').map((s) => s.trim());
-  else if (raw.includes(',')) parts = raw.split(',').map((s) => s.trim());
+  if (raw.includes("|")) parts = raw.split("|").map((s) => s.trim());
+  else if (raw.includes(",")) parts = raw.split(",").map((s) => s.trim());
   else parts = [raw];
 
   const [first, lastmod, changefreq, priority] = parts;
@@ -194,9 +212,9 @@ function applyDefaults(rows: Row[], s: State): Row[] {
     const rr: Row = { ...r };
 
     // lastmod
-    if (s.lastmodMode === 'today') {
+    if (s.lastmodMode === "today") {
       rr.lastmod = today;
-    } else if (s.lastmodMode === 'fromCSV') {
+    } else if (s.lastmodMode === "fromCSV") {
       if (rr.lastmod && /^\d{4}-\d{2}-\d{2}$/.test(rr.lastmod)) {
         // ok
       } else if (!rr.lastmod) {
@@ -215,7 +233,7 @@ function applyDefaults(rows: Row[], s: State): Row[] {
     rr.changefreq = (rr.changefreq || s.defaultChangefreq || undefined) as ChangeFreq;
 
     // priority
-    const p = (rr.priority ?? s.defaultPriority ?? '').trim();
+    const p = (rr.priority ?? s.defaultPriority ?? "").trim();
     rr.priority = p ? clampPriority(p) : undefined;
 
     out.push(rr);
@@ -229,7 +247,7 @@ function clampPriority(p: string) {
     const c = Math.max(0, Math.min(1, n));
     return c.toFixed(2);
   }
-  return '';
+  return "";
 }
 
 function chunk<T>(arr: T[], size: number) {
@@ -240,7 +258,9 @@ function chunk<T>(arr: T[], size: number) {
 }
 
 function buildSitemapXML(urlset: Row[], pretty: boolean) {
-  const head = `<?xml version="1.0" encoding="UTF-8"?>\n` + `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+  const head =
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
   const tail = `</urlset>`;
 
   const urls = urlset.map((r) => {
@@ -252,26 +272,33 @@ function buildSitemapXML(urlset: Row[], pretty: boolean) {
       ...(r.priority ? [`    <priority>${x(r.priority)}</priority>`] : []),
       `  </url>`,
     ];
-    return parts.join('\n');
+    return parts.join("\n");
   });
 
-  const body = urls.join('\n');
-  const raw = head + (body ? body + '\n' : '') + tail;
-  return pretty ? raw + '\n' : raw;
+  const body = urls.join("\n");
+  const raw = head + (body ? body + "\n" : "") + tail;
+  return pretty ? raw + "\n" : raw;
 }
 
 function buildIndexXML(parts: { loc: string; lastmod?: string }[], pretty: boolean) {
-  const head = `<?xml version="1.0" encoding="UTF-8"?>\n` + `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+  const head =
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
   const tail = `</sitemapindex>`;
 
   const nodes = parts.map((p) => {
-    const inner = [`  <sitemap>`, `    <loc>${x(p.loc)}</loc>`, ...(p.lastmod ? [`    <lastmod>${x(p.lastmod)}</lastmod>`] : []), `  </sitemap>`];
-    return inner.join('\n');
+    const inner = [
+      `  <sitemap>`,
+      `    <loc>${x(p.loc)}</loc>`,
+      ...(p.lastmod ? [`    <lastmod>${x(p.lastmod)}</lastmod>`] : []),
+      `  </sitemap>`,
+    ];
+    return inner.join("\n");
   });
 
-  const body = nodes.join('\n');
-  const raw = head + (body ? body + '\n' : '') + tail;
-  return pretty ? raw + '\n' : raw;
+  const body = nodes.join("\n");
+  const raw = head + (body ? body + "\n" : "") + tail;
+  return pretty ? raw + "\n" : raw;
 }
 
 function toBytes(s: string) {
@@ -280,9 +307,9 @@ function toBytes(s: string) {
 }
 
 function downloadTxt(name: string, content: string) {
-  const blob = new Blob([content], { type: 'application/xml;charset=utf-8' });
+  const blob = new Blob([content], { type: "application/xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
@@ -294,9 +321,9 @@ function downloadTxt(name: string, content: string) {
 // ---------------- Page ----------------
 export default function SitemapGeneratorPage() {
   const [s, setS] = React.useState<State>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
-        const raw = localStorage.getItem('sitemap-gen-v1');
+        const raw = localStorage.getItem("sitemap-gen-v1");
         if (raw) return { ...DEFAULT, ...JSON.parse(raw) } as State;
       } catch {}
     }
@@ -306,7 +333,7 @@ export default function SitemapGeneratorPage() {
   const [copied, setCopied] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    localStorage.setItem('sitemap-gen-v1', JSON.stringify(s));
+    localStorage.setItem("sitemap-gen-v1", JSON.stringify(s));
   }, [s]);
 
   const baseRows = React.useMemo(() => buildRows(s), [s]);
@@ -316,17 +343,18 @@ export default function SitemapGeneratorPage() {
     const chunks = chunk(rows, Math.max(1, Math.min(50000, s.maxUrlsPerFile || 50000)));
     const files: BuiltFile[] = chunks.map((ch, i) => {
       const xml = buildSitemapXML(ch, s.pretty);
-      const name = chunks.length === 1 ? s.filename : s.filename.replace(/\.xml$/i, '') + `-${i + 1}.xml`;
+      const name =
+        chunks.length === 1 ? s.filename : s.filename.replace(/\.xml$/i, "") + `-${i + 1}.xml`;
       return { name, xml, bytes: toBytes(xml) };
     });
 
     // Index
     if (s.makeIndex && files.length > 1) {
       // index file name
-      const indexName = s.filename.replace(/\.xml$/i, '') + '-index.xml';
+      const indexName = s.filename.replace(/\.xml$/i, "") + "-index.xml";
 
       // Determine each part's web URL if possible (heuristic: baseUrl + / + file name)
-      const base = s.baseUrl?.replace(/\/+$/, '');
+      const base = s.baseUrl?.replace(/\/+$/, "");
       const indexEntries = files.map((f) => ({
         loc: base ? `${base}/${f.name}` : f.name,
         lastmod: todayISO(),
@@ -345,7 +373,7 @@ export default function SitemapGeneratorPage() {
     setCopied(null);
   }
 
-  async function copy(xml: string, key = 'xml') {
+  async function copy(xml: string, key = "xml") {
     await navigator.clipboard.writeText(xml);
     setCopied(key);
     setTimeout(() => setCopied(null), 1200);
@@ -363,7 +391,10 @@ export default function SitemapGeneratorPage() {
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <FileCode className="h-6 w-6" /> Sitemap.xml Generator
           </h1>
-          <p className="text-sm text-muted-foreground">Build XML sitemaps from URL lists. Normalize, dedupe, set defaults, and export split files + optional index.</p>
+          <p className="text-sm text-muted-foreground">
+            Build XML sitemaps from URL lists. Normalize, dedupe, set defaults, and export split
+            files + optional index.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={resetAll} className="gap-2">
@@ -371,8 +402,17 @@ export default function SitemapGeneratorPage() {
           </Button>
           {preview && (
             <>
-              <Button variant="outline" onClick={() => copy(preview.xml, 'preview')} className="gap-2">
-                {copied === 'preview' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy Preview
+              <Button
+                variant="outline"
+                onClick={() => copy(preview.xml, "preview")}
+                className="gap-2"
+              >
+                {copied === "preview" ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}{" "}
+                Copy Preview
               </Button>
               <Button onClick={() => downloadTxt(preview.name, preview.xml)} className="gap-2">
                 <Download className="h-4 w-4" /> Download Preview
@@ -387,7 +427,8 @@ export default function SitemapGeneratorPage() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Input URLs</CardTitle>
           <CardDescription>
-            One per line (absolute or relative). Optional metadata via <code className="font-mono">|</code> or CSV.
+            One per line (absolute or relative). Optional metadata via{" "}
+            <code className="font-mono">|</code> or CSV.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -402,7 +443,8 @@ export default function SitemapGeneratorPage() {
               Formats supported:
               <ul className="list-disc pl-5 mt-1 space-y-1">
                 <li>
-                  <span className="font-mono">/path</span> or <span className="font-mono">https://domain.com/path</span>
+                  <span className="font-mono">/path</span> or{" "}
+                  <span className="font-mono">https://domain.com/path</span>
                 </li>
                 <li>
                   <span className="font-mono">url | lastmod | changefreq | priority</span>
@@ -411,7 +453,8 @@ export default function SitemapGeneratorPage() {
                   <span className="font-mono">url,lastmod,changefreq,priority</span>
                 </li>
                 <li>
-                  <span className="font-mono">lastmod</span> prefers <span className="font-mono">YYYY-MM-DD</span>.
+                  <span className="font-mono">lastmod</span> prefers{" "}
+                  <span className="font-mono">YYYY-MM-DD</span>.
                 </li>
               </ul>
             </div>
@@ -422,17 +465,28 @@ export default function SitemapGeneratorPage() {
               <Label htmlFor="base" className="flex items-center gap-2">
                 <LinkIcon className="h-4 w-4" /> Base URL (for relative paths)
               </Label>
-              <Input id="base" value={s.baseUrl} onChange={(e) => setS((p) => ({ ...p, baseUrl: e.target.value.trim() }))} placeholder="https://example.com" />
+              <Input
+                id="base"
+                value={s.baseUrl}
+                onChange={(e) => setS((p) => ({ ...p, baseUrl: e.target.value.trim() }))}
+                placeholder="https://example.com"
+              />
             </div>
             <div className="rounded-md border p-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center justify-between">
                   <Label>Keep trailing slash</Label>
-                  <Switch checked={s.keepTrailingSlash} onCheckedChange={(v) => setS((p) => ({ ...p, keepTrailingSlash: v }))} />
+                  <Switch
+                    checked={s.keepTrailingSlash}
+                    onCheckedChange={(v) => setS((p) => ({ ...p, keepTrailingSlash: v }))}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Force HTTPS</Label>
-                  <Switch checked={s.forceHttps} onCheckedChange={(v) => setS((p) => ({ ...p, forceHttps: v }))} />
+                  <Switch
+                    checked={s.forceHttps}
+                    onCheckedChange={(v) => setS((p) => ({ ...p, forceHttps: v }))}
+                  />
                 </div>
               </div>
             </div>
@@ -449,7 +503,8 @@ export default function SitemapGeneratorPage() {
                   ...p,
                   includeSampleHeaders: !p.includeSampleHeaders,
                 }))
-              }>
+              }
+            >
               <Wand2 className="h-4 w-4" /> Tips
             </Button>
             <Badge variant="secondary" className="font-normal">
@@ -475,22 +530,39 @@ export default function SitemapGeneratorPage() {
                 <div className="space-y-1.5">
                   <Label>changefreq</Label>
                   <div className="flex flex-wrap gap-2">
-                    {(['', 'daily', 'weekly', 'monthly', 'yearly'] as ChangeFreq[]).map((f) => (
-                      <Button key={f || 'none'} type="button" size="sm" variant={s.defaultChangefreq === f ? 'default' : 'outline'} onClick={() => setS((p) => ({ ...p, defaultChangefreq: f }))}>
-                        {f || 'none'}
+                    {(["", "daily", "weekly", "monthly", "yearly"] as ChangeFreq[]).map((f) => (
+                      <Button
+                        key={f || "none"}
+                        type="button"
+                        size="sm"
+                        variant={s.defaultChangefreq === f ? "default" : "outline"}
+                        onClick={() => setS((p) => ({ ...p, defaultChangefreq: f }))}
+                      >
+                        {f || "none"}
                       </Button>
                     ))}
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="prio">priority</Label>
-                  <Input id="prio" value={s.defaultPriority} onChange={(e) => setS((p) => ({ ...p, defaultPriority: e.target.value }))} placeholder="e.g., 0.80" />
+                  <Input
+                    id="prio"
+                    value={s.defaultPriority}
+                    onChange={(e) => setS((p) => ({ ...p, defaultPriority: e.target.value }))}
+                    placeholder="e.g., 0.80"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>lastmod</Label>
                   <div className="flex flex-wrap gap-2">
-                    {(['none', 'today', 'fromCSV'] as const).map((m) => (
-                      <Button key={m} type="button" size="sm" variant={s.lastmodMode === m ? 'default' : 'outline'} onClick={() => setS((p) => ({ ...p, lastmodMode: m }))}>
+                    {(["none", "today", "fromCSV"] as const).map((m) => (
+                      <Button
+                        key={m}
+                        type="button"
+                        size="sm"
+                        variant={s.lastmodMode === m ? "default" : "outline"}
+                        onClick={() => setS((p) => ({ ...p, lastmodMode: m }))}
+                      >
                         {m}
                       </Button>
                     ))}
@@ -506,7 +578,14 @@ export default function SitemapGeneratorPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="fname">Base filename</Label>
-                  <Input id="fname" value={s.filename} onChange={(e) => setS((p) => ({ ...p, filename: e.target.value || 'sitemap.xml' }))} placeholder="sitemap.xml" />
+                  <Input
+                    id="fname"
+                    value={s.filename}
+                    onChange={(e) =>
+                      setS((p) => ({ ...p, filename: e.target.value || "sitemap.xml" }))
+                    }
+                    placeholder="sitemap.xml"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="max">Max URLs per file</Label>
@@ -519,7 +598,10 @@ export default function SitemapGeneratorPage() {
                     onChange={(e) =>
                       setS((p) => ({
                         ...p,
-                        maxUrlsPerFile: Math.max(1, Math.min(50000, Number(e.target.value) || 50000)),
+                        maxUrlsPerFile: Math.max(
+                          1,
+                          Math.min(50000, Number(e.target.value) || 50000),
+                        ),
                       }))
                     }
                   />
@@ -532,15 +614,23 @@ export default function SitemapGeneratorPage() {
                     Adds <span className="font-mono">*-index.xml</span> linking all parts.
                   </p>
                 </div>
-                <Switch checked={s.makeIndex} onCheckedChange={(v) => setS((p) => ({ ...p, makeIndex: v }))} />
+                <Switch
+                  checked={s.makeIndex}
+                  onCheckedChange={(v) => setS((p) => ({ ...p, makeIndex: v }))}
+                />
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Pretty print</Label>
-                  <p className="text-xs text-muted-foreground">Appends a newline; keeps layout readable.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Appends a newline; keeps layout readable.
+                  </p>
                 </div>
-                <Switch checked={s.pretty} onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))} />
+                <Switch
+                  checked={s.pretty}
+                  onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))}
+                />
               </div>
             </div>
           </div>
@@ -556,7 +646,9 @@ export default function SitemapGeneratorPage() {
                 <Badge variant="outline">{(totalBytes / 1024).toFixed(1)} KB total</Badge>
                 <Badge variant="outline">{rows.filter((r) => r.lastmod).length} lastmod</Badge>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">Limits: max 50,000 URLs or 50MB per file (uncompressed).</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Limits: max 50,000 URLs or 50MB per file (uncompressed).
+              </p>
             </div>
 
             {parts.length > 0 && (
@@ -565,7 +657,12 @@ export default function SitemapGeneratorPage() {
                   <Label>Download all</Label>
                   <div className="flex flex-wrap gap-2">
                     {parts.map((f, i) => (
-                      <Button key={f.name + i} size="sm" variant="outline" onClick={() => downloadTxt(f.name, f.xml)}>
+                      <Button
+                        key={f.name + i}
+                        size="sm"
+                        variant="outline"
+                        onClick={() => downloadTxt(f.name, f.xml)}
+                      >
                         <Download className="h-4 w-4 mr-1" /> {f.name}
                       </Button>
                     ))}
@@ -578,10 +675,12 @@ export default function SitemapGeneratorPage() {
               <p className="font-medium mb-1">Tips</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>
-                  Use absolute URLs where possible. Relative paths are resolved against <span className="font-mono">{s.baseUrl || 'your base URL'}</span>.
+                  Use absolute URLs where possible. Relative paths are resolved against{" "}
+                  <span className="font-mono">{s.baseUrl || "your base URL"}</span>.
                 </li>
                 <li>
-                  Provide <span className="font-mono">lastmod</span> as <span className="font-mono">YYYY-MM-DD</span> for best compatibility.
+                  Provide <span className="font-mono">lastmod</span> as{" "}
+                  <span className="font-mono">YYYY-MM-DD</span> for best compatibility.
                 </li>
                 <li>Submit the index file to search engines if you split into parts.</li>
                 <li>Don’t include non-canonical or blocked (robots) URLs.</li>
@@ -601,14 +700,32 @@ export default function SitemapGeneratorPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
-            <Textarea readOnly className="min-h-[320px] font-mono text-sm" value={preview ? preview.xml : '<urlset />'} />
+            <Textarea
+              readOnly
+              className="min-h-[320px] font-mono text-sm"
+              value={preview ? preview.xml : "<urlset />"}
+            />
             <div className="flex flex-wrap gap-2">
               {preview && (
                 <>
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => copy(preview.xml, 'preview2')}>
-                    {copied === 'preview2' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => copy(preview.xml, "preview2")}
+                  >
+                    {copied === "preview2" ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}{" "}
+                    Copy
                   </Button>
-                  <Button size="sm" className="gap-2" onClick={() => downloadTxt(preview.name, preview.xml)}>
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => downloadTxt(preview.name, preview.xml)}
+                  >
                     <Download className="h-4 w-4" /> Download
                   </Button>
                 </>
@@ -620,7 +737,9 @@ export default function SitemapGeneratorPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Validation checklist</Label>
-                <p className="text-xs text-muted-foreground">Quick sanity checks for common issues.</p>
+                <p className="text-xs text-muted-foreground">
+                  Quick sanity checks for common issues.
+                </p>
               </div>
               <Badge variant="secondary">XML</Badge>
             </div>

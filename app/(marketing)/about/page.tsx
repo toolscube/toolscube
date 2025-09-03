@@ -1,11 +1,12 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export const metadata = {
-  title: 'About — Tools Hub',
-  description: 'Learn about Tools Hub — our mission is to provide fast, free, privacy-friendly online utilities.',
+  title: "About — Tools Hub",
+  description:
+    "Learn about Tools Hub — our mission is to provide fast, free, privacy-friendly online utilities.",
 };
 
 export default function AboutPage() {
@@ -22,10 +23,13 @@ export default function AboutPage() {
           <Badge variant="secondary" className="w-fit">
             Fast • Free • Privacy-Friendly
           </Badge>
-          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight md:text-4xl">About Tools Hub</h1>
+          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+            About Tools Hub
+          </h1>
           <p className="max-w-2xl text-pretty text-muted-foreground">
-            Tools Hub brings essential online utilities together — URL shortener, PDF & image tools, text utilities, developer helpers, and calculators — with a focus on speed, simplicity, and
-            privacy.
+            Tools Hub brings essential online utilities together — URL shortener, PDF & image tools,
+            text utilities, developer helpers, and calculators — with a focus on speed, simplicity,
+            and privacy.
           </p>
           <div className="mt-2 flex gap-3">
             <Button asChild>
@@ -43,7 +47,10 @@ export default function AboutPage() {
       {/* Values + Tech */}
       <section className="grid gap-4 md:grid-cols-2">
         <Card className="relative overflow-hidden">
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+          />
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">What we value</CardTitle>
           </CardHeader>
@@ -56,7 +63,10 @@ export default function AboutPage() {
         </Card>
 
         <Card className="relative overflow-hidden">
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+          />
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Tech we use</CardTitle>
           </CardHeader>
@@ -114,14 +124,23 @@ export default function AboutPage() {
             <CardTitle className="text-lg">Our journey</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <p>We started Tools Hub to remove small daily frictions: converting files, cleaning text, generating links, and validating data — quickly, without sign-ups or bloated apps.</p>
-            <p>Today, we’re expanding responsibly: better performance, clearer privacy choices, and a growing catalog of practical utilities that respect your time and attention.</p>
+            <p>
+              We started Tools Hub to remove small daily frictions: converting files, cleaning text,
+              generating links, and validating data — quickly, without sign-ups or bloated apps.
+            </p>
+            <p>
+              Today, we’re expanding responsibly: better performance, clearer privacy choices, and a
+              growing catalog of practical utilities that respect your time and attention.
+            </p>
           </CardContent>
         </Card>
 
         {/* CTA */}
         <Card className="relative overflow-hidden">
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
+          />
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Get in touch</CardTitle>
           </CardHeader>

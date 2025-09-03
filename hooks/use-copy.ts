@@ -1,5 +1,5 @@
-import { copyToClipboard } from '@/lib/clipboard';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type CopyOptions = { timeoutMs?: number };
 

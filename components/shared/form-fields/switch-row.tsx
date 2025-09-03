@@ -1,4 +1,4 @@
-import { Switch } from '@/components/ui/switch';
+import { Switch } from "@/components/ui/switch";
 
 export interface SwitchRowProps {
   label: string;
@@ -8,7 +8,13 @@ export interface SwitchRowProps {
   disabled?: boolean;
 }
 
-export default function SwitchRow({ label, checked, onCheckedChange, hint, disabled = false }: SwitchRowProps) {
+export default function SwitchRow({
+  label,
+  checked,
+  onCheckedChange,
+  hint,
+  disabled = false,
+}: SwitchRowProps) {
   return (
     <div className="flex items-center justify-between rounded-lg border py-2 px-3">
       <div className="mr-3">

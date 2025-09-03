@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 type Hop = {
   index: number;
@@ -38,10 +38,16 @@ function parseMeta(html: string, baseUrl: string): Meta {
     }
   };
   const title = pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  const description = pick(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i);
+  const description = pick(
+    /<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i,
+  );
   const ogTitle = pick(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["'][^>]*>/i);
-  const ogDescription = pick(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["'][^>]*>/i);
-  const ogImage = relToAbs(pick(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']*)["'][^>]*>/i));
+  const ogDescription = pick(
+    /<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["'][^>]*>/i,
+  );
+  const ogImage = relToAbs(
+    pick(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']*)["'][^>]*>/i),
+  );
   return { title, description, ogTitle, ogDescription, ogImage, finalUrl: baseUrl };
 }
 
@@ -56,13 +62,13 @@ export async function POST(req: Request) {
     let finalUrl = inputUrl;
 
     for (let i = 0; i < Math.min(30, Math.max(1, Number(maxHops) || 10)); i++) {
-      const res = await fetch(current, { redirect: 'manual' });
+      const res = await fetch(current, { redirect: "manual" });
       const hop: Hop = {
         index: i + 1,
         url: current,
         status: res.status,
         statusText: res.statusText,
-        location: res.headers.get('location'),
+        location: res.headers.get("location"),
       };
       hops.push(hop);
 
@@ -81,9 +87,9 @@ export async function POST(req: Request) {
     // Try to fetch final for meta (best-effort)
     let meta: Meta | undefined;
     try {
-      const finRes = await fetch(finalUrl, { redirect: 'follow' });
-      const contentType = finRes.headers.get('content-type') || undefined;
-      if (contentType?.includes('text/html')) {
+      const finRes = await fetch(finalUrl, { redirect: "follow" });
+      const contentType = finRes.headers.get("content-type") || undefined;
+      if (contentType?.includes("text/html")) {
         const html = await finRes.text();
         meta = parseMeta(html, finalUrl);
         meta.contentType = contentType;
@@ -112,11 +118,11 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         ok: false,
-        inputUrl: '',
-        finalUrl: '',
+        inputUrl: "",
+        finalUrl: "",
         totalHops: 0,
         hops: [],
-        error: e?.message ?? 'Failed to expand link',
+        error: e?.message ?? "Failed to expand link",
         startedAt: new Date().toISOString(),
         ms: 0,
       },

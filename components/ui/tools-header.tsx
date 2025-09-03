@@ -1,17 +1,25 @@
-'use client';
+"use client";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ToolsData } from '@/data/tools';
-import type { LucideIcon } from 'lucide-react';
-import { ArrowRight, GitBranch, Link2, Search, Star } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import type { LucideIcon } from "lucide-react";
+import { ArrowRight, GitBranch, Link2, Search, Star } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ToolsData } from "@/data/tools";
 
 // Types
 type ToolItem = {
@@ -27,12 +35,12 @@ type FlatItem = ToolItem & {
   icon?: unknown;
 };
 
-const RECENT_KEY = 'tools-hub:recent-items';
+const RECENT_KEY = "tools-hub:recent-items";
 const MAX_RECENT = 8;
 
 // Icon normalizer
 function asIcon(maybe: unknown): LucideIcon {
-  return typeof maybe === 'function' ? (maybe as LucideIcon) : Link2;
+  return typeof maybe === "function" ? (maybe as LucideIcon) : Link2;
 }
 
 // Utils
@@ -75,7 +83,7 @@ export default function ToolsHeader() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<FlatItem[]>([]);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const all = useMemo(() => flattenTools(ToolsData), []);
   const popular = useMemo(() => all.filter((i) => i.popular), [all]);
   const inputProxyRef = useRef<HTMLButtonElement | null>(null);
@@ -83,21 +91,21 @@ export default function ToolsHeader() {
   // Keyboard shortcuts: Cmd/Ctrl+K to open, "/" to quick-open
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((o) => !o);
-      } else if (e.key === '/') {
+      } else if (e.key === "/") {
         const t = e.target as HTMLElement;
         const tag = t?.tagName?.toLowerCase();
-        const editable = t?.getAttribute?.('contenteditable') === 'true';
-        if (!editable && tag !== 'input' && tag !== 'textarea') {
+        const editable = t?.getAttribute?.("contenteditable") === "true";
+        if (!editable && tag !== "input" && tag !== "textarea") {
           e.preventDefault();
           setOpen(true);
         }
       }
     }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   // load recent on mount and whenever dialog opens
@@ -141,10 +149,13 @@ export default function ToolsHeader() {
                     ref={inputProxyRef}
                     onClick={() => setOpen(true)}
                     className="hidden sm:flex items-center gap-2 rounded-xl border bg-background/50 px-3 py-2 text-sm text-muted-foreground hover:bg-background/70 ring-1 ring-border/50 shadow-sm transition backdrop-blur supports-[backdrop-filter]:bg-background/40"
-                    aria-label="Search tools">
+                    aria-label="Search tools"
+                  >
                     <Search className="h-4 w-4" />
                     <span className="pr-6">Search tools…</span>
-                    <kbd className="ml-auto text-[10px] tracking-wider rounded border bg-muted px-1.5 py-0.5">⌘K</kbd>
+                    <kbd className="ml-auto text-[10px] tracking-wider rounded border bg-muted px-1.5 py-0.5">
+                      ⌘K
+                    </kbd>
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="end">
@@ -154,7 +165,12 @@ export default function ToolsHeader() {
             </TooltipProvider>
 
             <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <Link href="https://github.com/tariqul420/tools-hub" rel="noopener noreferrer" target="_blank" className="dark:text-foreground inline-flex items-center gap-1">
+              <Link
+                href="https://github.com/tariqul420/tools-hub"
+                rel="noopener noreferrer"
+                target="_blank"
+                className="dark:text-foreground inline-flex items-center gap-1"
+              >
                 <GitBranch className="h-4 w-4" />
                 GitHub
               </Link>
@@ -165,7 +181,11 @@ export default function ToolsHeader() {
 
       {/* Search Modal */}
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Search any tool (e.g., QR, Base64, Invoice, Regex)…" value={query} onValueChange={setQuery} />
+        <CommandInput
+          placeholder="Search any tool (e.g., QR, Base64, Invoice, Regex)…"
+          value={query}
+          onValueChange={setQuery}
+        />
         <CommandList>
           <CommandEmpty>No tools found.</CommandEmpty>
 
@@ -176,11 +196,17 @@ export default function ToolsHeader() {
                 {recent.map((item) => {
                   const Icon = asIcon(item.icon);
                   return (
-                    <CommandItem key={`recent:${item.url}`} value={`${item.title} ${item.category}`} onSelect={() => go(item)}>
+                    <CommandItem
+                      key={`recent:${item.url}`}
+                      value={`${item.title} ${item.category}`}
+                      onSelect={() => go(item)}
+                    >
                       <Icon className="mr-2 h-4 w-4" />
                       <div className="flex min-w-0 flex-col">
                         <span className="truncate">{item.title}</span>
-                        <span className="truncate text-xs text-muted-foreground">{item.description}</span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {item.description}
+                        </span>
                       </div>
                       <Badge className="ml-auto" variant="secondary">
                         {item.category}
@@ -201,11 +227,17 @@ export default function ToolsHeader() {
                 {popular.map((item) => {
                   const Icon = asIcon(item.icon);
                   return (
-                    <CommandItem key={`popular:${item.url}`} value={`${item.title} ${item.category}`} onSelect={() => go(item)}>
+                    <CommandItem
+                      key={`popular:${item.url}`}
+                      value={`${item.title} ${item.category}`}
+                      onSelect={() => go(item)}
+                    >
                       <Star className="mr-2 h-4 w-4" />
                       <div className="flex min-w-0 flex-col">
                         <span className="truncate">{item.title}</span>
-                        <span className="truncate text-xs text-muted-foreground">{item.description}</span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {item.description}
+                        </span>
                       </div>
                       <Badge className="ml-auto" variant="outline">
                         {item.category}
@@ -225,11 +257,17 @@ export default function ToolsHeader() {
               {items.map((item) => {
                 const Icon = asIcon(item.icon);
                 return (
-                  <CommandItem key={item.url} value={`${item.title} ${category}`} onSelect={() => go(item)}>
+                  <CommandItem
+                    key={item.url}
+                    value={`${item.title} ${category}`}
+                    onSelect={() => go(item)}
+                  >
                     <Icon className="mr-2 h-4 w-4" />
                     <div className="flex min-w-0 flex-col">
                       <span className="truncate">{item.title}</span>
-                      <span className="truncate text-xs text-muted-foreground">{item.description}</span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {item.description}
+                      </span>
                     </div>
                     <Badge className="ml-auto" variant="secondary">
                       {category}

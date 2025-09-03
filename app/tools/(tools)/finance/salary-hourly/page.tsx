@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
-import { Calculator, Copy, Download, Info, RotateCcw, Timer } from 'lucide-react';
-import * as React from 'react';
+import { Calculator, Copy, Download, Info, RotateCcw, Timer } from "lucide-react";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 /**
  * Salary ⇄ Hourly Converter
@@ -20,9 +20,9 @@ import * as React from 'react';
 
 export default function SalaryHourlyPage() {
   // ---------- State ----------
-  const [mode, setMode] = React.useState<'salary' | 'hourly'>('salary');
+  const [mode, setMode] = React.useState<"salary" | "hourly">("salary");
   const [amount, setAmount] = React.useState<number>(600000); // default salary
-  const [currency, setCurrency] = React.useState<string>('BDT');
+  const [currency, setCurrency] = React.useState<string>("BDT");
   const [hoursPerWeek, setHoursPerWeek] = React.useState<number>(40);
   const [daysPerWeek, setDaysPerWeek] = React.useState<number>(5);
   const [weeksPerYear, setWeeksPerYear] = React.useState<number>(52);
@@ -32,8 +32,14 @@ export default function SalaryHourlyPage() {
   const [copied, setCopied] = React.useState<string | null>(null);
 
   // ---------- Derived ----------
-  const yearHoursNominal = React.useMemo(() => weeksPerYear * hoursPerWeek, [weeksPerYear, hoursPerWeek]);
-  const hoursPerDay = React.useMemo(() => (daysPerWeek > 0 ? hoursPerWeek / daysPerWeek : hoursPerWeek), [hoursPerWeek, daysPerWeek]);
+  const yearHoursNominal = React.useMemo(
+    () => weeksPerYear * hoursPerWeek,
+    [weeksPerYear, hoursPerWeek],
+  );
+  const hoursPerDay = React.useMemo(
+    () => (daysPerWeek > 0 ? hoursPerWeek / daysPerWeek : hoursPerWeek),
+    [hoursPerWeek, daysPerWeek],
+  );
   const yearHoursWorked = React.useMemo(() => {
     // If PTO is paid and we want an effective hourly, reduce worked hours by PTO days
     const ptoHours = countPaidPTO ? ptoDays * hoursPerDay : 0;
@@ -41,14 +47,15 @@ export default function SalaryHourlyPage() {
   }, [yearHoursNominal, ptoDays, hoursPerDay, countPaidPTO]);
 
   const results = React.useMemo(() => {
-    if (mode === 'salary') return fromSalary(amount, { yearHoursNominal, yearHoursWorked, hoursPerWeek, daysPerWeek });
+    if (mode === "salary")
+      return fromSalary(amount, { yearHoursNominal, yearHoursWorked, hoursPerWeek, daysPerWeek });
     return fromHourly(amount, { yearHoursNominal, hoursPerWeek, daysPerWeek });
   }, [mode, amount, yearHoursNominal, yearHoursWorked, hoursPerWeek, daysPerWeek]);
 
   function resetAll() {
-    setMode('salary');
+    setMode("salary");
     setAmount(600000);
-    setCurrency('BDT');
+    setCurrency("BDT");
     setHoursPerWeek(40);
     setDaysPerWeek(5);
     setWeeksPerYear(52);
@@ -66,18 +73,36 @@ export default function SalaryHourlyPage() {
 
   function exportCSV() {
     const rows: string[][] = [
-      ['Mode', 'Amount', 'Currency', 'Hours/Week', 'Days/Week', 'Weeks/Year', 'PTO Days', 'Count Paid PTO'],
-      [mode, numStr(amount), currency, numStr(hoursPerWeek), numStr(daysPerWeek), numStr(weeksPerYear), numStr(ptoDays), String(countPaidPTO)],
+      [
+        "Mode",
+        "Amount",
+        "Currency",
+        "Hours/Week",
+        "Days/Week",
+        "Weeks/Year",
+        "PTO Days",
+        "Count Paid PTO",
+      ],
+      [
+        mode,
+        numStr(amount),
+        currency,
+        numStr(hoursPerWeek),
+        numStr(daysPerWeek),
+        numStr(weeksPerYear),
+        numStr(ptoDays),
+        String(countPaidPTO),
+      ],
       [],
-      ['Label', 'Value'],
+      ["Label", "Value"],
       ...Object.entries(results.all).map(([k, v]) => [k, numStr(v)]),
     ];
-    const csv = rows.map((r) => r.map(csvEscape).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'salary-hourly.csv';
+    a.download = "salary-hourly.csv";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -91,7 +116,9 @@ export default function SalaryHourlyPage() {
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               <Timer className="h-6 w-6" /> Salary ⇄ Hourly
             </h1>
-            <p className="text-sm text-muted-foreground">Convert between annual salary and hourly/day/week/month pay rates.</p>
+            <p className="text-sm text-muted-foreground">
+              Convert between annual salary and hourly/day/week/month pay rates.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={resetAll} className="gap-2">
@@ -113,21 +140,28 @@ export default function SalaryHourlyPage() {
             <div className="space-y-2">
               <Label>Mode</Label>
               <div className="grid grid-cols-2 gap-2">
-                <ModeButton active={mode === 'salary'} onClick={() => setMode('salary')}>
+                <ModeButton active={mode === "salary"} onClick={() => setMode("salary")}>
                   From Salary
                 </ModeButton>
-                <ModeButton active={mode === 'hourly'} onClick={() => setMode('hourly')}>
+                <ModeButton active={mode === "hourly"} onClick={() => setMode("hourly")}>
                   From Hourly
                 </ModeButton>
               </div>
-              <p className="text-xs text-muted-foreground">From Salary: convert annual to hourly, etc. From Hourly: estimate annual and more.</p>
+              <p className="text-xs text-muted-foreground">
+                From Salary: convert annual to hourly, etc. From Hourly: estimate annual and more.
+              </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">{mode === 'salary' ? 'Annual Salary' : 'Hourly Rate'}</Label>
-              <Input id="amount" inputMode="decimal" value={numDisplay(amount)} onChange={(e) => setAmount(safeNum(e.target.value))} />
+              <Label htmlFor="amount">{mode === "salary" ? "Annual Salary" : "Hourly Rate"}</Label>
+              <Input
+                id="amount"
+                inputMode="decimal"
+                value={numDisplay(amount)}
+                onChange={(e) => setAmount(safeNum(e.target.value))}
+              />
               <div className="flex flex-wrap gap-2 pt-1">
-                {['BDT', 'USD', 'INR', 'EUR'].map((c) => (
+                {["BDT", "USD", "INR", "EUR"].map((c) => (
                   <QuickChip key={c} onClick={() => setCurrency(c)}>
                     {c}
                   </QuickChip>
@@ -137,25 +171,57 @@ export default function SalaryHourlyPage() {
 
             <div className="space-y-2">
               <Label htmlFor="hpw">Hours per week</Label>
-              <Input id="hpw" type="number" min={1} step="1" value={hoursPerWeek} onChange={(e) => setHoursPerWeek(Number(e.target.value) || 1)} />
+              <Input
+                id="hpw"
+                type="number"
+                min={1}
+                step="1"
+                value={hoursPerWeek}
+                onChange={(e) => setHoursPerWeek(Number(e.target.value) || 1)}
+              />
               <p className="text-xs text-muted-foreground">Typical full‑time is 40.</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="dpw">Days per week</Label>
-              <Input id="dpw" type="number" min={1} max={7} step="1" value={daysPerWeek} onChange={(e) => setDaysPerWeek(Number(e.target.value) || 1)} />
-              <p className="text-xs text-muted-foreground">Useful for PTO‑aware effective hourly.</p>
+              <Input
+                id="dpw"
+                type="number"
+                min={1}
+                max={7}
+                step="1"
+                value={daysPerWeek}
+                onChange={(e) => setDaysPerWeek(Number(e.target.value) || 1)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Useful for PTO‑aware effective hourly.
+              </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="wpy">Weeks per year</Label>
-              <Input id="wpy" type="number" min={1} max={60} step="1" value={weeksPerYear} onChange={(e) => setWeeksPerYear(Number(e.target.value) || 1)} />
+              <Input
+                id="wpy"
+                type="number"
+                min={1}
+                max={60}
+                step="1"
+                value={weeksPerYear}
+                onChange={(e) => setWeeksPerYear(Number(e.target.value) || 1)}
+              />
               <p className="text-xs text-muted-foreground">52 weeks by default.</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="pto">Paid time off (days)</Label>
-              <Input id="pto" type="number" min={0} step="1" value={ptoDays} onChange={(e) => setPtoDays(Number(e.target.value) || 0)} />
+              <Input
+                id="pto"
+                type="number"
+                min={0}
+                step="1"
+                value={ptoDays}
+                onChange={(e) => setPtoDays(Number(e.target.value) || 0)}
+              />
               <div className="flex items-center gap-2 pt-1">
                 <Switch checked={countPaidPTO} onCheckedChange={setCountPaidPTO} />
                 <span className="text-sm">Count paid PTO when computing effective hourly</span>
@@ -178,32 +244,85 @@ export default function SalaryHourlyPage() {
         <GlassCard className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Results</CardTitle>
-            <CardDescription>Nominal uses {fmtNumber(yearHoursNominal)} hours/year (hours × weeks). Effective hourly (salary mode) counts paid PTO.</CardDescription>
+            <CardDescription>
+              Nominal uses {fmtNumber(yearHoursNominal)} hours/year (hours × weeks). Effective
+              hourly (salary mode) counts paid PTO.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {mode === 'salary' ? (
+            {mode === "salary" ? (
               <div className="grid gap-4 sm:grid-cols-3">
-                <ResultBox label="Hourly (nominal)" value={fmtMoney(results.hourly, currency, round2)} onCopy={() => copy(results.hourly, 'Hourly (nominal)')} copied={copied === 'Hourly (nominal)'} />
-                <ResultBox label="Daily" value={fmtMoney(results.daily, currency, round2)} onCopy={() => copy(results.daily, 'Daily')} copied={copied === 'Daily'} />
-                <ResultBox label="Weekly" value={fmtMoney(results.weekly, currency, round2)} onCopy={() => copy(results.weekly, 'Weekly')} copied={copied === 'Weekly'} />
-                <ResultBox label="Monthly" value={fmtMoney(results.monthly, currency, round2)} onCopy={() => copy(results.monthly, 'Monthly')} copied={copied === 'Monthly'} />
-                <ResultBox label="Annual" value={fmtMoney(results.annual, currency, round2)} onCopy={() => copy(results.annual, 'Annual')} copied={copied === 'Annual'} />
+                <ResultBox
+                  label="Hourly (nominal)"
+                  value={fmtMoney(results.hourly, currency, round2)}
+                  onCopy={() => copy(results.hourly, "Hourly (nominal)")}
+                  copied={copied === "Hourly (nominal)"}
+                />
+                <ResultBox
+                  label="Daily"
+                  value={fmtMoney(results.daily, currency, round2)}
+                  onCopy={() => copy(results.daily, "Daily")}
+                  copied={copied === "Daily"}
+                />
+                <ResultBox
+                  label="Weekly"
+                  value={fmtMoney(results.weekly, currency, round2)}
+                  onCopy={() => copy(results.weekly, "Weekly")}
+                  copied={copied === "Weekly"}
+                />
+                <ResultBox
+                  label="Monthly"
+                  value={fmtMoney(results.monthly, currency, round2)}
+                  onCopy={() => copy(results.monthly, "Monthly")}
+                  copied={copied === "Monthly"}
+                />
+                <ResultBox
+                  label="Annual"
+                  value={fmtMoney(results.annual, currency, round2)}
+                  onCopy={() => copy(results.annual, "Annual")}
+                  copied={copied === "Annual"}
+                />
                 {ptoDays > 0 && countPaidPTO && (
                   <ResultBox
                     label="Hourly (effective w/ PTO)"
                     value={fmtMoney(results.hourlyEffective, currency, round2)}
-                    onCopy={() => copy(results.hourlyEffective, 'Hourly (effective w/ PTO)')}
-                    copied={copied === 'Hourly (effective w/ PTO)'}
+                    onCopy={() => copy(results.hourlyEffective, "Hourly (effective w/ PTO)")}
+                    copied={copied === "Hourly (effective w/ PTO)"}
                   />
                 )}
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-3">
-                <ResultBox label="Annual" value={fmtMoney(results.annual, currency, round2)} onCopy={() => copy(results.annual, 'Annual')} copied={copied === 'Annual'} />
-                <ResultBox label="Monthly" value={fmtMoney(results.monthly, currency, round2)} onCopy={() => copy(results.monthly, 'Monthly')} copied={copied === 'Monthly'} />
-                <ResultBox label="Weekly" value={fmtMoney(results.weekly, currency, round2)} onCopy={() => copy(results.weekly, 'Weekly')} copied={copied === 'Weekly'} />
-                <ResultBox label="Daily" value={fmtMoney(results.daily, currency, round2)} onCopy={() => copy(results.daily, 'Daily')} copied={copied === 'Daily'} />
-                <ResultBox label="Hourly" value={fmtMoney(results.hourly, currency, round2)} onCopy={() => copy(results.hourly, 'Hourly')} copied={copied === 'Hourly'} />
+                <ResultBox
+                  label="Annual"
+                  value={fmtMoney(results.annual, currency, round2)}
+                  onCopy={() => copy(results.annual, "Annual")}
+                  copied={copied === "Annual"}
+                />
+                <ResultBox
+                  label="Monthly"
+                  value={fmtMoney(results.monthly, currency, round2)}
+                  onCopy={() => copy(results.monthly, "Monthly")}
+                  copied={copied === "Monthly"}
+                />
+                <ResultBox
+                  label="Weekly"
+                  value={fmtMoney(results.weekly, currency, round2)}
+                  onCopy={() => copy(results.weekly, "Weekly")}
+                  copied={copied === "Weekly"}
+                />
+                <ResultBox
+                  label="Daily"
+                  value={fmtMoney(results.daily, currency, round2)}
+                  onCopy={() => copy(results.daily, "Daily")}
+                  copied={copied === "Daily"}
+                />
+                <ResultBox
+                  label="Hourly"
+                  value={fmtMoney(results.hourly, currency, round2)}
+                  onCopy={() => copy(results.hourly, "Hourly")}
+                  copied={copied === "Hourly"}
+                />
               </div>
             )}
 
@@ -217,7 +336,10 @@ export default function SalaryHourlyPage() {
 
             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
               <Info className="h-4 w-4" />
-              <span>Nominal annual hours = weeks × hours/week. Effective hourly increases when paid PTO reduces worked hours.</span>
+              <span>
+                Nominal annual hours = weeks × hours/week. Effective hourly increases when paid PTO
+                reduces worked hours.
+              </span>
             </div>
 
             <div className="pt-2">
@@ -233,9 +355,19 @@ export default function SalaryHourlyPage() {
 }
 
 // ---------- Components ----------
-function ModeButton({ active, onClick, children }: React.PropsWithChildren<{ active?: boolean; onClick?: () => void }>) {
+function ModeButton({
+  active,
+  onClick,
+  children,
+}: React.PropsWithChildren<{ active?: boolean; onClick?: () => void }>) {
   return (
-    <button onClick={onClick} className={cn('rounded-md border px-3 py-2 text-sm transition', active ? 'bg-primary/10 border-primary/40' : 'hover:bg-accent hover:text-accent-foreground')}>
+    <button
+      onClick={onClick}
+      className={cn(
+        "rounded-md border px-3 py-2 text-sm transition",
+        active ? "bg-primary/10 border-primary/40" : "hover:bg-accent hover:text-accent-foreground",
+      )}
+    >
       {children}
     </button>
   );
@@ -243,13 +375,26 @@ function ModeButton({ active, onClick, children }: React.PropsWithChildren<{ act
 
 function QuickChip({ children, onClick }: React.PropsWithChildren<{ onClick?: () => void }>) {
   return (
-    <button onClick={onClick} className="rounded-full border px-3 py-1 text-xs hover:bg-accent hover:text-accent-foreground transition">
+    <button
+      onClick={onClick}
+      className="rounded-full border px-3 py-1 text-xs hover:bg-accent hover:text-accent-foreground transition"
+    >
       {children}
     </button>
   );
 }
 
-function ResultBox({ label, value, onCopy, copied }: { label: string; value: string; onCopy: () => void; copied?: boolean }) {
+function ResultBox({
+  label,
+  value,
+  onCopy,
+  copied,
+}: {
+  label: string;
+  value: string;
+  onCopy: () => void;
+  copied?: boolean;
+}) {
   return (
     <div className="rounded-lg border p-3">
       <div className="mb-1 flex items-center justify-between">
@@ -264,7 +409,15 @@ function ResultBox({ label, value, onCopy, copied }: { label: string; value: str
 }
 
 // ---------- Logic ----------
-function fromSalary(annual: number, opts: { yearHoursNominal: number; yearHoursWorked: number; hoursPerWeek: number; daysPerWeek: number }) {
+function fromSalary(
+  annual: number,
+  opts: {
+    yearHoursNominal: number;
+    yearHoursWorked: number;
+    hoursPerWeek: number;
+    daysPerWeek: number;
+  },
+) {
   const A = Math.max(0, Number(annual) || 0);
   const { yearHoursNominal, yearHoursWorked, hoursPerWeek, daysPerWeek } = opts;
   const hourly = A / Math.max(1, yearHoursNominal);
@@ -280,8 +433,8 @@ function fromSalary(annual: number, opts: { yearHoursNominal: number; yearHoursW
     monthly,
     annual: A,
     all: {
-      'Hourly (nominal)': hourly,
-      'Hourly (effective)': hourlyEffective,
+      "Hourly (nominal)": hourly,
+      "Hourly (effective)": hourlyEffective,
       Daily: daily,
       Weekly: weekly,
       Monthly: monthly,
@@ -290,7 +443,10 @@ function fromSalary(annual: number, opts: { yearHoursNominal: number; yearHoursW
   };
 }
 
-function fromHourly(hourly: number, opts: { yearHoursNominal: number; hoursPerWeek: number; daysPerWeek: number }) {
+function fromHourly(
+  hourly: number,
+  opts: { yearHoursNominal: number; hoursPerWeek: number; daysPerWeek: number },
+) {
   const H = Math.max(0, Number(hourly) || 0);
   const { yearHoursNominal, hoursPerWeek, daysPerWeek } = opts;
   const annual = H * yearHoursNominal;
@@ -315,13 +471,13 @@ function fromHourly(hourly: number, opts: { yearHoursNominal: number; hoursPerWe
 
 // ---------- Utils ----------
 function numDisplay(n: number) {
-  return Number.isFinite(n) ? String(n) : '';
+  return Number.isFinite(n) ? String(n) : "";
 }
 function numStr(n: number) {
   return String(n);
 }
 function safeNum(v: string) {
-  const x = Number(String(v).replace(/[^0-9.\-]/g, ''));
+  const x = Number(String(v).replace(/[^0-9.-]/g, ""));
   return Number.isFinite(x) ? x : 0;
 }
 function csvEscape(cell: string) {
@@ -331,9 +487,9 @@ function csvEscape(cell: string) {
 function fmtMoney(n: number, currency: string, round2: boolean) {
   const val = round2 ? Math.round(n * 100) / 100 : n;
   try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(val);
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(val);
   } catch {
-    return new Intl.NumberFormat().format(val) + ' ' + currency;
+    return new Intl.NumberFormat().format(val) + " " + currency;
   }
 }
 function fmtNumber(n: number) {

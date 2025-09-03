@@ -1,6 +1,6 @@
-import { copyToClipboard } from '@/lib/clipboard';
-import QRCode from 'qrcode';
-import { useCallback } from 'react';
+import QRCode from "qrcode";
+import { useCallback } from "react";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type LogoOpt = { src: string; sizePct: number; roundedPct?: number; pad?: number };
 type Args = {
@@ -26,11 +26,11 @@ function makeOptions(a: Args, width: number) {
 }
 
 async function overlayLogo(canvas: HTMLCanvasElement, logo: LogoOpt) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const img = await new Promise<HTMLImageElement>((res, rej) => {
     const im = new Image();
-    im.crossOrigin = 'anonymous';
+    im.crossOrigin = "anonymous";
     im.onload = () => res(im);
     im.onerror = rej;
     im.src = logo.src;
@@ -58,7 +58,7 @@ async function overlayLogo(canvas: HTMLCanvasElement, logo: LogoOpt) {
   ctx.arcTo(rx, ry + rh, rx, ry, rr);
   ctx.arcTo(rx, ry, rx + rw, ry, rr);
   ctx.closePath();
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = "#fff";
   ctx.fill();
   ctx.restore();
 
@@ -69,10 +69,10 @@ export function useQrExport(args: Args) {
   const getPngDataUrl = useCallback(
     async (scale = 1) => {
       const exportSize = clamp(Math.round(args.size * (scale || 1)), 64, 4096);
-      const canvas = document.createElement('canvas');
-      await QRCode.toCanvas(canvas, args.value || 'Scan me', makeOptions(args, exportSize));
+      const canvas = document.createElement("canvas");
+      await QRCode.toCanvas(canvas, args.value || "Scan me", makeOptions(args, exportSize));
       if (args.logo) await overlayLogo(canvas, args.logo);
-      return canvas.toDataURL('image/png');
+      return canvas.toDataURL("image/png");
     },
     [args],
   );
@@ -88,9 +88,9 @@ export function useQrExport(args: Args) {
 
   /** Triggers a PNG download. */
   const downloadPNG = useCallback(
-    async (filename = 'qrcode.png', scale = 1) => {
+    async (filename = "qrcode.png", scale = 1) => {
       const url = await getPngDataUrl(scale);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.download = filename;
       a.href = url;
       a.click();
@@ -100,11 +100,14 @@ export function useQrExport(args: Args) {
 
   /** Triggers an SVG download. */
   const downloadSVG = useCallback(
-    async (filename = 'qrcode.svg') => {
-      const svg = await QRCode.toString(args.value || 'Scan me', { ...makeOptions(args, args.size), type: 'svg' });
-      const blob = new Blob([svg], { type: 'image/svg+xml' });
+    async (filename = "qrcode.svg") => {
+      const svg = await QRCode.toString(args.value || "Scan me", {
+        ...makeOptions(args, args.size),
+        type: "svg",
+      });
+      const blob = new Blob([svg], { type: "image/svg+xml" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.download = filename;
       a.href = url;
       a.click();

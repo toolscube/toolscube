@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://naturalsefaa.com';
-const SITE_NAME = 'Tools Hub • Natural Sefa';
-const SITE_TWITTER = '@toolshub';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://naturalsefaa.com";
+const SITE_NAME = "Tools Hub • Natural Sefa";
+const SITE_TWITTER = "@toolshub";
 const DEFAULT_IMAGE = `${SITE_URL}/og/tools-hub-og.png`;
 
 type BuildMetaInput = {
@@ -23,8 +23,18 @@ export function buildMetadata(input: BuildMetaInput): Metadata {
       template: `%s • Tools Hub`,
     },
     description: input.description,
-    keywords: input.keywords ?? ['url shortener', 'online tools', 'developer tools', 'text utilities', 'pdf tools', 'image converters', 'calculators', 'free tools', 'privacy friendly'],
-    category: 'Utilities',
+    keywords: input.keywords ?? [
+      "url shortener",
+      "online tools",
+      "developer tools",
+      "text utilities",
+      "pdf tools",
+      "image converters",
+      "calculators",
+      "free tools",
+      "privacy friendly",
+    ],
+    category: "Utilities",
 
     alternates: { canonical: url },
 
@@ -35,14 +45,14 @@ export function buildMetadata(input: BuildMetaInput): Metadata {
       googleBot: {
         index: true,
         follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-        'max-video-preview': -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
       },
     },
 
     openGraph: {
-      type: 'website',
+      type: "website",
       url,
       siteName: SITE_NAME,
       title: input.title,
@@ -58,7 +68,7 @@ export function buildMetadata(input: BuildMetaInput): Metadata {
     },
 
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       site: SITE_TWITTER,
       creator: SITE_TWITTER,
       title: input.title,
@@ -67,14 +77,14 @@ export function buildMetadata(input: BuildMetaInput): Metadata {
     },
 
     icons: {
-      icon: '/favicon.ico',
-      shortcut: '/favicon.ico',
-      apple: '/favicon.ico',
+      icon: "/favicon.ico",
+      shortcut: "/favicon.ico",
+      apple: "/favicon.ico",
     },
 
-    applicationName: 'Tools Hub',
+    applicationName: "Tools Hub",
     other: {
-      'og:locale': 'en_US',
+      "og:locale": "en_US",
     },
   };
 }

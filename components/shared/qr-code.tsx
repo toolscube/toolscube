@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import QRCode from 'qrcode';
-import * as React from 'react';
+import QRCode from "qrcode";
+import * as React from "react";
 
-export type QrECL = 'L' | 'M' | 'Q' | 'H';
-export type QrFormat = 'png' | 'svg';
+export type QrECL = "L" | "M" | "Q" | "H";
+export type QrFormat = "png" | "svg";
 
 export type QrLogo = {
   src: string;
@@ -31,12 +31,12 @@ export type QrProps = {
 
 export function QRCodeBox({
   value,
-  format = 'png',
+  format = "png",
   size = 200,
   margin = 1,
-  ecl = 'M',
-  fg = '#000000',
-  bg = '#ffffff',
+  ecl = "M",
+  fg = "#000000",
+  bg = "#ffffff",
   quietZone = true,
   logo = null,
   className,
@@ -45,7 +45,7 @@ export function QRCodeBox({
   onDataUrl,
 }: QrProps) {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
-  const [svgMarkup, setSvgMarkup] = React.useState<string>('');
+  const [svgMarkup, setSvgMarkup] = React.useState<string>("");
 
   const opts = React.useMemo(
     () => ({
@@ -62,12 +62,12 @@ export function QRCodeBox({
 
     const render = async () => {
       if (!value) {
-        if (format === 'svg') setSvgMarkup('');
+        if (format === "svg") setSvgMarkup("");
         return;
       }
 
-      if (format === 'svg') {
-        const svg = await QRCode.toString(value, { ...opts, type: 'svg' });
+      if (format === "svg") {
+        const svg = await QRCode.toString(value, { ...opts, type: "svg" });
         if (!cancelled) setSvgMarkup(svg);
         return;
       }
@@ -86,7 +86,7 @@ export function QRCodeBox({
       }
 
       if (onDataUrl && canvasRef.current) {
-        onDataUrl(canvasRef.current.toDataURL('image/png'));
+        onDataUrl(canvasRef.current.toDataURL("image/png"));
       }
     };
 
@@ -98,23 +98,36 @@ export function QRCodeBox({
 
   return (
     <div className={className}>
-      {format === 'svg' ? (
-        <div className={svgClassName} dangerouslySetInnerHTML={{ __html: svgMarkup || '<svg/>' }} aria-label="QR SVG" />
+      {format === "svg" ? (
+        <div
+          className={svgClassName}
+          dangerouslySetInnerHTML={{ __html: svgMarkup || "<svg/>" }}
+          aria-label="QR SVG"
+        />
       ) : (
-        <canvas ref={canvasRef} width={size} height={size} className={canvasClassName} aria-label="QR Canvas" />
+        <canvas
+          ref={canvasRef}
+          width={size}
+          height={size}
+          className={canvasClassName}
+          aria-label="QR Canvas"
+        />
       )}
     </div>
   );
 }
 
 /* logo overlay helper (canvas only) */
-async function overlayLogo(canvas: HTMLCanvasElement, cfg: { src: string; sizePct: number; roundedPct: number; pad: number }) {
+async function overlayLogo(
+  canvas: HTMLCanvasElement,
+  cfg: { src: string; sizePct: number; roundedPct: number; pad: number },
+) {
   return new Promise<void>((resolve) => {
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return resolve();
 
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       const w = canvas.width;
       const h = canvas.height;
@@ -130,7 +143,7 @@ async function overlayLogo(canvas: HTMLCanvasElement, cfg: { src: string; sizePc
       const bgH = size + cfg.pad * 2;
 
       roundedRect(ctx, bgX, bgY, bgW, bgH, r);
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = "#ffffff";
       ctx.fill();
 
       ctx.drawImage(img, x, y, size, size);
@@ -141,7 +154,14 @@ async function overlayLogo(canvas: HTMLCanvasElement, cfg: { src: string; sizePc
   });
 }
 
-function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
   r = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
   ctx.moveTo(x + r, y);

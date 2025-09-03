@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { ActionButton, CopyButton, ResetButton } from '@/components/shared/action-buttons';
-import { InputField } from '@/components/shared/form-fields/input-field';
-import Stat from '@/components/shared/stat';
-import ToolPageHeader from '@/components/shared/tool-page-header';
-import { Badge } from '@/components/ui/badge';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard } from '@/components/ui/glass-card';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
-import { Cake, Calendar, HeartPulse, Info } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Cake, Calendar, HeartPulse, Info } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import Stat from "@/components/shared/stat";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 // Helpers
-const pad = (n: number, w = 2) => n.toString().padStart(w, '0');
+const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
 const msIn = {
   second: 1000,
   minute: 60 * 1000,
@@ -48,9 +48,9 @@ function clampDateString(s: string) {
 
 function getLocalTimeZone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   } catch {
-    return 'UTC';
+    return "UTC";
   }
 }
 
@@ -92,7 +92,15 @@ function diffYMD(from: Date, to: Date) {
 
 function nextBirthday(fromDob: Date, now: Date) {
   const y = now.getFullYear();
-  const candidate = new Date(y, fromDob.getMonth(), fromDob.getDate(), fromDob.getHours(), fromDob.getMinutes(), 0, 0);
+  const candidate = new Date(
+    y,
+    fromDob.getMonth(),
+    fromDob.getDate(),
+    fromDob.getHours(),
+    fromDob.getMinutes(),
+    0,
+    0,
+  );
   if (candidate < now) {
     candidate.setFullYear(y + 1);
   }
@@ -100,12 +108,12 @@ function nextBirthday(fromDob: Date, now: Date) {
 }
 
 function shortDate(d: Date, timeZone?: string) {
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat("en-GB", {
     timeZone,
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    weekday: 'short',
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    weekday: "short",
   }).format(d);
 }
 
@@ -114,8 +122,8 @@ export default function AgeCalculatorClient() {
 
   // Inputs
   const [hasTime, setHasTime] = useState(false);
-  const [dobDate, setDobDate] = useState<string>('');
-  const [dobTime, setDobTime] = useState<string>('00:00');
+  const [dobDate, setDobDate] = useState<string>("");
+  const [dobTime, setDobTime] = useState<string>("00:00");
 
   // Live clock (so "seconds alive" moves)
   const [now, setNow] = useState<Date>(new Date());
@@ -128,8 +136,8 @@ export default function AgeCalculatorClient() {
   const birth: Date | null = useMemo(() => {
     if (!dobDate) return null;
     const safe = clampDateString(dobDate);
-    const [y, m, d] = safe.split('-').map((n) => Number(n));
-    const [hh, mm] = (hasTime ? dobTime : '00:00').split(':').map((n) => Number(n));
+    const [y, m, d] = safe.split("-").map((n) => Number(n));
+    const [hh, mm] = (hasTime ? dobTime : "00:00").split(":").map((n) => Number(n));
     const dt = new Date(y, m - 1, d, hh, mm, 0, 0);
     return isNaN(dt.getTime()) ? null : dt;
   }, [dobDate, dobTime, hasTime]);
@@ -153,14 +161,14 @@ export default function AgeCalculatorClient() {
     const until = {
       days: Math.ceil(untilMs / msIn.day),
       exact: shortDate(nb),
-      weekday: new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(nb),
+      weekday: new Intl.DateTimeFormat("en-GB", { weekday: "long" }).format(nb),
     };
 
     // Milestones
     const milestones = [
-      { label: '10,000th day', at: new Date(birth.getTime() + 10000 * msIn.day) },
-      { label: '20,000th day', at: new Date(birth.getTime() + 20000 * msIn.day) },
-      { label: '1 billion seconds', at: new Date(birth.getTime() + 1_000_000_000 * msIn.second) },
+      { label: "10,000th day", at: new Date(birth.getTime() + 10000 * msIn.day) },
+      { label: "20,000th day", at: new Date(birth.getTime() + 20000 * msIn.day) },
+      { label: "1 billion seconds", at: new Date(birth.getTime() + 1_000_000_000 * msIn.second) },
     ];
 
     return { ymd, total, nb, until, milestones };
@@ -174,16 +182,16 @@ export default function AgeCalculatorClient() {
 
   const resetAll = () => {
     setHasTime(false);
-    setDobDate('');
-    setDobTime('00:00');
+    setDobDate("");
+    setDobTime("00:00");
   };
 
   // Hydrate from URL (if any)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
-    const date = p.get('date');
-    const time = p.get('time');
+    const date = p.get("date");
+    const time = p.get("time");
     if (date) setDobDate(date);
     if (time) {
       setDobTime(time);
@@ -192,8 +200,8 @@ export default function AgeCalculatorClient() {
   }, []);
 
   const params = new URLSearchParams();
-  if (dobDate) params.set('date', dobDate);
-  if (hasTime) params.set('time', dobTime);
+  if (dobDate) params.set("date", dobDate);
+  if (hasTime) params.set("time", dobTime);
   const link = `${window.location.href}?${params.toString()}`;
 
   const summary =
@@ -202,7 +210,7 @@ export default function AgeCalculatorClient() {
 Born: ${shortDate(birth)}
 Total: ${results?.total.days} days, ${results?.total.hours} hours
 Next birthday: ${results?.until.exact} (${results?.until.days} days)`
-      : '';
+      : "";
 
   return (
     <>
@@ -214,8 +222,18 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ActionButton variant="outline" Icon={Calendar} label="Use today" onClick={applyToday} />
-            <CopyButton variant="default" getText={() => link || ''} label="Copy link" disabled={!params || !link || !summary} />
+            <ActionButton
+              variant="outline"
+              Icon={Calendar}
+              label="Use today"
+              onClick={applyToday}
+            />
+            <CopyButton
+              variant="default"
+              getText={() => link || ""}
+              label="Copy link"
+              disabled={!params || !link || !summary}
+            />
           </>
         }
       />
@@ -225,16 +243,23 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
         <CardHeader>
           <CardTitle className="text-base">Your Birth Details</CardTitle>
           <CardDescription>
-            Enter date (and optionally time) of birth. We use your device zone: <span className="font-medium">{deviceTz}</span>.
+            Enter date (and optionally time) of birth. We use your device zone:{" "}
+            <span className="font-medium">{deviceTz}</span>.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <InputField label="Date of Birth" id="dob-date" type="date" value={dobDate} onChange={(e) => setDobDate(clampDateString(e.target.value))} />
+          <InputField
+            label="Date of Birth"
+            id="dob-date"
+            type="date"
+            value={dobDate}
+            onChange={(e) => setDobDate(clampDateString(e.target.value))}
+          />
 
           <div className="space-y-2">
             <InputField
               label="Time of Birth (optional)"
-              className={cn(!hasTime && 'opacity-50')}
+              className={cn(!hasTime && "opacity-50")}
               id="dob-time"
               type="time"
               value={dobTime}
@@ -268,10 +293,27 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
             <>
               {/* Stats Cards */}
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <Stat label="Age" value={`${results.ymd.years}y ${results.ymd.months}m ${results.ymd.days}d`} hint={`Born ${shortDate(birth)}`} />
-                <Stat label="Total Days" value={results.total.days.toLocaleString()} hint={`${results.total.hours.toLocaleString()} hours`} />
-                <Stat label="Total Minutes" value={results.total.minutes.toLocaleString()} hint={`${results.total.seconds.toLocaleString()} seconds`} />
-                <Stat label="Next Birthday" value={`${results.until.days} days`} hint={`${results.until.weekday}, ${results.until.exact}`} Icon={Cake} />
+                <Stat
+                  label="Age"
+                  value={`${results.ymd.years}y ${results.ymd.months}m ${results.ymd.days}d`}
+                  hint={`Born ${shortDate(birth)}`}
+                />
+                <Stat
+                  label="Total Days"
+                  value={results.total.days.toLocaleString()}
+                  hint={`${results.total.hours.toLocaleString()} hours`}
+                />
+                <Stat
+                  label="Total Minutes"
+                  value={results.total.minutes.toLocaleString()}
+                  hint={`${results.total.seconds.toLocaleString()} seconds`}
+                />
+                <Stat
+                  label="Next Birthday"
+                  value={`${results.until.days} days`}
+                  hint={`${results.until.weekday}, ${results.until.exact}`}
+                  Icon={Cake}
+                />
               </div>
 
               {/* Timeline-ish summary */}
@@ -279,13 +321,20 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
                 <div className="flex items-center justify-between">
                   <div className="text-sm">
                     <div>
-                      <span className="text-muted-foreground">Born:</span> <span className="font-medium">{shortDate(birth)}</span>
+                      <span className="text-muted-foreground">Born:</span>{" "}
+                      <span className="font-medium">{shortDate(birth)}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">As of now:</span> <span className="font-medium">{shortDate(now)}</span>
+                      <span className="text-muted-foreground">As of now:</span>{" "}
+                      <span className="font-medium">{shortDate(now)}</span>
                     </div>
                   </div>
-                  <CopyButton size="sm" variant="outline" getText={() => summary || ''} label="Copy summary" />
+                  <CopyButton
+                    size="sm"
+                    variant="outline"
+                    getText={() => summary || ""}
+                    label="Copy summary"
+                  />
                 </div>
               </div>
 
@@ -294,12 +343,17 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
                 <h3 className="text-sm font-medium">Milestones</h3>
                 <div className="grid gap-2 md:grid-cols-2">
                   {results.milestones.map((m) => (
-                    <div key={m.label} className="flex items-center justify-between rounded-md border p-3">
+                    <div
+                      key={m.label}
+                      className="flex items-center justify-between rounded-md border p-3"
+                    >
                       <div className="space-y-0.5">
                         <div className="font-medium">{m.label}</div>
                         <div className="text-xs text-muted-foreground">{shortDate(m.at)}</div>
                       </div>
-                      <Badge variant={m.at < now ? 'secondary' : 'default'}>{m.at < now ? 'Passed' : 'Upcoming'}</Badge>
+                      <Badge variant={m.at < now ? "secondary" : "default"}>
+                        {m.at < now ? "Passed" : "Upcoming"}
+                      </Badge>
                     </div>
                   ))}
                 </div>

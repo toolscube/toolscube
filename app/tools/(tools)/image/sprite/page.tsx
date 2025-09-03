@@ -1,25 +1,46 @@
-'use client';
+"use client";
 
-import { ArrowDown, ArrowUp, Brush, Check, Copy, Download, Grid2X2, Info, LayoutGrid, Loader2, MoveHorizontal, RotateCcw, Trash2, Upload } from 'lucide-react';
-import * as React from 'react';
-import { useDropzone } from 'react-dropzone';
+import {
+  ArrowDown,
+  ArrowUp,
+  Brush,
+  Check,
+  Copy,
+  Download,
+  Grid2X2,
+  Info,
+  LayoutGrid,
+  Loader2,
+  MoveHorizontal,
+  RotateCcw,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import * as React from "react";
+import { useDropzone } from "react-dropzone";
 
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 /* ---------------- types ---------------- */
-type LayoutMode = 'grid';
-type SizeMode = 'uniform' | 'auto';
-type OutFormat = 'png' | 'webp';
+type LayoutMode = "grid";
+type SizeMode = "uniform" | "auto";
+type OutFormat = "png" | "webp";
 
 interface LoadedIcon {
   id: string;
@@ -43,33 +64,33 @@ interface SpritePlacement {
 export default function SpriteSheetPage() {
   const [icons, setIcons] = React.useState<LoadedIcon[]>([]);
   const [running, setRunning] = React.useState(false);
-  const [log, setLog] = React.useState('');
+  const [log, setLog] = React.useState("");
   const [copied, setCopied] = React.useState(false);
 
   // Layout / sizing
-  const [layout] = React.useState<LayoutMode>('grid');
-  const [sizeMode, setSizeMode] = React.useState<SizeMode>('uniform');
+  const [layout] = React.useState<LayoutMode>("grid");
+  const [sizeMode, setSizeMode] = React.useState<SizeMode>("uniform");
   const [columns, setColumns] = React.useState<number>(8);
-  const [cellW, setCellW] = React.useState<number | ''>('');
-  const [cellH, setCellH] = React.useState<number | ''>('');
+  const [cellW, setCellW] = React.useState<number | "">("");
+  const [cellH, setCellH] = React.useState<number | "">("");
   const [gap, setGap] = React.useState(2);
   const [pad, setPad] = React.useState(2);
 
   // Output
-  const [fmt, setFmt] = React.useState<OutFormat>('png');
+  const [fmt, setFmt] = React.useState<OutFormat>("png");
   const [quality, setQuality] = React.useState(90); // webp only
   const [transparent, setTransparent] = React.useState(true);
-  const [bg, setBg] = React.useState('#ffffff');
+  const [bg, setBg] = React.useState("#ffffff");
 
   // CSS
-  const [sheetClass, setSheetClass] = React.useState('sprite');
-  const [classPrefix, setClassPrefix] = React.useState('icon');
+  const [sheetClass, setSheetClass] = React.useState("sprite");
+  const [classPrefix, setClassPrefix] = React.useState("icon");
 
   // dropzone
   const onDrop = React.useCallback(async (files: File[]) => {
     const next: LoadedIcon[] = [];
     for (const f of files) {
-      if (!f.type.startsWith('image/')) continue;
+      if (!f.type.startsWith("image/")) continue;
       const url = URL.createObjectURL(f);
       const { width, height } = await loadImageMeta(url);
       next.push({
@@ -82,20 +103,20 @@ export default function SpriteSheetPage() {
       });
     }
     setIcons((prev) => [...prev, ...next]);
-    setLog((l) => l + (next.length ? `Added ${next.length} file(s)\n` : ''));
+    setLog((l) => l + (next.length ? `Added ${next.length} file(s)\n` : ""));
   }, []);
 
   React.useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       const item = e.clipboardData?.files?.[0];
-      if (item && item.type.startsWith('image/')) onDrop([item]);
+      if (item && item.type.startsWith("image/")) onDrop([item]);
     }
-    window.addEventListener('paste', onPaste);
-    return () => window.removeEventListener('paste', onPaste);
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
   }, [onDrop]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'image/*': [] },
+    accept: { "image/*": [] },
     multiple: true,
     onDrop,
   });
@@ -104,19 +125,19 @@ export default function SpriteSheetPage() {
     icons.forEach((i) => URL.revokeObjectURL(i.url));
     setIcons([]);
     setRunning(false);
-    setLog('');
+    setLog("");
     setColumns(8);
-    setSizeMode('uniform');
-    setCellW('');
-    setCellH('');
+    setSizeMode("uniform");
+    setCellW("");
+    setCellH("");
     setGap(2);
     setPad(2);
-    setFmt('png');
+    setFmt("png");
     setQuality(90);
     setTransparent(true);
-    setBg('#ffffff');
-    setSheetClass('sprite');
-    setClassPrefix('icon');
+    setBg("#ffffff");
+    setSheetClass("sprite");
+    setClassPrefix("icon");
   }
 
   function removeAt(idx: number) {
@@ -142,7 +163,7 @@ export default function SpriteSheetPage() {
     if (icons.length === 0) return;
     try {
       setRunning(true);
-      setLog('Building sprite…');
+      setLog("Building sprite…");
 
       const settings = calculateSettings(icons, {
         sizeMode,
@@ -155,13 +176,13 @@ export default function SpriteSheetPage() {
 
       const { canvas, placements } = await buildSprite(icons, settings);
 
-      const mime = fmt === 'png' ? 'image/png' : 'image/webp';
-      const q = fmt === 'webp' ? Math.min(1, Math.max(0.01, quality / 100)) : 1;
+      const mime = fmt === "png" ? "image/png" : "image/webp";
+      const q = fmt === "webp" ? Math.min(1, Math.max(0.01, quality / 100)) : 1;
 
-      if (!transparent && fmt === 'png') {
+      if (!transparent && fmt === "png") {
         // flatten to solid bg if requested
         fillBackground(canvas, bg);
-      } else if (!transparent && fmt === 'webp') {
+      } else if (!transparent && fmt === "webp") {
         fillBackground(canvas, bg);
       } else if (transparent) {
         // ensure transparent background
@@ -187,7 +208,9 @@ export default function SpriteSheetPage() {
           image: spriteName,
           width: canvas.width,
           height: canvas.height,
-          sprites: placements.reduce<Record<string, { x: number; y: number; w: number; h: number }>>((acc, p) => {
+          sprites: placements.reduce<
+            Record<string, { x: number; y: number; w: number; h: number }>
+          >((acc, p) => {
             acc[p.name] = { x: p.x, y: p.y, w: p.w, h: p.h };
             return acc;
           }, {}),
@@ -196,10 +219,14 @@ export default function SpriteSheetPage() {
         2,
       );
 
-      triggerDownload(new Blob([css], { type: 'text/css;charset=utf-8' }), 'sprite.css');
-      triggerDownload(new Blob([json], { type: 'application/json;charset=utf-8' }), 'sprite.json');
+      triggerDownload(new Blob([css], { type: "text/css;charset=utf-8" }), "sprite.css");
+      triggerDownload(new Blob([json], { type: "application/json;charset=utf-8" }), "sprite.json");
 
-      setLog(`Done → ${spriteName} (${formatBytes(blob.size)})\n` + `Also generated sprite.css and sprite.json\n` + `Sheet: ${canvas.width}×${canvas.height}px, Icons: ${icons.length}\n`);
+      setLog(
+        `Done → ${spriteName} (${formatBytes(blob.size)})\n` +
+          `Also generated sprite.css and sprite.json\n` +
+          `Sheet: ${canvas.width}×${canvas.height}px, Icons: ${icons.length}\n`,
+      );
     } catch (err: any) {
       setLog(`Error: ${err?.message || String(err)}`);
     } finally {
@@ -208,7 +235,7 @@ export default function SpriteSheetPage() {
   }
 
   function copyLog() {
-    navigator.clipboard.writeText(log || '').then(() => {
+    navigator.clipboard.writeText(log || "").then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1100);
     });
@@ -227,15 +254,22 @@ export default function SpriteSheetPage() {
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               <LayoutGrid className="h-6 w-6" /> Sprite Sheet Maker
             </h1>
-            <p className="text-sm text-muted-foreground">Combine icons into a single image with generated CSS classes & JSON map. Drag & drop, paste (Ctrl/Cmd+V), or click to upload.</p>
+            <p className="text-sm text-muted-foreground">
+              Combine icons into a single image with generated CSS classes & JSON map. Drag & drop,
+              paste (Ctrl/Cmd+V), or click to upload.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={resetAll} className="gap-2">
               <RotateCcw className="h-4 w-4" /> Reset
             </Button>
             <Button onClick={run} className="gap-2" disabled={!icons.length || running}>
-              {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {running ? 'Building…' : 'Build & Download'}
+              {running ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {running ? "Building…" : "Build & Download"}
             </Button>
           </div>
         </GlassCard>
@@ -251,23 +285,28 @@ export default function SpriteSheetPage() {
             <div
               {...getRootProps()}
               className={cn(
-                'group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition',
-                isDragActive ? 'border-primary bg-primary/5' : 'hover:bg-muted/40',
-              )}>
+                "group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition",
+                isDragActive ? "border-primary bg-primary/5" : "hover:bg-muted/40",
+              )}
+            >
               <input {...getInputProps()} />
               <div className="pointer-events-none flex flex-col items-center gap-2 text-center">
                 <div className="rounded-full bg-primary/10 p-3">
                   <Upload className="h-6 w-6 text-primary" />
                 </div>
                 <p className="text-sm font-medium">Drop images here, or click to browse</p>
-                <p className="text-xs text-muted-foreground">PNG, JPEG, WEBP, GIF, SVG (GIF/SVG will be rasterized)</p>
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPEG, WEBP, GIF, SVG (GIF/SVG will be rasterized)
+                </p>
               </div>
             </div>
 
             {/* List */}
             <div className="grid gap-3">
               {icons.length === 0 ? (
-                <div className="rounded-lg border p-3 text-sm text-muted-foreground">No files yet — add some icons to build a sprite.</div>
+                <div className="rounded-lg border p-3 text-sm text-muted-foreground">
+                  No files yet — add some icons to build a sprite.
+                </div>
               ) : (
                 <div className="max-h-72 overflow-auto rounded-lg border">
                   <table className="w-full text-sm">
@@ -289,8 +328,8 @@ export default function SpriteSheetPage() {
                                   className="block h-full w-full"
                                   style={{
                                     backgroundImage: `url(${ic.url})`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
                                   }}
                                 />
                               </span>
@@ -302,13 +341,30 @@ export default function SpriteSheetPage() {
                           </td>
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-2">
-                              <Button size="icon" variant="outline" onClick={() => move(i, -1)} disabled={i === 0} title="Move up">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => move(i, -1)}
+                                disabled={i === 0}
+                                title="Move up"
+                              >
                                 <ArrowUp className="h-4 w-4" />
                               </Button>
-                              <Button size="icon" variant="outline" onClick={() => move(i, +1)} disabled={i === icons.length - 1} title="Move down">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => move(i, +1)}
+                                disabled={i === icons.length - 1}
+                                title="Move down"
+                              >
                                 <ArrowDown className="h-4 w-4" />
                               </Button>
-                              <Button size="icon" variant="outline" onClick={() => removeAt(i)} title="Remove">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => removeAt(i)}
+                                title="Remove"
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -337,7 +393,13 @@ export default function SpriteSheetPage() {
                   <Grid2X2 className="h-4 w-4" /> Columns
                 </Label>
                 <div className="flex items-center gap-3">
-                  <Input type="number" min={1} value={columns} onChange={(e) => setColumns(Math.max(1, Number(e.target.value || 1)))} className="w-28" />
+                  <Input
+                    type="number"
+                    min={1}
+                    value={columns}
+                    onChange={(e) => setColumns(Math.max(1, Number(e.target.value || 1)))}
+                    className="w-28"
+                  />
                   <div className="text-xs text-muted-foreground">Row-major placement</div>
                 </div>
               </div>
@@ -346,14 +408,26 @@ export default function SpriteSheetPage() {
                 <Label className="flex items-center gap-2">
                   <MoveHorizontal className="h-4 w-4" /> Gap (px)
                 </Label>
-                <Slider min={0} max={32} step={1} value={[gap]} onValueChange={([v]) => setGap(v)} />
+                <Slider
+                  min={0}
+                  max={32}
+                  step={1}
+                  value={[gap]}
+                  onValueChange={([v]) => setGap(v)}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Brush className="h-4 w-4" /> Padding (px)
                 </Label>
-                <Slider min={0} max={32} step={1} value={[pad]} onValueChange={([v]) => setPad(v)} />
+                <Slider
+                  min={0}
+                  max={32}
+                  step={1}
+                  value={[pad]}
+                  onValueChange={([v]) => setPad(v)}
+                />
               </div>
 
               <div className="space-y-2">
@@ -367,19 +441,33 @@ export default function SpriteSheetPage() {
                     <SelectItem value="auto">Auto (use intrinsic)</SelectItem>
                   </SelectContent>
                 </Select>
-                {sizeMode === 'uniform' ? (
+                {sizeMode === "uniform" ? (
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Cell W</Label>
-                      <Input type="number" min={1} placeholder={`${Math.max(1, maxW)}`} value={cellW} onChange={(e) => setCellW(numOrEmpty(e.target.value))} />
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder={`${Math.max(1, maxW)}`}
+                        value={cellW}
+                        onChange={(e) => setCellW(numOrEmpty(e.target.value))}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Cell H</Label>
-                      <Input type="number" min={1} placeholder={`${Math.max(1, maxH)}`} value={cellH} onChange={(e) => setCellH(numOrEmpty(e.target.value))} />
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder={`${Math.max(1, maxH)}`}
+                        value={cellH}
+                        onChange={(e) => setCellH(numOrEmpty(e.target.value))}
+                      />
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Each sprite keeps its own width/height.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Each sprite keeps its own width/height.
+                  </p>
                 )}
               </div>
             </div>
@@ -399,13 +487,20 @@ export default function SpriteSheetPage() {
                 </Select>
               </div>
 
-              {fmt === 'webp' && (
+              {fmt === "webp" && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="quality">Quality</Label>
                     <span className="text-xs text-muted-foreground">{quality}</span>
                   </div>
-                  <Slider id="quality" min={1} max={100} step={1} value={[quality]} onValueChange={([q]) => setQuality(q)} />
+                  <Slider
+                    id="quality"
+                    min={1}
+                    max={100}
+                    step={1}
+                    value={[quality]}
+                    onValueChange={([q]) => setQuality(q)}
+                  />
                 </div>
               )}
 
@@ -419,8 +514,18 @@ export default function SpriteSheetPage() {
                 </div>
                 {!transparent && (
                   <div className="mt-2 flex items-center gap-3">
-                    <Input type="color" className="h-9 w-16 p-1" value={bg} onChange={(e) => setBg(e.target.value)} />
-                    <Input aria-label="Background hex" value={bg} onChange={(e) => setBg(e.target.value)} className="w-36" />
+                    <Input
+                      type="color"
+                      className="h-9 w-16 p-1"
+                      value={bg}
+                      onChange={(e) => setBg(e.target.value)}
+                    />
+                    <Input
+                      aria-label="Background hex"
+                      value={bg}
+                      onChange={(e) => setBg(e.target.value)}
+                      className="w-36"
+                    />
                   </div>
                 )}
               </div>
@@ -429,11 +534,19 @@ export default function SpriteSheetPage() {
                 <Label>CSS Classes</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Input value={sheetClass} onChange={(e) => setSheetClass(e.target.value)} placeholder="sprite" />
+                    <Input
+                      value={sheetClass}
+                      onChange={(e) => setSheetClass(e.target.value)}
+                      placeholder="sprite"
+                    />
                     <div className="text-xs text-muted-foreground">Base class (sprite sheet)</div>
                   </div>
                   <div className="space-y-1">
-                    <Input value={classPrefix} onChange={(e) => setClassPrefix(e.target.value)} placeholder="icon" />
+                    <Input
+                      value={classPrefix}
+                      onChange={(e) => setClassPrefix(e.target.value)}
+                      placeholder="icon"
+                    />
                     <div className="text-xs text-muted-foreground">Per-icon class prefix</div>
                   </div>
                 </div>
@@ -449,7 +562,8 @@ export default function SpriteSheetPage() {
                     Image: <span className="font-medium">sprite.png/webp</span>
                   </li>
                   <li>
-                    CSS: <span className="font-medium">.sprite</span> container + <span className="font-medium">.{classPrefix}-name</span> classes
+                    CSS: <span className="font-medium">.sprite</span> container +{" "}
+                    <span className="font-medium">.{classPrefix}-name</span> classes
                   </li>
                   <li>JSON map with x/y/w/h for each icon</li>
                 </ul>
@@ -469,11 +583,17 @@ export default function SpriteSheetPage() {
           <CardContent>
             <Textarea readOnly value={log} className="min-h-[120px] font-mono" />
             <div className="mt-2 flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={copyLog} disabled={!log}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={copyLog}
+                disabled={!log}
+              >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 Copy
               </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog('')}>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog("")}>
                 Clear
               </Button>
             </div>
@@ -490,8 +610,8 @@ function calculateSettings(
   icons: LoadedIcon[],
   opts: {
     sizeMode: SizeMode;
-    cellW: number | '';
-    cellH: number | '';
+    cellW: number | "";
+    cellH: number | "";
     columns: number;
     gap: number;
     pad: number;
@@ -499,10 +619,12 @@ function calculateSettings(
 ) {
   const maxW = Math.max(...icons.map((i) => i.width));
   const maxH = Math.max(...icons.map((i) => i.height));
-  const cellWidth = opts.sizeMode === 'uniform' ? (typeof opts.cellW === 'number' ? opts.cellW : maxW) : 0;
-  const cellHeight = opts.sizeMode === 'uniform' ? (typeof opts.cellH === 'number' ? opts.cellH : maxH) : 0;
+  const cellWidth =
+    opts.sizeMode === "uniform" ? (typeof opts.cellW === "number" ? opts.cellW : maxW) : 0;
+  const cellHeight =
+    opts.sizeMode === "uniform" ? (typeof opts.cellH === "number" ? opts.cellH : maxH) : 0;
   return {
-    layout: 'grid' as const,
+    layout: "grid" as const,
     columns: Math.max(1, Math.floor(opts.columns)),
     gap: Math.max(0, Math.floor(opts.gap)),
     pad: Math.max(0, Math.floor(opts.pad)),
@@ -512,8 +634,13 @@ function calculateSettings(
   };
 }
 
-async function buildSprite(icons: LoadedIcon[], settings: ReturnType<typeof calculateSettings>): Promise<{ canvas: HTMLCanvasElement; placements: SpritePlacement[] }> {
-  const imgs = await Promise.all(icons.map((i) => createImageElement(i.url).then((el) => ({ el, ic: i }))));
+async function buildSprite(
+  icons: LoadedIcon[],
+  settings: ReturnType<typeof calculateSettings>,
+): Promise<{ canvas: HTMLCanvasElement; placements: SpritePlacement[] }> {
+  const imgs = await Promise.all(
+    icons.map((i) => createImageElement(i.url).then((el) => ({ el, ic: i }))),
+  );
 
   const n = icons.length;
   const cols = settings.columns;
@@ -522,7 +649,7 @@ async function buildSprite(icons: LoadedIcon[], settings: ReturnType<typeof calc
   let sheetW = 0;
   let sheetH = 0;
 
-  if (settings.sizeMode === 'uniform') {
+  if (settings.sizeMode === "uniform") {
     // grid of fixed cells
     sheetW = settings.pad * 2 + settings.cellW * cols + settings.gap * (cols - 1);
     sheetH = settings.pad * 2 + settings.cellH * rows + settings.gap * (rows - 1);
@@ -540,17 +667,17 @@ async function buildSprite(icons: LoadedIcon[], settings: ReturnType<typeof calc
     sheetH = settings.pad * 2 + rowHeights.reduce((a, b) => a + b, 0) + settings.gap * (rows - 1);
   }
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(sheetW));
   canvas.height = Math.max(1, Math.round(sheetH));
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('2D context unavailable');
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D context unavailable");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const placements: SpritePlacement[] = [];
 
   // Draw
-  if (settings.sizeMode === 'uniform') {
+  if (settings.sizeMode === "uniform") {
     for (let i = 0; i < n; i++) {
       const c = i % cols;
       const r = Math.floor(i / cols);
@@ -600,10 +727,17 @@ async function buildSprite(icons: LoadedIcon[], settings: ReturnType<typeof calc
 
 /* ---------------- CSS generation ---------------- */
 
-function generateCSS(opts: { placements: SpritePlacement[]; sheetClass: string; classPrefix: string; spriteFilename: string; sheetW: number; sheetH: number }) {
+function generateCSS(opts: {
+  placements: SpritePlacement[];
+  sheetClass: string;
+  classPrefix: string;
+  spriteFilename: string;
+  sheetW: number;
+  sheetH: number;
+}) {
   const { placements, sheetClass, classPrefix, spriteFilename, sheetW, sheetH } = opts;
 
-  const esc = (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, '-');
+  const esc = (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, "-");
 
   const lines: string[] = [];
   lines.push(`.${sheetClass} {`);
@@ -611,13 +745,13 @@ function generateCSS(opts: { placements: SpritePlacement[]; sheetClass: string; 
   lines.push(`  background-repeat: no-repeat;`);
   lines.push(`  display: inline-block;`);
   lines.push(`}`);
-  lines.push('');
+  lines.push("");
 
   // helpful for responsive scaling via background-size if needed
   lines.push(`/* Sheet size: ${sheetW}x${sheetH}px */`);
 
   for (const p of placements) {
-    const cls = `.${classPrefix}-${esc(p.name.replace(/\.[^.]+$/, ''))}`;
+    const cls = `.${classPrefix}-${esc(p.name.replace(/\.[^.]+$/, ""))}`;
     lines.push(`${cls} {`);
     lines.push(`  width: ${p.w}px;`);
     lines.push(`  height: ${p.h}px;`);
@@ -625,32 +759,32 @@ function generateCSS(opts: { placements: SpritePlacement[]; sheetClass: string; 
     lines.push(`}`);
   }
 
-  return lines.join('\n') + '\n';
+  return lines.join("\n") + "\n";
 }
 
 /* ---------------- helpers ---------------- */
 
-function numOrEmpty(v: string): number | '' {
+function numOrEmpty(v: string): number | "" {
   const n = Number(v);
-  return isNaN(n) ? '' : n;
+  return isNaN(n) ? "" : n;
 }
 
 function sanitizeName(name: string) {
-  return name.replace(/\s+/g, '-').toLowerCase();
+  return name.replace(/\s+/g, "-").toLowerCase();
 }
 
 function cryptoRandom() {
-  if ('randomUUID' in crypto) return (crypto as any).randomUUID();
+  if ("randomUUID" in crypto) return (crypto as any).randomUUID();
   return Math.random().toString(36).slice(2);
 }
 
 function fillBackground(canvas: HTMLCanvasElement, color: string) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
   ctx.save();
-  ctx.globalCompositeOperation = 'destination-over';
-  ctx.fillStyle = color || '#ffffff';
+  ctx.globalCompositeOperation = "destination-over";
+  ctx.fillStyle = color || "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 }
@@ -667,7 +801,7 @@ function loadImageMeta(url: string): Promise<{ width: number; height: number }> 
 function createImageElement(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = url;
@@ -676,13 +810,13 @@ function createImageElement(url: string): Promise<HTMLImageElement> {
 
 function canvasToBlob(canvas: HTMLCanvasElement, mime: string, q: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Failed to encode sprite'))), mime, q);
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode sprite"))), mime, q);
   });
 }
 
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -692,7 +826,7 @@ function triggerDownload(blob: Blob, filename: string) {
 }
 
 function formatBytes(bytes: number) {
-  const units = ['B', 'KB', 'MB', 'GB'];
+  const units = ["B", "KB", "MB", "GB"];
   let i = 0;
   let n = bytes;
   while (n >= 1024 && i < units.length - 1) {

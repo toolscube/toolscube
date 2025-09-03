@@ -1,6 +1,6 @@
 // Base64 Encoder / Decoder
-type Mode = 'encode' | 'decode';
-type TabKey = 'text' | 'file';
+type Mode = "encode" | "decode";
+type TabKey = "text" | "file";
 
 type FileInfo = {
   name: string;
@@ -9,14 +9,31 @@ type FileInfo = {
 };
 
 // Case Converter
-type CaseMode = 'upper' | 'lower' | 'title' | 'sentence' | 'camel' | 'pascal' | 'snake' | 'kebab' | 'constant' | 'capitalized' | 'alternating' | 'invert';
+type CaseMode =
+  | "upper"
+  | "lower"
+  | "title"
+  | "sentence"
+  | "camel"
+  | "pascal"
+  | "snake"
+  | "kebab"
+  | "constant"
+  | "capitalized"
+  | "alternating"
+  | "invert";
 
-type PipelineToggle = 'trim' | 'collapseSpaces' | 'removePunctuation' | 'normalizeQuotes' | 'removeDiacritics';
+type PipelineToggle =
+  | "trim"
+  | "collapseSpaces"
+  | "removePunctuation"
+  | "normalizeQuotes"
+  | "removeDiacritics";
 
 // slugify
-type DelimiterChar = '-' | '_' | '';
-type DelimiterKey = 'dash' | 'underscore' | 'none';
-type Mode = 'single' | 'batch';
+type DelimiterChar = "-" | "_" | "";
+type DelimiterKey = "dash" | "underscore" | "none";
+type Mode = "single" | "batch";
 
 type Options = {
   delimiter: DelimiterChar;
@@ -35,4 +52,4 @@ type Options = {
 type DensityRow = { word: string; count: number; percent: number };
 
 // Text Clear
-type CaseMode = 'none' | 'lower' | 'upper' | 'sentence' | 'title';
+type CaseMode = "none" | "lower" | "upper" | "sentence" | "title";

@@ -1,49 +1,60 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeftRight, Calculator, Check, Copy, Download, RotateCcw, Tag } from 'lucide-react';
+import { ArrowLeftRight, Calculator, Check, Copy, Download, RotateCcw, Tag } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 // ===== Types =====
-type Currency = 'BDT' | 'USD' | 'INR';
-type Mode = 'forward' | 'reverse'; // forward: compute final price from discount; reverse: compute needed discount from final price
+type Currency = "BDT" | "USD" | "INR";
+type Mode = "forward" | "reverse"; // forward: compute final price from discount; reverse: compute needed discount from final price
 
 // ===== Helpers =====
 function parseNum(n: string | number): number {
-  const v = typeof n === 'number' ? n : Number(String(n).replace(/,/g, '').trim());
+  const v = typeof n === "number" ? n : Number(String(n).replace(/,/g, "").trim());
   return Number.isFinite(v) ? v : 0;
 }
 
 function fmt(n: number, currency: Currency) {
   const code = currency;
-  const locale = currency === 'USD' ? 'en-US' : 'en-IN';
-  return new Intl.NumberFormat(locale, { style: 'currency', currency: code, maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100);
+  const locale = currency === "USD" ? "en-US" : "en-IN";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: code,
+    maximumFractionDigits: 2,
+  }).format(Math.round(n * 100) / 100);
 }
 
 function qs(k: string, fallback: string) {
-  if (typeof window === 'undefined') return fallback;
+  if (typeof window === "undefined") return fallback;
   return new URLSearchParams(window.location.search).get(k) ?? fallback;
 }
 function setParams(params: Record<string, string | number>) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
-  window.history.replaceState({}, '', url.toString());
+  window.history.replaceState({}, "", url.toString());
 }
 
 function csvDownload(filename: string, rows: (string | number)[][]) {
-  const content = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const content = rows
+    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -55,23 +66,23 @@ function csvDownload(filename: string, rows: (string | number)[][]) {
 // ===== Page =====
 export default function DiscountFinderPage() {
   // Query-backed defaults
-  const [currency, setCurrency] = useState<Currency>((qs('c', 'BDT') as Currency) || 'BDT');
-  const [mode, setMode] = useState<Mode>((qs('m', 'forward') as Mode) || 'forward');
+  const [currency, setCurrency] = useState<Currency>((qs("c", "BDT") as Currency) || "BDT");
+  const [mode, setMode] = useState<Mode>((qs("m", "forward") as Mode) || "forward");
 
-  const [original, setOriginal] = useState<string>(qs('op', '1200') || '1200'); // Original price (single unit)
-  const [discountPct, setDiscountPct] = useState<string>(qs('dp', '15') || '15'); // % discount
-  const [extraPct, setExtraPct] = useState<string>(qs('xp', '0') || '0'); // stacked extra % discount
-  const [fixedOff, setFixedOff] = useState<string>(qs('fx', '0') || '0'); // fixed amount off
-  const [taxPct, setTaxPct] = useState<string>(qs('tx', '0') || '0'); // tax applied after discounts
-  const [qty, setQty] = useState<string>(qs('q', '1') || '1'); // quantity
+  const [original, setOriginal] = useState<string>(qs("op", "1200") || "1200"); // Original price (single unit)
+  const [discountPct, setDiscountPct] = useState<string>(qs("dp", "15") || "15"); // % discount
+  const [extraPct, setExtraPct] = useState<string>(qs("xp", "0") || "0"); // stacked extra % discount
+  const [fixedOff, setFixedOff] = useState<string>(qs("fx", "0") || "0"); // fixed amount off
+  const [taxPct, setTaxPct] = useState<string>(qs("tx", "0") || "0"); // tax applied after discounts
+  const [qty, setQty] = useState<string>(qs("q", "1") || "1"); // quantity
 
   // Reverse mode: target final price
-  const [targetFinal, setTargetFinal] = useState<string>(qs('tf', '') || '');
+  const [targetFinal, setTargetFinal] = useState<string>(qs("tf", "") || "");
 
   // Optional “compare to” competitor price
-  const [compare, setCompare] = useState<string>(qs('cmp', '') || '');
+  const [compare, setCompare] = useState<string>(qs("cmp", "") || "");
 
-  const [copied, setCopied] = useState<'link' | 'summary' | null>(null);
+  const [copied, setCopied] = useState<"link" | "summary" | null>(null);
 
   // History
   const [history, setHistory] = useState<
@@ -92,12 +103,15 @@ export default function DiscountFinderPage() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('df_history');
+      const raw = localStorage.getItem("df_history");
       const parsed = raw ? JSON.parse(raw) : [];
       if (Array.isArray(parsed)) setHistory(parsed);
     } catch {}
   }, []);
-  useEffect(() => localStorage.setItem('df_history', JSON.stringify(history.slice(0, 50))), [history]);
+  useEffect(
+    () => localStorage.setItem("df_history", JSON.stringify(history.slice(0, 50))),
+    [history],
+  );
 
   // Keep URL synced
   useEffect(() => {
@@ -113,7 +127,18 @@ export default function DiscountFinderPage() {
       tf: parseNum(targetFinal),
       cmp: parseNum(compare),
     });
-  }, [currency, mode, original, discountPct, extraPct, fixedOff, taxPct, qty, targetFinal, compare]);
+  }, [
+    currency,
+    mode,
+    original,
+    discountPct,
+    extraPct,
+    fixedOff,
+    taxPct,
+    qty,
+    targetFinal,
+    compare,
+  ]);
 
   // Numbers
   const o = useMemo(() => Math.max(0, parseNum(original)), [original]);
@@ -208,15 +233,39 @@ export default function DiscountFinderPage() {
 
   function exportHistoryCSV() {
     const rows: (string | number)[][] = [
-      ['Time', 'Mode', 'Original', 'Discount %', 'Extra %', 'Fixed Off', 'Tax %', 'Qty', 'Final Each', 'Final Total', 'Effective %'],
-      ...history.map((r) => [r.ts, r.mode, r.original, r.discountPct, r.extraPct, r.fixedOff, r.taxPct, r.qty, r.finalEach, r.finalTotal, r.effectivePct]),
+      [
+        "Time",
+        "Mode",
+        "Original",
+        "Discount %",
+        "Extra %",
+        "Fixed Off",
+        "Tax %",
+        "Qty",
+        "Final Each",
+        "Final Total",
+        "Effective %",
+      ],
+      ...history.map((r) => [
+        r.ts,
+        r.mode,
+        r.original,
+        r.discountPct,
+        r.extraPct,
+        r.fixedOff,
+        r.taxPct,
+        r.qty,
+        r.finalEach,
+        r.finalTotal,
+        r.effectivePct,
+      ]),
     ];
-    csvDownload('discount-history.csv', rows);
+    csvDownload("discount-history.csv", rows);
   }
 
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
-  function copy(text: string, key: 'link' | 'summary') {
+  function copy(text: string, key: "link" | "summary") {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(key);
       setTimeout(() => setCopied(null), 1200);
@@ -234,28 +283,36 @@ export default function DiscountFinderPage() {
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               <Tag className="h-6 w-6" /> Discount Finder
             </h1>
-            <p className="text-sm text-muted-foreground">Before/after price, savings, and effective discount.</p>
+            <p className="text-sm text-muted-foreground">
+              Before/after price, savings, and effective discount.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="gap-2" onClick={() => setMode(mode === 'forward' ? 'reverse' : 'forward')}>
-              <ArrowLeftRight className="h-4 w-4" /> {mode === 'forward' ? 'Switch to Reverse' : 'Switch to Forward'}
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setMode(mode === "forward" ? "reverse" : "forward")}
+            >
+              <ArrowLeftRight className="h-4 w-4" />{" "}
+              {mode === "forward" ? "Switch to Reverse" : "Switch to Forward"}
             </Button>
             <Button
               variant="outline"
               onClick={() => {
-                setCurrency('BDT');
-                setMode('forward');
-                setOriginal('1200');
-                setDiscountPct('15');
-                setExtraPct('0');
-                setFixedOff('0');
-                setTaxPct('0');
-                setQty('1');
-                setCompare('');
-                setTargetFinal('');
+                setCurrency("BDT");
+                setMode("forward");
+                setOriginal("1200");
+                setDiscountPct("15");
+                setExtraPct("0");
+                setFixedOff("0");
+                setTaxPct("0");
+                setQty("1");
+                setCompare("");
+                setTargetFinal("");
                 setCopied(null);
               }}
-              className="gap-2">
+              className="gap-2"
+            >
               <RotateCcw className="h-4 w-4" /> Reset
             </Button>
             <Button onClick={saveHistory} className="gap-2">
@@ -268,7 +325,9 @@ export default function DiscountFinderPage() {
         <GlassCard className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Inputs</CardTitle>
-            <CardDescription>Enter original price and discounts. Choose mode for reverse calculation.</CardDescription>
+            <CardDescription>
+              Enter original price and discounts. Choose mode for reverse calculation.
+            </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* Currency */}
@@ -289,23 +348,45 @@ export default function DiscountFinderPage() {
             {/* Original */}
             <div className="space-y-2">
               <Label htmlFor="original">Original Price (each)</Label>
-              <Input id="original" inputMode="decimal" value={original} onChange={(e) => setOriginal(e.target.value)} placeholder="e.g. 1200" />
+              <Input
+                id="original"
+                inputMode="decimal"
+                value={original}
+                onChange={(e) => setOriginal(e.target.value)}
+                placeholder="e.g. 1200"
+              />
             </div>
 
             {/* Qty */}
             <div className="space-y-2">
               <Label htmlFor="qty">Quantity</Label>
-              <Input id="qty" inputMode="numeric" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="e.g. 1" />
+              <Input
+                id="qty"
+                inputMode="numeric"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                placeholder="e.g. 1"
+              />
             </div>
 
             {/* % Discount */}
             <div className="space-y-2">
               <Label htmlFor="discount">Discount (%)</Label>
               <div className="flex items-center gap-2">
-                <Input id="discount" inputMode="decimal" value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} />
+                <Input
+                  id="discount"
+                  inputMode="decimal"
+                  value={discountPct}
+                  onChange={(e) => setDiscountPct(e.target.value)}
+                />
                 <div className="flex flex-wrap gap-1">
                   {presets.map((p) => (
-                    <Badge key={p} variant={parseNum(discountPct) === p ? 'default' : 'outline'} className="cursor-pointer" onClick={() => setDiscountPct(String(p))}>
+                    <Badge
+                      key={p}
+                      variant={parseNum(discountPct) === p ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => setDiscountPct(String(p))}
+                    >
                       {p}%
                     </Badge>
                   ))}
@@ -316,32 +397,62 @@ export default function DiscountFinderPage() {
             {/* Extra % */}
             <div className="space-y-2">
               <Label htmlFor="extra">Extra Discount (%)</Label>
-              <Input id="extra" inputMode="decimal" value={extraPct} onChange={(e) => setExtraPct(e.target.value)} placeholder="e.g. 5" />
+              <Input
+                id="extra"
+                inputMode="decimal"
+                value={extraPct}
+                onChange={(e) => setExtraPct(e.target.value)}
+                placeholder="e.g. 5"
+              />
             </div>
 
             {/* Fixed off */}
             <div className="space-y-2">
               <Label htmlFor="fixed">Fixed Off (each)</Label>
-              <Input id="fixed" inputMode="decimal" value={fixedOff} onChange={(e) => setFixedOff(e.target.value)} placeholder="e.g. 100" />
+              <Input
+                id="fixed"
+                inputMode="decimal"
+                value={fixedOff}
+                onChange={(e) => setFixedOff(e.target.value)}
+                placeholder="e.g. 100"
+              />
             </div>
 
             {/* Tax */}
             <div className="space-y-2">
               <Label htmlFor="tax">Tax (%)</Label>
-              <Input id="tax" inputMode="decimal" value={taxPct} onChange={(e) => setTaxPct(e.target.value)} placeholder="e.g. 0 or 7.5" />
+              <Input
+                id="tax"
+                inputMode="decimal"
+                value={taxPct}
+                onChange={(e) => setTaxPct(e.target.value)}
+                placeholder="e.g. 0 or 7.5"
+              />
             </div>
 
             {/* Compare */}
             <div className="space-y-2">
               <Label htmlFor="compare">Competitor Price (each, optional)</Label>
-              <Input id="compare" inputMode="decimal" value={compare} onChange={(e) => setCompare(e.target.value)} placeholder="e.g. 999" />
+              <Input
+                id="compare"
+                inputMode="decimal"
+                value={compare}
+                onChange={(e) => setCompare(e.target.value)}
+                placeholder="e.g. 999"
+              />
             </div>
 
             {/* Reverse target */}
-            {mode === 'reverse' && (
+            {mode === "reverse" && (
               <div className="space-y-2">
                 <Label htmlFor="target">Target Final Price (each)</Label>
-                <Input id="target" inputMode="decimal" value={targetFinal} onChange={(e) => setTargetFinal(e.target.value)} placeholder="e.g. 950" />
+                <Input
+                  id="target"
+                  inputMode="decimal"
+                  value={targetFinal}
+                  onChange={(e) => setTargetFinal(e.target.value)}
+                  placeholder="e.g. 950"
+                />
               </div>
             )}
           </CardContent>
@@ -355,9 +466,15 @@ export default function DiscountFinderPage() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border p-4">
-              <div className="text-xs text-muted-foreground">Price After Discounts (pre-tax, each)</div>
-              <div className="mt-1 text-xl font-semibold">{fmt(discountedEachBeforeTax, currency)}</div>
-              <div className="mt-1 text-xs text-muted-foreground">Effective discount: {effectivePct.toFixed(2)}%</div>
+              <div className="text-xs text-muted-foreground">
+                Price After Discounts (pre-tax, each)
+              </div>
+              <div className="mt-1 text-xl font-semibold">
+                {fmt(discountedEachBeforeTax, currency)}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Effective discount: {effectivePct.toFixed(2)}%
+              </div>
             </div>
 
             <div className="rounded-xl border p-4">
@@ -385,16 +502,23 @@ export default function DiscountFinderPage() {
               </div>
               {cmp > 0 && (
                 <div className="mt-1 text-xs text-muted-foreground">
-                  vs competitor: {fmt(cmp, currency)} — You save {fmt(Math.max(0, (cmp - finalEach) * q), currency)} total
+                  vs competitor: {fmt(cmp, currency)} — You save{" "}
+                  {fmt(Math.max(0, (cmp - finalEach) * q), currency)} total
                 </div>
               )}
             </div>
 
-            {mode === 'reverse' && (
+            {mode === "reverse" && (
               <div className="rounded-xl border p-4 sm:col-span-2 lg:col-span-2">
-                <div className="text-xs text-muted-foreground">Required % Discount (keeping extra%, fixed & tax)</div>
-                <div className="mt-1 text-xl font-semibold">{Number.isFinite(needPctForTarget) ? `${needPctForTarget.toFixed(2)}%` : '—'}</div>
-                <div className="mt-1 text-xs text-muted-foreground">To reach {tf ? fmt(tf, currency) : 'target'} per unit (final, after tax).</div>
+                <div className="text-xs text-muted-foreground">
+                  Required % Discount (keeping extra%, fixed & tax)
+                </div>
+                <div className="mt-1 text-xl font-semibold">
+                  {Number.isFinite(needPctForTarget) ? `${needPctForTarget.toFixed(2)}%` : "—"}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  To reach {tf ? fmt(tf, currency) : "target"} per unit (final, after tax).
+                </div>
               </div>
             )}
           </CardContent>
@@ -413,13 +537,20 @@ export default function DiscountFinderPage() {
                   finalTotal,
                   currency,
                 )} | Savings: ${fmt(totalSavings, currency)} (${totalSavingsPct.toFixed(2)}%)`,
-                'summary',
+                "summary",
               )
-            }>
-            {copied === 'summary' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy Summary
+            }
+          >
+            {copied === "summary" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{" "}
+            Copy Summary
           </Button>
-          <Button variant="outline" className="gap-2" onClick={() => shareUrl && copy(shareUrl, 'link')}>
-            {copied === 'link' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy Share Link
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => shareUrl && copy(shareUrl, "link")}
+          >
+            {copied === "link" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
+            Share Link
           </Button>
           {history.length > 0 && (
             <Button variant="outline" className="gap-2" onClick={exportHistoryCSV}>
@@ -457,7 +588,9 @@ export default function DiscountFinderPage() {
                     {history.map((h, idx) => (
                       <tr key={idx} className="[&>td]:border-b [&>td]:px-3 [&>td]:py-2">
                         <td className="text-left">{new Date(h.ts).toLocaleString()}</td>
-                        <td className="text-left">{h.mode === 'forward' ? 'Forward' : 'Reverse'}</td>
+                        <td className="text-left">
+                          {h.mode === "forward" ? "Forward" : "Reverse"}
+                        </td>
                         <td className="text-right">{fmt(h.original, currency)}</td>
                         <td className="text-right">{h.discountPct}</td>
                         <td className="text-right">{h.extraPct}</td>

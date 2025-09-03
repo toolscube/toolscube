@@ -1,12 +1,11 @@
-import { Button } from '@/components/ui/button';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { getAnalytics } from '@/lib/actions/shortener.action';
-import { ExternalLink, Link as LinkIcon } from 'lucide-react';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-
-import ClicksByDayChart from '@/components/tools/url/clicks-by-day-chart';
-import TopTable from '@/components/tools/url/top-table';
+import { ExternalLink, Link as LinkIcon } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import ClicksByDayChart from "@/components/tools/url/clicks-by-day-chart";
+import TopTable from "@/components/tools/url/top-table";
+import { Button } from "@/components/ui/button";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { getAnalytics } from "@/lib/actions/shortener.action";
 
 export default async function AnalyticsPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -16,7 +15,7 @@ export default async function AnalyticsPage({ params }: { params: { id: string }
   const { link, total, first, last, byDay, topReferrers, topCountries } = data;
 
   const createdStr = new Date(first).toLocaleString();
-  const lastStr = last ? new Date(last).toLocaleString() : '—';
+  const lastStr = last ? new Date(last).toLocaleString() : "—";
   const shortPath = `/${link.short}`;
 
   return (
@@ -28,7 +27,10 @@ export default async function AnalyticsPage({ params }: { params: { id: string }
             <div className="text-xs text-muted-foreground">Short</div>
             <div className="flex items-center gap-2">
               <div className="truncate text-2xl font-semibold">{shortPath}</div>
-              <Link href={`/tools/url/shortener/interstitial/${link.short}`} className="text-xs underline underline-offset-4">
+              <Link
+                href={`/tools/url/shortener/interstitial/${link.short}`}
+                className="text-xs underline underline-offset-4"
+              >
                 Interstitial
               </Link>
             </div>
@@ -62,7 +64,14 @@ export default async function AnalyticsPage({ params }: { params: { id: string }
         <div className="grid gap-6 md:grid-cols-2">
           <GlassCard className="p-4">
             <div className="mb-3 text-sm font-medium">Clicks by Day</div>
-            {byDay.length === 0 ? <p className="text-xs text-muted-foreground">— No clicks yet —</p> : <ClicksByDayChart data={byDay.map(([date, n]) => ({ date, clicks: n }))} height={220} />}
+            {byDay.length === 0 ? (
+              <p className="text-xs text-muted-foreground">— No clicks yet —</p>
+            ) : (
+              <ClicksByDayChart
+                data={byDay.map(([date, n]) => ({ date, clicks: n }))}
+                height={220}
+              />
+            )}
           </GlassCard>
 
           <GlassCard className="p-4">
@@ -70,13 +79,20 @@ export default async function AnalyticsPage({ params }: { params: { id: string }
             {topReferrers.length === 0 ? (
               <p className="text-xs text-muted-foreground">—</p>
             ) : (
-              <TopTable rows={topReferrers.map(([label, n]) => ({ label, value: n }))} labelClassName="truncate max-w-[18rem]" />
+              <TopTable
+                rows={topReferrers.map(([label, n]) => ({ label, value: n }))}
+                labelClassName="truncate max-w-[18rem]"
+              />
             )}
           </GlassCard>
 
           <GlassCard className="p-4 md:col-span-2">
             <div className="mb-3 text-sm font-medium">Top Countries</div>
-            {topCountries.length === 0 ? <p className="text-xs text-muted-foreground">—</p> : <TopTable rows={topCountries.map(([label, n]) => ({ label, value: n }))} />}
+            {topCountries.length === 0 ? (
+              <p className="text-xs text-muted-foreground">—</p>
+            ) : (
+              <TopTable rows={topCountries.map(([label, n]) => ({ label, value: n }))} />
+            )}
           </GlassCard>
         </div>
       </MotionGlassCard>

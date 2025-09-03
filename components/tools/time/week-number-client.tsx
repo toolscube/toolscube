@@ -1,36 +1,46 @@
-'use client';
+"use client";
 
-import { ActionButton, CopyButton, ResetButton } from '@/components/shared/action-buttons';
-import { InputField } from '@/components/shared/form-fields/input-field';
-import SwitchRow from '@/components/shared/form-fields/switch-row';
-import ToolPageHeader from '@/components/shared/tool-page-header';
-import { Badge } from '@/components/ui/badge';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard } from '@/components/ui/glass-card';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { CalendarDays, CalendarRange, CalendarSearch, ChevronLeft, ChevronRight, Download, Info, Keyboard, type LucideIcon } from 'lucide-react';
-import * as React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import {
+  CalendarDays,
+  CalendarRange,
+  CalendarSearch,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Info,
+  Keyboard,
+  type LucideIcon,
+} from "lucide-react";
+import type * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 /* Helpers */
 const msDay = 24 * 60 * 60 * 1000;
-const pad = (n: number, w = 2) => n.toString().padStart(w, '0');
+const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
 
 function fmtDateInput(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 function fromDateInput(s: string) {
-  const [y, m, d] = s.split('-').map(Number);
+  const [y, m, d] = s.split("-").map(Number);
   return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
 }
 function fmtShort(d: Date) {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
   }).format(d);
 }
 function fmtISO(d: Date) {
@@ -88,34 +98,44 @@ function fromISOYearWeek(isoYear: number, week: number) {
   return new Date(mondayUTC.getUTCFullYear(), mondayUTC.getUTCMonth(), mondayUTC.getUTCDate());
 }
 
-function downloadFile(filename: string, content: string, type = 'text/plain;charset=utf-8') {
+function downloadFile(filename: string, content: string, type = "text/plain;charset=utf-8") {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-function toICSAllDayRange({ title, start, end, description }: { title: string; start: Date; end: Date; description?: string }) {
+function toICSAllDayRange({
+  title,
+  start,
+  end,
+  description,
+}: {
+  title: string;
+  start: Date;
+  end: Date;
+  description?: string;
+}) {
   const dt = (d: Date) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
   const dtEndExclusive = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1);
   const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//ToolsHub//WeekNumber//EN',
-    'BEGIN:VEVENT',
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//ToolsHub//WeekNumber//EN",
+    "BEGIN:VEVENT",
     `UID:week-${title}-${dt(start)}@toolshub`,
     `DTSTAMP:${dt(new Date())}T000000Z`,
     `DTSTART;VALUE=DATE:${dt(start)}`,
     `DTEND;VALUE=DATE:${dt(dtEndExclusive)}`,
     `SUMMARY:${title}`,
-    ...(description ? [`DESCRIPTION:${description.replace(/\n/g, '\\n')}`] : []),
-    'END:VEVENT',
-    'END:VCALENDAR',
+    ...(description ? [`DESCRIPTION:${description.replace(/\n/g, "\\n")}`] : []),
+    "END:VEVENT",
+    "END:VCALENDAR",
   ];
-  return lines.join('\r\n');
+  return lines.join("\r\n");
 }
 
 export default function WeekNumberClient() {
@@ -123,13 +143,16 @@ export default function WeekNumberClient() {
   const [showUS, setShowUS] = useState(false);
 
   // Extra inputs: ISO Year + Week jump
-  const [isoYearInput, setIsoYearInput] = useState<number | ''>('');
-  const [isoWeekInput, setIsoWeekInput] = useState<number | ''>('');
+  const [isoYearInput, setIsoYearInput] = useState<number | "">("");
+  const [isoWeekInput, setIsoWeekInput] = useState<number | "">("");
 
   // Derived
   const date = useMemo(() => fromDateInput(dateStr), [dateStr]);
   const iso = useMemo(() => isoWeekInfo(date), [date]);
-  const isoRange = useMemo(() => ({ start: startOfISOWeek(date), end: endOfISOWeek(date) }), [date]);
+  const isoRange = useMemo(
+    () => ({ start: startOfISOWeek(date), end: endOfISOWeek(date) }),
+    [date],
+  );
 
   const usWeek = useMemo(() => {
     if (!showUS) return null as null | { year: number; week: number };
@@ -141,24 +164,27 @@ export default function WeekNumberClient() {
     return { year: d.getFullYear(), week };
   }, [date, showUS]);
 
-  const gotoDelta = (deltaWeeks: number) => setDateStr(fmtDateInput(new Date(date.getFullYear(), date.getMonth(), date.getDate() + deltaWeeks * 7)));
+  const gotoDelta = (deltaWeeks: number) =>
+    setDateStr(
+      fmtDateInput(new Date(date.getFullYear(), date.getMonth(), date.getDate() + deltaWeeks * 7)),
+    );
   const setToday = () => setDateStr(fmtDateInput(new Date()));
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
-    const d = p.get('date');
-    const isoParam = p.get('iso');
-    const sys = p.get('sys');
+    const d = p.get("date");
+    const isoParam = p.get("iso");
+    const sys = p.get("sys");
 
     if (isoParam && /^\d{4}-W\d{1,2}$/.test(isoParam)) {
-      const [y, w] = isoParam.split('-W').map(Number);
+      const [y, w] = isoParam.split("-W").map(Number);
       const monday = fromISOYearWeek(y, w);
       setDateStr(fmtDateInput(monday));
     } else if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
       setDateStr(d);
     }
-    if (sys) setShowUS(sys.includes('us'));
+    if (sys) setShowUS(sys.includes("us"));
   }, []);
 
   // Week strip
@@ -173,16 +199,20 @@ export default function WeekNumberClient() {
   }, [isoRange]);
 
   // SSR-safe
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
 
   // Share link (sync iso param)
   const params = new URLSearchParams();
-  params.set('iso', `${iso.isoYear}-W${iso.week}`);
-  params.set('sys', showUS ? 'iso,us' : 'iso');
+  params.set("iso", `${iso.isoYear}-W${iso.week}`);
+  params.set("sys", showUS ? "iso,us" : "iso");
   const link = `${window.location.href}?${params.toString()}`;
 
-  const summaryLines = [`ISO: ${iso.isoYear}-W${iso.week}`, `Range: ${fmtShort(isoRange.start)} — ${fmtShort(isoRange.end)}`, ...(showUS && usWeek ? [`US: ${usWeek.year}-W${usWeek.week}`] : [])];
-  const summary = summaryLines.join('\n');
+  const summaryLines = [
+    `ISO: ${iso.isoYear}-W${iso.week}`,
+    `Range: ${fmtShort(isoRange.start)} — ${fmtShort(isoRange.end)}`,
+    ...(showUS && usWeek ? [`US: ${usWeek.year}-W${usWeek.week}`] : []),
+  ];
+  const summary = summaryLines.join("\n");
 
   const jsonSummary = JSON.stringify(
     {
@@ -203,20 +233,20 @@ export default function WeekNumberClient() {
       end: isoRange.end,
       description: summary,
     });
-    downloadFile(`week-${iso.isoYear}-W${iso.week}.ics`, ics, 'text/calendar;charset=utf-8');
+    downloadFile(`week-${iso.isoYear}-W${iso.week}.ics`, ics, "text/calendar;charset=utf-8");
   };
 
   // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target && (e.target as HTMLElement).tagName === 'INPUT') return;
-      if (e.key === 'ArrowLeft') gotoDelta(-1);
-      if (e.key === 'ArrowRight') gotoDelta(1);
-      if (e.key.toLowerCase() === 't') setToday();
-      if (e.key.toLowerCase() === 'c') navigator.clipboard.writeText(summary);
+      if (e.target && (e.target as HTMLElement).tagName === "INPUT") return;
+      if (e.key === "ArrowLeft") gotoDelta(-1);
+      if (e.key === "ArrowRight") gotoDelta(1);
+      if (e.key.toLowerCase() === "t") setToday();
+      if (e.key.toLowerCase() === "c") navigator.clipboard.writeText(summary);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [summary]);
 
   return (
@@ -228,10 +258,18 @@ export default function WeekNumberClient() {
         description="Find ISO week and date range"
         actions={
           <>
-            <ResetButton label="Week start" onClick={() => setDateStr(fmtDateInput(fromISOYearWeek(iso.isoYear, iso.week)))} />
+            <ResetButton
+              label="Week start"
+              onClick={() => setDateStr(fmtDateInput(fromISOYearWeek(iso.isoYear, iso.week)))}
+            />
             <CopyButton label="Copy summary" copiedLabel="Copied" getText={() => summary} />
             <CopyButton label="Copy link" copiedLabel="Copied" getText={() => link} />
-            <ActionButton variant="default" Icon={Download} label="Download" onClick={downloadICS} />
+            <ActionButton
+              variant="default"
+              Icon={Download}
+              label="Download"
+              onClick={downloadICS}
+            />
           </>
         }
       />
@@ -240,18 +278,40 @@ export default function WeekNumberClient() {
       <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Pick a Date</CardTitle>
-          <CardDescription>Weeks start Monday; Week 1 is the week containing Jan 4 (ISO-8601).</CardDescription>
+          <CardDescription>
+            Weeks start Monday; Week 1 is the week containing Jan 4 (ISO-8601).
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 lg:grid-cols-2">
           {/* Left: Date + quick actions */}
           <div className="space-y-3">
-            <InputField id="wk-date" label="Date" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} />
+            <InputField
+              id="wk-date"
+              label="Date"
+              type="date"
+              value={dateStr}
+              onChange={(e) => setDateStr(e.target.value)}
+            />
 
             <div className="flex flex-wrap items-center gap-2">
-              <ActionButton Icon={ChevronLeft} label="Prev" size="sm" onClick={() => gotoDelta(-1)} />
+              <ActionButton
+                Icon={ChevronLeft}
+                label="Prev"
+                size="sm"
+                onClick={() => gotoDelta(-1)}
+              />
               <ActionButton Icon={CalendarRange} label="Today" size="sm" onClick={setToday} />
-              <ActionButton Icon={ChevronRight} label="Next" size="sm" onClick={() => gotoDelta(1)} />
-              <Badge variant="secondary" className="ml-auto flex items-center gap-1 text-xs" title="Shortcuts: ← / → (prev/next), T (today), C (copy summary)">
+              <ActionButton
+                Icon={ChevronRight}
+                label="Next"
+                size="sm"
+                onClick={() => gotoDelta(1)}
+              />
+              <Badge
+                variant="secondary"
+                className="ml-auto flex items-center gap-1 text-xs"
+                title="Shortcuts: ← / → (prev/next), T (today), C (copy summary)"
+              >
                 <Keyboard className="h-3.5 w-3.5" />← / →, T, C
               </Badge>
             </div>
@@ -261,7 +321,11 @@ export default function WeekNumberClient() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Extras</Label>
-              <SwitchRow label="Show US-style week number" checked={showUS} onCheckedChange={setShowUS} />
+              <SwitchRow
+                label="Show US-style week number"
+                checked={showUS}
+                onCheckedChange={setShowUS}
+              />
               <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
                 <Info className="h-3.5 w-3.5" />
                 US week = Sun–Sat; Week 1 starts Jan 1.
@@ -280,7 +344,9 @@ export default function WeekNumberClient() {
                   max={9999}
                   placeholder={`${iso.isoYear}`}
                   value={isoYearInput}
-                  onChange={(e) => setIsoYearInput(e.target.value === '' ? '' : Number(e.target.value))}
+                  onChange={(e) =>
+                    setIsoYearInput(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                 />
                 <InputField
                   className="w-full"
@@ -291,7 +357,9 @@ export default function WeekNumberClient() {
                   max={53}
                   placeholder={`${iso.week}`}
                   value={isoWeekInput}
-                  onChange={(e) => setIsoWeekInput(e.target.value === '' ? '' : Number(e.target.value))}
+                  onChange={(e) =>
+                    setIsoWeekInput(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                 />
                 <div className="flex gap-2">
                   <ActionButton
@@ -307,8 +375,8 @@ export default function WeekNumberClient() {
                     variant="ghost"
                     label="Clear"
                     onClick={() => {
-                      setIsoYearInput('');
-                      setIsoWeekInput('');
+                      setIsoYearInput("");
+                      setIsoWeekInput("");
                     }}
                   />
                 </div>
@@ -337,10 +405,10 @@ export default function WeekNumberClient() {
           {showUS && usWeek && (
             <div className="rounded-md border p-3">
               <div className="text-sm">
-                <span className="text-muted-foreground">US Week:</span>{' '}
+                <span className="text-muted-foreground">US Week:</span>{" "}
                 <span className="font-medium">
                   {usWeek.year}-W{usWeek.week}
-                </span>{' '}
+                </span>{" "}
                 <Badge variant="secondary" className="ml-2">
                   Sun–Sat
                 </Badge>
@@ -357,10 +425,18 @@ export default function WeekNumberClient() {
                 return (
                   <div
                     key={d.toISOString()}
-                    className={cn('relative px-3 py-3 text-sm border-t', 'hover:bg-accent/50 transition-colors', isWeekend && 'bg-muted/30', isToday && 'bg-primary/5')}
-                    title={`${fmtISO(d)} • ${label}`}>
+                    className={cn(
+                      "relative px-3 py-3 text-sm border-t",
+                      "hover:bg-accent/50 transition-colors",
+                      isWeekend && "bg-muted/30",
+                      isToday && "bg-primary/5",
+                    )}
+                    title={`${fmtISO(d)} • ${label}`}
+                  >
                     <span>{label}</span>
-                    {isToday && <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />}
+                    {isToday && (
+                      <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
+                    )}
                   </div>
                 );
               })}
@@ -369,8 +445,16 @@ export default function WeekNumberClient() {
 
           {/* Quick copy row */}
           <div className="flex flex-wrap gap-2">
-            <CopyButton label="Copy ISO (YYYY-Www)" copiedLabel="Copied" getText={() => `${iso.isoYear}-W${iso.week}`} />
-            <CopyButton label="Copy date range" copiedLabel="Copied" getText={() => `${fmtISO(isoRange.start)} — ${fmtISO(isoRange.end)}`} />
+            <CopyButton
+              label="Copy ISO (YYYY-Www)"
+              copiedLabel="Copied"
+              getText={() => `${iso.isoYear}-W${iso.week}`}
+            />
+            <CopyButton
+              label="Copy date range"
+              copiedLabel="Copied"
+              getText={() => `${fmtISO(isoRange.start)} — ${fmtISO(isoRange.end)}`}
+            />
             <CopyButton label="Copy JSON" copiedLabel="Copied" getText={() => jsonSummary} />
           </div>
 
@@ -388,7 +472,15 @@ export default function WeekNumberClient() {
   );
 }
 
-function Stat({ title, value, Icon }: { title: string; value: React.ReactNode; Icon?: LucideIcon }) {
+function Stat({
+  title,
+  value,
+  Icon,
+}: {
+  title: string;
+  value: React.ReactNode;
+  Icon?: LucideIcon;
+}) {
   return (
     <div className="rounded-xl border p-3 hover:ring-1 hover:ring-primary/20 transition-shadow">
       <div className="flex items-center justify-between">

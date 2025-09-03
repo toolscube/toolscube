@@ -1,6 +1,16 @@
-import { HeartPulse, type LucideIcon } from 'lucide-react';
+import { HeartPulse, type LucideIcon } from "lucide-react";
 
-export default function Stat({ label, value, hint, Icon }: { label: string; value: React.ReactNode; hint?: string; Icon?: LucideIcon }) {
+export default function Stat({
+  label,
+  value,
+  hint,
+  Icon,
+}: {
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+  Icon?: LucideIcon;
+}) {
   const TopIcon = Icon ?? HeartPulse;
 
   return (

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { ToolsData } from '@/data/tools';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ToolsData } from "@/data/tools";
 
 // helpers
 type ToolItem = {
@@ -40,8 +40,13 @@ export default function HomePage() {
         <Badge variant="secondary" className="relative flex items-center gap-1 text-xs">
           <Sparkles className="h-3.5 w-3.5" /> Fast • Free • Privacy-Friendly
         </Badge>
-        <h1 className="relative max-w-3xl text-balance text-4xl font-bold leading-tight tracking-tight md:text-5xl">Essential online tools, crafted with care.</h1>
-        <p className="relative max-w-2xl text-pretty text-muted-foreground">Shorten links, convert PDFs & images, format JSON, calculate BMI, and more — all in one fast and minimal hub.</p>
+        <h1 className="relative max-w-3xl text-balance text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+          Essential online tools, crafted with care.
+        </h1>
+        <p className="relative max-w-2xl text-pretty text-muted-foreground">
+          Shorten links, convert PDFs & images, format JSON, calculate BMI, and more — all in one
+          fast and minimal hub.
+        </p>
         <div className="relative flex gap-3">
           <Button asChild size="lg">
             <Link href="/tools" aria-label="Explore all tools">
@@ -59,16 +64,22 @@ export default function HomePage() {
       {/* Tools Grid (Popular) */}
       <section aria-label="Popular tools" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 pt-8">
         {tools.map((t) => (
-          <Link key={t.url} href={t.url} className="group focus:outline-none" aria-label={`${t.title}${t.description ? ` — ${t.description}` : ''}`}>
+          <Link
+            key={t.url}
+            href={t.url}
+            className="group focus:outline-none"
+            aria-label={`${t.title}${t.description ? ` — ${t.description}` : ""}`}
+          >
             <Card
               className={[
-                'relative h-full overflow-hidden rounded-2xl border',
-                'bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50',
-                'transition-all duration-300',
-                'hover:shadow-[0_20px_50px_-15px_var(--shadow-color,rgba(2,132,199,0.25))] hover:-translate-y-0.5',
-                '[--shadow-color:theme(colors.primary/30)]',
-                'focus-within:ring-2 focus-within:ring-primary/50',
-              ].join(' ')}>
+                "relative h-full overflow-hidden rounded-2xl border",
+                "bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50",
+                "transition-all duration-300",
+                "hover:shadow-[0_20px_50px_-15px_var(--shadow-color,rgba(2,132,199,0.25))] hover:-translate-y-0.5",
+                "[--shadow-color:theme(colors.primary/30)]",
+                "focus-within:ring-2 focus-within:ring-primary/50",
+              ].join(" ")}
+            >
               {/* glow aura */}
               <div
                 aria-hidden
@@ -77,11 +88,20 @@ export default function HomePage() {
 
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold tracking-tight">{t.title}</CardTitle>
-                {t.description && <CardDescription className="text-sm text-muted-foreground line-clamp-2">{t.description}</CardDescription>}
+                {t.description && (
+                  <CardDescription className="text-sm text-muted-foreground line-clamp-2">
+                    {t.description}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent className="pt-0">
-                <Button size="sm" variant="secondary" className="transition-all group-hover:-translate-y-0.5 group-hover:shadow-sm">
-                  Open <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="transition-all group-hover:-translate-y-0.5 group-hover:shadow-sm"
+                >
+                  Open{" "}
+                  <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Button>
               </CardContent>
 

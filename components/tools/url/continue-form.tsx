@@ -1,10 +1,16 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { GlassCard } from '@/components/ui/glass-card';
-import * as React from 'react';
+import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
 
-export default function ContinueForm({ action, host }: { action: (formData: FormData) => Promise<void>; host: string }) {
+export default function ContinueForm({
+  action,
+  host,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  host: string;
+}) {
   const [agree, setAgree] = React.useState(false);
   const [left, setLeft] = React.useState(3);
   const canSubmit = agree && left === 0;
@@ -17,14 +23,23 @@ export default function ContinueForm({ action, host }: { action: (formData: Form
 
   return (
     <GlassCard className="p-4">
-      <form action={action} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <form
+        action={action}
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div className="text-sm text-muted-foreground">
           You’re about to continue to <span className="font-medium text-foreground">{host}</span>.
         </div>
 
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <label className="inline-flex items-center gap-2 text-xs">
-            <input type="checkbox" className="h-4 w-4 accent-primary" checked={agree} onChange={(e) => setAgree(e.target.checked)} />I trust this site
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-primary"
+              checked={agree}
+              onChange={(e) => setAgree(e.target.checked)}
+            />
+            I trust this site
           </label>
 
           <Button type="submit" disabled={!canSubmit} className="gap-2">

@@ -1,10 +1,23 @@
-'use client';
+"use client";
 
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import * as React from 'react';
-import type { FieldPath, FieldValues } from 'react-hook-form';
+import * as React from "react";
+import type { FieldPath, FieldValues } from "react-hook-form";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 /** Types */
 type Option = {
@@ -46,16 +59,22 @@ type BaseProps = {
   error?: React.ReactNode;
 };
 
-export type SelectFieldProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = BaseProps & {
+export type SelectFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> = BaseProps & {
   /** If omitted, runs in standalone mode */
   name?: TName;
 };
 
 /** Implementation */
 
-const CLEAR_TOKEN = '__CLEAR__';
+const CLEAR_TOKEN = "__CLEAR__";
 
-function normalizeOut(raw: string, { valueAsNumber }: { valueAsNumber?: boolean }): string | number | undefined {
+function normalizeOut(
+  raw: string,
+  { valueAsNumber }: { valueAsNumber?: boolean },
+): string | number | undefined {
   if (raw === CLEAR_TOKEN) return undefined;
   if (!valueAsNumber) return raw;
   const n = Number(raw);
@@ -63,17 +82,20 @@ function normalizeOut(raw: string, { valueAsNumber }: { valueAsNumber?: boolean 
 }
 
 function normalizeIn(v: string | number | undefined | null): string {
-  if (v === null || v === undefined) return '';
+  if (v === null || v === undefined) return "";
   return String(v);
 }
 
-export default function SelectField<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>>({
+export default function SelectField<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+>({
   /** Common */
   name,
   id,
   label,
   options,
-  placeholder = 'Select an option',
+  placeholder = "Select an option",
   description,
   className,
   triggerClassName,
@@ -81,7 +103,7 @@ export default function SelectField<TFieldValues extends FieldValues, TName exte
   disabled = false,
   required = false,
   allowClear = false,
-  clearLabel = 'Clear',
+  clearLabel = "Clear",
   valueAsNumber = false,
 
   /** Controlled / Uncontrolled (standalone) */
@@ -108,21 +130,28 @@ export default function SelectField<TFieldValues extends FieldValues, TName exte
     return (
       <div className={className}>
         {label ? (
-          <label htmlFor={triggerId} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-2">
+          <label
+            htmlFor={triggerId}
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-2"
+          >
             {label}
             {required && <span className="ml-0.5 text-destructive">*</span>}
           </label>
         ) : null}
         <div className="dark:bg-transparent overflow-hidden rounded-md">
           <Select value={selectValue} onValueChange={handleChange} disabled={disabled}>
-            <SelectTrigger id={triggerId} className={cn('w-full', triggerClassName)}>
+            <SelectTrigger id={triggerId} className={cn("w-full", triggerClassName)}>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
 
             <SelectContent className={contentClassName}>
               {allowClear && <SelectItem value={CLEAR_TOKEN}>{clearLabel}</SelectItem>}
               {options.map((opt) => (
-                <SelectItem key={String(opt.value)} value={String(opt.value)} disabled={opt.disabled}>
+                <SelectItem
+                  key={String(opt.value)}
+                  value={String(opt.value)}
+                  disabled={opt.disabled}
+                >
                   {opt.label}
                 </SelectItem>
               ))}
@@ -143,7 +172,7 @@ export default function SelectField<TFieldValues extends FieldValues, TName exte
       name={name}
       render={({ field }) => {
         const effectiveDisabled = disabled || field.disabled;
-        const current = externalValue !== undefined ? externalValue : field.value ?? undefined;
+        const current = externalValue !== undefined ? externalValue : (field.value ?? undefined);
 
         const selectValue = normalizeIn(current);
 
@@ -164,15 +193,23 @@ export default function SelectField<TFieldValues extends FieldValues, TName exte
 
             <FormControl>
               <div className="dark:bg-transparent overflow-hidden rounded-md">
-                <Select value={selectValue} onValueChange={handleChange} disabled={effectiveDisabled}>
-                  <SelectTrigger id={triggerId} className={cn('w-full', triggerClassName)}>
+                <Select
+                  value={selectValue}
+                  onValueChange={handleChange}
+                  disabled={effectiveDisabled}
+                >
+                  <SelectTrigger id={triggerId} className={cn("w-full", triggerClassName)}>
                     <SelectValue placeholder={placeholder} />
                   </SelectTrigger>
 
                   <SelectContent className={contentClassName}>
                     {allowClear && <SelectItem value={CLEAR_TOKEN}>{clearLabel}</SelectItem>}
                     {options.map((opt) => (
-                      <SelectItem key={String(opt.value)} value={String(opt.value)} disabled={opt.disabled}>
+                      <SelectItem
+                        key={String(opt.value)}
+                        value={String(opt.value)}
+                        disabled={opt.disabled}
+                      >
                         {opt.label}
                       </SelectItem>
                     ))}

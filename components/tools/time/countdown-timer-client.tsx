@@ -1,25 +1,33 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useEffect, useMemo, useState } from 'react';
-
-import SwitchRow from '@/components/shared/form-fields/switch-row';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard } from '@/components/ui/glass-card';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-
-import { ActionButton } from '@/components/shared/action-buttons';
-import { InputField } from '@/components/shared/form-fields/input-field';
-import ToolPageHeader from '@/components/shared/tool-page-header';
-import { AlarmClock, CalendarClock, Clock, Download, Pause, Play, Plus, RotateCcw, Trash2, Zap } from 'lucide-react';
+import {
+  AlarmClock,
+  CalendarClock,
+  Clock,
+  Download,
+  Pause,
+  Play,
+  Plus,
+  RotateCcw,
+  Trash2,
+  Zap,
+} from "lucide-react";
+import type * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ActionButton } from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 /* Types */
 
-type Mode = 'countdown' | 'pomodoro' | 'event';
+type Mode = "countdown" | "pomodoro" | "event";
 
 type Timer = {
   id: string;
@@ -39,7 +47,7 @@ type Timer = {
   workMs?: number;
   breakMs?: number;
   cycles?: number;
-  phase?: 'work' | 'break' | 'done';
+  phase?: "work" | "break" | "done";
   currentCycle?: number;
 };
 
@@ -50,14 +58,14 @@ const ms = {
   hr: 60 * 60 * 1000,
 };
 
-const pad = (n: number, w = 2) => n.toString().padStart(w, '0');
+const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
 function fmtHMS(totalMs: number) {
-  const sign = totalMs < 0 ? '-' : '';
+  const sign = totalMs < 0 ? "-" : "";
   const t = Math.max(0, Math.abs(totalMs));
   const h = Math.floor(t / ms.hr);
   const m = Math.floor((t % ms.hr) / ms.min);
@@ -81,8 +89,8 @@ function formatTimeInput(d: Date): string {
 
 function parseDateTimeLocal(dateStr?: string, timeStr?: string) {
   if (!dateStr || !timeStr) return null;
-  const [y, mo, da] = dateStr.split('-').map(Number);
-  const [hh, mm] = timeStr.split(':').map(Number);
+  const [y, mo, da] = dateStr.split("-").map(Number);
+  const [hh, mm] = timeStr.split(":").map(Number);
   const dt = new Date(y, (mo || 1) - 1, da || 1, hh || 0, mm || 0, 0, 0);
   return isNaN(dt.getTime()) ? null : dt;
 }
@@ -94,7 +102,7 @@ function beep() {
     const ctx = new Ctx();
     const o = ctx.createOscillator();
     const g = ctx.createGain();
-    o.type = 'sine';
+    o.type = "sine";
     o.frequency.value = 880;
     o.connect(g);
     g.connect(ctx.destination);
@@ -107,18 +115,18 @@ function beep() {
 }
 
 function isFinished(t: Timer) {
-  if (t.mode === 'event') return (t.targetTs || 0) - Date.now() <= 0;
-  if (t.mode === 'pomodoro') return t.phase === 'done';
+  if (t.mode === "event") return (t.targetTs || 0) - Date.now() <= 0;
+  if (t.mode === "pomodoro") return t.phase === "done";
   return (t.remainingMs || 0) <= 0;
 }
 
 function resetTimer(t: Timer): Timer {
-  if (t.mode === 'event') return { ...t, running: true };
-  if (t.mode === 'pomodoro')
+  if (t.mode === "event") return { ...t, running: true };
+  if (t.mode === "pomodoro")
     return {
       ...t,
       running: false,
-      phase: 'work',
+      phase: "work",
       currentCycle: 1,
       remainingMs: t.workMs,
     };
@@ -127,31 +135,31 @@ function resetTimer(t: Timer): Timer {
 }
 
 function advanceTimer(t: Timer, dtMs: number): Timer {
-  if (t.mode === 'event') return t;
+  if (t.mode === "event") return t;
   if (!t.running) return t;
 
-  if (t.mode === 'countdown') {
+  if (t.mode === "countdown") {
     const rem = Math.max(0, (t.remainingMs || 0) - dtMs);
     return { ...t, remainingMs: rem, running: rem > 0 && t.running };
   }
 
   // pomodoro
   let rem = Math.max(0, (t.remainingMs || 0) - dtMs);
-  let phase = t.phase || 'work';
+  let phase = t.phase || "work";
   let cyc = t.currentCycle || 1;
   const total = t.cycles || 1;
 
   if (rem <= 0) {
-    if (phase === 'work') {
+    if (phase === "work") {
       if (cyc >= total) {
-        return { ...t, phase: 'done', running: false, remainingMs: 0 };
+        return { ...t, phase: "done", running: false, remainingMs: 0 };
       } else {
-        phase = 'break';
+        phase = "break";
         rem = t.breakMs || 0;
       }
-    } else if (phase === 'break') {
+    } else if (phase === "break") {
       cyc = Math.min(cyc + 1, total);
-      phase = 'work';
+      phase = "work";
       rem = t.workMs || 0;
     }
   }
@@ -161,10 +169,10 @@ function advanceTimer(t: Timer, dtMs: number): Timer {
 
 /* ICS export */
 
-function downloadFile(filename: string, content: string, type = 'text/plain;charset=utf-8') {
+function downloadFile(filename: string, content: string, type = "text/plain;charset=utf-8") {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
@@ -175,30 +183,31 @@ function toICSAlarmCountdown(label: string, seconds: number) {
   const now = new Date();
   const start = now;
   const end = new Date(now.getTime() + seconds * 1000);
-  const dt = (d: Date) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+  const dt = (d: Date) =>
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
 
   const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//ToolsHub//Countdown//EN',
-    'BEGIN:VEVENT',
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//ToolsHub//Countdown//EN",
+    "BEGIN:VEVENT",
     `UID:countdown-${uid()}@toolshub`,
     `DTSTAMP:${dt(new Date())}`,
     `DTSTART:${dt(start)}`,
     `DTEND:${dt(end)}`,
     `SUMMARY:${label}`,
-    'END:VEVENT',
-    'END:VCALENDAR',
+    "END:VEVENT",
+    "END:VCALENDAR",
   ];
-  return lines.join('\r\n');
+  return lines.join("\r\n");
 }
 
 export default function CountdownTimerClient() {
   // timers (persisted)
   const [timers, setTimers] = useState<Timer[]>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
-        const raw = localStorage.getItem('th:timers');
+        const raw = localStorage.getItem("th:timers");
         if (raw) return JSON.parse(raw) as Timer[];
       } catch {}
     }
@@ -209,21 +218,21 @@ export default function CountdownTimerClient() {
   const [titleBlink, setTitleBlink] = useState(true);
 
   // Builders: controlled inputs
-  const [cdLabel, setCdLabel] = useState('Countdown');
-  const [cdMin, setCdMin] = useState<number | ''>(10);
+  const [cdLabel, setCdLabel] = useState("Countdown");
+  const [cdMin, setCdMin] = useState<number | "">(10);
 
-  const [poWork, setPoWork] = useState<number | ''>(25);
-  const [poBreak, setPoBreak] = useState<number | ''>(5);
-  const [poCycles, setPoCycles] = useState<number | ''>(4);
+  const [poWork, setPoWork] = useState<number | "">(25);
+  const [poBreak, setPoBreak] = useState<number | "">(5);
+  const [poCycles, setPoCycles] = useState<number | "">(4);
 
-  const [evLabel, setEvLabel] = useState('Event');
+  const [evLabel, setEvLabel] = useState("Event");
   const [evDate, setEvDate] = useState(formatDateInput(new Date()));
   const [evTime, setEvTime] = useState(formatTimeInput(new Date()));
 
   // Persist timers
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('th:timers', JSON.stringify(timers));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("th:timers", JSON.stringify(timers));
     }
   }, [timers]);
 
@@ -254,10 +263,10 @@ export default function CountdownTimerClient() {
 
     if (anyDone) {
       interval = window.setInterval(() => {
-        document.title = document.title.startsWith('⏰') ? base : `⏰ Timer done!`;
+        document.title = document.title.startsWith("⏰") ? base : `⏰ Timer done!`;
       }, 1000);
     } else {
-      document.title = base.replace(/^⏰\s+/, '');
+      document.title = base.replace(/^⏰\s+/, "");
     }
 
     return () => {
@@ -270,7 +279,18 @@ export default function CountdownTimerClient() {
   /* Actions */
   const addCountdown = (label: string, minutes: number) => {
     const dur = Math.max(1, Math.round(minutes)) * ms.min;
-    setTimers((arr) => [...arr, { id: uid(), label, mode: 'countdown', running: false, createdAt: Date.now(), durationMs: dur, remainingMs: dur }]);
+    setTimers((arr) => [
+      ...arr,
+      {
+        id: uid(),
+        label,
+        mode: "countdown",
+        running: false,
+        createdAt: Date.now(),
+        durationMs: dur,
+        remainingMs: dur,
+      },
+    ]);
   };
 
   const addMeeting = (minutes: number) => addCountdown(`Meeting ${minutes}m`, minutes);
@@ -283,13 +303,13 @@ export default function CountdownTimerClient() {
       {
         id: uid(),
         label: `Pomodoro ${workMin}/${breakMin} ×${cycles}`,
-        mode: 'pomodoro',
+        mode: "pomodoro",
         running: false,
         createdAt: Date.now(),
         workMs,
         breakMs,
         cycles,
-        phase: 'work',
+        phase: "work",
         currentCycle: 1,
         remainingMs: workMs,
       },
@@ -298,7 +318,17 @@ export default function CountdownTimerClient() {
 
   const addEvent = (label: string, target: Date | null) => {
     if (!target) return;
-    setTimers((arr) => [...arr, { id: uid(), label: label || 'Event', mode: 'event', running: true, createdAt: Date.now(), targetTs: target.getTime() }]);
+    setTimers((arr) => [
+      ...arr,
+      {
+        id: uid(),
+        label: label || "Event",
+        mode: "event",
+        running: true,
+        createdAt: Date.now(),
+        targetTs: target.getTime(),
+      },
+    ]);
   };
 
   const onRunToggle = (id: string, run: boolean) => {
@@ -319,7 +349,13 @@ export default function CountdownTimerClient() {
         description="Pomodoro cycles, quick meeting timers, or a countdown to any date — all in one place."
         actions={
           <>
-            <ActionButton variant="default" Icon={Trash2} label="Clear all" onClick={onDeleteAll} disabled={timers.length === 0} />
+            <ActionButton
+              variant="default"
+              Icon={Trash2}
+              label="Clear all"
+              onClick={onDeleteAll}
+              disabled={timers.length === 0}
+            />
           </>
         }
       />
@@ -328,10 +364,16 @@ export default function CountdownTimerClient() {
       <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Quick Start</CardTitle>
-          <CardDescription>Create popular timers with one click or customize below.</CardDescription>
+          <CardDescription>
+            Create popular timers with one click or customize below.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Button variant="outline" onClick={() => addPomodoro(25, 5, 4)} className="justify-start gap-2">
+          <Button
+            variant="outline"
+            onClick={() => addPomodoro(25, 5, 4)}
+            className="justify-start gap-2"
+          >
             <Zap className="h-4 w-4" /> Pomodoro 25/5 ×4
           </Button>
           <Button variant="outline" onClick={() => addMeeting(15)} className="justify-start gap-2">
@@ -350,20 +392,37 @@ export default function CountdownTimerClient() {
       <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Create Your Timer</CardTitle>
-          <CardDescription>Fine-tune a countdown, Pomodoro set, or event date/time.</CardDescription>
+          <CardDescription>
+            Fine-tune a countdown, Pomodoro set, or event date/time.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
           {/* Countdown */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-            <InputField className="sm:col-span-2" id="cd-label" label="Countdown Label" placeholder="e.g., Tea break" value={cdLabel} onChange={(e) => setCdLabel(e.target.value)} />
-            <InputField className="sm:col-span-2" id="cd-min" label="Minutes" type="number" min={1} value={cdMin} onChange={(e) => setCdMin(e.target.value === '' ? '' : Number(e.target.value))} />
+            <InputField
+              className="sm:col-span-2"
+              id="cd-label"
+              label="Countdown Label"
+              placeholder="e.g., Tea break"
+              value={cdLabel}
+              onChange={(e) => setCdLabel(e.target.value)}
+            />
+            <InputField
+              className="sm:col-span-2"
+              id="cd-min"
+              label="Minutes"
+              type="number"
+              min={1}
+              value={cdMin}
+              onChange={(e) => setCdMin(e.target.value === "" ? "" : Number(e.target.value))}
+            />
             <div className="flex items-end">
               <ActionButton
                 variant="outline"
                 Icon={Plus}
                 label="Add Countdown"
                 onClick={() => {
-                  if (cdMin && cdMin > 0) addCountdown(cdLabel || 'Countdown', cdMin);
+                  if (cdMin && cdMin > 0) addCountdown(cdLabel || "Countdown", cdMin);
                 }}
               />
             </div>
@@ -380,7 +439,7 @@ export default function CountdownTimerClient() {
               type="number"
               min={1}
               value={poWork}
-              onChange={(e) => setPoWork(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={(e) => setPoWork(e.target.value === "" ? "" : Number(e.target.value))}
             />
             <InputField
               className="sm:col-span-2"
@@ -389,7 +448,7 @@ export default function CountdownTimerClient() {
               type="number"
               min={1}
               value={poBreak}
-              onChange={(e) => setPoBreak(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={(e) => setPoBreak(e.target.value === "" ? "" : Number(e.target.value))}
             />
             <InputField
               className="sm:col-span-2"
@@ -398,7 +457,7 @@ export default function CountdownTimerClient() {
               type="number"
               min={1}
               value={poCycles}
-              onChange={(e) => setPoCycles(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={(e) => setPoCycles(e.target.value === "" ? "" : Number(e.target.value))}
             />
             <div className="flex items-end lg:col-span-2">
               <ActionButton
@@ -417,11 +476,37 @@ export default function CountdownTimerClient() {
 
           {/* Event */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-8">
-            <InputField className="sm:col-span-2" label="Event Label" id="ev-label" value={evLabel} onChange={(e) => setEvLabel(e.target.value)} />
-            <InputField className="sm:col-span-2" label="Date" id="ev-date" type="date" value={evDate} onChange={(e) => setEvDate(e.target.value)} />
-            <InputField className="sm:col-span-2" label="Time" id="ev-time" type="time" value={evTime} onChange={(e) => setEvTime(e.target.value)} />
+            <InputField
+              className="sm:col-span-2"
+              label="Event Label"
+              id="ev-label"
+              value={evLabel}
+              onChange={(e) => setEvLabel(e.target.value)}
+            />
+            <InputField
+              className="sm:col-span-2"
+              label="Date"
+              id="ev-date"
+              type="date"
+              value={evDate}
+              onChange={(e) => setEvDate(e.target.value)}
+            />
+            <InputField
+              className="sm:col-span-2"
+              label="Time"
+              id="ev-time"
+              type="time"
+              value={evTime}
+              onChange={(e) => setEvTime(e.target.value)}
+            />
             <div className="flex items-end lg:col-span-2">
-              <ActionButton className="w-full" variant="outline" Icon={Plus} onClick={() => addEvent(evLabel, parseDateTimeLocal(evDate, evTime))} label="Add Event" />
+              <ActionButton
+                className="w-full"
+                variant="outline"
+                Icon={Plus}
+                onClick={() => addEvent(evLabel, parseDateTimeLocal(evDate, evTime))}
+                label="Add Event"
+              />
             </div>
           </div>
 
@@ -430,7 +515,11 @@ export default function CountdownTimerClient() {
           {/* Preferences */}
           <div className="flex flex-wrap items-center gap-4">
             <SwitchRow label="Sound on finish" checked={sound} onCheckedChange={setSound} />
-            <SwitchRow label="Blink page title" checked={titleBlink} onCheckedChange={setTitleBlink} />
+            <SwitchRow
+              label="Blink page title"
+              checked={titleBlink}
+              onCheckedChange={setTitleBlink}
+            />
           </div>
         </CardContent>
       </GlassCard>
@@ -439,12 +528,23 @@ export default function CountdownTimerClient() {
       <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Active Timers</CardTitle>
-          <CardDescription>Start, pause, reset, or remove timers. Pomodoro auto-advances phases.</CardDescription>
+          <CardDescription>
+            Start, pause, reset, or remove timers. Pomodoro auto-advances phases.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {timers.length === 0 && <p className="text-sm text-muted-foreground">No timers yet. Create one above.</p>}
+          {timers.length === 0 && (
+            <p className="text-sm text-muted-foreground">No timers yet. Create one above.</p>
+          )}
           {timers.map((t) => (
-            <TimerCard key={t.id} t={t} sound={sound} onRun={(r) => onRunToggle(t.id, r)} onReset={() => onReset(t.id)} onDelete={() => onDelete(t.id)} />
+            <TimerCard
+              key={t.id}
+              t={t}
+              sound={sound}
+              onRun={(r) => onRunToggle(t.id, r)}
+              onReset={() => onReset(t.id)}
+              onDelete={() => onDelete(t.id)}
+            />
           ))}
         </CardContent>
       </GlassCard>
@@ -454,26 +554,55 @@ export default function CountdownTimerClient() {
 
 /* Timer Card */
 
-function TimerCard({ t, onRun, onReset, onDelete, sound }: { t: Timer; onRun: (run: boolean) => void; onReset: () => void; onDelete: () => void; sound: boolean }) {
-  const isEvent = t.mode === 'event';
-  const isPomo = t.mode === 'pomodoro';
+function TimerCard({
+  t,
+  onRun,
+  onReset,
+  onDelete,
+  sound,
+}: {
+  t: Timer;
+  onRun: (run: boolean) => void;
+  onReset: () => void;
+  onDelete: () => void;
+  sound: boolean;
+}) {
+  const isEvent = t.mode === "event";
+  const isPomo = t.mode === "pomodoro";
 
   const { remaining, duration, subtitle, phaseBadge } = useMemo(() => {
     if (isEvent) {
       const now = Date.now();
       const rem = (t.targetTs || now) - now;
-      const lab = rem <= 0 ? 'Happened' : 'Until event';
-      return { remaining: rem, duration: Math.max(rem, 1), subtitle: lab, phaseBadge: null as React.ReactNode };
+      const lab = rem <= 0 ? "Happened" : "Until event";
+      return {
+        remaining: rem,
+        duration: Math.max(rem, 1),
+        subtitle: lab,
+        phaseBadge: null as React.ReactNode,
+      };
     }
     if (isPomo) {
-      const dur = t.phase === 'work' ? t.workMs || 0 : t.phase === 'break' ? t.breakMs || 0 : t.workMs || 0;
+      const dur =
+        t.phase === "work" ? t.workMs || 0 : t.phase === "break" ? t.breakMs || 0 : t.workMs || 0;
       const rem = t.remainingMs || 0;
       const cyc = t.currentCycle || 1;
       const total = t.cycles || 1;
-      const badge = <Badge variant={t.phase === 'work' ? 'default' : t.phase === 'break' ? 'secondary' : 'secondary'}>{t.phase === 'done' ? 'Done' : `${t.phase} • ${cyc}/${total}`}</Badge>;
-      return { remaining: rem, duration: dur, subtitle: 'Pomodoro', phaseBadge: badge };
+      const badge = (
+        <Badge
+          variant={t.phase === "work" ? "default" : t.phase === "break" ? "secondary" : "secondary"}
+        >
+          {t.phase === "done" ? "Done" : `${t.phase} • ${cyc}/${total}`}
+        </Badge>
+      );
+      return { remaining: rem, duration: dur, subtitle: "Pomodoro", phaseBadge: badge };
     }
-    return { remaining: t.remainingMs || 0, duration: t.durationMs || 1, subtitle: 'Countdown', phaseBadge: null as React.ReactNode };
+    return {
+      remaining: t.remainingMs || 0,
+      duration: t.durationMs || 1,
+      subtitle: "Countdown",
+      phaseBadge: null as React.ReactNode,
+    };
   }, [t, isEvent, isPomo]);
 
   const ratio = progressRatio(remaining, duration);
@@ -490,14 +619,20 @@ function TimerCard({ t, onRun, onReset, onDelete, sound }: { t: Timer; onRun: (r
 
   // Bonus: export an ICS for countdown (quick calendar block)
   const exportICS = () => {
-    if (t.mode !== 'countdown') return;
+    if (t.mode !== "countdown") return;
     const seconds = Math.max(1, Math.floor((t.remainingMs || 0) / 1000));
     const ics = toICSAlarmCountdown(t.label, seconds);
-    downloadFile(`countdown-${t.label.replace(/\s+/g, '-').toLowerCase()}.ics`, ics, 'text/calendar;charset=utf-8');
+    downloadFile(
+      `countdown-${t.label.replace(/\s+/g, "-").toLowerCase()}.ics`,
+      ics,
+      "text/calendar;charset=utf-8",
+    );
   };
 
   return (
-    <div className={cn('rounded-md border p-3 transition-colors', justFinished && 'border-primary')}>
+    <div
+      className={cn("rounded-md border p-3 transition-colors", justFinished && "border-primary")}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {phaseBadge}
@@ -532,13 +667,13 @@ function TimerCard({ t, onRun, onReset, onDelete, sound }: { t: Timer; onRun: (r
           </>
         )}
         {isEvent && (
-          <Badge variant={remaining <= 0 ? 'secondary' : 'default'} className="gap-1">
-            <CalendarClock className="h-3 w-3" /> {remaining <= 0 ? 'Started/Passed' : 'Scheduled'}
+          <Badge variant={remaining <= 0 ? "secondary" : "default"} className="gap-1">
+            <CalendarClock className="h-3 w-3" /> {remaining <= 0 ? "Started/Passed" : "Scheduled"}
           </Badge>
         )}
 
         {/* Optional: ICS export for countdown */}
-        {t.mode === 'countdown' && (
+        {t.mode === "countdown" && (
           <Button size="sm" variant="outline" className="gap-2" onClick={exportICS}>
             <Download className="h-4 w-4" /> ICS
           </Button>

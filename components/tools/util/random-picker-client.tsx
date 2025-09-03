@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { CopyButton, ExportTextButton, ResetButton } from '@/components/shared/action-buttons';
-import TextareaField from '@/components/shared/form-fields/textarea-field';
-import ToolPageHeader from '@/components/shared/tool-page-header';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard } from '@/components/ui/glass-card';
-import { Separator } from '@/components/ui/separator';
-import { Dice5, Sparkles, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Dice5, Sparkles, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CopyButton, ExportTextButton, ResetButton } from "@/components/shared/action-buttons";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
 
 // Types
 type Entry = { id: string; name: string };
 type HistoryItem = { id: string; ts: number; winner: string; pool: number };
 
 // Helpers
-function uid(prefix = 'id') {
+function uid(prefix = "id") {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 export default function RandomPickerClient() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -28,21 +28,21 @@ export default function RandomPickerClient() {
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem('tools:randpicker:entries');
+      const s = localStorage.getItem("tools:randpicker:entries");
       if (s) setEntries(JSON.parse(s));
-      const h = localStorage.getItem('tools:randpicker:history');
+      const h = localStorage.getItem("tools:randpicker:history");
       if (h) setHistory(JSON.parse(h));
     } catch {}
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem('tools:randpicker:entries', JSON.stringify(entries));
+      localStorage.setItem("tools:randpicker:entries", JSON.stringify(entries));
     } catch {}
   }, [entries]);
   useEffect(() => {
     try {
-      localStorage.setItem('tools:randpicker:history', JSON.stringify(history.slice(0, 20)));
+      localStorage.setItem("tools:randpicker:history", JSON.stringify(history.slice(0, 20)));
     } catch {}
   }, [history]);
 
@@ -52,8 +52,8 @@ export default function RandomPickerClient() {
       .map((l) => l.trim())
       .filter(Boolean);
     if (!lines.length) return;
-    setEntries((es) => [...es, ...lines.map((l) => ({ id: uid('e'), name: l }))]);
-    setInput('');
+    setEntries((es) => [...es, ...lines.map((l) => ({ id: uid("e"), name: l }))]);
+    setInput("");
   };
 
   const resetAll = () => {
@@ -67,7 +67,9 @@ export default function RandomPickerClient() {
     const i = Math.floor(Math.random() * entries.length);
     const w = entries[i].name;
     setWinner(w);
-    setHistory((h) => [{ id: uid('h'), ts: Date.now(), winner: w, pool: entries.length }, ...h].slice(0, 20));
+    setHistory((h) =>
+      [{ id: uid("h"), ts: Date.now(), winner: w, pool: entries.length }, ...h].slice(0, 20),
+    );
   };
 
   const copyWinner = async () => {
@@ -88,7 +90,12 @@ export default function RandomPickerClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ExportTextButton variant="default" filename="entries.txt" getText={() => entries.map((e) => e.name).join('\n')} disabled={!entries} />
+            <ExportTextButton
+              variant="default"
+              filename="entries.txt"
+              getText={() => entries.map((e) => e.name).join("\n")}
+              disabled={!entries}
+            />
           </>
         }
       />
@@ -100,7 +107,12 @@ export default function RandomPickerClient() {
           <CardDescription>One name per line.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          <TextareaField value={input} onChange={(e) => setInput(e.target.value)} placeholder="Alice\nBob\nCharlie" textareaClassName="min-h-[120px]" />
+          <TextareaField
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Alice\nBob\nCharlie"
+            textareaClassName="min-h-[120px]"
+          />
           <Button onClick={addEntries} className="gap-2 w-full sm:w-auto">
             <Users className="h-4 w-4" /> Add
           </Button>
@@ -138,7 +150,7 @@ export default function RandomPickerClient() {
           {winner ? (
             <div className="flex items-center justify-between rounded-md border p-3">
               <span className="font-semibold">{winner}</span>
-              <CopyButton size="sm" getText={() => winner || ''} />
+              <CopyButton size="sm" getText={() => winner || ""} />
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No winner yet.</p>

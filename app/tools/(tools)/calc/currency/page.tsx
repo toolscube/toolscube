@@ -1,44 +1,57 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard, MotionGlassCard } from '@/components/ui/glass-card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-
-import { ArrowLeftRight, Copy, Download, Globe, Link2, RotateCcw, Sparkles, TrendingUp } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  Copy,
+  Download,
+  Globe,
+  Link2,
+  RotateCcw,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 // ====== Config ======
-const PROVIDER = 'exchangerate.host'; // public, no key
+const PROVIDER = "exchangerate.host"; // public, no key
 const CACHE_HOURS = 12;
 
 // Common + popular currencies (extend anytime)
 const CURRENCIES: { code: string; name: string; symbol?: string }[] = [
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
-  { code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
-  { code: 'SAR', name: 'Saudi Riyal' },
-  { code: 'AED', name: 'UAE Dirham' },
-  { code: 'SGD', name: 'Singapore Dollar' },
-  { code: 'MYR', name: 'Malaysian Ringgit' },
-  { code: 'THB', name: 'Thai Baht' },
-  { code: 'PKR', name: 'Pakistani Rupee' },
-  { code: 'NPR', name: 'Nepalese Rupee' },
-  { code: 'LKR', name: 'Sri Lankan Rupee' },
-  { code: 'ZAR', name: 'South African Rand' },
-  { code: 'TRY', name: 'Turkish Lira' },
-  { code: 'CHF', name: 'Swiss Franc' },
+  { code: "USD", name: "US Dollar", symbol: "$" },
+  { code: "EUR", name: "Euro", symbol: "€" },
+  { code: "GBP", name: "British Pound", symbol: "£" },
+  { code: "INR", name: "Indian Rupee", symbol: "₹" },
+  { code: "BDT", name: "Bangladeshi Taka", symbol: "৳" },
+  { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+  { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+  { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+  { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+  { code: "SAR", name: "Saudi Riyal" },
+  { code: "AED", name: "UAE Dirham" },
+  { code: "SGD", name: "Singapore Dollar" },
+  { code: "MYR", name: "Malaysian Ringgit" },
+  { code: "THB", name: "Thai Baht" },
+  { code: "PKR", name: "Pakistani Rupee" },
+  { code: "NPR", name: "Nepalese Rupee" },
+  { code: "LKR", name: "Sri Lankan Rupee" },
+  { code: "ZAR", name: "South African Rand" },
+  { code: "TRY", name: "Turkish Lira" },
+  { code: "CHF", name: "Swiss Franc" },
 ];
 
 // ====== Types ======
@@ -47,15 +60,15 @@ type Favorite = { from: string; to: string };
 
 // ====== Utils ======
 const qs = (k: string, fallback: string) => {
-  if (typeof window === 'undefined') return fallback;
+  if (typeof window === "undefined") return fallback;
   return new URLSearchParams(window.location.search).get(k) ?? fallback;
 };
 
 const setParams = (params: Record<string, string | number>) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
-  window.history.replaceState({}, '', url.toString());
+  window.history.replaceState({}, "", url.toString());
 };
 
 const nowISO = () => new Date().toISOString();
@@ -68,11 +81,13 @@ function formatNumber(n: number, max = 6) {
 }
 
 function csvDownload(filename: string, rows: (string | number)[][]) {
-  const content = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const content = rows
+    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
 
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -88,31 +103,36 @@ function pairKey(from: string, to: string) {
 // ====== Page ======
 export default function CurrencyConverterPage() {
   // Query-param backed defaults (handy for sharing)
-  const [amount, setAmount] = useState<string>(qs('amt', '100'));
-  const [from, setFrom] = useState<string>(qs('from', 'USD'));
-  const [to, setTo] = useState<string>(qs('to', 'BDT'));
+  const [amount, setAmount] = useState<string>(qs("amt", "100"));
+  const [from, setFrom] = useState<string>(qs("from", "USD"));
+  const [to, setTo] = useState<string>(qs("to", "BDT"));
 
   const [rates, setRates] = useState<RatesMap>({});
   const [base, setBase] = useState<string>(from);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'cached' | 'error'>('idle');
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "cached" | "error">("idle");
 
   const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [history, setHistory] = useState<{ ts: string; from: string; to: string; amount: number; result: number; rate: number }[]>([]);
+  const [history, setHistory] = useState<
+    { ts: string; from: string; to: string; amount: number; result: number; rate: number }[]
+  >([]);
 
   // Load favorites & history
   useEffect(() => {
     try {
-      const fav = JSON.parse(localStorage.getItem('cc_favorites') || '[]') as Favorite[];
+      const fav = JSON.parse(localStorage.getItem("cc_favorites") || "[]") as Favorite[];
       setFavorites(Array.isArray(fav) ? fav : []);
-      const hist = JSON.parse(localStorage.getItem('cc_history') || '[]') as typeof history;
+      const hist = JSON.parse(localStorage.getItem("cc_history") || "[]") as typeof history;
       setHistory(Array.isArray(hist) ? hist : []);
     } catch {}
   }, []);
 
   // Persist favorites & history
-  useEffect(() => localStorage.setItem('cc_favorites', JSON.stringify(favorites)), [favorites]);
-  useEffect(() => localStorage.setItem('cc_history', JSON.stringify(history.slice(0, 50))), [history]);
+  useEffect(() => localStorage.setItem("cc_favorites", JSON.stringify(favorites)), [favorites]);
+  useEffect(
+    () => localStorage.setItem("cc_history", JSON.stringify(history.slice(0, 50))),
+    [history],
+  );
 
   // Keep URL synced for sharing
   useEffect(() => {
@@ -121,17 +141,21 @@ export default function CurrencyConverterPage() {
 
   // Fetch rates (with cache)
   async function fetchRates(baseCode: string) {
-    setStatus('loading');
+    setStatus("loading");
     try {
       const cacheKey = `cc_rates_${baseCode}`;
       const cachedRaw = localStorage.getItem(cacheKey);
       if (cachedRaw) {
-        const cached = JSON.parse(cachedRaw) as { updatedAt: string; rates: RatesMap; provider?: string };
+        const cached = JSON.parse(cachedRaw) as {
+          updatedAt: string;
+          rates: RatesMap;
+          provider?: string;
+        };
         // keep using the same CACHE_HOURS you already set
         if (cached.updatedAt && hoursAgo(cached.updatedAt) < CACHE_HOURS) {
           setRates(cached.rates);
           setLastUpdated(cached.updatedAt);
-          setStatus('cached');
+          setStatus("cached");
           return;
         }
       }
@@ -139,27 +163,34 @@ export default function CurrencyConverterPage() {
       const res = await fetch(`/api/rates?base=${encodeURIComponent(baseCode)}`);
       if (!res.ok) throw new Error(`Rate API failed (${res.status})`);
       const data = (await res.json()) as { base: string; rates: RatesMap | null; provider: string };
-      if (!data.rates) throw new Error('No rates in response');
+      if (!data.rates) throw new Error("No rates in response");
 
       const updatedAt = nowISO();
-      localStorage.setItem(`cc_rates_${baseCode}`, JSON.stringify({ updatedAt, rates: data.rates, provider: data.provider }));
+      localStorage.setItem(
+        `cc_rates_${baseCode}`,
+        JSON.stringify({ updatedAt, rates: data.rates, provider: data.provider }),
+      );
 
       setRates(data.rates);
       setLastUpdated(updatedAt);
-      setStatus('ok');
+      setStatus("ok");
     } catch (e) {
       // Try stale cache
       const cacheKey = `cc_rates_${baseCode}`;
       const cachedRaw = localStorage.getItem(cacheKey);
       if (cachedRaw) {
-        const cached = JSON.parse(cachedRaw) as { updatedAt: string; rates: RatesMap; provider?: string };
+        const cached = JSON.parse(cachedRaw) as {
+          updatedAt: string;
+          rates: RatesMap;
+          provider?: string;
+        };
         setRates(cached.rates);
-        setLastUpdated(cached.updatedAt + ' (stale)');
-        setStatus('cached');
+        setLastUpdated(cached.updatedAt + " (stale)");
+        setStatus("cached");
       } else {
         setRates({});
-        setLastUpdated('');
-        setStatus('error');
+        setLastUpdated("");
+        setStatus("error");
       }
     }
   }
@@ -188,38 +219,53 @@ export default function CurrencyConverterPage() {
   }
 
   function resetAll() {
-    setAmount('100');
-    setFrom('USD');
-    setTo('BDT');
-    setTimeout(() => fetchRates('USD'), 0);
+    setAmount("100");
+    setFrom("USD");
+    setTo("BDT");
+    setTimeout(() => fetchRates("USD"), 0);
   }
 
   function convert() {
     if (!rate) return;
-    setHistory((h) => [{ ts: nowISO(), from, to, amount: Number(amount) || 0, result, rate }, ...h]);
+    setHistory((h) => [
+      { ts: nowISO(), from, to, amount: Number(amount) || 0, result, rate },
+      ...h,
+    ]);
   }
 
   function toggleFavorite() {
     const key = pairKey(from, to);
     setFavorites((favs) => {
       const exists = favs.some((f) => pairKey(f.from, f.to) === key);
-      return exists ? favs.filter((f) => pairKey(f.from, f.to) !== key) : [{ from, to }, ...favs].slice(0, 15);
+      return exists
+        ? favs.filter((f) => pairKey(f.from, f.to) !== key)
+        : [{ from, to }, ...favs].slice(0, 15);
     });
   }
 
   const isFavorite = favorites.some((f) => f.from === from && f.to === to);
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   function copy(text: string) {
     navigator.clipboard.writeText(text);
   }
 
   function exportHistoryCSV() {
-    const rows: string[][] = [['Time', 'From', 'To', 'Amount', 'Rate', 'Result'], ...history.map((h) => [String(h.ts), h.from, h.to, String(h.amount), String(h.rate), String(h.result)])];
-    csvDownload('currency-history.csv', rows);
+    const rows: string[][] = [
+      ["Time", "From", "To", "Amount", "Rate", "Result"],
+      ...history.map((h) => [
+        String(h.ts),
+        h.from,
+        h.to,
+        String(h.amount),
+        String(h.rate),
+        String(h.result),
+      ]),
+    ];
+    csvDownload("currency-history.csv", rows);
   }
 
-  const inlineRate = rate ? `1 ${from} = ${formatNumber(rate)} ${to}` : '—';
+  const inlineRate = rate ? `1 ${from} = ${formatNumber(rate)} ${to}` : "—";
 
   return (
     <div className="container mx-auto max-w-5xl px-3 py-6 sm:py-10">
@@ -231,7 +277,8 @@ export default function CurrencyConverterPage() {
               <Globe className="h-6 w-6" /> Currency Converter
             </h1>
             <p className="text-sm text-muted-foreground">
-              Convert currencies with live rates ({PROVIDER}). Cached for {CACHE_HOURS}h to load fast.
+              Convert currencies with live rates ({PROVIDER}). Cached for {CACHE_HOURS}h to load
+              fast.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -255,11 +302,21 @@ export default function CurrencyConverterPage() {
             {/* Amount */}
             <div className="space-y-2">
               <Label htmlFor="amount">Amount</Label>
-              <Input id="amount" inputMode="decimal" placeholder="100" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <Input
+                id="amount"
+                inputMode="decimal"
+                placeholder="100"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
               <div className="text-xs text-muted-foreground">
                 Inline rate: <span className="font-medium">{inlineRate}</span>
               </div>
-              {lastUpdated && <div className="text-xs text-muted-foreground">Updated: {new Date(lastUpdated).toLocaleString()}</div>}
+              {lastUpdated && (
+                <div className="text-xs text-muted-foreground">
+                  Updated: {new Date(lastUpdated).toLocaleString()}
+                </div>
+              )}
             </div>
 
             {/* From */}
@@ -301,15 +358,39 @@ export default function CurrencyConverterPage() {
               <Button variant="outline" className="gap-2" onClick={swap}>
                 <ArrowLeftRight className="h-4 w-4" /> Swap
               </Button>
-              <Button variant={isFavorite ? 'default' : 'outline'} className="gap-2" onClick={toggleFavorite}>
-                <Sparkles className="h-4 w-4" /> {isFavorite ? 'Favorited' : 'Add Favorite'}
+              <Button
+                variant={isFavorite ? "default" : "outline"}
+                className="gap-2"
+                onClick={toggleFavorite}
+              >
+                <Sparkles className="h-4 w-4" /> {isFavorite ? "Favorited" : "Add Favorite"}
               </Button>
-              <Button variant="outline" className="gap-2" onClick={() => shareUrl && copy(shareUrl)}>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => shareUrl && copy(shareUrl)}
+              >
                 <Link2 className="h-4 w-4" /> Copy Share Link
               </Button>
               <div className="ml-auto">
-                <Badge variant={status === 'ok' ? 'default' : status === 'cached' ? 'outline' : status === 'loading' ? 'outline' : 'destructive'}>
-                  {status === 'loading' ? 'Fetching rates…' : status === 'ok' ? 'Live' : status === 'cached' ? 'Cached' : 'Error'}
+                <Badge
+                  variant={
+                    status === "ok"
+                      ? "default"
+                      : status === "cached"
+                        ? "outline"
+                        : status === "loading"
+                          ? "outline"
+                          : "destructive"
+                  }
+                >
+                  {status === "loading"
+                    ? "Fetching rates…"
+                    : status === "ok"
+                      ? "Live"
+                      : status === "cached"
+                        ? "Cached"
+                        : "Error"}
                 </Badge>
               </div>
             </div>
@@ -325,13 +406,17 @@ export default function CurrencyConverterPage() {
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border p-4">
               <div className="text-xs text-muted-foreground">Rate</div>
-              <div className="mt-1 text-xl font-semibold">{rate ? `1 ${from} = ${formatNumber(rate)} ${to}` : '—'}</div>
+              <div className="mt-1 text-xl font-semibold">
+                {rate ? `1 ${from} = ${formatNumber(rate)} ${to}` : "—"}
+              </div>
               <div className="mt-1 text-xs text-muted-foreground">Provider: {PROVIDER}</div>
             </div>
 
             <div className="rounded-xl border p-4">
               <div className="text-xs text-muted-foreground">Converted Amount</div>
-              <div className="mt-1 text-xl font-semibold">{rate ? `${formatNumber(Number(amount || 0) * rate)} ${to}` : '—'}</div>
+              <div className="mt-1 text-xl font-semibold">
+                {rate ? `${formatNumber(Number(amount || 0) * rate)} ${to}` : "—"}
+              </div>
             </div>
           </CardContent>
         </GlassCard>
@@ -356,11 +441,14 @@ export default function CurrencyConverterPage() {
                       onClick={() => {
                         setFrom(f.from);
                         setTo(f.to);
-                      }}>
+                      }}
+                    >
                       {f.from} → {f.to}
                     </Button>
                   ))}
-                  {favorites.length === 0 && <p className="text-sm text-muted-foreground">No favorites yet.</p>}
+                  {favorites.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No favorites yet.</p>
+                  )}
                 </CardContent>
               </GlassCard>
             )}
@@ -373,7 +461,12 @@ export default function CurrencyConverterPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="gap-2" onClick={exportHistoryCSV}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={exportHistoryCSV}
+                    >
                       <Download className="h-4 w-4" /> Export CSV
                     </Button>
                     <Button
@@ -382,7 +475,8 @@ export default function CurrencyConverterPage() {
                       className="gap-2"
                       onClick={() => {
                         setHistory([]);
-                      }}>
+                      }}
+                    >
                       Clear
                     </Button>
                   </div>
@@ -409,7 +503,12 @@ export default function CurrencyConverterPage() {
                             <td className="text-right">{formatNumber(h.rate)}</td>
                             <td className="text-right">{formatNumber(h.result)}</td>
                             <td className="text-right">
-                              <Button variant="outline" size="sm" className="gap-2" onClick={() => navigator.clipboard.writeText(String(h.result))}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                onClick={() => navigator.clipboard.writeText(String(h.result))}
+                              >
                                 <Copy className="h-4 w-4" /> Copy
                               </Button>
                             </td>
