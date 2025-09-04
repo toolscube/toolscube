@@ -125,7 +125,7 @@ export default function AgeCalculatorClient() {
   const [dobDate, setDobDate] = useState<string>("");
   const [dobTime, setDobTime] = useState<string>("00:00");
 
-  // Live clock (so "seconds alive" moves)
+  // Live clock
   const [now, setNow] = useState<Date>(new Date());
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 1000);
@@ -136,10 +136,10 @@ export default function AgeCalculatorClient() {
   const birth: Date | null = useMemo(() => {
     if (!dobDate) return null;
     const safe = clampDateString(dobDate);
-    const [y, m, d] = safe.split("-").map((n) => Number(n));
-    const [hh, mm] = (hasTime ? dobTime : "00:00").split(":").map((n) => Number(n));
+    const [y, m, d] = safe.split("-").map(Number);
+    const [hh, mm] = (hasTime ? dobTime : "00:00").split(":").map(Number);
     const dt = new Date(y, m - 1, d, hh, mm, 0, 0);
-    return isNaN(dt.getTime()) ? null : dt;
+    return Number.isNaN(dt.getTime()) ? null : dt;
   }, [dobDate, dobTime, hasTime]);
 
   // Calculations
@@ -186,7 +186,7 @@ export default function AgeCalculatorClient() {
     setDobTime("00:00");
   };
 
-  // Hydrate from URL (if any)
+  // Hydrate from URL
   useEffect(() => {
     if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
@@ -212,6 +212,30 @@ Total: ${results?.total.days} days, ${results?.total.hours} hours
 Next birthday: ${results?.until.exact} (${results?.until.days} days)`
       : "";
 
+     const stats = [
+      {
+        label: "Age",
+        value: `${results?.ymd.years}Y ${results?.ymd.months}M ${results?.ymd.days}D`,
+        hint: birth ? `Born ${shortDate(birth)}` : "Birth date not set",
+      },
+      {
+        label: "Total Days",
+        value: results?.total.days.toLocaleString(),
+        hint: `${results?.total.hours.toLocaleString()} Hours`,
+      },
+      {
+        label: "Total Minutes",
+        value: results?.total.minutes.toLocaleString(),
+        hint: `${results?.total.seconds.toLocaleString()} Seconds`,
+      },
+      {
+        label: "Next Birthday",
+        value: `${results?.until.days} Days`,
+        hint: `${results?.until.weekday}, ${results?.until.exact}`,
+        Icon: Cake,
+      },
+    ];
+
   return (
     <>
       {/* HEADER */}
@@ -224,7 +248,7 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
             <ResetButton onClick={resetAll} />
             <ActionButton
               variant="outline"
-              Icon={Calendar}
+              icon={Calendar}
               label="Use today"
               onClick={applyToday}
             />
@@ -293,27 +317,9 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
             <>
               {/* Stats Cards */}
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <Stat
-                  label="Age"
-                  value={`${results.ymd.years}y ${results.ymd.months}m ${results.ymd.days}d`}
-                  hint={`Born ${shortDate(birth)}`}
-                />
-                <Stat
-                  label="Total Days"
-                  value={results.total.days.toLocaleString()}
-                  hint={`${results.total.hours.toLocaleString()} hours`}
-                />
-                <Stat
-                  label="Total Minutes"
-                  value={results.total.minutes.toLocaleString()}
-                  hint={`${results.total.seconds.toLocaleString()} seconds`}
-                />
-                <Stat
-                  label="Next Birthday"
-                  value={`${results.until.days} days`}
-                  hint={`${results.until.weekday}, ${results.until.exact}`}
-                  Icon={Cake}
-                />
+                {stats.map((s) => (
+                  <Stat key={s.label} label={s.label} value={s.value} hint={s.hint} Icon={s.Icon} />
+                ))}
               </div>
 
               {/* Timeline-ish summary */}
