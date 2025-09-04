@@ -13,14 +13,18 @@ import {
   SortDesc,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { CopyButton, ExportTextButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
 import { InputField } from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
@@ -210,6 +214,34 @@ export default function LineToolsClient() {
     { label: "Avg length", value: stats.avgLen },
   ];
 
+  const actions = [
+    {
+      icon: SortAsc,
+      label: "Sort A→Z",
+      onClick: () => actionSort("asc"),
+    },
+    {
+      icon: SortDesc,
+      label: "Sort Z→A",
+      onClick: () => actionSort("desc"),
+    },
+    {
+      icon: Shuffle,
+      label: "Shuffle",
+      onClick: actionShuffle,
+    },
+    {
+      icon: Hash,
+      label: "Unique",
+      onClick: actionUnique,
+    },
+    {
+      icon: Scissors,
+      label: "Trim lines",
+      onClick: actionTrim,
+    },
+  ];
+
   return (
     <>
       {/* Header */}
@@ -291,7 +323,7 @@ export default function LineToolsClient() {
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs text-muted-foreground">
             {inputHistory.map((h, idx) => (
-              <div key={idx} className="rounded-md border p-2">
+              <div key={idx as number} className="rounded-md border p-2">
                 {h.label}: <strong>{h.value}</strong>
               </div>
             ))}
@@ -312,21 +344,15 @@ export default function LineToolsClient() {
         <CardContent className="space-y-4">
           {/* Basic ops */}
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="gap-2" onClick={() => actionSort("asc")}>
-              <SortAsc className="h-4 w-4" /> Sort A→Z
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={() => actionSort("desc")}>
-              <SortDesc className="h-4 w-4" /> Sort Z→A
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={actionShuffle}>
-              <Shuffle className="h-4 w-4" /> Shuffle
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={actionUnique}>
-              <Hash className="h-4 w-4" /> Unique
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={actionTrim}>
-              <Scissors className="h-4 w-4" /> Trim lines
-            </Button>
+            {actions.map((a, i) => (
+              <ActionButton
+                key={i as number}
+                icon={a.icon}
+                label={a.label}
+                onClick={a.onClick}
+                variant="outline"
+              />
+            ))}
           </div>
 
           {/* Find & Replace */}
@@ -361,14 +387,12 @@ export default function LineToolsClient() {
                 />
               </div>
               <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  className="gap-2"
+                <ActionButton
+                  icon={Search}
+                  label="Run Replace"
                   onClick={actionFindReplace}
                   disabled={!find}
-                >
-                  <Search className="h-4 w-4" /> Run Replace
-                </Button>
+                />
               </div>
             </div>
           </div>
@@ -402,14 +426,12 @@ export default function LineToolsClient() {
                 />
               </div>
               <div className="sm:col-span-2 flex justify-end">
-                <Button
-                  variant="outline"
-                  className="gap-2"
+                <ActionButton
+                  icon={Filter}
+                  label="Apply Filter"
                   onClick={actionFilter}
                   disabled={!filterQuery}
-                >
-                  <Filter className="h-4 w-4" /> Apply Filter
-                </Button>
+                />
               </div>
             </div>
           </div>
@@ -491,14 +513,12 @@ export default function LineToolsClient() {
               label="Copy Output"
               copiedLabel="Copied Output"
             />
-            <Button
-              variant="outline"
-              className="gap-2"
+            <ActionButton
+              icon={Replace}
+              label="Replace Input"
               onClick={() => setText(output)}
               disabled={!output}
-            >
-              <Replace className="h-4 w-4" /> Replace Input
-            </Button>
+            />
           </div>
         </CardContent>
       </GlassCard>
