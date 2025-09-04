@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import {
+  ActionButton,
   CopyButton,
   ExportFromUrlButton,
   ExportTextButton,
@@ -26,7 +27,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 
 /** Base64 Utilities */
 // Convert Uint8Array to base64 (standard)
@@ -106,21 +106,45 @@ export default function Base64Client() {
   // text
   const [inputText, setInputText] = React.useState<string>("");
   const [outputText, setOutputText] = React.useState<string>("");
-  const [copied, setCopied] = React.useState<"in" | "out" | null>(null);
 
   // files
   const [inFile, setInFile] = React.useState<File | null>(null);
   const [inInfo, setInInfo] = React.useState<FileInfo | null>(null);
   const [outFileInfo, setOutFileInfo] = React.useState<FileInfo | null>(null);
   const [outBlobUrl, setOutBlobUrl] = React.useState<string>("");
+  const [previewText, setPreviewText] = React.useState<string>("");
 
   const dropRef = React.useRef<HTMLLabelElement | null>(null);
+  const previewRef = React.useRef<HTMLTextAreaElement | null>(null);
 
   React.useEffect(() => {
     return () => {
       if (outBlobUrl) URL.revokeObjectURL(outBlobUrl);
     };
   }, [outBlobUrl]);
+
+  React.useEffect(() => {
+    try {
+      if (!inputText) {
+        setOutputText("");
+        return;
+      }
+
+      if (mode === "encode") {
+        const u8 = new TextEncoder().encode(inputText);
+        let b64 = u8ToBase64(u8);
+        if (urlSafe) b64 = toUrlSafe(b64, noPadding);
+        setOutputText(wrapCol > 0 ? wrapLines(b64, wrapCol) : b64);
+      } else {
+        const cleaned = inputText.replace(/\s+/g, "");
+        const restored = urlSafe ? fromUrlSafe(cleaned) : cleaned;
+        const u8 = base64ToU8(restored);
+        setOutputText(new TextDecoder().decode(u8));
+      }
+    } catch {
+      setOutputText("Failed to process. Check your input.");
+    }
+  }, [inputText, mode, urlSafe, noPadding, wrapCol]);
 
   const resetAll = () => {
     setMode("encode");
@@ -129,10 +153,10 @@ export default function Base64Client() {
     setWrapCol(0);
     setInputText("");
     setOutputText("");
-    setCopied(null);
     setInFile(null);
     setInInfo(null);
     setOutFileInfo(null);
+    setPreviewText("");
     if (outBlobUrl) {
       URL.revokeObjectURL(outBlobUrl);
       setOutBlobUrl("");
@@ -140,37 +164,6 @@ export default function Base64Client() {
   };
 
   /** Actions */
-  const runText = async () => {
-    try {
-      if (mode === "encode") {
-        const u8 = new TextEncoder().encode(inputText);
-        let b64 = u8ToBase64(u8);
-        if (urlSafe) b64 = toUrlSafe(b64, noPadding);
-        const wrapped = wrapCol > 0 ? wrapLines(b64, wrapCol) : b64;
-        setOutputText(wrapped);
-      } else {
-        const cleaned = inputText.replace(/\s+/g, "");
-        const restored = urlSafe ? fromUrlSafe(cleaned) : cleaned;
-        const u8 = base64ToU8(restored);
-        const text = new TextDecoder().decode(u8);
-        setOutputText(text);
-      }
-    } catch {
-      setOutputText("⚠️ Failed to process. Check your input and options.");
-    }
-  };
-
-  const copyValue = async (kind: "in" | "out") => {
-    const val = kind === "in" ? inputText : outputText;
-    try {
-      await navigator.clipboard.writeText(val);
-      setCopied(kind);
-      setTimeout(() => setCopied(null), 900);
-    } catch {
-      // ignore
-    }
-  };
-
   // File encode: file -> base64.txt
   const encodeFile = async () => {
     if (!inFile) return;
@@ -188,9 +181,16 @@ export default function Base64Client() {
       size: out.size,
       type: "text/plain",
     });
+
+    if (out.size < 200 * 1024) {
+      const preview = await out.text();
+      setPreviewText(preview.slice(0, 20_000));
+    } else {
+      setPreviewText("");
+    }
   };
 
-  // File decode: base64.txt -> original (guess type if possible)
+  // File decode: base64.txt
   const decodeFile = async () => {
     if (!inFile) return;
     const text = await inFile.text();
@@ -206,7 +206,9 @@ export default function Base64Client() {
       else if (String.fromCharCode(...u8.slice(0, 4)) === "%PDF") type = "application/pdf";
       else {
         const sample = new TextDecoder().decode(u8.slice(0, 64));
-        if (/^[\x09\x0A\x0D\x20-\x7E]/.test(sample)) type = "text/plain";
+        if (/^[\t\n\r\u0020-\u007E]/.test(sample)) {
+          type = "text/plain";
+        }
       }
 
       const out = u8ToBlob(u8, type || "application/octet-stream");
@@ -218,6 +220,17 @@ export default function Base64Client() {
         size: out.size,
         type: type || "application/octet-stream",
       });
+
+      if (
+        type &&
+        (type.startsWith("text/") || type === "application/json") &&
+        out.size < 200 * 1024
+      ) {
+        const preview = await out.text();
+        setPreviewText(preview.slice(0, 20_000));
+      } else {
+        setPreviewText("");
+      }
     } catch {
       if (outBlobUrl) {
         URL.revokeObjectURL(outBlobUrl);
@@ -228,6 +241,7 @@ export default function Base64Client() {
         size: 0,
         type: "text/plain",
       });
+      setPreviewText("");
     }
   };
 
@@ -237,6 +251,7 @@ export default function Base64Client() {
     setInFile(f);
     setInInfo({ name: f.name, size: f.size, type: f.type || "application/octet-stream" });
     setOutFileInfo(null);
+    setPreviewText("");  
     if (outBlobUrl) {
       URL.revokeObjectURL(outBlobUrl);
       setOutBlobUrl("");
@@ -250,80 +265,69 @@ export default function Base64Client() {
         icon={ArrowLeftRight}
         title="Base64 Encoder / Decoder"
         description="Encode or decode strings & files in Base64"
+        actions={<ResetButton variant="default" onClick={resetAll} />}
       />
 
       {/* Mode + Options */}
-      <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr] mt-4">
-        <GlassCard className="p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Label className="text-sm">Mode</Label>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={mode === "encode" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setMode("encode")}
-                >
-                  Encode
-                </Button>
-                <Button
-                  variant={mode === "decode" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setMode("decode")}
-                >
-                  Decode
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center justify-between rounded-lg border p-2">
-                <div className="mr-3">
-                  <p className="text-sm font-medium leading-none">URL-safe</p>
-                  <p className="text-xs text-muted-foreground">
-                    Use <code>-</code> and <code>_</code> instead of <code>+</code>/<code>/</code>.
-                  </p>
-                </div>
-                <Switch checked={urlSafe} onCheckedChange={setUrlSafe} />
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg border p-2">
-                <div className="mr-3">
-                  <p className="text-sm font-medium leading-none">No padding</p>
-                  <p className="text-xs text-muted-foreground">
-                    Remove trailing <code>=</code> signs.
-                  </p>
-                </div>
-                <Switch checked={noPadding} onCheckedChange={setNoPadding} />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <InputField
-                  label="Line wrap"
-                  id="wrap"
-                  type="number"
-                  min={0}
-                  placeholder="0 (off)"
-                  value={wrapCol || ""}
-                  onChange={(e) => setWrapCol(Math.max(0, Number(e.target.value) || 0))}
-                  className="w-28"
-                />
-              </div>
+      <GlassCard className="p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Button
+                variant={mode === "encode" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMode("encode")}
+              >
+                Encode
+              </Button>
+              <Button
+                variant={mode === "decode" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMode("decode")}
+              >
+                Decode
+              </Button>
             </div>
           </div>
-        </GlassCard>
 
-        <GlassCard className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Tip: Encoding a file? Use the <strong>File</strong> tab for drag-and-drop + downloads.
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center justify-between rounded-lg border p-2">
+              <div className="mr-3">
+                <p className="text-sm font-medium leading-none">URL-safe</p>
+                <p className="text-xs text-muted-foreground">
+                  Use <code>-</code> and <code>_</code> instead of <code>+</code>/<code>/</code>.
+                </p>
+              </div>
+              <Switch checked={urlSafe} onCheckedChange={setUrlSafe} />
             </div>
-            <ResetButton onClick={resetAll} />
-          </div>
-        </GlassCard>
-      </div>
 
-      <Separator className="my-6" />
+            <div className="flex items-center justify-between rounded-lg border p-2">
+              <div className="mr-3">
+                <p className="text-sm font-medium leading-none">No padding</p>
+                <p className="text-xs text-muted-foreground">
+                  Remove trailing <code>=</code> signs.
+                </p>
+              </div>
+              <Switch checked={noPadding} onCheckedChange={setNoPadding} />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <InputField
+                label="Line wrap"
+                id="wrap"
+                type="number"
+                min={0}
+                placeholder="0 (off)"
+                value={wrapCol || ""}
+                onChange={(e) => setWrapCol(Math.max(0, Number(e.target.value) || 0))}
+                className="w-28"
+              />
+            </div>
+          </div>
+        </div>
+      </GlassCard>
+
+      <Separator />
 
       {/* Tabs: Text / File */}
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="w-full">
@@ -337,51 +341,42 @@ export default function Base64Client() {
         </TabsList>
 
         {/* TEXT */}
-        <TabsContent value="text" className="mt-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <GlassCard className="p-5">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Input</Label>
-                <CopyButton getText={() => inputText || ""} />
+        <TabsContent value="text" className="mt-4 grid gap-4 md:grid-cols-2">
+          <GlassCard className="p-5 flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <Label className="text-sm font-medium">Input</Label>
+              <CopyButton getText={() => inputText} />
+            </div>
+            <TextareaField
+              value={inputText}
+              onValueChange={setInputText}
+              placeholder={mode === "encode" ? "Type text to encode…" : "Paste Base64 to decode…"}
+              textareaClassName="min-h-[250px]"
+              autoResize
+            />
+          </GlassCard>
+
+          <GlassCard className="p-5 flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <Label className="text-sm font-medium">Output</Label>
+              <div className="flex gap-2">
+                <CopyButton getText={() => outputText} />
+                <ExportTextButton
+                  variant="default"
+                  filename="encoded-base64.txt"
+                  getText={() => outputText}
+                  disabled={!outputText}
+                />
               </div>
-              <TextareaField
-                value={inputText}
-                onValueChange={setInputText}
-                placeholder={
-                  mode === "encode" ? "Type or paste text to encode…" : "Paste Base64 to decode…"
-                }
-                textareaClassName="min-h-[200px]"
-                autoResize
-              />
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={runText} className="gap-2">
-                  {mode === "encode" ? "Encode →" : "Decode →"}
-                </Button>
-              </div>
-            </GlassCard>
-
-            <GlassCard className="p-5">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Output</Label>
-
-                <div className="flex items-center gap-2">
-                  <CopyButton getText={() => outputText || ""} />
-
-                  {mode === "encode" && outputText && (
-                    <ExportTextButton filename="encoded-base64.txt" getText={outputText} />
-                  )}
-                </div>
-              </div>
-
-              <TextareaField
-                value={outputText}
-                readOnly
-                placeholder="Result will appear here…"
-                textareaClassName="min-h-[250px]"
-                autoResize
-              />
-            </GlassCard>
-          </div>
+            </div>
+            <TextareaField
+              value={outputText}
+              readOnly
+              placeholder="Result appears here…"
+              textareaClassName="min-h-[250px]"
+              autoResize
+            />
+          </GlassCard>
         </TabsContent>
 
         {/* FILE */}
@@ -389,12 +384,25 @@ export default function Base64Client() {
           <div className="grid gap-4 md:grid-cols-2">
             {/* LEFT: Input file */}
             <GlassCard className="p-5">
-              <Label className="text-sm font-medium">Input File</Label>
+              <div className="flex justify-between items-center">
+                <Label className="text-sm font-medium">Input File</Label>
+
+                <div className="flex items-center gap-2">
+                  <ResetButton onClick={resetAll} />
+                  <ActionButton
+                    variant="default"
+                    onClick={mode === "encode" ? encodeFile : decodeFile}
+                    disabled={!inFile}
+                    icon={ArrowLeftRight}
+                    label={mode === "encode" ? "Encode" : "Decode"}
+                  />
+                </div>
+              </div>
 
               <label
                 ref={dropRef}
                 htmlFor="file-input"
-                className="mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-center transition hover:bg-muted/50"
+                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-center transition hover:bg-muted/50 min-h-[200]"
               >
                 <UploadCloud className="h-7 w-7" />
                 <div className="text-sm font-medium">Drag & drop or click to upload</div>
@@ -405,7 +413,7 @@ export default function Base64Client() {
               </label>
 
               {inInfo && (
-                <div className="mt-3 rounded-lg border p-3 text-sm">
+                <div className="rounded-lg border p-3 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{inInfo.type || "application/octet-stream"}</Badge>
                     <span className="text-muted-foreground">
@@ -415,24 +423,47 @@ export default function Base64Client() {
                   <div className="mt-1 font-mono text-xs">{inInfo.name}</div>
                 </div>
               )}
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button
-                  onClick={mode === "encode" ? encodeFile : decodeFile}
-                  disabled={!inFile}
-                  className="gap-2"
-                >
-                  <ArrowLeftRight className="h-4 w-4" />
-                  {mode === "encode" ? "Encode file → Base64" : "Decode Base64 file → Binary"}
-                </Button>
-
-                <ResetButton onClick={resetAll} />
-              </div>
             </GlassCard>
 
             {/* RIGHT: Output */}
             <GlassCard className="p-5">
-              <Label className="text-sm font-medium">Output</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Output</Label>
+
+                {outFileInfo && (
+                  <div className="flex flex-wrap gap-2">
+                    <CopyButton getText={() => outBlobUrl || ""} disabled={!outBlobUrl} />
+                    {outBlobUrl && (
+                      <ExportFromUrlButton
+                        filename={outFileInfo.name}
+                        url={outBlobUrl}
+                        label="Download"
+                        variant="default"
+                      />
+                    )}
+                    {outBlobUrl && inferPreviewKind(outFileInfo.type) === "image" && (
+                      <LinkButton
+                        href={outBlobUrl}
+                        label="Open preview"
+                        variant="default"
+                        icon={ImageIcon}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {outFileInfo && (
+                <div className="flex flex-col gap-2 border p-3 rounded-md">
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <Badge variant="secondary">{outFileInfo.type}</Badge>
+                    <span className="text-muted-foreground">
+                      {(outFileInfo.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+                  <div className="text-xs">{outFileInfo.name}</div>
+                </div>
+              )}
 
               {!outFileInfo && (
                 <div className="text-xs text-muted-foreground">
@@ -441,52 +472,17 @@ export default function Base64Client() {
               )}
 
               {outFileInfo && (
-                <div className="mb-2 rounded-lg border p-3">
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <Badge variant="secondary">{outFileInfo.type}</Badge>
-                    <span className="text-muted-foreground">
-                      {(outFileInfo.size / 1024).toFixed(1)} KB
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs">{outFileInfo.name}</div>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {outBlobUrl && (
-                      <ExportFromUrlButton
-                        filename={outFileInfo.name}
-                        url={outBlobUrl}
-                        label="Download"
-                        variant="default"
-                        size="sm"
-                        className="gap-2 mb-2"
-                      />
-                    )}
-                    {outBlobUrl && inferPreviewKind(outFileInfo.type) === "image" && (
-                      <LinkButton
-                        href={outBlobUrl}
-                        label="Open preview"
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        icon={ImageIcon}
-                      />
-                    )}
-                  </div>
-
+                <div>
                   {outBlobUrl &&
                     inferPreviewKind(outFileInfo.type) === "text" &&
                     outFileInfo.size < 200 * 1024 && (
                       <>
                         <Label className="text-xs text-muted-foreground mb-1">Preview</Label>
-                        <Textarea
+                        <TextareaField
+                          ref={previewRef}
                           readOnly
-                          className="min-h-[180px]"
-                          defaultValue={""}
-                          onFocus={async (e) => {
-                            const resp = await fetch(outBlobUrl);
-                            const txt = await resp.text();
-                            e.currentTarget.value = txt.slice(0, 20000);
-                          }}
+                          textareaClassName="min-h-[180px]"
+                          value={previewText}
                         />
                       </>
                     )}

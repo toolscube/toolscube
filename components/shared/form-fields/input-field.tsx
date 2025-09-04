@@ -111,6 +111,8 @@ export function InputField<
     return raw === "" ? "" : Number(raw);
   };
 
+  const LeftFileIcon: LucideIcon = Icon ?? CloudUpload;
+
   if (inFormMode) {
     // ── RHF MODE
     return (
@@ -178,7 +180,7 @@ export function InputField<
                       disabled={effectiveDisabled || field.disabled}
                       className="gap-2"
                     >
-                      {(FileIcon ?? CloudUpload)({ className: "h-4 w-4" })}
+                      <LeftFileIcon className="w-4 h-4" />
                       {fileButtonLabel}
                     </Button>
                   </div>
@@ -265,7 +267,7 @@ export function InputField<
             disabled={effectiveDisabled}
             className="gap-2"
           >
-            {(FileIcon ?? CloudUpload)({ className: "h-4 w-4" })}
+            <LeftFileIcon className="w-4 h-4" />
             {fileButtonLabel}
           </Button>
         </div>

@@ -52,10 +52,10 @@ export type TextareaFieldProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > = BaseProps & { name?: TName };
 
-export default function TextareaField<
-  TFieldValues extends FieldValues,
-  TName extends FieldPath<TFieldValues>,
->(props: TextareaFieldProps<TFieldValues, TName>) {
+const TextareaField = React.forwardRef<
+  HTMLTextAreaElement,
+  TextareaFieldProps<FieldValues, string>
+>((props, ref) => {
   const {
     name,
     id,
@@ -84,59 +84,60 @@ export default function TextareaField<
     error,
   } = props;
 
-  const taRef = React.useRef<HTMLTextAreaElement | null>(null);
+  // local ref + merge with forwarded ref
+  const innerRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const setMergedRef = React.useCallback(
+    (el: HTMLTextAreaElement | null) => {
+      innerRef.current = el;
+      if (typeof ref === "function") ref(el);
+      else if (ref) (ref as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+    },
+    [ref],
+  );
+
   const autoId = React.useId();
   const textareaId = id ?? autoId;
 
-  // local state always declared (only used when !name)
+  // local state declared unconditionally (used only when standalone)
   const [internal, setInternal] = React.useState<string>(defaultValue ?? "");
+  const standaloneValue = externalValue ?? internal;
 
-  // computed value (standalone uses internal state)
-  const value = externalValue ?? (name ? undefined : internal) ?? "";
-
-  // resize function
+  // autoresize helper
   const resizeNow = React.useCallback(() => {
-    if (!autoResize || !taRef.current) return;
-    const el = taRef.current;
+    if (!autoResize || !innerRef.current) return;
+    const el = innerRef.current;
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
   }, [autoResize]);
 
-  // effect always declared
+  // keep height in sync in both modes
   React.useEffect(() => {
     resizeNow();
   }, [resizeNow]);
 
-  const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-    const next = e.target.value;
-    if (name) {
-      // RHF will handle onChange via field
-      onValueChange?.(next);
-    } else {
-      onValueChange ? onValueChange(next) : setInternal(next);
-    }
-    onChange?.(e);
-    resizeNow();
-  };
+  if (!name) {
+    // Standalone mode
+    const value = standaloneValue ?? "";
 
-  const handleBlur: React.FocusEventHandler<HTMLTextAreaElement> = (e) => {
-    if (trimOnBlur) {
-      const trimmed = e.target.value.trim();
-      if (trimmed !== e.target.value) {
-        if (name) {
-          onValueChange?.(trimmed);
-        } else {
+    const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
+      const next = e.target.value;
+      onValueChange ? onValueChange(next) : setInternal(next);
+      onChange?.(e);
+      resizeNow();
+    };
+
+    const handleBlur: React.FocusEventHandler<HTMLTextAreaElement> = (e) => {
+      if (trimOnBlur) {
+        const trimmed = e.target.value.trim();
+        if (trimmed !== e.target.value) {
           onValueChange ? onValueChange(trimmed) : setInternal(trimmed);
         }
       }
-    }
-    onBlur?.(e);
-  };
+      onBlur?.(e);
+    };
 
-  const count = typeof value === "string" ? value.length : 0;
+    const count = typeof value === "string" ? value.length : 0;
 
-  if (!name) {
-    // ── Standalone
     return (
       <div className={className}>
         {label ? (
@@ -151,7 +152,7 @@ export default function TextareaField<
 
         <div className={cn("overflow-hidden rounded-md dark:bg-transparent", wrapperClassName)}>
           <Textarea
-            ref={taRef}
+            ref={setMergedRef}
             id={textareaId}
             placeholder={placeholder}
             value={value}
@@ -187,79 +188,87 @@ export default function TextareaField<
     );
   }
 
-  // ── RHF
+  // RHF mode
   return (
     <FormField
       name={name}
-      render={({ field }) => (
-        <FormItem className={className}>
-          {label ? (
-            <FormLabel className="mb-2" htmlFor={textareaId}>
-              {label}
-              {required && <span className="ml-0.5 text-destructive">*</span>}
-            </FormLabel>
-          ) : null}
+      render={({ field }) => {
+        const value = externalValue ?? field.value ?? "";
+        const count = typeof value === "string" ? value.length : 0;
 
-          <FormControl>
-            <div
-              className={cn(
-                "overflow-hidden rounded-md bg-light dark:bg-transparent",
-                wrapperClassName,
-              )}
-            >
-              <Textarea
-                ref={taRef}
-                id={textareaId}
-                placeholder={placeholder}
-                value={externalValue ?? field.value ?? ""}
-                onChange={(e) => {
-                  field.onChange(e.target.value);
-                  onValueChange?.(e.target.value);
-                  onChange?.(e);
-                  resizeNow();
-                }}
-                onBlur={(e) => {
-                  if (trimOnBlur) {
-                    const trimmed = e.target.value.trim();
-                    if (trimmed !== e.target.value) {
-                      field.onChange(trimmed);
-                      onValueChange?.(trimmed);
+        return (
+          <FormItem className={className}>
+            {label ? (
+              <FormLabel className="mb-2" htmlFor={textareaId}>
+                {label}
+                {required && <span className="ml-0.5 text-destructive">*</span>}
+              </FormLabel>
+            ) : null}
+
+            <FormControl>
+              <div
+                className={cn(
+                  "overflow-hidden rounded-md bg-light dark:bg-transparent",
+                  wrapperClassName,
+                )}
+              >
+                <Textarea
+                  ref={setMergedRef}
+                  id={textareaId}
+                  placeholder={placeholder}
+                  value={value}
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                    onValueChange?.(e.target.value);
+                    onChange?.(e);
+                    resizeNow();
+                  }}
+                  onBlur={(e) => {
+                    if (trimOnBlur) {
+                      const trimmed = e.target.value.trim();
+                      if (trimmed !== e.target.value) {
+                        field.onChange(trimmed);
+                        onValueChange?.(trimmed);
+                      }
                     }
-                  }
-                  field.onBlur();
-                  onBlur?.(e);
-                }}
-                onKeyUp={onKeyUp}
-                onPaste={onPaste}
-                disabled={disabled || field.disabled}
-                readOnly={readOnly}
-                rows={rows}
-                maxLength={maxLength}
-                className={cn("w-full", minHeight, textareaClassName)}
-                aria-required={required || undefined}
-              />
-            </div>
-          </FormControl>
+                    field.onBlur();
+                    onBlur?.(e);
+                  }}
+                  onKeyUp={onKeyUp}
+                  onPaste={onPaste}
+                  disabled={disabled || field.disabled}
+                  readOnly={readOnly}
+                  rows={rows}
+                  maxLength={maxLength}
+                  className={cn("w-full", minHeight, textareaClassName)}
+                  aria-required={required || undefined}
+                />
+              </div>
+            </FormControl>
 
-          {description ? <FormDescription>{description}</FormDescription> : null}
+            {description ? <FormDescription>{description}</FormDescription> : null}
 
-          {showCount && (
-            <div
-              className={cn(
-                "mt-1 text-right text-xs",
-                maxLength && count >= maxLength * 0.95
-                  ? "text-destructive"
-                  : "text-muted-foreground",
-              )}
-            >
-              {count}
-              {maxLength ? ` / ${maxLength}` : ""}
-            </div>
-          )}
+            {showCount && (
+              <div
+                className={cn(
+                  "mt-1 text-right text-xs",
+                  maxLength && count >= maxLength * 0.95
+                    ? "text-destructive"
+                    : "text-muted-foreground",
+                )}
+              >
+                {count}
+                {maxLength ? ` / ${maxLength}` : ""}
+              </div>
+            )}
 
-          <FormMessage />
-        </FormItem>
-      )}
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
-}
+});
+
+TextareaField.displayName = "TextareaField";
+export default TextareaField;

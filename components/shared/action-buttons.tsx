@@ -1,8 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from "@/lib/utils/download";
 import {
   Check,
   Clipboard,
@@ -16,6 +13,9 @@ import {
 import Link from "next/link";
 import * as React from "react";
 import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from "@/lib/utils/download";
 
 type Variant = "default" | "outline" | "destructive" | "secondary" | "ghost" | "link";
 type Size = "default" | "sm" | "lg" | "icon";
@@ -331,7 +331,7 @@ export function SaveButton({
 }
 
 export function ExportTextButton({
-  filename,
+  filename = "text.txt",
   getText,
   label = "Export",
   mime = "text/plain;charset=utf-8;",
@@ -341,7 +341,7 @@ export function ExportTextButton({
   disabled,
   icon: Icon,
 }: {
-  filename: string;
+  filename?: string;
   getText: () => MaybePromise<string>;
   label?: string;
   mime?: string;
