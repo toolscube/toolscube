@@ -3,6 +3,7 @@
 import { AlignLeft, BarChart2, Clock4, FileText, Info, Mic, Type as TypeIcon } from "lucide-react";
 import * as React from "react";
 import {
+  ActionButton,
   CopyButton,
   ExportTextButton,
   PasteButton,
@@ -13,7 +14,6 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
@@ -211,15 +211,13 @@ function QuickTransforms({
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {actions.map((a) => (
-        <Button
+        <ActionButton
           key={a.key}
-          variant="outline"
-          className={cn("justify-start gap-2", a.span2 && "sm:col-span-2")}
+          icon={AlignLeft}
+          label={a.label}
+          className={cn("justify-start", a.span2 && "sm:col-span-2")}
           onClick={a.run}
-        >
-          <AlignLeft className="h-4 w-4" />
-          {a.label}
-        </Button>
+        />
       ))}
     </div>
   );

@@ -20,7 +20,6 @@ import { InputField } from "@/components/shared/form-fields/input-field";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -273,20 +272,18 @@ export default function Base64Client() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Button
+              <ActionButton
+                label="Encode"
                 variant={mode === "encode" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setMode("encode")}
-              >
-                Encode
-              </Button>
-              <Button
+              />
+              <ActionButton
+                label="Decode"
                 variant={mode === "decode" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setMode("decode")}
-              >
-                Decode
-              </Button>
+              />
             </div>
           </div>
 

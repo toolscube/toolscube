@@ -2,11 +2,10 @@
 
 import { Eye, EyeOff, Info, Key, Shield, ShieldAlert, ShieldCheck, Timer } from "lucide-react";
 import * as React from "react";
-import { CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
@@ -72,7 +71,7 @@ function estimateCharset(pw: string) {
   const hasDigit = /\d/.test(pw);
   const hasSpace = /\s/.test(pw);
   const symbolMatch = pw.match(/[!@#$%^&*()\-_=+[\]{};:'",.<>/?`~\\|]/g);
-  const asciiOnly = /^[\x00-\x7F]*$/.test(pw);
+const asciiOnly = /^\p{ASCII}*$/u.test(pw);
 
   if (hasLower) size += 26;
   if (hasUpper) size += 26;
@@ -123,7 +122,8 @@ function bandColor(band: StrengthBand) {
 
 // convert seconds to human readable
 function humanTime(seconds: number) {
-  if (!isFinite(seconds) || seconds <= 0) return "instant";
+  if (!Number.isFinite(seconds) || seconds <= 0) return "instant";
+
   const units: [number, string][] = [
     [60, "sec"],
     [60, "min"],
@@ -131,16 +131,20 @@ function humanTime(seconds: number) {
     [365, "day"],
     [Infinity, "yr"],
   ];
+
   let n = seconds;
   let idx = 0;
+
   for (; idx < units.length; idx++) {
     const [step] = units[idx];
     if (n < step) break;
-    n = n / step;
+    n /= step;
   }
+
   const label = units[idx]?.[1] ?? "sec";
   return `${n.toFixed(n >= 10 ? 0 : 1)} ${label}${n >= 2 ? "s" : ""}`;
 }
+
 
 // quick heuristic checks
 function findIssues(pw: string) {
@@ -259,9 +263,7 @@ export default function PasswordStrengthClient() {
                   autoComplete="off"
                 />
               </div>
-              <Button type="button" variant="outline" onClick={() => setShow((s) => !s)}>
-                {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
+              <ActionButton icon={show ? EyeOff : Eye} onClick={() => setShow((s) => !s)} />
             </div>
           </div>
 
@@ -337,7 +339,10 @@ export default function PasswordStrengthClient() {
           <div className="space-y-3">
             <div className="grid grid-cols-1 gap-2 text-sm">
               {estimatedCrackTimes.map((time, idx) => (
-                <div key={idx} className="flex items-center justify-between rounded-md border p-2">
+                <div
+                  key={idx as number}
+                  className="flex items-center justify-between rounded-md border p-2"
+                >
                   <div className="flex items-center gap-2">
                     <Timer className="h-4 w-4" />
                     {time.label}
@@ -380,7 +385,7 @@ export default function PasswordStrengthClient() {
               ) : (
                 <ul className="list-disc pl-6 text-sm space-y-1">
                   {issues.map((i, idx) => (
-                    <li key={idx}>{i}</li>
+                    <li key={idx as number}>{i}</li>
                   ))}
                 </ul>
               )}
@@ -467,7 +472,7 @@ correct horse battery staple"
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} className="border-t">
+                <tr key={i as number} className="border-t">
                   <td className="py-2 pr-4 font-mono break-all">{r.sample}</td>
                   <td className="py-2 pr-4">{r.bits.toFixed(1)}</td>
                   <td className="py-2 pr-4">

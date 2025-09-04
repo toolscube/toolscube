@@ -3,6 +3,7 @@
 import { History, ListChecks, Wand2 } from "lucide-react";
 import * as React from "react";
 import {
+  ActionButton,
   CopyButton,
   ExportCSVButton,
   ExportTextButton,
@@ -13,7 +14,6 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
@@ -265,30 +265,21 @@ pear`}
             <div>
               <Label>Sort</Label>
               <div className="mt-2 grid grid-cols-3 gap-2">
-                <Button
-                  type="button"
-                  variant={sortMode === "none" ? "default" : "outline"}
-                  onClick={() => setSortMode("none")}
-                  className="w-full"
-                >
-                  None
-                </Button>
-                <Button
-                  type="button"
-                  variant={sortMode === "asc" ? "default" : "outline"}
-                  onClick={() => setSortMode("asc")}
-                  className="w-full"
-                >
-                  A→Z
-                </Button>
-                <Button
-                  type="button"
-                  variant={sortMode === "desc" ? "default" : "outline"}
-                  onClick={() => setSortMode("desc")}
-                  className="w-full"
-                >
-                  Z→A
-                </Button>
+                {(
+                  [
+                    { key: "none", label: "None" },
+                    { key: "asc", label: "A→Z" },
+                    { key: "desc", label: "Z→A" },
+                  ] as const
+                ).map((opt) => (
+                  <ActionButton
+                    key={opt.key}
+                    label={opt.label}
+                    variant={sortMode === opt.key ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => setSortMode(opt.key)}
+                  />
+                ))}
               </div>
             </div>
 
@@ -296,29 +287,27 @@ pear`}
               <Label>Case</Label>
               <div className="mt-2 grid grid-cols-4 gap-2">
                 {(["none", "lower", "upper", "title"] as const).map((m) => (
-                  <Button
-                    key={m}
-                    type="button"
+                  <ActionButton
+                    key={m as string}
                     variant={caseMode === m ? "default" : "outline"}
                     onClick={() => setCaseMode(m)}
-                    className="w-full capitalize"
-                  >
-                    {m}
-                  </Button>
+                    className="capitalize"
+                    label={m}
+                  />
                 ))}
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <InputField
-                name="prefix"
+                id="prefix"
                 label="Prefix"
                 value={prefix}
                 onChange={(e) => setPrefix(e.target.value)}
                 placeholder="e.g. - "
               />
               <InputField
-                name="suffix"
+                id="suffix"
                 label="Suffix"
                 value={suffix}
                 onChange={(e) => setSuffix(e.target.value)}
@@ -336,7 +325,7 @@ pear`}
             {numbering && (
               <div className="grid gap-3 sm:grid-cols-3">
                 <InputField
-                  name="numStart"
+                  id="numStart"
                   label="Start"
                   type="number"
                   min={-999999}
@@ -345,7 +334,7 @@ pear`}
                   onChange={(e) => setNumStart(Number(e.target.value) || 1)}
                 />
                 <InputField
-                  name="numPad"
+                  id="numPad"
                   label="Pad"
                   type="number"
                   min={0}
@@ -354,7 +343,7 @@ pear`}
                   onChange={(e) => setNumPad(Math.max(0, Math.min(8, Number(e.target.value) || 0)))}
                 />
                 <InputField
-                  name="numSep"
+                  id="numSep"
                   label="Separator"
                   value={numSep}
                   onChange={(e) => setNumSep(e.target.value)}

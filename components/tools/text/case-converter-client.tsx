@@ -15,7 +15,6 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
@@ -349,15 +348,19 @@ export default function CaseConverterClient() {
               />
 
               <div className="flex flex-wrap gap-2 pt-1">
-                <Button size="sm" variant="outline" className="gap-2" onClick={presetSlug}>
-                  <Wand2 className="h-4 w-4" /> Preset: Slug
-                </Button>
-                <Button size="sm" variant="outline" className="gap-2" onClick={presetCode}>
-                  <Wand2 className="h-4 w-4" /> Preset: Code
-                </Button>
-                <Button size="sm" variant="outline" className="gap-2" onClick={presetSocial}>
-                  <Wand2 className="h-4 w-4" /> Preset: Social
-                </Button>
+                {[
+                  { label: "Preset: Slug", onClick: presetSlug },
+                  { label: "Preset: Code", onClick: presetCode },
+                  { label: "Preset: Social", onClick: presetSocial },
+                ].map((preset) => (
+                  <ActionButton
+                    key={preset.label}
+                    size="sm"
+                    icon={Wand2}
+                    label={preset.label}
+                    onClick={preset.onClick}
+                  />
+                ))}
               </div>
             </div>
 

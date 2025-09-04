@@ -9,7 +9,6 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
@@ -51,8 +50,9 @@ function smartQuotesToStraight(s: string) {
 }
 
 function removeEmojis(s: string) {
-  return s.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, "");
+  return s.replace(/\p{Extended_Pictographic}|\p{Variation_Selector}/gu, "");
 }
+
 
 function removeUrls(s: string) {
   return s.replace(/\b(?:https?:\/\/|www\.)\S+/gi, "");
@@ -71,8 +71,9 @@ function removeDiacritics(s: string) {
 }
 
 function keepAsciiOnly(s: string) {
-  return s.replace(/[^\x00-\x7F]+/g, "");
+  return s.replace(/[^\u0020-\u007E]+/g, "");
 }
+
 
 function collapseSpaces(s: string) {
   return s.replace(/[ \t]+/g, " ");
@@ -101,7 +102,7 @@ function toSentenceCase(s: string) {
   const parts = lower.split(/([.!?]+\s+)/);
   for (let i = 0; i < parts.length; i += 2) {
     const seg = parts[i];
-    if (seg && seg.trim()) {
+    if (seg?.trim()) {
       parts[i] = seg.replace(/^[\s]*([a-zA-Z\p{L}])/u, (m) => m.toUpperCase());
     }
   }
@@ -324,7 +325,7 @@ export default function TextCleanerClient() {
 
           <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs text-muted-foreground">
             {inputHistory.map((h, idx) => (
-              <div key={idx} className="rounded-md border p-2">
+              <div key={idx as number} className="rounded-md border p-2">
                 {h.label}: <strong>{h.value}</strong>
               </div>
             ))}
@@ -461,21 +462,24 @@ export default function TextCleanerClient() {
             textareaClassName="min-h-[220px] font-mono"
           />
           <div className="flex flex-wrap gap-2">
-            <ExportTextButton filename="cleaned.txt" getText={() => output} disabled={!output} />
+            <ExportTextButton
+              variant="default"
+              filename="cleaned.txt"
+              getText={() => output}
+              disabled={!output}
+            />
             <CopyButton
               label="Copy Output"
               copiedLabel="Copied Output"
               getText={() => output}
               disabled={!output}
             />
-            <Button
-              variant="outline"
-              className="gap-2"
+            <ResetButton
+              icon={Eraser}
+              label="Replace Input"
               onClick={() => setInput(output)}
               disabled={!output}
-            >
-              <Eraser className="h-4 w-4" /> Replace Input
-            </Button>
+            />
           </div>
         </CardContent>
       </GlassCard>

@@ -10,13 +10,13 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Mode = "single" | "batch";
+type PresetKey = "seo" | "github" | "id" | "raw";
 
 const delimiterFromKey = (k: DelimiterKey): DelimiterChar =>
   k === "dash" ? "-" : k === "underscore" ? "_" : "";
@@ -231,6 +231,13 @@ export default function SlugifyPage() {
     }
   };
 
+  const presetButtons: { label: string; preset: PresetKey }[] = [
+    { label: "SEO Blog", preset: "seo" },
+    { label: "GitHub Anchor", preset: "github" },
+    { label: "Compact ID", preset: "id" },
+    { label: "Raw", preset: "raw" },
+  ];
+
   return (
     <>
       {/* Header */}
@@ -244,18 +251,16 @@ export default function SlugifyPage() {
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <GlassCard className="p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => applyPreset("seo")}>
-              SEO Blog
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => applyPreset("github")}>
-              GitHub Anchor
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => applyPreset("id")}>
-              Compact ID
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => applyPreset("raw")}>
-              Raw
-            </Button>
+            {presetButtons.map((item) => (
+              <ActionButton
+                key={item.preset}
+                size="sm"
+                variant="outline"
+                label={item.label}
+                onClick={() => applyPreset(item.preset)}
+              />
+            ))}
+
             <ResetButton className="ml-auto" onClick={resetAll} />
           </div>
 
