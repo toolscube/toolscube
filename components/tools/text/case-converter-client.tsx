@@ -3,6 +3,7 @@
 import { ArrowLeftRight, Eraser, Info, Replace, Type as TypeIcon, Wand2 } from "lucide-react";
 import * as React from "react";
 import {
+  ActionButton,
   CopyButton,
   ExportTextButton,
   PasteButton,
@@ -258,24 +259,6 @@ export default function CaseConverterClient() {
     setCustomSep("");
   };
 
-  const paste = async () => {
-    try {
-      const s = await navigator.clipboard.readText();
-      setSource((prev) => (prev ? prev + (prev.endsWith("\n") ? "" : "\n") + s : s));
-    } catch {}
-  };
-
-  const download = (which: "src" | "dst") => {
-    const content = which === "src" ? source : transformed;
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = which === "src" ? "original.txt" : "converted.txt";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   // Presets — one click “opinionated” settings
   const presetSlug = () => {
     setMode("kebab");
@@ -337,50 +320,71 @@ export default function CaseConverterClient() {
           <CardDescription>Choose a case style and optional clean-up pipeline.</CardDescription>
         </CardHeader>
 
-        <CardContent className="grid gap-6 lg:grid-cols-3">
+        <CardContent>
           {/* Case mode */}
-          <div className="space-y-2">
-            <SelectField
-              label="Case Style"
-              placeholder="Choose case style"
-              value={mode}
-              onValueChange={(v) => setMode((v as CaseMode) ?? "title")}
-              allowClear={false}
-              options={[
-                { value: "upper", label: "UPPER" },
-                { value: "lower", label: "lower" },
-                { value: "title", label: "Title Case" },
-                { value: "sentence", label: "Sentence case" },
-                { value: "camel", label: "camelCase" },
-                { value: "pascal", label: "PascalCase" },
-                { value: "snake", label: "snake_case" },
-                { value: "kebab", label: "kebab-case" },
-                { value: "constant", label: "CONSTANT_CASE" },
-                { value: "capitalized", label: "Capitalized" },
-                { value: "alternating", label: "aLtErNaTiNg" },
-                { value: "invert", label: "iNVERT cASE" },
-              ]}
-              description="How your text should be transformed."
-              triggerClassName="w-full"
-            />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-2">
+              <SelectField
+                label="Case Style"
+                placeholder="Choose case style"
+                value={mode}
+                onValueChange={(v) => setMode((v as CaseMode) ?? "title")}
+                allowClear={false}
+                options={[
+                  { value: "upper", label: "UPPER" },
+                  { value: "lower", label: "lower" },
+                  { value: "title", label: "Title Case" },
+                  { value: "sentence", label: "Sentence case" },
+                  { value: "camel", label: "camelCase" },
+                  { value: "pascal", label: "PascalCase" },
+                  { value: "snake", label: "snake_case" },
+                  { value: "kebab", label: "kebab-case" },
+                  { value: "constant", label: "CONSTANT_CASE" },
+                  { value: "capitalized", label: "Capitalized" },
+                  { value: "alternating", label: "aLtErNaTiNg" },
+                  { value: "invert", label: "iNVERT cASE" },
+                ]}
+                description="How your text should be transformed."
+                triggerClassName="w-full"
+              />
 
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Button size="sm" variant="outline" className="gap-2" onClick={presetSlug}>
-                <Wand2 className="h-4 w-4" /> Preset: Slug
-              </Button>
-              <Button size="sm" variant="outline" className="gap-2" onClick={presetCode}>
-                <Wand2 className="h-4 w-4" /> Preset: Code
-              </Button>
-              <Button size="sm" variant="outline" className="gap-2" onClick={presetSocial}>
-                <Wand2 className="h-4 w-4" /> Preset: Social
-              </Button>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button size="sm" variant="outline" className="gap-2" onClick={presetSlug}>
+                  <Wand2 className="h-4 w-4" /> Preset: Slug
+                </Button>
+                <Button size="sm" variant="outline" className="gap-2" onClick={presetCode}>
+                  <Wand2 className="h-4 w-4" /> Preset: Code
+                </Button>
+                <Button size="sm" variant="outline" className="gap-2" onClick={presetSocial}>
+                  <Wand2 className="h-4 w-4" /> Preset: Social
+                </Button>
+              </div>
+            </div>
+
+            {/* Extras */}
+            <div className="space-y-3">
+              <SwitchRow
+                label="Live mode"
+                hint="Apply changes as you type."
+                checked={live}
+                onCheckedChange={setLive}
+              />
+
+              <InputField
+                label="Replace whitespace with"
+                id="customSep"
+                placeholder="(Optional) e.g. _ or -"
+                value={customSep}
+                onChange={(e) => setCustomSep(e.target.value)}
+                hint="Useful for custom slugs or tokens after conversion."
+              />
             </div>
           </div>
 
           {/* Pipeline toggles */}
           <div className="space-y-2">
             <Label className="text-sm">Clean-up Pipeline</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
               <SwitchRow
                 label="Trim ends"
                 checked={toggles.trim}
@@ -407,25 +411,6 @@ export default function CaseConverterClient() {
                 onCheckedChange={(v) => setToggles((t) => ({ ...t, removeDiacritics: v }))}
               />
             </div>
-          </div>
-
-          {/* Extras */}
-          <div className="space-y-3">
-            <SwitchRow
-              label="Live mode"
-              hint="Apply changes as you type."
-              checked={live}
-              onCheckedChange={setLive}
-            />
-
-            <InputField
-              label="Replace whitespace with"
-              id="customSep"
-              placeholder="(Optional) e.g. _ or -"
-              value={customSep}
-              onChange={(e) => setCustomSep(e.target.value)}
-              hint="Useful for custom slugs or tokens after conversion."
-            />
           </div>
         </CardContent>
       </GlassCard>
@@ -482,20 +467,17 @@ export default function CaseConverterClient() {
           />
 
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            <Button
-              variant="outline"
-              className="justify-center gap-2"
-              onClick={() => setSource("")}
-            >
-              <Eraser className="h-4 w-4" /> Clear
-            </Button>
+            <ResetButton icon={Eraser} label="Clear" onClick={() => setSource("")} />
 
             <CopyButton getText={() => source || ""} />
 
             {!live && (
-              <Button className="justify-start gap-2" onClick={() => setSource(transformed)}>
-                <Replace className="h-4 w-4" /> Convert Text
-              </Button>
+              <ActionButton
+                variant="default"
+                icon={Replace}
+                label="Convert Text"
+                onClick={() => setSource(transformed)}
+              />
             )}
           </div>
         </GlassCard>
@@ -512,7 +494,7 @@ export default function CaseConverterClient() {
 
           <TextareaField
             className="mt-2"
-            textareaClassName="min-h-[260px]"
+            textareaClassName="min-h-[270px]"
             value={
               live
                 ? transformed
@@ -532,10 +514,14 @@ export default function CaseConverterClient() {
               size="sm"
               disabled={!transformed}
             />
+
             {!live && (
-              <Button className="gap-2" onClick={() => setSource(transformed)}>
-                <ArrowLeftRight className="h-4 w-4" /> Apply to source
-              </Button>
+              <ActionButton
+                variant="default"
+                icon={ArrowLeftRight}
+                label="Apply to source"
+                onClick={() => setSource(transformed)}
+              />
             )}
           </div>
         </GlassCard>

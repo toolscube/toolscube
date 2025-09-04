@@ -3,7 +3,7 @@
 import { Eraser, Info, List, Type, Wand2 as Wand } from "lucide-react";
 import * as React from "react";
 import toast from "react-hot-toast";
-import { CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
 import { InputField } from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
@@ -161,9 +161,9 @@ export default function SlugifyPage() {
     ],
   );
 
-  const runSingle = React.useCallback(() => {
-    setOutput(slugify(input, opts));
-  }, [input, opts]);
+ const runSingle = React.useCallback(() => {
+  setOutput(slugify(input, opts));
+}, [input, opts]);
 
   const runBatch = React.useCallback(() => {
     const lines = (batchInput || "").split(/\r?\n/);
@@ -171,19 +171,17 @@ export default function SlugifyPage() {
     setBatchOutput(slugs.join("\n"));
   }, [batchInput, opts]);
 
-  // Live/Manual behavior
-  React.useEffect(() => {
-    if (!live) return;
+  // unify into one stable runner
+  const runCurrent = React.useCallback(() => {
     if (mode === "single") runSingle();
     else runBatch();
-  }, [live, mode, input, batchInput, opts, runSingle, runBatch]);
+  }, [mode, runSingle, runBatch]);
 
+  // only effect you need
   React.useEffect(() => {
-    if (live) {
-      if (mode === "single") runSingle();
-      else runBatch();
-    }
-  }, [live]);
+    if (!live) return;
+    runCurrent();
+  }, [live, runCurrent]);
 
   const resetAll = () => {
     setInput("");
@@ -285,13 +283,14 @@ export default function SlugifyPage() {
             />
 
             <SwitchRow
+              className="ml-auto"
               label="Live mode"
               hint="Apply changes as you type."
               checked={live}
               onCheckedChange={setLive}
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 w-full">
               <SwitchRow label="Lowercase" checked={lowercase} onCheckedChange={setLowercase} />
               <SwitchRow label="Trim edges" checked={trim} onCheckedChange={setTrim} />
               <SwitchRow
@@ -361,10 +360,8 @@ export default function SlugifyPage() {
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Input</Label>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="gap-2" onClick={() => setInput("")}>
-                    <Eraser className="h-4 w-4" /> Clear
-                  </Button>
-                  <CopyButton variant="ghost" getText={() => input} />
+                  <ResetButton icon={Eraser} label="Clear" onClick={() => setInput("")} />
+                  <CopyButton variant="default" getText={() => input} />
                 </div>
               </div>
 
@@ -379,16 +376,12 @@ export default function SlugifyPage() {
                 placeholder={
                   live ? "Write a title to slugify…" : "Write a title… (Ctrl/Cmd + Enter to run)"
                 }
-                textareaClassName="min-h-[160px]"
+                textareaClassName="min-h-[250px]"
               />
 
               {/* Show run button ONLY in Manual mode */}
               {!live && (
-                <div className="flex flex-wrap gap-2">
-                  <Button className="gap-2" onClick={runSingle}>
-                    <Wand className="h-4 w-4" /> Slugify
-                  </Button>
-                </div>
+                <ActionButton variant="default" icon={Wand} onClick={runSingle} label="Slugify" />
               )}
             </GlassCard>
 
@@ -401,17 +394,17 @@ export default function SlugifyPage() {
                     {live ? "Live" : "Manual"}
                   </Badge>
                 </div>
-                <CopyButton variant="ghost" getText={() => output} />
+                <CopyButton getText={() => output} />
               </div>
 
               <TextareaField
                 readOnly
                 value={output}
                 placeholder="Result will appear here…"
-                textareaClassName="mt-2 min-h-[120px] font-mono"
+                textareaClassName="min-h-[200px]"
                 autoResize
               />
-              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>
                   Length: <code className="rounded bg-muted px-1">{output.length}</code>
                 </span>
@@ -430,21 +423,14 @@ export default function SlugifyPage() {
         </TabsContent>
 
         {/* Batch */}
-        <TabsContent value="batch" className="mt-4">
+        <TabsContent value="batch">
           <div className="grid gap-4 md:grid-cols-2">
             <GlassCard className="p-5">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Input (one title per line)</Label>
                 <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => setBatchInput("")}
-                  >
-                    <Eraser className="h-4 w-4" /> Clear
-                  </Button>
-                  <CopyButton variant="ghost" getText={() => batchInput} />
+                  <ResetButton icon={Eraser} onClick={() => setBatchInput("")} label="Clear" />
+                  <CopyButton variant="default" getText={() => batchInput} />
                 </div>
               </div>
 
@@ -459,35 +445,36 @@ export default function SlugifyPage() {
                 onKeyUp={(e) => {
                   if (!live && e.key === "Enter" && (e.ctrlKey || e.metaKey)) runBatch();
                 }}
-                textareaClassName="mt-2 min-h-[220px]"
+                textareaClassName="min-h-[250px]"
                 autoResize
               />
 
               {/* Show run button ONLY in Manual mode */}
               {!live && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button className="gap-2" onClick={runBatch}>
-                    <Wand className="h-4 w-4" /> Slugify List
-                  </Button>
-                </div>
+                <ActionButton
+                  variant="default"
+                  icon={Wand}
+                  label="Slugify List"
+                  onClick={runBatch}
+                />
               )}
             </GlassCard>
 
             <GlassCard className="p-5">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Output (one slug per line)</Label>
-                <CopyButton variant="ghost" getText={() => batchOutput} />
+                <CopyButton variant="default" getText={() => batchOutput} />
               </div>
 
               <TextareaField
                 readOnly
                 value={batchOutput}
                 placeholder="result-one\nresult-two\nresult-three"
-                textareaClassName="mt-2 min-h-[220px] font-mono"
+                textareaClassName="min-h-[200px]"
                 autoResize
               />
 
-              <div className="mt-3 text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Lines:{" "}
                 <code className="rounded bg-muted px-1">
                   {batchOutput ? batchOutput.split("\n").length : 0}

@@ -341,7 +341,7 @@ export default function Base64Client() {
         </TabsList>
 
         {/* TEXT */}
-        <TabsContent value="text" className="mt-4 grid gap-4 md:grid-cols-2">
+        <TabsContent value="text" className="grid gap-4 md:grid-cols-2">
           <GlassCard className="p-5 flex flex-col gap-3">
             <div className="flex justify-between items-center">
               <Label className="text-sm font-medium">Input</Label>
@@ -380,7 +380,7 @@ export default function Base64Client() {
         </TabsContent>
 
         {/* FILE */}
-        <TabsContent value="file" className="mt-4">
+        <TabsContent value="file">
           <div className="grid gap-4 md:grid-cols-2">
             {/* LEFT: Input file */}
             <GlassCard className="p-5">
