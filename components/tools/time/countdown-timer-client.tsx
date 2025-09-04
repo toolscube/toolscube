@@ -87,31 +87,44 @@ function formatTimeInput(d: Date): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function parseDateTimeLocal(dateStr?: string, timeStr?: string) {
+function parseDateTimeLocal(dateStr?: string, timeStr?: string): Date | null {
   if (!dateStr || !timeStr) return null;
+
   const [y, mo, da] = dateStr.split("-").map(Number);
   const [hh, mm] = timeStr.split(":").map(Number);
+
   const dt = new Date(y, (mo || 1) - 1, da || 1, hh || 0, mm || 0, 0, 0);
-  return isNaN(dt.getTime()) ? null : dt;
+
+  return Number.isNaN(dt.getTime()) ? null : dt;
 }
 
-function beep() {
+export function beep(): void {
   try {
-    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.value = 880;
-    o.connect(g);
-    g.connect(ctx.destination);
-    g.gain.setValueAtTime(0.0001, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.55);
-    o.start();
-    o.stop(ctx.currentTime + 0.6);
-  } catch {}
+    const AC = window.AudioContext ?? window.webkitAudioContext;
+    if (!AC) return;
+
+    const ctx = new AC();
+
+    if (ctx.state === "suspended") {
+      // Fire-and-forget; we don't need to await here.
+      void ctx.resume();
+    }
+
+    const osc = new OscillatorNode(ctx, { type: "sine", frequency: 880 });
+    const gain = new GainNode(ctx, { gain: 0.0001 });
+
+    osc.connect(gain).connect(ctx.destination);
+
+    const t0 = ctx.currentTime;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.22, t0 + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
+
+    osc.start(t0);
+    osc.stop(t0 + 0.6);
+  } catch {
+    // no-op: fail silently
+  }
 }
 
 function isFinished(t: Timer) {
@@ -340,6 +353,30 @@ export default function CountdownTimerClient() {
   const onDelete = (id: string) => setTimers((arr) => arr.filter((t) => t.id !== id));
   const onDeleteAll = () => setTimers([]);
 
+
+  const actions = [
+    {
+      icon: Zap,
+      label: "Pomodoro 25/5 ×4",
+      onClick: () => addPomodoro(25, 5, 4),
+    },
+    {
+      icon: Clock,
+      label: "Meeting 15m",
+      onClick: () => addMeeting(15),
+    },
+    {
+      icon: Clock,
+      label: "Meeting 30m",
+      onClick: () => addMeeting(30),
+    },
+    {
+      icon: Clock,
+      label: "Meeting 60m",
+      onClick: () => addMeeting(60),
+    },
+  ];
+
   return (
     <>
       {/* Header */}
@@ -348,15 +385,13 @@ export default function CountdownTimerClient() {
         title="Countdown / Timer"
         description="Pomodoro cycles, quick meeting timers, or a countdown to any date — all in one place."
         actions={
-          <>
-            <ActionButton
-              variant="default"
-              Icon={Trash2}
-              label="Clear all"
-              onClick={onDeleteAll}
-              disabled={timers.length === 0}
-            />
-          </>
+          <ActionButton
+            variant="default"
+            icon={Trash2}
+            label="Clear all"
+            onClick={onDeleteAll}
+            disabled={timers.length === 0}
+          />
         }
       />
 
@@ -369,22 +404,14 @@ export default function CountdownTimerClient() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Button
-            variant="outline"
-            onClick={() => addPomodoro(25, 5, 4)}
-            className="justify-start gap-2"
-          >
-            <Zap className="h-4 w-4" /> Pomodoro 25/5 ×4
-          </Button>
-          <Button variant="outline" onClick={() => addMeeting(15)} className="justify-start gap-2">
-            <Clock className="h-4 w-4" /> Meeting 15m
-          </Button>
-          <Button variant="outline" onClick={() => addMeeting(30)} className="justify-start gap-2">
-            <Clock className="h-4 w-4" /> Meeting 30m
-          </Button>
-          <Button variant="outline" onClick={() => addMeeting(60)} className="justify-start gap-2">
-            <Clock className="h-4 w-4" /> Meeting 60m
-          </Button>
+          {actions.map((item) => (
+            <ActionButton
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              onClick={item.onClick}
+            />
+          ))}
         </CardContent>
       </GlassCard>
 
@@ -419,7 +446,7 @@ export default function CountdownTimerClient() {
             <div className="flex items-end">
               <ActionButton
                 variant="outline"
-                Icon={Plus}
+                icon={Plus}
                 label="Add Countdown"
                 onClick={() => {
                   if (cdMin && cdMin > 0) addCountdown(cdLabel || "Countdown", cdMin);
@@ -463,7 +490,7 @@ export default function CountdownTimerClient() {
               <ActionButton
                 className="w-full"
                 variant="outline"
-                Icon={Plus}
+                icon={Plus}
                 onClick={() => {
                   if (poWork && poBreak && poCycles) addPomodoro(poWork, poBreak, poCycles);
                 }}
@@ -503,7 +530,7 @@ export default function CountdownTimerClient() {
               <ActionButton
                 className="w-full"
                 variant="outline"
-                Icon={Plus}
+                icon={Plus}
                 onClick={() => addEvent(evLabel, parseDateTimeLocal(evDate, evTime))}
                 label="Add Event"
               />

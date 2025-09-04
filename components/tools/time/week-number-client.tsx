@@ -425,7 +425,8 @@ export default function WeekNumberClient() {
           {/* Quick copy row */}
           <div className="flex flex-wrap gap-2">
             <CopyButton
-              label="Copy ISO (YYYY-Www)"
+              variant="default"
+              label="Copy ISO"
               copiedLabel="Copied"
               getText={() => `${iso.isoYear}-W${iso.week}`}
             />
