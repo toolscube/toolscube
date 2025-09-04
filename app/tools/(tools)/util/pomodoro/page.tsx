@@ -8,7 +8,6 @@ import {
   History,
   Pause,
   Play,
-  RotateCcw,
   Settings2,
   SkipForward,
   Timer,
@@ -17,11 +16,12 @@ import {
   Zap,
 } from "lucide-react";
 import * as React from "react";
-
-import { Button } from "@/components/ui/button";
+import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -31,10 +31,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
-// ---------------- Types ----------------
+// Types
 type Mode = "work" | "short" | "long";
 type HistoryItem = {
   id: string;
@@ -44,7 +43,7 @@ type HistoryItem = {
   durationMs: number;
 };
 
-// ---------------- Helpers ----------------
+// Helpers
 const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 
 function msToClock(ms: number) {
@@ -75,7 +74,6 @@ function makeBeep(volume = 0.4, durationMs = 220, freq = 880) {
   }, durationMs);
 }
 
-// ---------------- Component ----------------
 export default function PomodoroPage() {
   // Settings
   const [workMin, setWorkMin] = React.useState<number>(25);
@@ -91,7 +89,7 @@ export default function PomodoroPage() {
   const [mode, setMode] = React.useState<Mode>("work");
   const [running, setRunning] = React.useState<boolean>(false);
   const [remainingMs, setRemainingMs] = React.useState<number>(workMin * 60 * 1000);
-  const [cycleCount, setCycleCount] = React.useState<number>(0); // completed work sessions
+  const [cycleCount, setCycleCount] = React.useState<number>(0);
   const [history, setHistory] = React.useState<HistoryItem[]>([]);
   const [startedAt, setStartedAt] = React.useState<number | null>(null);
 
@@ -120,7 +118,6 @@ export default function PomodoroPage() {
         setRemainingMs((prev) => {
           const next = prev - 1000;
           if (next <= 0) {
-            // complete current session
             onCompleteSession();
             return 0;
           }
@@ -143,7 +140,6 @@ export default function PomodoroPage() {
     autoStartWork,
   ]);
 
-  // Visibility: optional pause (kept running for simplicity)
   // Keyboard shortcuts
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -160,7 +156,7 @@ export default function PomodoroPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [running, mode, remainingMs]);
 
-  // Notifications permission (ask once after first interaction)
+  // Notifications permission
   const askedRef = React.useRef(false);
   React.useEffect(() => {
     const onFirstClick = () => {
@@ -198,7 +194,6 @@ export default function PomodoroPage() {
     setStartedAt(null);
   }
   function skip() {
-    // record current as ended, then move
     onCompleteSession(true);
   }
 
@@ -253,7 +248,6 @@ export default function PomodoroPage() {
           return;
         }
       } else {
-        // finished a break -> back to work
         setMode("work");
         setRemainingMs(workMin * 60 * 1000);
         ping("Focus time 🔥", `Back to work for ${workMin} minutes.`);
@@ -261,7 +255,6 @@ export default function PomodoroPage() {
         return;
       }
     } else {
-      // Skip logic: jump immediately to next suggested mode without logging completion toast
       if (mode === "work") {
         const newCount = cycleCount + 1;
         setCycleCount(newCount);
@@ -304,30 +297,25 @@ export default function PomodoroPage() {
   };
 
   return (
-    <MotionGlassCard className="space-y-4">
+    <>
       {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Timer className="h-6 w-6" /> Pomodoro Focus
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Work / break cycles with sound, history, and auto-start options.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset All
-          </Button>
-          <Button variant="outline" onClick={skip} className="gap-2">
-            <SkipForward className="h-4 w-4" /> Skip
-          </Button>
-          <Button onClick={toggle} className="gap-2">
-            {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            {running ? "Pause" : "Start"}
-          </Button>
-        </div>
-      </GlassCard>
+      <ToolPageHeader
+        icon={Timer}
+        title="Pomodoro Focus"
+        description="Work / break cycles with sound, history, and auto-start options."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} label="Reset All" />
+            <ActionButton icon={SkipForward} label="Skip" onClick={skip} />
+            <ActionButton
+              variant="default"
+              icon={running ? Pause : Play}
+              label={running ? "Pause" : "Start"}
+              onClick={toggle}
+            />
+          </>
+        }
+      />
 
       {/* Timer Card */}
       <GlassCard className="shadow-sm">
@@ -387,18 +375,14 @@ export default function PomodoroPage() {
               </div>
 
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
+                <ResetButton size="sm" onClick={() => resetTimer(mode)} />
+                <ActionButton
+                  variant="default"
                   size="sm"
-                  onClick={() => resetTimer(mode)}
-                  className="gap-2"
-                >
-                  <RotateCcw className="h-4 w-4" /> Reset
-                </Button>
-                <Button size="sm" onClick={toggle} className="gap-2">
-                  {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  {running ? "Pause" : "Start"}
-                </Button>
+                  icon={running ? Pause : Play}
+                  label={running ? "Pause" : "Start"}
+                  onClick={toggle}
+                />
               </div>
 
               <p className="text-[11px] text-muted-foreground">
@@ -409,36 +393,30 @@ export default function PomodoroPage() {
             {/* Quick Controls */}
             <div className="grid gap-4">
               <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <Label>Work (min)</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={180}
-                    value={workMin}
-                    onChange={(e) => setWorkMin(clamp(parseInt(e.target.value || "0", 10), 1, 180))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Short (min)</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={60}
-                    value={shortMin}
-                    onChange={(e) => setShortMin(clamp(parseInt(e.target.value || "0", 10), 1, 60))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Long (min)</Label>
-                  <Input
-                    type="number"
-                    min={5}
-                    max={90}
-                    value={longMin}
-                    onChange={(e) => setLongMin(clamp(parseInt(e.target.value || "0", 10), 5, 90))}
-                  />
-                </div>
+                <InputField
+                  label="Work (min)"
+                  type="number"
+                  min={1}
+                  max={180}
+                  value={workMin}
+                  onChange={(e) => setWorkMin(clamp(parseInt(e.target.value || "0", 10), 1, 180))}
+                />
+                <InputField
+                  label="Short (min)"
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={shortMin}
+                  onChange={(e) => setShortMin(clamp(parseInt(e.target.value || "0", 10), 1, 60))}
+                />
+                <InputField
+                  label="Long (min)"
+                  type="number"
+                  min={5}
+                  max={90}
+                  value={longMin}
+                  onChange={(e) => setLongMin(clamp(parseInt(e.target.value || "0", 10), 5, 90))}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -458,7 +436,7 @@ export default function PomodoroPage() {
                       );
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select mode" />
                     </SelectTrigger>
                     <SelectContent>
@@ -468,64 +446,58 @@ export default function PomodoroPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Until Long Break</Label>
-                  <Input
-                    type="number"
-                    min={2}
-                    max={12}
-                    value={sessionsUntilLong}
-                    onChange={(e) =>
-                      setSessionsUntilLong(clamp(parseInt(e.target.value || "0", 10), 2, 12))
-                    }
+                <InputField
+                  label="Until Long Break"
+                  type="number"
+                  min={2}
+                  max={12}
+                  value={sessionsUntilLong}
+                  onChange={(e) =>
+                    setSessionsUntilLong(clamp(parseInt(e.target.value || "0", 10), 2, 12))
+                  }
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <Settings2 className="h-4 w-4" />
+                  <span className="text-sm">Auto-start options</span>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <SwitchRow
+                    label="Auto-start breaks"
+                    checked={autoStartBreaks}
+                    onCheckedChange={setAutoStartBreaks}
+                  />
+                  <SwitchRow
+                    label="Auto-start work"
+                    checked={autoStartWork}
+                    onCheckedChange={setAutoStartWork}
                   />
                 </div>
               </div>
 
-              <div className="grid gap-3">
-                <div className="flex items-center justify-between rounded-md border p-3">
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-4 w-4" />
-                    <span className="text-sm">Sound on session change</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={volume}
-                      onChange={(e) => setVolume(parseInt(e.target.value || "0", 10))}
-                      className="w-28"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setSoundOn((s) => !s)}
-                      aria-label="Toggle sound"
-                    >
-                      {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                    </Button>
-                  </div>
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  <span className="text-sm">Sound on session change</span>
                 </div>
-
-                <div className="flex flex-col gap-2 rounded-md border p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Settings2 className="h-4 w-4" />
-                      <span className="text-sm">Auto-start options</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <label className="flex items-center gap-2">
-                      <Switch checked={autoStartBreaks} onCheckedChange={setAutoStartBreaks} />{" "}
-                      Auto-start breaks
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <Switch checked={autoStartWork} onCheckedChange={setAutoStartWork} />{" "}
-                      Auto-start work
-                    </label>
-                  </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={volume}
+                    onChange={(e) => setVolume(parseInt(e.target.value || "0", 10))}
+                    className="w-28"
+                  />
+                  <ActionButton
+                    size="icon"
+                    onClick={() => setSoundOn((s) => !s)}
+                    aria-label="Toggle sound"
+                    icon={soundOn ? Volume2 : VolumeX}
+                  />
                 </div>
               </div>
             </div>
@@ -583,6 +555,6 @@ export default function PomodoroPage() {
           )}
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }

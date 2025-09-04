@@ -295,14 +295,14 @@ function CityRow({
 
       <div className="flex flex-wrap gap-2">
         <ActionButton
-          Icon={Replace}
+          icon={Replace}
           label="Set as source"
           size="sm"
           variant="outline"
           onClick={onSwap}
         />
         <CopyButton size="sm" getText={`${text} — ${tz}`} />
-        <ActionButton Icon={Trash2} label="Remove" size="sm" variant="outline" onClick={onRemove} />
+        <ActionButton icon={Trash2} label="Remove" size="sm" variant="outline" onClick={onRemove} />
       </div>
     </div>
   );
@@ -427,7 +427,7 @@ export default function TimezoneConverterClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ActionButton variant="outline" Icon={Clock} label="Now" onClick={applyNow} />
+            <ActionButton variant="outline" icon={Clock} label="Now" onClick={applyNow} />
             <CopyButton variant="default" label="Copy Link" getText={link} />
           </>
         }
@@ -456,7 +456,6 @@ export default function TimezoneConverterClient() {
 
           <div className="grid grid-cols-2 gap-3">
             <InputField
-              fileIcon
               id="date"
               label="Date"
               type="date"

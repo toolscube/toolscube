@@ -1,7 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { ArrowRight, GitBranch, Link2, Search, Star } from "lucide-react";
+import { ArrowRight, Github, Link2, Linkedin, Search, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -165,15 +165,24 @@ export default function ToolsHeader() {
               </Tooltip>
             </TooltipProvider>
 
-            <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
+            <Button variant="outline" asChild size="icon" className="hidden sm:flex">
+              <Link
+                href="https://www.linkedin.com/in/tariqul-dev"
+                rel="noopener noreferrer"
+                target="_blank"
+                className="dark:text-foreground inline-flex items-center gap-1"
+              >
+                <Linkedin className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" asChild size="icon" className="hidden sm:flex">
               <Link
                 href="https://github.com/tariqul420"
                 rel="noopener noreferrer"
                 target="_blank"
                 className="dark:text-foreground inline-flex items-center gap-1"
               >
-                <GitBranch className="h-4 w-4" />
-                GitHub
+                <Github className="h-4 w-4" />
               </Link>
             </Button>
           </div>

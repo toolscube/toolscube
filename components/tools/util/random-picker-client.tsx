@@ -2,10 +2,14 @@
 
 import { Dice5, Sparkles, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { CopyButton, ExportTextButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
@@ -23,7 +27,6 @@ export default function RandomPickerClient() {
   const [input, setInput] = useState("");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
   useEffect(() => {
@@ -72,15 +75,6 @@ export default function RandomPickerClient() {
     );
   };
 
-  const copyWinner = async () => {
-    if (!winner) return;
-    try {
-      await navigator.clipboard.writeText(winner);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {}
-  };
-
   return (
     <>
       <ToolPageHeader
@@ -113,9 +107,7 @@ export default function RandomPickerClient() {
             placeholder="Alice\nBob\nCharlie"
             textareaClassName="min-h-[120px]"
           />
-          <Button onClick={addEntries} className="gap-2 w-full sm:w-auto">
-            <Users className="h-4 w-4" /> Add
-          </Button>
+          <ActionButton variant="default" icon={Users} label="Add" onClick={addEntries} />
         </CardContent>
       </GlassCard>
 
@@ -144,9 +136,12 @@ export default function RandomPickerClient() {
           <CardDescription>Click Pick to choose randomly</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button onClick={pickWinner} className="gap-2">
-            <Sparkles className="h-4 w-4" /> Pick Winner
-          </Button>
+          <ActionButton
+            variant="default"
+            icon={Sparkles}
+            label="Pick Winner"
+            onClick={pickWinner}
+          />
           {winner ? (
             <div className="flex items-center justify-between rounded-md border p-3">
               <span className="font-semibold">{winner}</span>
