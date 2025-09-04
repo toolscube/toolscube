@@ -8,25 +8,22 @@ import {
   Pause,
   Play,
   Plus,
-  RotateCcw,
   Trash2,
   Zap,
 } from "lucide-react";
 import type * as React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { ActionButton } from "@/components/shared/action-buttons";
+import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
 import { InputField } from "@/components/shared/form-fields/input-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 /* Types */
-
 type Mode = "countdown" | "pomodoro" | "event";
 
 type Timer = {
@@ -680,35 +677,51 @@ function TimerCard({
         {!isEvent && (
           <>
             {t.running ? (
-              <Button size="sm" variant="outline" className="gap-2" onClick={() => onRun(false)}>
-                <Pause className="h-4 w-4" /> Pause
-              </Button>
+              <ActionButton
+                size="sm"
+                variant="outline"
+                icon={Pause}
+                label="Pause"
+                onClick={() => onRun(false)}
+              />
             ) : (
-              <Button size="sm" variant="outline" className="gap-2" onClick={() => onRun(true)}>
-                <Play className="h-4 w-4" /> Start
-              </Button>
+              <ActionButton
+                size="sm"
+                variant="outline"
+                icon={Play}
+                label="Start"
+                onClick={() => onRun(true)}
+              />
             )}
-            <Button size="sm" variant="outline" className="gap-2" onClick={onReset}>
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
+
+            <ResetButton size="sm" onClick={onReset} />
           </>
         )}
+
         {isEvent && (
           <Badge variant={remaining <= 0 ? "secondary" : "default"} className="gap-1">
             <CalendarClock className="h-3 w-3" /> {remaining <= 0 ? "Started/Passed" : "Scheduled"}
           </Badge>
         )}
 
-        {/* Optional: ICS export for countdown */}
         {t.mode === "countdown" && (
-          <Button size="sm" variant="outline" className="gap-2" onClick={exportICS}>
-            <Download className="h-4 w-4" /> ICS
-          </Button>
+          <ActionButton
+            size="sm"
+            variant="outline"
+            icon={Download}
+            label="ICS"
+            onClick={exportICS}
+          />
         )}
 
-        <Button size="sm" variant="outline" className="gap-2 ml-auto" onClick={onDelete}>
-          <Trash2 className="h-4 w-4" /> Remove
-        </Button>
+        <ActionButton
+          size="sm"
+          variant="outline"
+          icon={Trash2}
+          label="Remove"
+          className="ml-auto"
+          onClick={onDelete}
+        />
       </div>
     </div>
   );
