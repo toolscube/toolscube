@@ -146,6 +146,7 @@ export default function ToolsHeader() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
+                    type="button"
                     ref={inputProxyRef}
                     onClick={() => setOpen(true)}
                     className="hidden sm:flex items-center gap-2 rounded-xl border bg-background/50 px-3 py-2 text-sm text-muted-foreground hover:bg-background/70 ring-1 ring-border/50 shadow-sm transition backdrop-blur supports-[backdrop-filter]:bg-background/40"
@@ -166,7 +167,7 @@ export default function ToolsHeader() {
 
             <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
               <Link
-                href="https://github.com/tariqul420/tools-hub"
+                href="https://github.com/tariqul420"
                 rel="noopener noreferrer"
                 target="_blank"
                 className="dark:text-foreground inline-flex items-center gap-1"
@@ -225,7 +226,6 @@ export default function ToolsHeader() {
             <>
               <CommandGroup heading="Popular">
                 {popular.map((item) => {
-                  const Icon = asIcon(item.icon);
                   return (
                     <CommandItem
                       key={`popular:${item.url}`}

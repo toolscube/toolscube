@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Download,
   Info,
-  Keyboard,
   type LucideIcon,
 } from "lucide-react";
 import type * as React from "react";
@@ -236,19 +235,6 @@ export default function WeekNumberClient() {
     downloadFile(`week-${iso.isoYear}-W${iso.week}.ics`, ics, "text/calendar;charset=utf-8");
   };
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target && (e.target as HTMLElement).tagName === "INPUT") return;
-      if (e.key === "ArrowLeft") gotoDelta(-1);
-      if (e.key === "ArrowRight") gotoDelta(1);
-      if (e.key.toLowerCase() === "t") setToday();
-      if (e.key.toLowerCase() === "c") navigator.clipboard.writeText(summary);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [summary]);
-
   return (
     <>
       {/* Header */}
@@ -266,7 +252,7 @@ export default function WeekNumberClient() {
             <CopyButton label="Copy link" copiedLabel="Copied" getText={() => link} />
             <ActionButton
               variant="default"
-              Icon={Download}
+              icon={Download}
               label="Download"
               onClick={downloadICS}
             />
@@ -295,25 +281,18 @@ export default function WeekNumberClient() {
 
             <div className="flex flex-wrap items-center gap-2">
               <ActionButton
-                Icon={ChevronLeft}
+                icon={ChevronLeft}
                 label="Prev"
                 size="sm"
                 onClick={() => gotoDelta(-1)}
               />
-              <ActionButton Icon={CalendarRange} label="Today" size="sm" onClick={setToday} />
+              <ActionButton icon={CalendarRange} label="Today" size="sm" onClick={setToday} />
               <ActionButton
-                Icon={ChevronRight}
+                icon={ChevronRight}
                 label="Next"
                 size="sm"
                 onClick={() => gotoDelta(1)}
               />
-              <Badge
-                variant="secondary"
-                className="ml-auto flex items-center gap-1 text-xs"
-                title="Shortcuts: ← / → (prev/next), T (today), C (copy summary)"
-              >
-                <Keyboard className="h-3.5 w-3.5" />← / →, T, C
-              </Badge>
             </div>
           </div>
 
@@ -363,6 +342,7 @@ export default function WeekNumberClient() {
                 />
                 <div className="flex gap-2">
                   <ActionButton
+                    variant="default"
                     label="Go"
                     onClick={() => {
                       if (isoYearInput && isoWeekInput) {
@@ -372,7 +352,6 @@ export default function WeekNumberClient() {
                     }}
                   />
                   <ActionButton
-                    variant="ghost"
                     label="Clear"
                     onClick={() => {
                       setIsoYearInput("");
@@ -396,10 +375,10 @@ export default function WeekNumberClient() {
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat title="ISO Year" value={iso.isoYear} Icon={CalendarSearch} />
-            <Stat title="ISO Week" value={`W${iso.week}`} Icon={CalendarSearch} />
-            <Stat title="Start (Mon)" value={fmtShort(isoRange.start)} Icon={CalendarDays} />
-            <Stat title="End (Sun)" value={fmtShort(isoRange.end)} Icon={CalendarDays} />
+            <Stat title="ISO Year" value={iso.isoYear} icon={CalendarSearch} />
+            <Stat title="ISO Week" value={`W${iso.week}`} icon={CalendarSearch} />
+            <Stat title="Start (Mon)" value={fmtShort(isoRange.start)} icon={CalendarDays} />
+            <Stat title="End (Sun)" value={fmtShort(isoRange.end)} icon={CalendarDays} />
           </div>
 
           {showUS && usWeek && (
@@ -475,11 +454,11 @@ export default function WeekNumberClient() {
 function Stat({
   title,
   value,
-  Icon,
+  icon: Icon,
 }: {
   title: string;
   value: React.ReactNode;
-  Icon?: LucideIcon;
+  icon?: LucideIcon;
 }) {
   return (
     <div className="rounded-xl border p-3 hover:ring-1 hover:ring-primary/20 transition-shadow">
