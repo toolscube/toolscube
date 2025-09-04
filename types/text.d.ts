@@ -33,7 +33,6 @@ type PipelineToggle =
 // slugify
 type DelimiterChar = "-" | "_" | "";
 type DelimiterKey = "dash" | "underscore" | "none";
-type Mode = "single" | "batch";
 
 type Options = {
   delimiter: DelimiterChar;
@@ -50,6 +49,3 @@ type Options = {
 
 // word counter
 type DensityRow = { word: string; count: number; percent: number };
-
-// Text Clear
-type CaseMode = "none" | "lower" | "upper" | "sentence" | "title";

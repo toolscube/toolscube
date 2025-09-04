@@ -7,7 +7,7 @@ import {
   Globe,
   ImageIcon,
   LinkIcon,
-  Map,
+  Map as MapIcon,
   Type,
   Wallet,
   Wrench,
@@ -530,7 +530,7 @@ export const ToolsData = [
   {
     title: "Travel",
     url: "/tools/travel",
-    icon: Map,
+    icon: MapIcon,
     isActive: true,
     items: [
       {

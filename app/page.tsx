@@ -21,7 +21,11 @@ function getPopularTools(max = 12): ToolItem[] {
   const popular = flat.filter((t) => t.popular);
   const pool = popular.length ? popular : flat;
   const seen = new Set<string>();
-  const unique = pool.filter((t) => (seen.has(t.url) ? false : (seen.add(t.url), true)));
+  const unique = pool.filter((t) => {
+    if (seen.has(t.url)) return false;
+    seen.add(t.url);
+    return true;
+  });
   return unique.slice(0, max);
 }
 

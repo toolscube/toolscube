@@ -109,7 +109,7 @@ export default function IdGeneratorClient() {
   const [mode, setMode] = useState<Mode>("uuid");
 
   // batch/options
-  const [count, setCount] = useState(5);
+  const [count, setCount] = useState(6);
   const [ensureUnique, setEnsureUnique] = useState(true);
   const [sortOut, setSortOut] = useState(false);
 
@@ -217,8 +217,7 @@ export default function IdGeneratorClient() {
     setRows([]);
   };
 
-  const isSeparator = (v: unknown): v is Separator =>
-    v === "newline" || v === "comma" || v === "space";
+  const isSeparator = (v: unknown) => v === "newline" || v === "comma" || v === "space";
 
   return (
     <>
@@ -393,8 +392,9 @@ export default function IdGeneratorClient() {
           </div>
 
           <div className="flex gap-2">
-            <CopyButton getText={() => processed.join(sepStr)} />
+            <CopyButton label="Copy All" getText={() => processed.join(sepStr)} />
             <ExportTextButton
+              variant="default"
               filename="ids.txt"
               getText={() => processed.join("\n")}
               label="Export TXT"
