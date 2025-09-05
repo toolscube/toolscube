@@ -18,7 +18,6 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { CalcButton } from "@/components/calculators/calc-button";
 import { Display } from "@/components/calculators/display";
-import SectionHeader from "@/components/root/section-header";
 import { Button } from "@/components/ui/button";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
 import { safeEval } from "@/lib/safe-eval";
@@ -107,10 +106,10 @@ export default function StandardCalculatorPage() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-10 space-y-6">
-      <SectionHeader
+      {/* <SectionHeader
         title="Standard Calculator"
         desc="Basic arithmetic with glass UI, keyboard support, ANS token, and live preview."
-      />
+      /> */}
 
       {/* Quick nav */}
       <div className="mb-1 flex flex-wrap gap-2">

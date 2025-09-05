@@ -4,7 +4,6 @@ import { Calculator, FunctionSquare, Percent } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CalcButton } from "@/components/calculators/calc-button";
-import SectionHeader from "@/components/root/section-header";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,10 +36,10 @@ export default function PercentageCalculatorPage() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-10">
-      <SectionHeader
+      {/* <SectionHeader
         title="Percentage Calculator"
         desc="Find percentages fast: X is what % of Y, what is R% of Y, and increase/decrease by %."
-      />
+      /> */}
 
       {/* Quick nav */}
       <div className="mb-3 flex flex-wrap gap-2">

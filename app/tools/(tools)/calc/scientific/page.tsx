@@ -16,7 +16,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CalcButton } from "@/components/calculators/calc-button";
 import { Display } from "@/components/calculators/display";
-import SectionHeader from "@/components/root/section-header";
 import { MotionGlassCard } from "@/components/ui/glass-card";
 import { safeEval } from "@/lib/safe-eval";
 
@@ -73,10 +72,10 @@ export default function ScientificCalculatorPage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-10">
-      <SectionHeader
+      {/* <SectionHeader
         title="Scientific Calculator"
         desc="Trig, logs, powers, roots and constants with a glass UI."
-      />
+      /> */}
 
       {/* Quick nav (Standard / Scientific / Percentage) */}
       <div className="mb-3 flex flex-wrap gap-2">
