@@ -229,9 +229,7 @@ export default function SavingsGoalPage() {
                 <Info className="h-4 w-4" />
                 <span>
                   We assume {begin ? "beginning" : "end"}‑of‑month deposits.{" "}
-                  {i === 0
-                    ? "No growth is applied."
-                    : "Annual rate " + rate + "% compounded monthly."}
+                  {i === 0 ? "No growth is applied." : `Annual rate ${rate} % compounded monthly.`}
                 </span>
               </div>
               <ProgressBar

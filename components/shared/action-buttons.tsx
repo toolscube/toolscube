@@ -445,7 +445,7 @@ export function ExportFromUrlButton({
 }
 
 export function ExportCSVButton({
-  filename,
+  filename = "download.csv",
   getRows,
   label = "Export CSV",
   variant = "outline",
@@ -454,7 +454,7 @@ export function ExportCSVButton({
   disabled,
   icon: Icon,
 }: {
-  filename: string;
+  filename?: string;
   getRows: () => MaybePromise<(string | number)[][]>;
   label?: string;
   variant?: Variant;
