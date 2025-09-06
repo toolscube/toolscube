@@ -1,37 +1,31 @@
 "use client";
 
+import { ArrowLeftRight, Globe, Sparkles, TrendingUp } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeftRight,
-  Copy,
-  Download,
-  Globe,
-  Link2,
-  RotateCcw,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+  ActionButton,
+  CopyButton,
+  ExportCSVButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 
-// Config
-const PROVIDER = "exchangerate.host";
+/* Config & Types */
+
+const PROVIDER_LABEL = "exchangerate.host";
 const CACHE_HOURS = 12;
 
-// Common + popular currencies
-const CURRENCIES: { code: string; name: string; symbol?: string }[] = [
+type RatesMap = Record<string, number>;
+type Favorite = { from: string; to: string };
+type Status = "idle" | "loading" | "ok" | "cached" | "error";
+
+const CURRENCIES: ReadonlyArray<{ code: string; name: string; symbol?: string }> = [
   { code: "USD", name: "US Dollar", symbol: "$" },
   { code: "EUR", name: "Euro", symbol: "€" },
   { code: "GBP", name: "British Pound", symbol: "£" },
@@ -52,13 +46,9 @@ const CURRENCIES: { code: string; name: string; symbol?: string }[] = [
   { code: "ZAR", name: "South African Rand" },
   { code: "TRY", name: "Turkish Lira" },
   { code: "CHF", name: "Swiss Franc" },
-];
+] as const;
 
-// Types
-type RatesMap = Record<string, number>;
-type Favorite = { from: string; to: string };
-
-// Utils
+/* Utils */
 const qs = (k: string, fallback: string) => {
   if (typeof window === "undefined") return fallback;
   return new URLSearchParams(window.location.search).get(k) ?? fallback;
@@ -67,49 +57,42 @@ const qs = (k: string, fallback: string) => {
 const setParams = (params: Record<string, string | number>) => {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
+
+  Object.entries(params).forEach(([k, v]) => {
+    url.searchParams.set(k, String(v));
+  });
+
   window.history.replaceState({}, "", url.toString());
 };
 
 const nowISO = () => new Date().toISOString();
 const hoursAgo = (iso: string) => (Date.now() - new Date(iso).getTime()) / 36e5;
 
-function formatNumber(n: number, max = 6) {
-  const abs = Math.abs(n);
-  const digits = abs >= 1 ? 2 : max;
-  return new Intl.NumberFormat(undefined, { maximumFractionDigits: digits }).format(n);
-}
-
-function csvDownload(filename: string, rows: (string | number)[][]) {
-  const content = rows
-    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
 function pairKey(from: string, to: string) {
   return `${from}_${to}`;
 }
 
+function formatNumber(n: number, decimals: number) {
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: decimals }).format(n);
+}
+
 export default function CurrencyConverterClient() {
+  // inputs
   const [amount, setAmount] = useState<string>(qs("amt", "100"));
   const [from, setFrom] = useState<string>(qs("from", "USD"));
   const [to, setTo] = useState<string>(qs("to", "BDT"));
 
+  // display options
+  const [decimals, setDecimals] = useState<number>(6);
+
+  // data
   const [rates, setRates] = useState<RatesMap>({});
   const [base, setBase] = useState<string>(from);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "cached" | "error">("idle");
+  const [isStale, setIsStale] = useState<boolean>(false);
+  const [status, setStatus] = useState<Status>("idle");
 
+  // favorites & history (persisted)
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [history, setHistory] = useState<
     { ts: string; from: string; to: string; amount: number; result: number; rate: number }[]
@@ -126,20 +109,21 @@ export default function CurrencyConverterClient() {
   }, []);
 
   // Persist favorites & history
-  useEffect(() => localStorage.setItem("cc_favorites", JSON.stringify(favorites)), [favorites]);
-  useEffect(
-    () => localStorage.setItem("cc_history", JSON.stringify(history.slice(0, 50))),
-    [history],
-  );
+  useEffect(() => {
+    localStorage.setItem("cc_favorites", JSON.stringify(favorites));
+  }, [favorites]);
+  useEffect(() => {
+    localStorage.setItem("cc_history", JSON.stringify(history.slice(0, 50)));
+  }, [history]);
 
   // Keep URL synced for sharing
   useEffect(() => {
     setParams({ amt: amount || 0, from, to });
   }, [amount, from, to]);
 
-  // Fetch rates (with cache)
-  async function fetchRates(baseCode: string) {
+  const fetchRates = useCallback(async (baseCode: string) => {
     setStatus("loading");
+    setIsStale(false);
     try {
       const cacheKey = `cc_rates_${baseCode}`;
       const cachedRaw = localStorage.getItem(cacheKey);
@@ -149,7 +133,6 @@ export default function CurrencyConverterClient() {
           rates: RatesMap;
           provider?: string;
         };
-
         if (cached.updatedAt && hoursAgo(cached.updatedAt) < CACHE_HOURS) {
           setRates(cached.rates);
           setLastUpdated(cached.updatedAt);
@@ -158,12 +141,19 @@ export default function CurrencyConverterClient() {
         }
       }
 
-      const res = await fetch(`/api/rates?base=${encodeURIComponent(baseCode)}`);
+      const res = await fetch(`/api/rates?base=${encodeURIComponent(baseCode)}`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error(`Rate API failed (${res.status})`);
-      const data = (await res.json()) as { base: string; rates: RatesMap | null; provider: string };
+      const data = (await res.json()) as {
+        base: string;
+        rates: RatesMap | null;
+        provider: string;
+        date?: string;
+      };
       if (!data.rates) throw new Error("No rates in response");
 
-      const updatedAt = nowISO();
+      const updatedAt = data.date || nowISO();
       localStorage.setItem(
         `cc_rates_${baseCode}`,
         JSON.stringify({ updatedAt, rates: data.rates, provider: data.provider }),
@@ -172,7 +162,7 @@ export default function CurrencyConverterClient() {
       setRates(data.rates);
       setLastUpdated(updatedAt);
       setStatus("ok");
-    } catch (e) {
+    } catch {
       const cacheKey = `cc_rates_${baseCode}`;
       const cachedRaw = localStorage.getItem(cacheKey);
       if (cachedRaw) {
@@ -182,7 +172,8 @@ export default function CurrencyConverterClient() {
           provider?: string;
         };
         setRates(cached.rates);
-        setLastUpdated(`${cached.updatedAt} (stale)`);
+        setLastUpdated(cached.updatedAt);
+        setIsStale(true);
         setStatus("cached");
       } else {
         setRates({});
@@ -190,43 +181,45 @@ export default function CurrencyConverterClient() {
         setStatus("error");
       }
     }
-  }
+  }, []);
 
-  // Initial + when base changes
   useEffect(() => {
     setBase(from);
   }, [from]);
-
   useEffect(() => {
     if (base) fetchRates(base);
-  }, [base]);
+  }, [base, fetchRates]);
 
-  // Derived conversion
-  const { result, rate } = useMemo(() => {
-    const amt = Number(amount) || 0;
-    const r = rates?.[to] ?? 0;
-    return { result: amt * r, rate: r };
-  }, [amount, rates, to]);
+  const amtNum = useMemo(() => Number(amount) || 0, [amount]);
+  const rate = useMemo(() => rates?.[to] ?? 0, [rates, to]);
+  const result = useMemo(() => amtNum * rate, [amtNum, rate]);
+  const inverseRate = useMemo(() => (rate ? 1 / rate : 0), [rate]);
 
+  const inlineRate = rate ? `1 ${from} = ${formatNumber(rate, decimals)} ${to}` : "—";
+  const inlineInverse =
+    inverseRate && Number.isFinite(inverseRate)
+      ? `1 ${to} = ${formatNumber(inverseRate, decimals)} ${from}`
+      : "—";
+
+  const isFavorite = favorites.some((f) => f.from === from && f.to === to);
+
+  /* Actions */
   function swap() {
-    const prevFrom = from;
     setFrom(to);
-    setTo(prevFrom);
+    setTo(from);
   }
 
   function resetAll() {
     setAmount("100");
     setFrom("USD");
     setTo("BDT");
-    setTimeout(() => fetchRates("USD"), 0);
+    setDecimals(6);
+    setBase("USD");
   }
 
   function convert() {
     if (!rate) return;
-    setHistory((h) => [
-      { ts: nowISO(), from, to, amount: Number(amount) || 0, result, rate },
-      ...h,
-    ]);
+    setHistory((h) => [{ ts: nowISO(), from, to, amount: amtNum, result, rate }, ...h]);
   }
 
   function toggleFavorite() {
@@ -239,51 +232,44 @@ export default function CurrencyConverterClient() {
     });
   }
 
-  const isFavorite = favorites.some((f) => f.from === from && f.to === to);
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
-
-  function copy(text: string) {
-    navigator.clipboard.writeText(text);
-  }
-
-  function exportHistoryCSV() {
-    const rows: string[][] = [
+  const csvRows = useMemo<(string | number)[][]>(() => {
+    if (!history.length) return [];
+    return [
       ["Time", "From", "To", "Amount", "Rate", "Result"],
-      ...history.map((h) => [
-        String(h.ts),
-        h.from,
-        h.to,
-        String(h.amount),
-        String(h.rate),
-        String(h.result),
-      ]),
+      ...history.map((h) => [h.ts, h.from, h.to, h.amount, h.rate, h.result]),
     ];
-    csvDownload("currency-history.csv", rows);
-  }
+  }, [history]);
 
-  const inlineRate = rate ? `1 ${from} = ${formatNumber(rate)} ${to}` : "—";
+  const currencyOptions = useMemo(
+    () =>
+      CURRENCIES.map((c) => ({
+        value: c.code,
+        label: (
+          <div className="flex items-center justify-between">
+            <span>
+              {c.code} — {c.name}
+            </span>
+            {c.symbol && <span className="ml-2 text-muted-foreground">{c.symbol}</span>}
+          </div>
+        ),
+      })),
+    [],
+  );
 
   return (
     <>
       {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Globe className="h-6 w-6" /> Currency Converter
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Convert currencies with live rates ({PROVIDER}). Cached for {CACHE_HOURS}h to load fast.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2" onClick={resetAll}>
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button className="gap-2" onClick={convert} disabled={!rate}>
-            <TrendingUp className="h-4 w-4" /> Convert
-          </Button>
-        </div>
-      </GlassCard>
+      <ToolPageHeader
+        icon={Globe}
+        title="Currency Converter"
+        description={`Convert currencies with live rates (${PROVIDER_LABEL}). Cached for ${CACHE_HOURS}h to load fast.`}
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <ActionButton icon={TrendingUp} label="Convert" onClick={convert} disabled={!rate} />
+          </>
+        }
+      />
 
       {/* Inputs */}
       <GlassCard className="shadow-sm">
@@ -295,74 +281,74 @@ export default function CurrencyConverterClient() {
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
-            <Input
+            <InputField
               id="amount"
+              label="Amount"
               inputMode="decimal"
               placeholder="100"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
             <div className="text-xs text-muted-foreground">
-              Inline rate: <span className="font-medium">{inlineRate}</span>
+              Rate: <span className="font-medium">{inlineRate}</span>
+              {inverseRate ? (
+                <>
+                  {" • "}
+                  <span className="font-medium">{inlineInverse}</span>
+                </>
+              ) : null}
             </div>
-            {lastUpdated && (
+            {!!lastUpdated && (
               <div className="text-xs text-muted-foreground">
-                Updated: {new Date(lastUpdated).toLocaleString()}
+                Updated: {new Date(lastUpdated).toLocaleString()} {isStale ? "(stale)" : ""}
               </div>
             )}
           </div>
 
           {/* From */}
-          <div className="space-y-2">
-            <Label htmlFor="from">From</Label>
-            <Select value={from} onValueChange={(v) => setFrom(v)}>
-              <SelectTrigger id="from">
-                <SelectValue placeholder="Base currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCIES.map((c) => (
-                  <SelectItem key={c.code} value={c.code}>
-                    {c.code} — {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            label="From"
+            value={from}
+            onValueChange={(v) => setFrom(v as string)}
+            options={currencyOptions}
+          />
 
           {/* To */}
-          <div className="space-y-2">
-            <Label htmlFor="to">To</Label>
-            <Select value={to} onValueChange={(v) => setTo(v)}>
-              <SelectTrigger id="to">
-                <SelectValue placeholder="Target currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCIES.map((c) => (
-                  <SelectItem key={c.code} value={c.code}>
-                    {c.code} — {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            label="To"
+            value={to}
+            onValueChange={(v) => setTo(v as string)}
+            options={currencyOptions}
+          />
 
-          {/* Swap + Actions */}
+          {/* Options row */}
           <div className="sm:col-span-2 lg:col-span-3 flex flex-wrap items-center gap-2">
-            <Button variant="outline" className="gap-2" onClick={swap}>
-              <ArrowLeftRight className="h-4 w-4" /> Swap
-            </Button>
-            <Button
+            <ActionButton variant="outline" icon={ArrowLeftRight} label="Swap" onClick={swap} />
+            <ActionButton
               variant={isFavorite ? "default" : "outline"}
-              className="gap-2"
+              icon={Sparkles}
+              label={isFavorite ? "Favorited" : "Add Favorite"}
               onClick={toggleFavorite}
-            >
-              <Sparkles className="h-4 w-4" /> {isFavorite ? "Favorited" : "Add Favorite"}
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={() => shareUrl && copy(shareUrl)}>
-              <Link2 className="h-4 w-4" /> Copy Share Link
-            </Button>
-            <div className="ml-auto">
+            />
+            <CopyButton
+              variant="outline"
+              label="Copy Share Link"
+              getText={() => (typeof window !== "undefined" ? window.location.href : "")}
+              disabled={typeof window === "undefined"}
+            />
+            <div className="ml-auto flex items-center gap-3">
+              <InputField
+                id="decimals"
+                label="Decimals"
+                type="number"
+                min={0}
+                max={10}
+                value={decimals}
+                onChange={(e) =>
+                  setDecimals(Math.min(10, Math.max(0, Number(e.target.value) || 0)))
+                }
+                className="w-28"
+              />
               <Badge
                 variant={
                   status === "ok"
@@ -375,11 +361,13 @@ export default function CurrencyConverterClient() {
                 }
               >
                 {status === "loading"
-                  ? "Fetching rates…"
+                  ? "Fetching…"
                   : status === "ok"
                     ? "Live"
                     : status === "cached"
-                      ? "Cached"
+                      ? isStale
+                        ? "Cached (stale)"
+                        : "Cached"
                       : "Error"}
               </Badge>
             </div>
@@ -388,7 +376,7 @@ export default function CurrencyConverterClient() {
       </GlassCard>
 
       {/* Results */}
-      <GlassCard className="shadow-sm">
+      <GlassCard className="my-4">
         <CardHeader>
           <CardTitle className="text-base">Result</CardTitle>
           <CardDescription>Calculated using the latest available rate.</CardDescription>
@@ -397,15 +385,31 @@ export default function CurrencyConverterClient() {
           <div className="rounded-xl border p-4">
             <div className="text-xs text-muted-foreground">Rate</div>
             <div className="mt-1 text-xl font-semibold">
-              {rate ? `1 ${from} = ${formatNumber(rate)} ${to}` : "—"}
+              {rate ? `1 ${from} = ${formatNumber(rate, decimals)} ${to}` : "—"}
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">Provider: {PROVIDER}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Provider: {PROVIDER_LABEL}</div>
+            <div className="mt-2">
+              <CopyButton
+                size="sm"
+                label="Copy rate"
+                getText={() => (rate ? `1 ${from} = ${rate} ${to}` : "")}
+                disabled={!rate}
+              />
+            </div>
           </div>
 
           <div className="rounded-xl border p-4">
             <div className="text-xs text-muted-foreground">Converted Amount</div>
             <div className="mt-1 text-xl font-semibold">
-              {rate ? `${formatNumber(Number(amount || 0) * rate)} ${to}` : "—"}
+              {rate ? `${formatNumber(result, decimals)} ${to}` : "—"}
+            </div>
+            <div className="mt-2">
+              <CopyButton
+                size="sm"
+                label="Copy amount"
+                getText={() => (rate ? String(result) : "")}
+                disabled={!rate}
+              />
             </div>
           </div>
         </CardContent>
@@ -424,21 +428,17 @@ export default function CurrencyConverterClient() {
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
                 {favorites.map((f, i) => (
-                  <Button
-                    key={i}
+                  <ActionButton
+                    key={`${f.from}-${f.to}-${i as number}`}
                     variant="outline"
                     size="sm"
+                    label={`${f.from} → ${f.to}`}
                     onClick={() => {
                       setFrom(f.from);
                       setTo(f.to);
                     }}
-                  >
-                    {f.from} → {f.to}
-                  </Button>
+                  />
                 ))}
-                {favorites.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No favorites yet.</p>
-                )}
               </CardContent>
             </GlassCard>
           )}
@@ -451,19 +451,15 @@ export default function CurrencyConverterClient() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="gap-2" onClick={exportHistoryCSV}>
-                    <Download className="h-4 w-4" /> Export CSV
-                  </Button>
-                  <Button
+                  <ExportCSVButton
                     variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => {
-                      setHistory([]);
-                    }}
-                  >
-                    Clear
-                  </Button>
+                    icon={TrendingUp}
+                    label="Export CSV"
+                    disabled={!history.length}
+                    filename="currency-history.csv"
+                    getRows={() => csvRows}
+                  />
+                  <ActionButton variant="outline" label="Clear" onClick={() => setHistory([])} />
                 </div>
                 <div className="overflow-auto rounded-md border">
                   <table className="w-full min-w-[640px] border-collapse text-sm">
@@ -484,18 +480,11 @@ export default function CurrencyConverterClient() {
                           <td className="text-left">
                             {h.from} → {h.to}
                           </td>
-                          <td className="text-right">{formatNumber(h.amount)}</td>
-                          <td className="text-right">{formatNumber(h.rate)}</td>
-                          <td className="text-right">{formatNumber(h.result)}</td>
+                          <td className="text-right">{formatNumber(h.amount, decimals)}</td>
+                          <td className="text-right">{formatNumber(h.rate, decimals)}</td>
+                          <td className="text-right">{formatNumber(h.result, decimals)}</td>
                           <td className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                              onClick={() => navigator.clipboard.writeText(String(h.result))}
-                            >
-                              <Copy className="h-4 w-4" /> Copy
-                            </Button>
+                            <CopyButton size="sm" label="Copy" getText={() => String(h.result)} />
                           </td>
                         </tr>
                       ))}
