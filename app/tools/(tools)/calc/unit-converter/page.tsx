@@ -4,20 +4,22 @@ import {
   ArrowLeftRight,
   Copy,
   Info,
-  RotateCcw,
   Ruler,
   Scale,
+  Settings,
   Sparkles,
   Table2,
   ThermometerSun,
 } from "lucide-react";
 import { type JSX, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -42,7 +44,7 @@ const ICON_BY_CATEGORY: Record<Category, JSX.Element> = {
   Temperature: <ThermometerSun className="h-4 w-4" />,
 };
 
-// ---- Conversion helpers (base: m, kg, °C) ----
+// Conversion helpers
 const lengthToBase: Record<string, number> = {
   m: 1,
   km: 1000,
@@ -107,7 +109,7 @@ function fromBase(category: Category, baseValue: number, unit: string): number {
 const nf = new Intl.NumberFormat(undefined, { maximumSignificantDigits: 8 });
 const pretty = (n: number | null) => (n == null || !Number.isFinite(n) ? "—" : nf.format(n));
 
-export default function UnitConverterPage() {
+export default function UnitConverterClient() {
   const [category, setCategory] = useState<Category>("Length");
   const [fromUnit, setFromUnit] = useState<string>(UNITS["Length"][0]);
   const [toUnit, setToUnit] = useState<string>(UNITS["Length"][1]);
@@ -115,16 +117,12 @@ export default function UnitConverterPage() {
   const [copied, setCopied] = useState(false);
   const [showTable, setShowTable] = useState(false);
 
-  // sanitize numeric input (Temperature can be negative; others not)
   const sanitize = (raw: string) => {
     const allowMinus = category === "Temperature";
-    // keep digits, optional single dot, and leading minus if allowed
     let v = raw.replace(/[^\d.-]/g, "");
     if (!allowMinus) v = v.replace(/-/g, "");
-    // only one dot
     const parts = v.split(".");
     if (parts.length > 2) v = `${parts[0]}.${parts.slice(1).join("")}`;
-    // only one leading minus
     if (allowMinus && v.lastIndexOf("-") > 0) v = v.replace(/-/g, "");
     return v;
   };
@@ -140,7 +138,6 @@ export default function UnitConverterPage() {
     setCategory(v);
     setFromUnit(UNITS[v][0]);
     setToUnit(UNITS[v][1] ?? UNITS[v][0]);
-    // Temperature often needs smaller default
     setAmount(v === "Temperature" ? "0" : "1");
   };
 
@@ -171,7 +168,6 @@ export default function UnitConverterPage() {
     setShowTable(false);
   };
 
-  // Build an optional “all conversions” table (current amount → every unit in category)
   const tableRows = useMemo(() => {
     const num = parseFloat(amount);
     if (!Number.isFinite(num)) return [];
@@ -184,105 +180,70 @@ export default function UnitConverterPage() {
   }, [amount, category, fromUnit]);
 
   return (
-    <div className="container mx-auto py-10 space-y-8">
-      <MotionGlassCard className="space-y-4">
-        {/* Flowing action header */}
-        <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-5">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-              <Sparkles className="h-6 w-6" /> Conversion
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Select a category, pick units, input an amount—then copy or explore the full table.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={resetAll} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
-            <Button
-              variant={showTable ? "secondary" : "outline"}
+    <>
+      {/* header */}
+      <ToolPageHeader
+        icon={Sparkles}
+        description="Select a category, pick units, input an amount—then copy or explore the full table."
+        title="Conversion"
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <ActionButton
+              icon={Table2}
+              label={`${showTable ? "Hide" : "Show"} Conversions`}
+              variant="default"
               onClick={() => setShowTable((s) => !s)}
-              className="gap-2"
-            >
-              <Table2 className="h-4 w-4" /> {showTable ? "Hide" : "Show"} All Conversions
-            </Button>
+            />
+          </>
+        }
+      />
+
+      {/* Settings */}
+      <GlassCard className="shadow-sm">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Settings className="w-4 h-4" /> <span>Settings</span>
+            </CardTitle>
+            <Badge variant="secondary" className="ml-1">
+              {ICON_BY_CATEGORY[category]} <span className="ml-1 hidden sm:inline">{category}</span>
+            </Badge>
           </div>
-        </GlassCard>
+          <CardDescription>Pick category, enter amount, choose From/To units.</CardDescription>
+        </CardHeader>
 
-        {/* Settings */}
-        <GlassCard className="shadow-sm">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                {ICON_BY_CATEGORY[category]} <span>Settings</span>
-              </CardTitle>
-              <Badge variant="secondary" className="ml-1">
-                {ICON_BY_CATEGORY[category]}{" "}
-                <span className="ml-1 hidden sm:inline">{category}</span>
-              </Badge>
+        <CardContent className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label>Category</Label>
+              <Select value={category} onValueChange={(v) => handleCategory(v as Category)}>
+                <SelectTrigger className="bg-background/60 backdrop-blur">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      <div className="flex items-center gap-2">
+                        {ICON_BY_CATEGORY[c]}
+                        <span>{c}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <CardDescription>Pick category, enter amount, choose From/To units.</CardDescription>
-          </CardHeader>
 
-          <CardContent className="grid gap-6 lg:grid-cols-2">
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label>Category</Label>
-                <Select value={category} onValueChange={(v) => handleCategory(v as Category)}>
-                  <SelectTrigger className="bg-background/60 backdrop-blur">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        <div className="flex items-center gap-2">
-                          {ICON_BY_CATEGORY[c]}
-                          <span>{c}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>From</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    inputMode="decimal"
-                    value={amount}
-                    onChange={(e) => setAmount(sanitize(e.target.value))}
-                    className="bg-background/60 backdrop-blur"
-                    aria-label="Amount"
-                  />
-                  <Select value={fromUnit} onValueChange={(v) => setFromUnit(v)}>
-                    <SelectTrigger className="w-40 bg-background/60 backdrop-blur">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {UNITS[category].map((u) => (
-                        <SelectItem key={u} value={u}>
-                          {u}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={swapUnits}
-                    className="shrink-0"
-                    title="Swap units (From ↔ To)"
-                  >
-                    <ArrowLeftRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>To</Label>
-                <Select value={toUnit} onValueChange={(v) => setToUnit(v)}>
+            <div className="grid gap-2">
+              <div className="flex items-end gap-2">
+                <InputField
+                  label="From"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => setAmount(sanitize(e.target.value))}
+                  aria-label="Amount"
+                />
+                <Select value={fromUnit} onValueChange={(v) => setFromUnit(v)}>
                   <SelectTrigger className="w-40 bg-background/60 backdrop-blur">
                     <SelectValue />
                   </SelectTrigger>
@@ -294,87 +255,105 @@ export default function UnitConverterPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
 
-              {/* Quick presets */}
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                {["1", "10", "100", "1000"].map((p) => (
-                  <Badge
-                    key={p}
-                    variant="outline"
-                    className="cursor-pointer hover:bg-primary/10"
-                    onClick={() => setAmount(p)}
-                  >
-                    {p}
-                  </Badge>
-                ))}
+                <ActionButton size="icon" onClick={swapUnits} icon={ArrowLeftRight} />
               </div>
             </div>
 
-            {/* Result & Info */}
-            <div className="grid gap-4">
-              <GlassCard className="rounded-2xl p-6">
-                <div className="text-sm text-muted-foreground">Result</div>
-                <div className="mt-2 flex items-baseline gap-3">
-                  <div className="text-4xl font-semibold tracking-tight">
-                    {pretty(result)} {toUnit}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={copyResult}
-                    title="Copy"
-                    className="hover:bg-primary/10"
-                  >
-                    <Copy className={`h-4 w-4 ${copied ? "animate-pulse" : ""}`} />
-                  </Button>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Base units: meter (m), kilogram (kg), Celsius (°C).
-                </p>
-              </GlassCard>
-
-              <GlassCard className="rounded-2xl p-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2 font-medium text-foreground">
-                  <Info className="h-3.5 w-3.5" /> Notes
-                </div>
-                <ul className="mt-2 list-disc space-y-1 pl-5">
-                  <li>Temperature supports negative values; others disallow minus.</li>
-                  <li>Length & weight use precise SI factors.</li>
-                  <li>Use the swap button to flip units instantly.</li>
-                </ul>
-              </GlassCard>
+            <div className="grid gap-2">
+              <Label>To</Label>
+              <Select value={toUnit} onValueChange={(v) => setToUnit(v)}>
+                <SelectTrigger className="w-40 bg-background/60 backdrop-blur">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNITS[category].map((u) => (
+                    <SelectItem key={u} value={u}>
+                      {u}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Quick presets */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {["1", "10", "100", "1000"].map((p) => (
+                <Badge
+                  key={p}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-primary/10"
+                  onClick={() => setAmount(p)}
+                >
+                  {p}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Result & Info */}
+          <div className="grid gap-4">
+            <GlassCard className="rounded-2xl p-6">
+              <div className="text-sm text-muted-foreground">Result</div>
+              <div className="mt-2 flex items-baseline gap-3">
+                <div className="text-4xl font-semibold tracking-tight">
+                  {pretty(result)} {toUnit}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={copyResult}
+                  title="Copy"
+                  className="hover:bg-primary/10"
+                >
+                  <Copy className={`h-4 w-4 ${copied ? "animate-pulse" : ""}`} />
+                </Button>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Base units: meter (m), kilogram (kg), Celsius (°C).
+              </p>
+            </GlassCard>
+
+            <GlassCard className="rounded-2xl p-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 font-medium text-foreground">
+                <Info className="h-3.5 w-3.5" /> Notes
+              </div>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                <li>Temperature supports negative values; others disallow minus.</li>
+                <li>Length & weight use precise SI factors.</li>
+                <li>Use the swap button to flip units instantly.</li>
+              </ul>
+            </GlassCard>
+          </div>
+        </CardContent>
+      </GlassCard>
+
+      {/* Optional full table */}
+      {showTable && (
+        <GlassCard className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">All Conversions in {category}</CardTitle>
+            <CardDescription>
+              Converts{" "}
+              <span className="font-medium">
+                {amount || "—"} {fromUnit}
+              </span>{" "}
+              into every unit in this category.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {tableRows.map((row) => (
+              <div
+                key={row.unit}
+                className="flex items-center justify-between rounded-md border p-3"
+              >
+                <span className="text-sm text-muted-foreground uppercase">{row.unit}</span>
+                <span className="font-mono">{pretty(row.value)}</span>
+              </div>
+            ))}
           </CardContent>
         </GlassCard>
-
-        {/* Optional full table */}
-        {showTable && (
-          <GlassCard className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">All Conversions in {category}</CardTitle>
-              <CardDescription>
-                Converts{" "}
-                <span className="font-medium">
-                  {amount || "—"} {fromUnit}
-                </span>{" "}
-                into every unit in this category.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {tableRows.map((row) => (
-                <div
-                  key={row.unit}
-                  className="flex items-center justify-between rounded-md border p-3"
-                >
-                  <span className="text-sm text-muted-foreground">{row.unit}</span>
-                  <span className="font-mono">{pretty(row.value)}</span>
-                </div>
-              ))}
-            </CardContent>
-          </GlassCard>
-        )}
-      </MotionGlassCard>
-    </div>
+      )}
+    </>
   );
 }
