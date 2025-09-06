@@ -10,14 +10,17 @@ import {
   Link as LinkIcon,
   PaintBucket,
   QrCode,
-  RefreshCcw,
   ShieldCheck,
   Trash,
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { CopyButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  LinkButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
 import { ColorField } from "@/components/shared/color-field";
 import { InputField } from "@/components/shared/form-fields/input-field";
 import { QRCodeBox } from "@/components/shared/qr-code";
@@ -34,7 +37,6 @@ import { createShort } from "@/lib/actions/shortener.action";
 import { timeAgo } from "@/lib/utils/time-ago";
 
 /* Types & LS helpers */
-
 type RecentItem = { slug: string; url: string; createdAt: number };
 const RECENT_KEY = "shortener:recent:v1";
 
@@ -91,7 +93,6 @@ export default function ShortenerClient() {
   });
 
   /* Actions */
-
   const removeRecent = (rowSlug: string) => {
     const next = recent.filter((i) => i.slug !== rowSlug);
     setRecent(next);
@@ -153,36 +154,34 @@ export default function ShortenerClient() {
               getText={() => shortUrl || ""}
               label="Copy"
               copiedLabel="Copied"
-              variant="ghost"
               size="sm"
               disabled={!shortUrl}
-              className="gap-2"
             />
 
-            <Link
-              href={shortUrl || "#"}
-              target={shortUrl ? "_blank" : undefined}
-              aria-disabled={!shortUrl}
-            >
-              <Button variant="outline" size="sm" className="gap-2" disabled={!shortUrl}>
-                <ExternalLink className="h-4 w-4" />
-                Open
-              </Button>
-            </Link>
+            <LinkButton
+              icon={ExternalLink}
+              label="Open"
+              href={shortUrl}
+              disabled={!shortUrl}
+              size="sm"
+              newTab
+            />
 
-            <Link href={analyticsUrl || "#"} aria-disabled={!shortUrl}>
-              <Button variant="outline" size="sm" className="gap-2" disabled={!shortUrl}>
-                <BarChart2 className="h-4 w-4" />
-                Analytics
-              </Button>
-            </Link>
+            <LinkButton
+              icon={BarChart2}
+              label="Analytics"
+              href={analyticsUrl}
+              disabled={!shortUrl}
+              size="sm"
+            />
 
-            <Link href={interstitialUrl || "#"} aria-disabled={!shortUrl}>
-              <Button variant="outline" size="sm" className="gap-2" disabled={!shortUrl}>
-                <ShieldCheck className="h-4 w-4" />
-                Interstitial
-              </Button>
-            </Link>
+            <LinkButton
+              icon={ShieldCheck}
+              label="Interstitial"
+              href={interstitialUrl}
+              disabled={!shortUrl}
+              size="sm"
+            />
           </div>
 
           {!shortUrl && (
@@ -227,15 +226,14 @@ export default function ShortenerClient() {
               <Label className="text-xs">ECC</Label>
               <div className="flex gap-1">
                 {(["L", "M", "Q", "H"] as ECC[]).map((level) => (
-                  <Button
+                  <ActionButton
                     key={level}
+                    label={level}
                     size="sm"
                     variant={qrECC === level ? "default" : "outline"}
                     className="px-2"
                     onClick={() => setQrECC(level)}
-                  >
-                    {level}
-                  </Button>
+                  />
                 ))}
               </div>
             </div>
@@ -286,28 +284,24 @@ export default function ShortenerClient() {
                 fg={qrDark}
                 bg={qrLight}
                 quietZone
-                // optional: canvas/svg classes
                 canvasClassName="h-auto w-[160px] sm:w-[200px] md:w-[220px]"
               />
             </div>
 
             {shortUrl ? (
               <div className="flex flex-wrap gap-2">
-                <Button
+                <ActionButton
+                  icon={Download}
+                  label="PNG"
                   size="sm"
-                  className="gap-2"
                   onClick={() => downloadPNG(`qr-${slug || "link"}.png`, 2)}
-                >
-                  <Download className="h-4 w-4" /> PNG
-                </Button>
-                <Button
+                />
+                <ActionButton
+                  icon={Download}
+                  label="SVG"
                   size="sm"
-                  variant="outline"
-                  className="gap-2"
                   onClick={() => downloadSVG(`qr-${slug || "link"}.svg`)}
-                >
-                  <Download className="h-4 w-4" /> SVG
-                </Button>
+                />
               </div>
             ) : (
               <div className="text-xs text-muted-foreground">
@@ -334,14 +328,14 @@ export default function ShortenerClient() {
               inputClassName="bg-background/60 backdrop-blur"
               className="flex-1"
             />
-            <Button onClick={onShorten} disabled={!url || status === "saving"} className="gap-2">
-              <LinkIcon className="h-4 w-4" />
-              {status === "saving" ? "Shortening…" : "Shorten"}
-            </Button>
-            <Button variant="outline" onClick={reset} className="gap-2">
-              <RefreshCcw className="h-4 w-4" />
-              Make another
-            </Button>
+            <ActionButton
+              variant="default"
+              icon={LinkIcon}
+              label={status === "saving" ? "Shortening…" : "Shorten"}
+              onClick={onShorten}
+              disabled={!url || status === "saving"}
+            />
+            <ResetButton label="Make another" onClick={reset} />
           </div>
           <p className="text-xs text-muted-foreground">
             We normalize URLs automatically (adds{" "}
@@ -352,21 +346,20 @@ export default function ShortenerClient() {
 
       <Separator className="my-6" />
 
-      {/* Recent history (local) */}
+      {/* Recent history */}
       <div className="grid gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">Recent</div>
           {recent.length > 0 && (
-            <Button
+            <ResetButton
               variant="ghost"
               size="sm"
+              label="Clear"
               onClick={() => {
                 setRecent([]);
                 saveRecent([]);
               }}
-            >
-              Clear
-            </Button>
+            />
           )}
         </div>
 
@@ -423,19 +416,12 @@ export default function ShortenerClient() {
                     {/* Copy */}
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <CopyButton
-                          getText={() => sUrl}
-                          label="Copy"
-                          copiedLabel="Copied"
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                        />
+                        <CopyButton getText={() => sUrl} size="sm" />
                       </TooltipTrigger>
                       <TooltipContent>Copy short link</TooltipContent>
                     </Tooltip>
 
-                    {/* QR popover (uses reusable component at small size) */}
+                    {/* QR popover */}
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button size="sm" variant="outline" className="gap-2">
@@ -462,24 +448,17 @@ export default function ShortenerClient() {
                     </Popover>
 
                     {/* Open */}
-                    <Link href={sUrl} target="_blank">
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <ExternalLink className="h-4 w-4" />
-                        Open
-                      </Button>
-                    </Link>
+                    <LinkButton size="sm" href={sUrl} newTab icon={ExternalLink} label="Open" />
 
                     {/* Analytics */}
-                    <Link href={aUrl}>
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <BarChart2 className="h-4 w-4" />
-                        Analytics
-                      </Button>
-                    </Link>
+                    <LinkButton icon={BarChart2} label="Analytics" href={aUrl} size="sm" />
 
-                    <Button onClick={() => removeRecent(it.slug)} size="sm" variant="outline">
-                      <Trash className="h-4 w-4" />
-                    </Button>
+                    <ActionButton
+                      onClick={() => removeRecent(it.slug)}
+                      size="sm"
+                      icon={Trash}
+                      variant="destructive"
+                    />
                   </div>
                 </GlassCard>
               );

@@ -530,32 +530,119 @@ export function ExportFileButton({
   );
 }
 
-export function LinkButton({
-  href,
-  label,
-  variant = "outline",
-  size = "default",
-  className,
-  icon: Icon,
-}: {
-  href: string;
-  label: string;
+type LinkButtonProps = {
+  href?: string;
+  label?: React.ReactNode;
   variant?: Variant;
   size?: Size;
   className?: string;
+  leftIcon?: LucideIcon;
+  rightIcon?: LucideIcon;
   icon?: LucideIcon;
-}) {
-  const LeftIcon: LucideIcon = Icon ?? Link2;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  newTab?: boolean;
+  external?: boolean;
+  target?: React.HTMLAttributeAnchorTarget;
+  rel?: string;
+  download?: boolean | string;
+  prefetch?: boolean;
+  replace?: boolean;
+  scroll?: boolean;
+  shallow?: boolean;
+  locale?: string | false;
+  ariaLabel?: string;
+  title?: string;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement | HTMLButtonElement>;
+};
+
+export function LinkButton({
+  href,
+  label = "Open",
+  variant = "outline",
+  size = "default",
+  className,
+  leftIcon,
+  rightIcon,
+  icon,
+  disabled,
+  fullWidth,
+  newTab,
+  external,
+  target,
+  rel,
+  download,
+  prefetch,
+  replace,
+  scroll,
+  shallow,
+  locale,
+  ariaLabel,
+  title,
+  onClick,
+}: LinkButtonProps) {
+  const LeftIcon: LucideIcon | undefined = leftIcon ?? icon ?? Link2;
+  const RightIcon: LucideIcon | undefined = rightIcon;
+  const isDisabled = disabled || !href;
+
+  const content = (
+    <>
+      {LeftIcon ? <LeftIcon className="h-4 w-4" /> : null}
+      {label}
+      {RightIcon ? <RightIcon className="h-4 w-4" /> : null}
+    </>
+  );
+
+  if (isDisabled) {
+    return (
+      <Button
+        type="button"
+        variant={variant}
+        size={size}
+        disabled
+        aria-disabled="true"
+        title={title}
+        className={cn("gap-2", fullWidth && "w-full", className)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
+        <span className="inline-flex items-center gap-2">{content}</span>
+      </Button>
+    );
+  }
+
+  const finalTarget = target ?? (newTab || external ? "_blank" : undefined);
+  const finalRel = rel ?? (finalTarget === "_blank" ? "noopener noreferrer" : undefined);
 
   return (
-    <Button asChild variant={variant} size={size} className={cn("gap-2", className)}>
-      <Link href={href} target="_blank" rel="noreferrer noopener" aria-label={label}>
-        <LeftIcon className="w-4 h-4" />
-        {label}
+    <Button
+      asChild
+      variant={variant}
+      size={size}
+      className={cn("gap-2", fullWidth && "w-full", className)}
+      title={title}
+    >
+      <Link
+        href={href}
+        target={finalTarget}
+        rel={finalRel}
+        prefetch={prefetch}
+        replace={replace}
+        scroll={scroll}
+        shallow={shallow}
+        locale={locale}
+        aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
+        download={download === true ? "" : download || undefined}
+        onClick={onClick}
+      >
+        {content}
       </Link>
     </Button>
   );
 }
+
 
 export function ActionButton({
   onClick,

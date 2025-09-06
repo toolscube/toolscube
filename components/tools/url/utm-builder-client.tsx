@@ -7,23 +7,26 @@ import {
   History,
   Link2,
   Plus,
+  RotateCcw,
   Share2,
   Trash2,
-  Wand2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ActionButton,
   CopyButton,
+  ExportCSVButton,
   ExportFileButton,
+  LinkButton,
   ResetButton,
   SaveButton,
 } from "@/components/shared/action-buttons";
 import { InputField } from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -158,29 +161,6 @@ function buildSingle(baseUrl: string, utm: UTMState, opts: OptionsState) {
   u.search = params.toString();
   return u.toString();
 }
-function csvDownload(filename: string, rows: string[][]) {
-  const csv = rows
-    .map((r) =>
-      r
-        .map((cell) => {
-          const v = (cell ?? "").toString().replace(/"/g, '""');
-          return /[",]/.test(v) ? `"${v}"` : v;
-        })
-        .join(","),
-    )
-    .join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-/* Component */
 
 export default function UTMBuilderClient() {
   // base / batch
@@ -281,19 +261,6 @@ export default function UTMBuilderClient() {
     if (selectedPreset === name) setSelectedPreset("");
   }
 
-  function exportPresets() {
-    const rows = JSON.stringify(presets, null, 2);
-    const blob = new Blob([rows], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "utm-presets.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
   async function importPresetsFromFiles(files: File[] | null) {
     const f = files?.[0];
     if (!f) return;
@@ -307,21 +274,8 @@ export default function UTMBuilderClient() {
     } catch {}
   }
 
-  function exportBatchCSV() {
-    if (!resultBatch.length) return;
-    const src = batchList
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-    const rows: string[][] = [
-      ["Base URL", "Result URL"],
-      ...resultBatch.map((r, i) => [src[i] ?? "", r]),
-    ];
-    csvDownload("utm-batch.csv", rows);
-  }
-  
   return (
-    <MotionGlassCard>
+    <>
       {/* Header */}
       <ToolPageHeader
         icon={Link2}
@@ -365,23 +319,19 @@ export default function UTMBuilderClient() {
                 onChange={(e) => setBaseUrl(e.target.value)}
                 className="flex-1"
               />
-              <Button
-                variant="outline"
-                className="gap-2"
+              <ActionButton
+                icon={ClipboardList}
+                label="Import from URL"
                 onClick={importFromUrl}
                 disabled={!isValidUrl(baseUrl)}
-              >
-                <ClipboardList className="h-4 w-4" /> Import from URL
-              </Button>
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={opts.batchMode}
-                onCheckedChange={(v) => setOpts((o) => ({ ...o, batchMode: Boolean(v) }))}
-              />
-              <Label className="text-sm">Batch Mode</Label>
-            </div>
+            <SwitchRow
+              label="Batch Mode"
+              checked={opts.batchMode}
+              onCheckedChange={(v) => setOpts((o) => ({ ...o, batchMode: Boolean(v) }))}
+            />
           </div>
 
           {opts.batchMode && (
@@ -393,32 +343,31 @@ export default function UTMBuilderClient() {
               onValueChange={setBatchList}
               textareaClassName="min-h-[120px] font-mono"
               rows={6}
-              autoResize
             />
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <ToggleRow
-              title="Keep existing query params"
-              subtitle="Preserve current ?a=b params on your base URL."
+            <SwitchRow
+              label="Keep existing query params"
+              hint="Preserve current ?a=b params on your base URL."
               checked={opts.keepExisting}
               onCheckedChange={(v) => setOpts((o) => ({ ...o, keepExisting: Boolean(v) }))}
             />
-            <ToggleRow
-              title="URL-encode parameter values"
-              subtitle="Spaces and special characters will be encoded."
+            <SwitchRow
+              label="URL-encode parameter values"
+              hint="Spaces and special characters will be encoded."
               checked={opts.encodeParams}
               onCheckedChange={(v) => setOpts((o) => ({ ...o, encodeParams: Boolean(v) }))}
             />
-            <ToggleRow
-              title="Lowercase keys"
-              subtitle="Enforce utm_* keys in lowercase."
+            <SwitchRow
+              label="Lowercase keys"
+              hint="Enforce utm_* keys in lowercase."
               checked={opts.lowercaseKeys}
               onCheckedChange={(v) => setOpts((o) => ({ ...o, lowercaseKeys: Boolean(v) }))}
             />
-            <ToggleRow
-              title="Prefix custom keys with utm_"
-              subtitle="Example: channel → utm_channel"
+            <SwitchRow
+              label="Prefix custom keys with utm_"
+              hint="Example: channel → utm_channel"
               checked={opts.prefixCustomWithUTM}
               onCheckedChange={(v) => setOpts((o) => ({ ...o, prefixCustomWithUTM: Boolean(v) }))}
             />
@@ -468,33 +417,22 @@ export default function UTMBuilderClient() {
               value={utm.content}
               onChange={(e) => setUtm((u) => ({ ...u, content: e.target.value }))}
             />
-            <div className="space-y-2">
-              <Label htmlFor="utm_id" className="flex items-center justify-between">
-                <span>utm_id</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={autoFillId}
-                >
-                  <Wand2 className="h-4 w-4" /> Auto ID
-                </Button>
-              </Label>
+            <div className="flex items-end gap-2">
               <InputField
+                className="w-full"
+                label="utm_id"
                 id="utm_id"
                 value={utm.id}
                 onChange={(e) => setUtm((u) => ({ ...u, id: e.target.value }))}
               />
+              <ActionButton icon={RotateCcw} size="icon" onClick={autoFillId} />
             </div>
           </div>
 
           <div className="rounded-md border">
             <div className="px-3 py-2 border-b flex items-center justify-between">
               <div className="text-sm font-medium">Custom parameters</div>
-              <Button variant="outline" size="sm" className="gap-2" onClick={addCustomRow}>
-                <Plus className="h-4 w-4" /> Add
-              </Button>
+              <ActionButton size="sm" icon={Plus} label="Add" onClick={addCustomRow} />
             </div>
             <div className="divide-y">
               {utm.custom.length === 0 && (
@@ -523,14 +461,13 @@ export default function UTMBuilderClient() {
                     <span className="text-xs text-muted-foreground">Enable</span>
                   </div>
                   <div className="flex justify-end">
-                    <Button
+                    <ActionButton
                       variant="ghost"
+                      icon={Trash2}
                       size="icon"
                       onClick={() => removeCustomRow(c.id)}
                       aria-label="Remove"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    />
                   </div>
                 </div>
               ))}
@@ -563,15 +500,15 @@ export default function UTMBuilderClient() {
               </Label>
               <div className="flex gap-2">
                 <InputField readOnly value={result} placeholder="—" className="font-mono flex-1" />
-                <CopyButton getText={() => result || ""} />
-                <Button
-                  variant="outline"
-                  className="gap-2"
+                <CopyButton getText={() => result} disabled={!result} />
+                <LinkButton
                   disabled={!result}
-                  onClick={() => window.open(result, "_blank", "noopener")}
-                >
-                  <Share2 className="h-4 w-4" /> Open
-                </Button>
+                  size="sm"
+                  icon={Share2}
+                  label="Open"
+                  href={result}
+                  newTab
+                />
               </div>
               <div className="text-xs text-muted-foreground">
                 {baseUrl && !isValidUrl(baseUrl) && (
@@ -585,8 +522,10 @@ export default function UTMBuilderClient() {
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button
+                <ActionButton
                   disabled={!result || requiredMissing.length > 0}
+                  icon={History}
+                  label="Save to History"
                   onClick={() => {
                     const item: HistoryItem = { ts: Date.now(), base: baseUrl, result };
                     try {
@@ -597,15 +536,10 @@ export default function UTMBuilderClient() {
                       localStorage.setItem(HISTORY_LS_KEY, JSON.stringify(next));
                     } catch {}
                   }}
-                  variant="outline"
-                  className="gap-2"
-                >
-                  <History className="h-4 w-4" /> Save to History
-                </Button>
+                />
                 <CopyButton
-                  label="Copy Config JSON"
+                  label="Copy JSON"
                   getText={() => JSON.stringify({ utm, options: opts }, null, 2)}
-                  variant="outline"
                 />
               </div>
             </div>
@@ -614,23 +548,31 @@ export default function UTMBuilderClient() {
           {opts.batchMode && (
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  className="gap-2"
+                <ExportCSVButton
+                  label="Export CSV"
+                  icon={Download}
                   disabled={!resultBatch.length}
-                  onClick={exportBatchCSV}
-                >
-                  <Download className="h-4 w-4" /> Export CSV
-                </Button>
+                  filename="utm-batch.csv"
+                  getRows={() => {
+                    const src = batchList
+                      .split("\n")
+                      .map((l) => l.trim())
+                      .filter(Boolean);
+                    return [
+                      ["Base URL", "Result URL"],
+                      ...resultBatch.map((r, i) => [src[i] ?? "", r]),
+                    ];
+                  }}
+                />
                 <CopyButton
                   label="Copy All"
-                  getText={() => (resultBatch.length ? resultBatch.join("\n") : "")} // ✅ fixed
-                  variant="outline"
+                  getText={() => (resultBatch.length ? resultBatch.join("\n") : "")}
                 />
-                <Button
-                  variant="outline"
+                <ActionButton
                   className="gap-2"
                   disabled={!resultBatch.length}
+                  icon={History}
+                  label="Save Batch to History"
                   onClick={() => {
                     const item: HistoryItem = {
                       ts: Date.now(),
@@ -645,9 +587,7 @@ export default function UTMBuilderClient() {
                       localStorage.setItem(HISTORY_LS_KEY, JSON.stringify(next));
                     } catch {}
                   }}
-                >
-                  <History className="h-4 w-4" /> Save Batch to History
-                </Button>
+                />
               </div>
 
               <div
@@ -669,14 +609,8 @@ export default function UTMBuilderClient() {
                           <div className="mt-1 line-clamp-1 break-all font-mono">{r}</div>
                         </div>
                         <div className="flex gap-2 justify-end">
-                          <CopyButton getText={() => r} variant="outline" size="sm" />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(r, "_blank", "noopener")}
-                          >
-                            <Share2 className="h-4 w-4" /> Open
-                          </Button>
+                          <CopyButton getText={() => r} size="sm" />
+                          <LinkButton size="sm" icon={Share2} label="Open" href={r} newTab />
                         </div>
                       </div>
                     ))}
@@ -702,7 +636,6 @@ export default function UTMBuilderClient() {
           <div className="grid gap-3 sm:grid-cols-[260px_1fr] sm:items-start">
             <div className="space-y-2">
               <Label>Choose a preset</Label>
-              {/* Standalone Select (no RHF) */}
               <Select value={selectedPreset} onValueChange={applyPreset}>
                 <SelectTrigger>
                   <SelectValue placeholder="No preset selected" />
@@ -720,14 +653,13 @@ export default function UTMBuilderClient() {
               </Select>
               {!!selectedPreset && (
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
+                  <ActionButton
                     size="sm"
                     className="gap-2"
                     onClick={() => deletePreset(selectedPreset)}
-                  >
-                    <Eraser className="h-4 w-4" /> Delete Preset
-                  </Button>
+                    icon={Eraser}
+                    label="Delete Preset"
+                  />
                 </div>
               )}
             </div>
@@ -739,34 +671,11 @@ export default function UTMBuilderClient() {
           </div>
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }
 
-/* ---------- Little subcomponents ---------- */
-
-function ToggleRow({
-  title,
-  subtitle,
-  checked,
-  onCheckedChange,
-}: {
-  title: string;
-  subtitle: string;
-  checked: boolean;
-  onCheckedChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-md border p-3">
-      <div>
-        <div className="text-sm font-medium">{title}</div>
-        <div className="text-xs text-muted-foreground">{subtitle}</div>
-      </div>
-      <Switch checked={checked} onCheckedChange={(v) => onCheckedChange(Boolean(v))} />
-    </div>
-  );
-}
-
+/* History list */
 function HistoryList() {
   const [items, setItems] = useState<HistoryItem[]>([]);
 
@@ -801,37 +710,20 @@ function HistoryList() {
                 <CopyButton
                   label="Copy All"
                   getText={() => (h.result as string[]).join("\n")}
-                  variant="outline"
                   size="sm"
                 />
-                <Button
-                  variant="outline"
+                <ExportCSVButton
                   size="sm"
-                  onClick={() =>
-                    csvDownload("utm-history-batch.csv", [
-                      ["URL"],
-                      ...(h.result as string[]).map((r) => [r]),
-                    ])
-                  }
-                >
-                  <Download className="h-4 w-4" /> CSV
-                </Button>
+                  icon={Download}
+                  filename="utm-history-batch.csv"
+                  label="CSV"
+                  getRows={() => [["URL"], ...(h.result as string[]).map((r) => [r])]}
+                />
               </>
             ) : (
               <>
-                <CopyButton
-                  label="Copy"
-                  getText={() => String(h.result)}
-                  variant="outline"
-                  size="sm"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(String(h.result), "_blank", "noopener")}
-                >
-                  <Share2 className="h-4 w-4" /> Open
-                </Button>
+                <CopyButton label="Copy" getText={() => String(h.result)} size="sm" />
+                <LinkButton size="sm" icon={Share2} label="Open" href={h.result} newTab />
               </>
             )}
           </div>
@@ -839,9 +731,13 @@ function HistoryList() {
       ))}
       {!!items.length && (
         <div className="p-3 flex justify-end">
-          <Button variant="outline" size="sm" className="gap-2" onClick={clearAll}>
-            <Eraser className="h-4 w-4" /> Clear History
-          </Button>
+          <ActionButton
+            size="sm"
+            className="gap-2"
+            onClick={clearAll}
+            icon={Eraser}
+            label="Clear History"
+          />
         </div>
       )}
     </div>

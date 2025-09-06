@@ -1,4 +1,3 @@
-import { MotionGlassCard } from "@/components/ui/glass-card";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ToolsHeader from "@/components/ui/tools-header";
 import { ToolsSidebar } from "@/components/ui/tools-sidebar";
@@ -31,9 +30,7 @@ export default function Layout({ children }: ChildrenProps) {
           <ToolsHeader />
 
           <main className="flex-1 py-4">
-            <MotionGlassCard className="@container/main min-h-screen w-full">
-              {children}
-            </MotionGlassCard>
+            <div className="@container/main min-h-screen w-full">{children}</div>
           </main>
         </div>
       </div>
