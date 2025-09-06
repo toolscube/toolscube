@@ -1,5 +1,6 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import * as React from "react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import {
@@ -10,39 +11,34 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 type BaseProps = {
   id?: string;
+  icon?: LucideIcon;
   label?: React.ReactNode;
   placeholder?: string;
   description?: React.ReactNode;
-
   className?: string;
   wrapperClassName?: string;
   textareaClassName?: string;
-
   rows?: number;
   minHeight?: string;
   maxLength?: number;
   showCount?: boolean;
-
   disabled?: boolean;
   required?: boolean;
-
   autoResize?: boolean;
   trimOnBlur?: boolean;
   readOnly?: boolean;
-
   value?: string;
   onValueChange?: (value: string) => void;
-
   onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
   onKeyUp?: React.KeyboardEventHandler<HTMLTextAreaElement>;
   onPaste?: React.ClipboardEventHandler<HTMLTextAreaElement>;
   onBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
-
   defaultValue?: string;
   error?: React.ReactNode;
 };
@@ -59,6 +55,7 @@ const TextareaField = React.forwardRef<
   const {
     name,
     id,
+    icon: Icon,
     label,
     placeholder,
     description,
@@ -83,8 +80,6 @@ const TextareaField = React.forwardRef<
     defaultValue,
     error,
   } = props;
-
-  // local ref + merge with forwarded ref
   const innerRef = React.useRef<HTMLTextAreaElement | null>(null);
   const setMergedRef = React.useCallback(
     (el: HTMLTextAreaElement | null) => {
@@ -98,11 +93,9 @@ const TextareaField = React.forwardRef<
   const autoId = React.useId();
   const textareaId = id ?? autoId;
 
-  // local state declared unconditionally (used only when standalone)
   const [internal, setInternal] = React.useState<string>(defaultValue ?? "");
   const standaloneValue = externalValue ?? internal;
 
-  // autoresize helper
   const resizeNow = React.useCallback(() => {
     if (!autoResize || !innerRef.current) return;
     const el = innerRef.current;
@@ -110,13 +103,11 @@ const TextareaField = React.forwardRef<
     el.style.height = `${el.scrollHeight}px`;
   }, [autoResize]);
 
-  // keep height in sync in both modes
   React.useEffect(() => {
     resizeNow();
   }, [resizeNow]);
 
   if (!name) {
-    // Standalone mode
     const value = standaloneValue ?? "";
 
     const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
@@ -141,13 +132,11 @@ const TextareaField = React.forwardRef<
     return (
       <div className={className}>
         {label ? (
-          <label
-            htmlFor={textareaId}
-            className="mb-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
+          <Label htmlFor={textareaId} className="mb-2 gap-2">
+            {Icon && <Icon className="w-4 h-4" />}
             {label}
             {required && <span className="ml-0.5 text-destructive">*</span>}
-          </label>
+          </Label>
         ) : null}
 
         <div className={cn("overflow-hidden rounded-md dark:bg-transparent", wrapperClassName)}>
@@ -188,7 +177,6 @@ const TextareaField = React.forwardRef<
     );
   }
 
-  // RHF mode
   return (
     <FormField
       name={name}
@@ -199,7 +187,8 @@ const TextareaField = React.forwardRef<
         return (
           <FormItem className={className}>
             {label ? (
-              <FormLabel className="mb-2" htmlFor={textareaId}>
+              <FormLabel className="mb-2 gap-2" htmlFor={textareaId}>
+                {Icon && <Icon className="w-4 h-4" />}
                 {label}
                 {required && <span className="ml-0.5 text-destructive">*</span>}
               </FormLabel>
@@ -261,7 +250,6 @@ const TextareaField = React.forwardRef<
                 {maxLength ? ` / ${maxLength}` : ""}
               </div>
             )}
-
             <FormMessage />
           </FormItem>
         );

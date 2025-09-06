@@ -17,31 +17,24 @@ type BaseProps = Omit<
   "onChange" | "type" | "value"
 > & {
   name?: string;
-
   icon?: LucideIcon;
   label?: React.ReactNode;
   labelNode?: React.ReactNode;
   disable?: boolean;
-
   value?: string | number;
   defaultValue?: string | number;
-
   requiredMark?: boolean;
   hint?: string;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   type?: HTMLInputTypeAttribute;
-
   parseNumber?: boolean;
   preventWheelChange?: boolean;
-
   id?: string;
   className?: string;
   inputClassName?: string;
-
   multiple?: boolean;
   accept?: string;
   onFilesChange?: (files: File[] | null) => void;
-
   fileIcon?: LucideIcon;
   fileButtonLabel?: string;
   fileButtonVariant?: ButtonVariant;
@@ -52,14 +45,10 @@ export type InputFieldProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > = BaseProps & {
-  /** If omitted, runs in standalone mode */
   name?: TName;
 };
 
-export function InputField<
-  TFieldValues extends FieldValues,
-  TName extends FieldPath<TFieldValues>,
->({
+export function InputField<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>>({
   name,
   icon: Icon,
   label,
@@ -81,8 +70,6 @@ export function InputField<
   multiple,
   accept,
   onFilesChange,
-
-  // simple file UI
   fileIcon: FileIcon,
   fileButtonLabel = "Import",
   fileButtonVariant = "outline",
@@ -90,22 +77,18 @@ export function InputField<
 
   ...rest
 }: InputFieldProps<TFieldValues, TName>) {
-  // ── Derived flags
   const effectiveDisabled = disabled ?? disable ?? false;
   const isFile = type === "file";
   const shouldParseNumber = parseNumber ?? type === "number";
   const shouldPreventWheel = preventWheelChange ?? shouldParseNumber;
   const labelContent = labelNode ?? label;
 
-  // ── Hooks (must be top-level, unconditional)
   const hiddenFileRef = React.useRef<HTMLInputElement | null>(null);
   const chooseFile = React.useCallback(() => hiddenFileRef.current?.click(), []);
   const [internal, setInternal] = React.useState<string | number | undefined>(defaultValue);
 
-  // Standalone vs RHF
   const inFormMode = Boolean(name);
 
-  // ── Helpers
   const toNumberIfNeeded = (raw: string): string | number => {
     if (!shouldParseNumber) return raw;
     return raw === "" ? "" : Number(raw);
@@ -114,7 +97,6 @@ export function InputField<
   const LeftFileIcon: LucideIcon = Icon ?? CloudUpload;
 
   if (inFormMode) {
-    // ── RHF MODE
     return (
       <FormField
         name={name as TName}
@@ -135,7 +117,6 @@ export function InputField<
             onChange?.(e);
           };
 
-          // assign both RHF ref and our local ref
           const assignRefs = (el: HTMLInputElement | null) => {
             hiddenFileRef.current = el;
             if (typeof fieldRef === "function") {
@@ -216,7 +197,6 @@ export function InputField<
     );
   }
 
-  // ── STANDALONE MODE
   const isControlled = value !== undefined;
   const currentValue = isControlled ? value : internal;
 

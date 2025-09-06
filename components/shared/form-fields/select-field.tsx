@@ -1,5 +1,6 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import * as React from "react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import {
@@ -10,6 +11,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -24,39 +26,27 @@ type Option = {
   label: React.ReactNode;
   value: string | number;
   disabled?: boolean;
+  icon?: LucideIcon;
 };
 
 type BaseProps = {
   id?: string;
-
+  icon?: LucideIcon;
   label?: React.ReactNode;
   options: Option[];
   placeholder?: string;
   description?: React.ReactNode;
-
-  /** Layout / styling */
   className?: string;
   triggerClassName?: string;
   contentClassName?: string;
-
-  /** Behavior */
   disabled?: boolean;
   required?: boolean;
-
   allowClear?: boolean;
   clearLabel?: string;
-
-  /** Controlled / value control */
   value?: string | number | undefined;
   onValueChange?: (value: string | number | undefined) => void;
-
-  /** Standalone default */
   defaultValue?: string | number | undefined;
-
-  /** Convert string to number on change */
   valueAsNumber?: boolean;
-
-  /** Error text for standalone mode */
   error?: React.ReactNode;
 };
 
@@ -64,7 +54,6 @@ export type SelectFieldProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > = BaseProps & {
-  /** If omitted, runs in standalone mode */
   name?: TName;
 };
 
@@ -86,14 +75,13 @@ function normalizeIn(v: string | number | undefined | null): string {
   return String(v);
 }
 
-/** Component */
 export default function SelectField<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
 >({
-  /** Common */
   name,
   id,
+  icon: Icon,
   label,
   options,
   placeholder = "Select an option",
@@ -107,17 +95,14 @@ export default function SelectField<
   clearLabel = "Clear",
   valueAsNumber = false,
 
-  /** Controlled / Uncontrolled (standalone) */
   value: externalValue,
   onValueChange,
   defaultValue,
   error,
 }: SelectFieldProps<TFieldValues, TName>) {
-  // Hooks must be top-level
   const autoId = React.useId();
   const triggerId = id ?? autoId;
 
-  // Local state exists regardless of branch, only used in standalone
   const [internal, setInternal] = React.useState<string | number | undefined>(defaultValue);
 
   // Renderers
@@ -134,13 +119,11 @@ export default function SelectField<
     return (
       <div className={className}>
         {label ? (
-          <label
-            htmlFor={triggerId}
-            className="mb-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
+          <Label htmlFor={triggerId} className="mb-2 gap-2">
+            {Icon && <Icon className="h-4 w-4" />}
             {label}
             {required && <span className="ml-0.5 text-destructive">*</span>}
-          </label>
+          </Label>
         ) : null}
 
         <div className="overflow-hidden rounded-md dark:bg-transparent">
@@ -151,15 +134,21 @@ export default function SelectField<
 
             <SelectContent className={contentClassName}>
               {allowClear && <SelectItem value={CLEAR_TOKEN}>{clearLabel}</SelectItem>}
-              {options.map((opt) => (
-                <SelectItem
-                  key={String(opt.value)}
-                  value={String(opt.value)}
-                  disabled={opt.disabled}
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
+              {options.map((opt) => {
+                const IconComp = opt.icon;
+                return (
+                  <SelectItem
+                    key={String(opt.value)}
+                    value={String(opt.value)}
+                    disabled={opt.disabled}
+                  >
+                    <span className="flex items-center gap-2">
+                      {IconComp && <IconComp className="h-4 w-4" />}
+                      {opt.label}
+                    </span>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -190,7 +179,8 @@ export default function SelectField<
         return (
           <FormItem className={className}>
             {label ? (
-              <FormLabel className="mb-2" htmlFor={triggerId}>
+              <FormLabel className="mb-2 gap-2" htmlFor={triggerId}>
+                {Icon && <Icon className="h-4 w-4" />}
                 {label}
                 {required && <span className="ml-0.5 text-destructive">*</span>}
               </FormLabel>
