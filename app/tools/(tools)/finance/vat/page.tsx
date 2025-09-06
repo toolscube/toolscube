@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-export default function VatCalculatorPage() {
+export default function VatCalculatorClient() {
   // State
   const [mode, setMode] = React.useState<"add" | "remove">("add");
   const [price, setPrice] = React.useState<number>(1000);
