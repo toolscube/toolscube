@@ -351,15 +351,6 @@ export default function SimpleInvoiceClient() {
               checked={data.paid}
               onCheckedChange={(v) => setData((d) => ({ ...d, paid: v }))}
             />
-            <InputField
-              label="Amount Paid"
-              type="number"
-              min={0}
-              value={data.amountPaid}
-              onChange={(e) =>
-                setData({ ...data, amountPaid: Math.max(0, Number(e.target.value) || 0) })
-              }
-            />
           </div>
 
           {/* From */}
@@ -387,7 +378,16 @@ export default function SimpleInvoiceClient() {
               placeholder="Address"
               value={data.from.address || ""}
               onValueChange={(v) => setData({ ...data, from: { ...data.from, address: v } })}
-              textareaClassName="min-h-[84px]"
+              textareaClassName="min-h-[82px]"
+            />
+            <InputField
+              label="Amount Paid"
+              type="number"
+              min={0}
+              value={data.amountPaid}
+              onChange={(e) =>
+                setData({ ...data, amountPaid: Math.max(0, Number(e.target.value) || 0) })
+              }
             />
           </div>
 
@@ -416,7 +416,7 @@ export default function SimpleInvoiceClient() {
               placeholder="Address"
               value={data.to.address || ""}
               onValueChange={(v) => setData({ ...data, to: { ...data.to, address: v } })}
-              textareaClassName="min-h-[84px]"
+              textareaClassName="min-h-[150px]"
             />
           </div>
         </CardContent>
@@ -532,7 +532,7 @@ export default function SimpleInvoiceClient() {
               value={data.notes || ""}
               onValueChange={(v) => setData({ ...data, notes: v })}
               placeholder="Optional notes, payment instructions, bank details, etc."
-              textareaClassName="min-h-[90px]"
+              textareaClassName="min-h-[320px]"
             />
           </div>
 

@@ -1,145 +1,58 @@
-"use client";
+import JsonLd from "@/components/seo/json-ld";
+import TodoOfflineClient from "@/components/tools/office/todo-offline-client";
+import { buildMetadata } from "@/lib/seo";
 
-import { Check, ClipboardList, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
-import { InputField } from "@/components/shared/form-fields/input-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
+export const metadata = buildMetadata({
+  title: "To-Do (Offline) • Tools Hub",
+  description:
+    "Local, private to-do list that works offline. No signup. Stores only in your browser.",
+  path: "/tools/office/todo",
+  keywords: [
+    "to-do",
+    "todo",
+    "offline to-do",
+    "task list",
+    "checklist",
+    "local only",
+    "privacy",
+    "Tools Hub",
+  ],
+});
 
-// Types
+export default function Page() {
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
-type Todo = {
-  id: string;
-  text: string;
-  done: boolean;
-  note?: string;
-  created: number;
-};
-
-// Helpers
-function uid(prefix = "id") {
-  return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
-// Page
-export default function TodoOfflineClient() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [input, setInput] = useState("");
-  const [note, setNote] = useState("");
-
-  // Local storage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("tools:todo");
-      if (saved) setTodos(JSON.parse(saved));
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("tools:todo", JSON.stringify(todos));
-    } catch {}
-  }, [todos]);
-
-  const addTodo = () => {
-    if (!input.trim()) return;
-    setTodos([
-      { id: uid("todo"), text: input.trim(), note: note.trim(), done: false, created: Date.now() },
-      ...todos,
-    ]);
-    setInput("");
-    setNote("");
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "To-Do (Offline) — Tools Hub",
+    url: `${site}/tools/office/todo`,
+    applicationCategory: "ProductivityApplication",
+    operatingSystem: "Web",
+    description:
+      "Fast, privacy-first offline to-do list. Works entirely in your browser with local storage. No accounts or cloud sync.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Add, edit, delete tasks",
+      "Categories & filters",
+      "Search",
+      "Priority & notes",
+      "Progress stats",
+      "Export CSV/JSON, import JSON",
+      "Autosave to local storage",
+      "Offline by default (no signup)",
+    ],
+    creator: {
+      "@type": "Person",
+      name: "Tariqul Islam",
+      url: "https://tariqul.dev",
+    },
   };
-
-  const toggleTodo = (id: string) => {
-    setTodos((ts) => ts.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
-  };
-
-  const removeTodo = (id: string) => setTodos((ts) => ts.filter((t) => t.id !== id));
-  const clearAll = () => setTodos([]);
 
   return (
-    <>
-      <ToolPageHeader
-        icon={ClipboardList}
-        title="To-Do (Offline)"
-        description="Local, private tasks stored in your browser."
-        actions={<ResetButton onClick={clearAll} />}
-      />
-
-      {/* Add new task */}
-      <GlassCard className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">New Task</CardTitle>
-          <CardDescription>Quickly add a task with optional notes.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2">
-          <InputField
-            label="Task"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="What needs to be done?"
-          />
-          <InputField
-            label="Note (optional)"
-            id="note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Extra details"
-          />
-
-          <div className="col-span-2">
-            <ActionButton variant="default" icon={Plus} label="Add Task" onClick={addTodo} />
-          </div>
-        </CardContent>
-      </GlassCard>
-
-      <Separator />
-
-      {/* List */}
-      <GlassCard className="shadow-sm">
-        <CardHeader className="flex items-end justify-between">
-          <div>
-            <CardTitle className="text-base">Tasks</CardTitle>
-            <CardDescription>Check off tasks when complete.</CardDescription>
-          </div>
-
-          <Badge variant="secondary" className="self-center">
-            {todos.filter((t) => !t.done).length} pending
-          </Badge>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {todos.length === 0 && (
-            <p className="text-sm text-muted-foreground">No tasks yet. Add one above.</p>
-          )}
-          {todos.map((t) => (
-            <div key={t.id} className="flex flex-col gap-2 rounded-md border p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="icon"
-                    variant={t.done ? "default" : "outline"}
-                    className="h-6 w-6"
-                    onClick={() => toggleTodo(t.id)}
-                  >
-                    {t.done && <Check className="h-4 w-4" />}
-                  </Button>
-                  <span className={t.done ? "line-through text-muted-foreground" : ""}>
-                    {t.text}
-                  </span>
-                </div>
-                <ActionButton size="icon" icon={Trash2} onClick={() => removeTodo(t.id)} />
-              </div>
-              {t.note && <p className="text-xs text-muted-foreground">{t.note}</p>}
-            </div>
-          ))}
-        </CardContent>
-      </GlassCard>
-    </>
+    <div className="space-y-4">
+      <JsonLd data={jsonLd} />
+      <TodoOfflineClient />
+    </div>
   );
 }
