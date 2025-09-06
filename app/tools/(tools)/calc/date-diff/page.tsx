@@ -1,25 +1,23 @@
 "use client";
 
-import {
-  Calendar,
-  CalendarDays,
-  CalendarRange,
-  Copy,
-  Info,
-  RefreshCcw,
-  RotateCcw,
-} from "lucide-react";
+import { Calendar, CalendarDays, CalendarRange, Info, RefreshCcw } from "lucide-react";
 import { useMemo, useState } from "react";
-import toast from "react-hot-toast";
+import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
 import Stat from "@/components/shared/stat";
-import { Button } from "@/components/ui/button";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 
-// Calendar-style Y/M/D diff + running totals (based on local timezone)
+// Types
+type PresetRange = "today" | "yesterday" | "last7" | "last30" | "thisMonth";
+type StatItem = { key: string; label: string; value: string; className?: string };
+
+/* Date helpers */
+
+// Calendar-style Y/M/D diff + running totals
 function diffYMD(a: Date, b: Date) {
   let from = new Date(a.getFullYear(), a.getMonth(), a.getDate());
   let to = new Date(b.getFullYear(), b.getMonth(), b.getDate());
@@ -48,7 +46,7 @@ function diffYMD(a: Date, b: Date) {
   return { years, months, days, totalDays, totalWeeks, totalHours, totalMinutes, totalSeconds };
 }
 
-// Count business days (Mon–Fri). Inclusive toggle supported.
+// Count business days (Mon–Fri).
 function businessDaysBetween(a: Date, b: Date, inclusive = false) {
   const [from, to] = a <= b ? [a, b] : [b, a];
   let days = 0;
@@ -58,7 +56,7 @@ function businessDaysBetween(a: Date, b: Date, inclusive = false) {
     end.setDate(end.getDate() + 1);
   }
   for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-    const wd = d.getDay(); // 0=Sun,6=Sat
+    const wd = d.getDay();
     if (wd !== 0 && wd !== 6) days++;
   }
   return days;
@@ -70,21 +68,21 @@ const fmt = new Intl.DateTimeFormat(undefined, {
   day: "2-digit",
 });
 
-export default function DateDiffPage() {
+export default function DateDiffClient() {
   const [start, setStart] = useState<string>("");
   const [end, setEnd] = useState<string>("");
   const [inclusive, setInclusive] = useState<boolean>(false);
-  const [copied, setCopied] = useState(false);
 
   const parsed = useMemo(() => {
     if (!start || !end) return null;
     const a = new Date(start);
     const b = new Date(end);
-    if (isNaN(a.getTime()) || isNaN(b.getTime())) return null;
+    const isInvalidDate = (d: Date) => Number.isNaN(d.getTime());
+    if (isInvalidDate(a) || isInvalidDate(b)) return null;
 
     const base = diffYMD(a, b);
 
-    // inclusive হলে totals +1 day (calendar Y/M/D নয়)
+    // If inclusive, totals +1 day (calendar Y/M/D stays)
     const totals = inclusive
       ? {
           ...base,
@@ -121,6 +119,7 @@ export default function DateDiffPage() {
     if (range === "today") {
       setStart(to.toISOString().split("T")[0]);
       setEnd(to.toISOString().split("T")[0]);
+      setInclusive(false);
       return;
     }
     if (range === "yesterday") {
@@ -128,6 +127,7 @@ export default function DateDiffPage() {
       y.setDate(y.getDate() - 1);
       setStart(y.toISOString().split("T")[0]);
       setEnd(y.toISOString().split("T")[0]);
+      setInclusive(false);
       return;
     }
     if (range === "last7") {
@@ -159,12 +159,11 @@ export default function DateDiffPage() {
     setStart("");
     setEnd("");
     setInclusive(false);
-    setCopied(false);
   };
 
-  const copySummary = async () => {
-    if (!parsed) return;
-    const lines = [
+  const summary = useMemo(() => {
+    if (!parsed) return "";
+    return [
       `Date difference (${parsed.aFmt} → ${parsed.bFmt})${inclusive ? " [inclusive]" : ""}`,
       `Calendar diff: ${parsed.years}y ${parsed.months}m ${parsed.days}d`,
       `Total days: ${parsed.totalDays}`,
@@ -174,181 +173,167 @@ export default function DateDiffPage() {
       `Total seconds: ${parsed.totalSeconds}`,
       `Business days (Mon–Fri): ${parsed.bizDays}`,
     ].join("\n");
-    try {
-      await navigator.clipboard.writeText(lines);
-      setCopied(true);
-      toast.success("Summary copied!");
-      setTimeout(() => setCopied(false), 1000);
-    } catch {
-      toast.error("Copy failed");
-    }
-  };
+  }, [parsed, inclusive]);
+
+  const QUICK_PRESETS: ReadonlyArray<{ label: string; value: PresetRange }> = [
+    { label: "Today", value: "today" },
+    { label: "Yesterday", value: "yesterday" },
+    { label: "Last 7 days", value: "last7" },
+    { label: "Last 30 days", value: "last30" },
+    { label: "This month", value: "thisMonth" },
+  ] as const;
+
+  const statItems = useMemo<StatItem[]>(() => {
+    const dash = "—";
+    return [
+      {
+        key: "cal",
+        label: "Calendar diff",
+        value: parsed ? `${parsed.years}y ${parsed.months}m ${parsed.days}d` : dash,
+      },
+      { key: "days", label: "Total days", value: parsed ? String(parsed.totalDays) : dash },
+      { key: "weeks", label: "Total weeks", value: parsed ? String(parsed.totalWeeks) : dash },
+      { key: "hours", label: "Total hours", value: parsed ? String(parsed.totalHours) : dash },
+      {
+        key: "minutes",
+        label: "Total minutes",
+        value: parsed ? String(parsed.totalMinutes) : dash,
+      },
+      {
+        key: "seconds",
+        label: "Total seconds",
+        value: parsed ? String(parsed.totalSeconds) : dash,
+      },
+      {
+        key: "biz",
+        label: "Business days (Mon–Fri)",
+        value: parsed ? String(parsed.bizDays) : dash,
+        className: "md:col-span-2",
+      },
+    ];
+  }, [parsed]);
 
   return (
-    <div className="py-10 space-y-8">
-      <MotionGlassCard className="space-y-4">
-        {/* Flowing Action Header */}
-        <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-5">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-              <CalendarRange className="h-6 w-6" /> Date Difference
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Uses your local timezone. Toggle inclusive to count both start and end dates.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={resetAll} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
-            <Button variant="outline" onClick={swap} className="gap-2">
-              <RefreshCcw className="h-4 w-4" /> Swap
-            </Button>
-            <Button variant="outline" onClick={copySummary} className="gap-2">
-              <Copy className={`h-4 w-4 ${copied ? "animate-pulse" : ""}`} /> Copy
-            </Button>
-          </div>
-        </GlassCard>
+    <>
+      {/* Header */}
+      <ToolPageHeader
+        icon={CalendarRange}
+        title="Date Difference"
+        description="Uses your local timezone. Toggle inclusive to count both start and end dates."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <ActionButton variant="outline" icon={RefreshCcw} label="Swap" onClick={swap} />
+            <CopyButton
+              variant="default"
+              label="Copy Summary"
+              getText={() => summary}
+              disabled={!summary}
+            />
+          </>
+        }
+      />
 
-        {/* Inputs */}
-        <GlassCard className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" /> Pick Dates
-            </CardTitle>
-            <CardDescription>
-              Quick presets or pick any two dates. Local timezone is applied.
-            </CardDescription>
-          </CardHeader>
+      {/* Inputs */}
+      <GlassCard className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" /> Pick Dates
+          </CardTitle>
+          <CardDescription>
+            Quick presets or pick any two dates. Local timezone is applied.
+          </CardDescription>
+        </CardHeader>
 
-          <CardContent>
-            {/* Presets */}
-            <div className="flex flex-wrap gap-2 pb-4">
-              <Button variant="secondary" size="sm" onClick={() => preset("today")}>
-                Today
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => preset("yesterday")}>
-                Yesterday
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => preset("last7")}>
-                Last 7 days
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => preset("last30")}>
-                Last 30 days
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => preset("thisMonth")}>
-                This month
-              </Button>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-[1fr_auto_1fr] md:items-end">
-              <GlassCard className="p-4">
-                <div className="grid gap-2">
-                  <Label>Start date</Label>
-                  <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={setTodayStart}
-                    className="mt-2 flex items-center gap-1"
-                  >
-                    <CalendarDays className="h-4 w-4" /> Today
-                  </Button>
-                </div>
-              </GlassCard>
-
-              <div className="flex items-end justify-center">
-                <button
-                  onClick={swap}
-                  className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm hover:bg-primary/10"
-                  title="Swap start/end"
-                >
-                  <RefreshCcw className="h-4 w-4" /> Swap
-                </button>
-              </div>
-
-              <GlassCard className="p-4">
-                <div className="grid gap-2">
-                  <Label>End date</Label>
-                  <Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={setTodayEnd}
-                    className="mt-2 flex items-center gap-1"
-                  >
-                    <CalendarDays className="h-4 w-4" /> Today
-                  </Button>
-                </div>
-              </GlassCard>
-            </div>
-
-            {/* Inclusive toggle */}
-            <div className="mt-4 flex items-center gap-3 text-sm">
-              <input
-                id="inclusive"
-                type="checkbox"
-                checked={inclusive}
-                onChange={(e) => setInclusive(e.target.checked)}
-                className="h-4 w-4 accent-primary"
+        <CardContent>
+          {/* Presets */}
+          <div className="flex flex-wrap gap-2 pb-4">
+            {QUICK_PRESETS.map((p) => (
+              <ActionButton
+                key={p.value}
+                variant="secondary"
+                size="sm"
+                label={p.label}
+                onClick={() => preset(p.value)}
               />
-              <label htmlFor="inclusive" className="select-none">
-                Count both start and end dates (inclusive)
-              </label>
+            ))}
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-[1fr_auto_1fr] md:items-end">
+            <div className="grid gap-2">
+              <InputField
+                label="Start date"
+                type="date"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+              />
+              <ActionButton
+                variant="outline"
+                size="sm"
+                icon={CalendarDays}
+                label="Today"
+                onClick={setTodayStart}
+              />
             </div>
 
-            <Separator className="my-6" />
+            <div className="flex items-end justify-center">
+              <ActionButton variant="outline" icon={RefreshCcw} label="Swap" onClick={swap} />
+            </div>
 
-            {/* Results */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <GlassCard className="p-4">
-                <Stat
-                  label="Calendar diff"
-                  value={parsed ? `${parsed.years}y ${parsed.months}m ${parsed.days}d` : "—"}
-                />
-              </GlassCard>
-              <GlassCard className="p-4">
-                <Stat label="Total days" value={parsed ? String(parsed.totalDays) : "—"} />
-              </GlassCard>
-              <GlassCard className="p-4">
-                <Stat label="Total weeks" value={parsed ? String(parsed.totalWeeks) : "—"} />
-              </GlassCard>
-              <GlassCard className="p-4">
-                <Stat label="Total hours" value={parsed ? String(parsed.totalHours) : "—"} />
-              </GlassCard>
-              <GlassCard className="p-4">
-                <Stat label="Total minutes" value={parsed ? String(parsed.totalMinutes) : "—"} />
-              </GlassCard>
-              <GlassCard className="p-4">
-                <Stat label="Total seconds" value={parsed ? String(parsed.totalSeconds) : "—"} />
-              </GlassCard>
-              <GlassCard className="p-4 md:col-span-2">
-                <Stat
-                  label="Business days (Mon–Fri)"
-                  value={parsed ? String(parsed.bizDays) : "—"}
-                />
-              </GlassCard>
-              <GlassCard className="p-4">
-                <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">Range</div>
-                  <div className="text-sm font-medium">
-                    {parsed
-                      ? `${parsed.aFmt} → ${parsed.bFmt}${inclusive ? " (inclusive)" : ""}`
-                      : "—"}
-                  </div>
-                  <div className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
-                    <Info className="mt-0.5 h-3.5 w-3.5" />
-                    <span>
-                      Calendar diff shows Y/M/D; totals are day-based. Business days exclude
-                      weekends; holidays not excluded.
-                    </span>
-                  </div>
+            <div className="grid gap-2">
+              <InputField
+                label="End date"
+                type="date"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+              />
+              <ActionButton
+                variant="outline"
+                size="sm"
+                icon={CalendarDays}
+                label="Today"
+                onClick={setTodayEnd}
+              />
+            </div>
+          </div>
+
+          {/* Inclusive toggle */}
+          <div className="mt-4">
+            <SwitchRow
+              label="Count both start and end dates (inclusive)"
+              checked={inclusive}
+              onCheckedChange={setInclusive}
+            />
+          </div>
+
+          <Separator className="my-6" />
+
+          {/* Results */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {statItems.map((s) => (
+              <Stat key={s.key} label={s.label} value={s.value} className={s.className} />
+            ))}
+
+            <GlassCard className="p-4">
+              <div className="space-y-1">
+                <div className="text-sm text-muted-foreground">Range</div>
+                <div className="text-sm font-medium">
+                  {parsed
+                    ? `${parsed.aFmt} → ${parsed.bFmt}${inclusive ? " (inclusive)" : ""}`
+                    : "—"}
                 </div>
-              </GlassCard>
-            </div>
-          </CardContent>
-        </GlassCard>
-      </MotionGlassCard>
-    </div>
+                <div className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
+                  <Info className="mt-0.5 h-3.5 w-3.5" />
+                  <span>
+                    Calendar diff shows Y/M/D; totals are day-based. Business days exclude weekends;
+                    holidays not excluded.
+                  </span>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        </CardContent>
+      </GlassCard>
+    </>
   );
 }

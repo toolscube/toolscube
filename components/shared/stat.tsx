@@ -1,20 +1,23 @@
 import { HeartPulse, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Stat({
   label,
   value,
   hint,
   Icon,
+  className,
 }: {
   label: string;
   value: React.ReactNode;
   hint?: string;
   Icon?: LucideIcon;
+  className?: string;
 }) {
   const TopIcon = Icon ?? HeartPulse;
 
   return (
-    <div className="rounded-md border p-3">
+    <div className={cn("rounded-md border p-3", className)}>
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">{label}</div>
         <TopIcon className="h-4 w-4 text-muted-foreground" />
