@@ -1,16 +1,25 @@
 "use client";
 
 import {
+  Bold,
   Check,
+  Code,
   Copy,
   Download,
   Eye,
   FileText,
   Fullscreen,
   Github,
-  ListTree,
+  Heading1,
+  Heading2,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListChecks,
+  ListOrdered,
   Minimize2,
   Printer,
+  Redo2,
   RotateCcw,
   SplitSquareHorizontal,
   Upload,
@@ -18,10 +27,9 @@ import {
   WrapText,
 } from "lucide-react";
 import * as React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,45 +39,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-type AnyFn = (...args: any[]) => any;
+/* -----------------------------------------------------------------------------
+   Reusable primitives
+----------------------------------------------------------------------------- */
 
-const SAMPLE_MD = `# ✨ Markdown Previewer
-
-Write Markdown on the left — see **live preview** on the right.
-
-## Features
-- **GFM** support (tables, task lists, strikethrough)
-- Import/Export: \`.md\` & rendered \`.html\`
-- Drag & drop files, paste images
-- Copy raw Markdown
-- LocalStorage persistence
-- Adjustable split
-- Syntax highlighting
-
-## Table
-| Feature | Status |
-| ------ | ------ |
-| GFM | ✅ |
-| Copy | ✅ |
-| Import/Export | ✅ |
-
-## Task List
-- [x] Build UI
-- [x] Add GFM
-- [ ] Add Math (KaTeX)
-
-\`\`\`ts
-function greet(name: string) {
-  console.log('Hello, ' + name);
+function clsx(...xs: Array<string | false | undefined | null>) {
+  return xs.filter(Boolean).join(" ");
 }
-\`\`\`
-
-> Tip: Toggle "Soft Wrap" if long lines overflow.
-`;
-
-const STORAGE_KEY = "toolshub.markdown-previewer.v3";
-
-/* ----------------------------- small utilities ---------------------------- */
 
 function downloadBlob(filename: string, content: string, type: string) {
   const blob = new Blob([content], { type });
@@ -83,44 +59,256 @@ function downloadBlob(filename: string, content: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-function clsx(...arr: Array<string | false | undefined>) {
-  return arr.filter(Boolean).join(" ");
+const STORAGE_KEY = "toolshub.markdown-previewer.v5";
+
+type AnyFn = (...args: any[]) => any;
+
+function useLocalStorage<T>(key: string, initial: T) {
+  const [value, setValue] = React.useState<T>(initial);
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) setValue(JSON.parse(raw));
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch {}
+    }, 200);
+    return () => clearTimeout(t);
+  }, [key, value]);
+  return [value, setValue] as const;
 }
 
-async function fileToDataURL(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(String(r.result));
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
+/** Panel: consistent card with header + content areas */
+function Panel({
+  title,
+  subtitle,
+  right,
+  children,
+  className,
+}: {
+  title: string;
+  subtitle?: React.ReactNode;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={clsx("rounded-xl border bg-background/60 backdrop-blur", className)}>
+      <div className="flex items-center justify-between border-b px-3 py-2">
+        <div>
+          <div className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+            {title}
+          </div>
+          {subtitle ? <div className="text-[11px] text-muted-foreground">{subtitle}</div> : null}
+        </div>
+        {right ? <div className="flex items-center gap-2">{right}</div> : null}
+      </div>
+      <div className="p-3">{children}</div>
+    </div>
+  );
 }
+
+/** Toolbar: grouped icon buttons with tooltips */
+function Toolbar({
+  groups,
+}: {
+  groups: Array<Array<{ title: string; icon: React.ReactNode; onClick: () => void }>>;
+}) {
+  return (
+    <div className="inline-flex w-full flex-wrap items-center gap-2">
+      {groups.map((g, gi) => (
+        <div key={gi} className="inline-flex items-center gap-1 rounded-md border bg-muted/30 px-1">
+          {g.map((b, bi) => (
+            <TooltipProvider key={bi}>
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    title={b.title}
+                    onClick={b.onClick}
+                  >
+                    {b.icon}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{b.title}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** SplitPane: vertical with draggable handle */
+function SplitPane({
+  left,
+  right,
+  min = 25,
+  max = 75,
+  value,
+  onChange,
+}: {
+  left: React.ReactNode;
+  right: React.ReactNode;
+  min?: number;
+  max?: number;
+  value: number; // % width for left pane
+  onChange: (v: number) => void;
+}) {
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const [drag, setDrag] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!drag) return;
+    const onMove = (e: MouseEvent) => {
+      const el = ref.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const x = Math.max(
+        r.width * (min / 100),
+        Math.min(e.clientX - r.left, r.width * (max / 100)),
+      );
+      onChange(Math.round((x / r.width) * 100));
+    };
+    const onUp = () => setDrag(false);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp, { once: true });
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [drag, min, max, onChange]);
+
+  return (
+    <div
+      ref={ref}
+      className="hidden gap-4 sm:grid"
+      style={{ gridTemplateColumns: `minmax(260px, ${value}%) 12px 1fr` }}
+    >
+      <div>{left}</div>
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        title="Drag to resize"
+        className={clsx(
+          "relative cursor-col-resize select-none",
+          drag ? "bg-primary/30" : "bg-transparent",
+        )}
+        onMouseDown={() => setDrag(true)}
+      >
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 rounded-full bg-primary/30" />
+      </div>
+      <div>{right}</div>
+    </div>
+  );
+}
+
+/** DropZone overlay for drag & drop files */
+function DropZone({ active, text }: { active: boolean; text: string }) {
+  if (!active) return null;
+  return (
+    <div className="absolute inset-0 z-40 grid place-items-center bg-primary/10 backdrop-blur-sm border-2 border-dashed border-primary rounded-2xl">
+      <div className="rounded-xl bg-background/80 px-4 py-2 text-sm">{text}</div>
+    </div>
+  );
+}
+
+/** Status bar chip */
+function Stat({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <span className="rounded-md border bg-muted/40 px-2 py-1 text-xs">
+      {label}: <b className="ml-1">{value}</b>
+    </span>
+  );
+}
+
+/** Outline list */
+function OutlineList({ items }: { items: { level: number; text: string; id: string }[] }) {
+  return (
+    <div className="max-h-[420px] overflow-auto p-2 text-sm">
+      {items.length === 0 ? (
+        <p className="text-muted-foreground text-xs px-1">No headings yet.</p>
+      ) : (
+        <ul className="space-y-1">
+          {items.map((h, i) => (
+            <li key={i} style={{ paddingLeft: (h.level - 1) * 12 }}>
+              <a
+                className="text-foreground/80 hover:underline"
+                href={`#${h.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById(h.id);
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* -----------------------------------------------------------------------------
+   Page
+----------------------------------------------------------------------------- */
+
+const SAMPLE_MD = `# ✨ Markdown Previewer
+
+Write Markdown on the left — see **live preview** on the right.
+
+- Live GFM preview
+- Copy MD / Copy HTML
+- Drag handle to resize
+- Paste images directly
+`;
 
 function sanitizeTitle(s: string) {
   return s.replace(/[<>:"/\\|?*]/g, "").slice(0, 120) || "Export";
 }
 
-/* ---------------------------------- Page ---------------------------------- */
-
 export default function MarkdownPreviewerPage() {
-  const [md, setMd] = useState("");
-  const [filename, setFilename] = useState("document.md");
-  const [copied, setCopied] = useState(false);
-  const [useGfm, setUseGfm] = useState(true);
-  const [softWrap, setSoftWrap] = useState(true);
-  const [split, setSplit] = useState(50);
-  const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor");
-  const [fullscreen, setFullscreen] = useState(false);
+  // state
+  const [state, setState] = useLocalStorage(STORAGE_KEY, {
+    md: SAMPLE_MD,
+    filename: "document.md",
+    useGfm: true,
+    softWrap: true,
+    split: 56,
+  });
 
-  // runtime plugins
-  const [remarkGfm, setRemarkGfm] = useState<AnyFn | null>(null);
-  const [rehypeHighlight, setRehypeHighlight] = useState<AnyFn | null>(null);
+  const md = state.md as string;
+  const filename = state.filename as string;
+  const useGfm = state.useGfm as boolean;
+  const softWrap = state.softWrap as boolean;
+  const split = state.split as number;
 
-  // cursor / outline
-  const editorRef = useRef<HTMLTextAreaElement | null>(null);
-  const [cursorRowCol, setCursorRowCol] = useState({ row: 1, col: 1 });
+  const set = (patch: Partial<typeof state>) => setState({ ...(state as any), ...patch });
 
-  const outline = useMemo(() => {
+  const [remarkGfm, setRemarkGfm] = React.useState<AnyFn | null>(null);
+  const [rehypeHighlight, setRehypeHighlight] = React.useState<AnyFn | null>(null);
+
+  const [copiedMd, setCopiedMd] = React.useState(false);
+  const [copiedHtml, setCopiedHtml] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<"editor" | "preview">("editor");
+  const [fullscreen, setFullscreen] = React.useState(false);
+  const [dragOver, setDragOver] = React.useState(false);
+
+  const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const [cursorRowCol, setCursorRowCol] = React.useState({ row: 1, col: 1 });
+
+  // outline
+  const outline = React.useMemo(() => {
     const lines = md.split("\n");
     const items: { level: number; text: string; id: string }[] = [];
     for (const l of lines) {
@@ -138,45 +326,13 @@ export default function MarkdownPreviewerPage() {
     return items;
   }, [md]);
 
-  const counts = useMemo(() => {
+  const counts = React.useMemo(() => {
     const words = (md.match(/\b\S+\b/g) || []).length;
     return { words, chars: md.length, lines: md.split("\n").length };
   }, [md]);
 
-  // load from storage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const s = JSON.parse(saved);
-        setMd(s.md ?? "");
-        setUseGfm(s.useGfm ?? true);
-        setSoftWrap(s.softWrap ?? true);
-        setSplit(s.split ?? 50);
-        setFilename(s.filename ?? "document.md");
-      } else {
-        setMd(SAMPLE_MD);
-      }
-    } catch {
-      setMd(SAMPLE_MD);
-    }
-  }, []);
-
-  // persist to storage
-  useEffect(() => {
-    const t = setTimeout(() => {
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({ md, useGfm, softWrap, split, filename }),
-        );
-      } catch {}
-    }, 200);
-    return () => clearTimeout(t);
-  }, [md, useGfm, softWrap, split, filename]);
-
-  // load plugins (correct way)
-  useEffect(() => {
+  // plugins
+  React.useEffect(() => {
     let mounted = true;
     (async () => {
       const [{ default: gfm }, { default: highlight }] = await Promise.all([
@@ -193,72 +349,39 @@ export default function MarkdownPreviewerPage() {
     };
   }, []);
 
-  /* -------------------------------- actions ------------------------------- */
+  // actions
+  const resetAll = () =>
+    set({
+      md: SAMPLE_MD,
+      filename: "document.md",
+      useGfm: true,
+      softWrap: true,
+      split: 56,
+    });
 
-  const resetAll = () => {
-    setMd(SAMPLE_MD);
-    setUseGfm(true);
-    setSoftWrap(true);
-    setSplit(50);
-    setFilename("document.md");
+  const copyMarkdown = async () => {
+    await navigator.clipboard.writeText(md);
+    setCopiedMd(true);
+    setTimeout(() => setCopiedMd(false), 1200);
   };
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(md);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {}
+  const generateHTML = async () => {
+    const { marked } = await import("marked");
+    return String(marked.parse(md));
   };
 
-  const handleImport = async (file?: File) => {
-    if (!file) return;
-    const text = await file.text();
-    setMd(text);
-    setFilename(file.name.endsWith(".md") ? file.name : `${file.name}.md`);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    const f = e.dataTransfer.files?.[0];
-    if (f) handleImport(f);
-  };
-
-  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (const it of items as any) {
-      if (it.kind === "file") {
-        const file = it.getAsFile();
-        if (file && file.type.startsWith("image/")) {
-          const dataUrl = await fileToDataURL(file);
-          const el = editorRef.current;
-          const start = el?.selectionStart ?? md.length;
-          const end = el?.selectionEnd ?? md.length;
-          const before = md.slice(0, start);
-          const after = md.slice(end);
-          const insert = `![pasted-image](${dataUrl})`;
-          const next = `${before}${insert}${after}`;
-          setMd(next);
-          requestAnimationFrame(() => {
-            if (!editorRef.current) return;
-            const pos = start + insert.length;
-            editorRef.current.selectionStart = editorRef.current.selectionEnd = pos;
-            editorRef.current.focus();
-          });
-          e.preventDefault();
-          return;
-        }
-      }
-    }
+  const copyHTML = async () => {
+    const html = await generateHTML();
+    await navigator.clipboard.writeText(html);
+    setCopiedHtml(true);
+    setTimeout(() => setCopiedHtml(false), 1200);
   };
 
   const handleExportMd = () =>
     downloadBlob(filename || "document.md", md, "text/markdown;charset=utf-8");
 
   const handleExportHtml = async () => {
-    const { marked } = await import("marked");
-    const html = marked.parse(md);
+    const html = await generateHTML();
     const doc = `<!doctype html>
 <html lang="en">
 <head>
@@ -284,58 +407,132 @@ ${html}
     downloadBlob(filename.replace(/\.md$/i, "") + ".html", doc, "text/html;charset=utf-8");
   };
 
-  const handlePrint = () => window.print();
-
-  const onCursor = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMd(e.target.value);
-    updateRowCol(e.target);
+  const handleImport = async (file?: File) => {
+    if (!file) return;
+    const text = await file.text();
+    set({ md: text, filename: file.name.endsWith(".md") ? file.name : `${file.name}.md` });
   };
-  const updateRowCol = (el: HTMLTextAreaElement) => {
-    const pos = el.selectionStart ?? 0;
-    const textUpto = el.value.slice(0, pos);
-    const rows = textUpto.split("\n");
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) void handleImport(f);
+  };
+
+  const onEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    set({ md: e.target.value });
+    const pos = e.target.selectionStart ?? 0;
+    const rows = e.target.value.slice(0, pos).split("\n");
     setCursorRowCol({ row: rows.length, col: rows[rows.length - 1].length + 1 });
   };
 
+  // editor helpers
+  function insertAtCursor(snippet: string) {
+    const el = editorRef.current;
+    if (!el) return set({ md: md + snippet });
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    const next = `${md.slice(0, start)}${snippet}${md.slice(end)}`;
+    set({ md: next });
+    requestAnimationFrame(() => {
+      if (!editorRef.current) return;
+      const pos = start + snippet.length;
+      editorRef.current.selectionStart = editorRef.current.selectionEnd = pos;
+      editorRef.current.focus();
+    });
+  }
+  function wrapSelection(prefix: string, suffix: string = prefix, placeholder = "text") {
+    const el = editorRef.current;
+    if (!el) return insertAtCursor(`${prefix}${placeholder}${suffix}`);
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    const sel = md.slice(start, end) || placeholder;
+    const next = `${md.slice(0, start)}${prefix}${sel}${suffix}${md.slice(end)}`;
+    set({ md: next });
+    requestAnimationFrame(() => {
+      if (!editorRef.current) return;
+      const newStart = start + prefix.length;
+      const newEnd = newStart + sel.length;
+      editorRef.current.selectionStart = newStart;
+      editorRef.current.selectionEnd = newEnd;
+      editorRef.current.focus();
+    });
+  }
+  function prefixLines(prefix: string) {
+    const el = editorRef.current;
+    if (!el) return;
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    const block = md.slice(start, end);
+    const nextBlock =
+      (block || "")
+        .split("\n")
+        .map((l) => (l.trim() ? `${prefix}${l.replace(/^\s*/, "")}` : l))
+        .join("\n") || `${prefix}`;
+    const next = `${md.slice(0, start)}${nextBlock}${md.slice(end)}`;
+    set({ md: next });
+  }
+
+  // keyboard shortcuts basic
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === "b") {
+        e.preventDefault();
+        wrapSelection("**");
+      } else if (k === "i") {
+        e.preventDefault();
+        wrapSelection("_");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // plugins arrays
-  const remarkPlugins = useMemo(() => {
+  const remarkPlugins = React.useMemo(() => {
     const arr: any[] = [];
     if (useGfm && remarkGfm) arr.push(remarkGfm);
     return arr;
   }, [useGfm, remarkGfm]);
-
-  const rehypePlugins = useMemo(() => {
+  const rehypePlugins = React.useMemo(() => {
     const arr: any[] = [];
     if (rehypeHighlight) arr.push(rehypeHighlight);
     return arr;
   }, [rehypeHighlight]);
 
-  /* --------------------------------- render -------------------------------- */
+  /* -------------------------------- Render -------------------------------- */
 
   return (
     <MotionGlassCard>
-      {/* Top bar */}
+      {/* Header */}
       <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <FileText className="h-6 w-6" /> Markdown Previewer
           </h1>
           <p className="text-sm text-muted-foreground">
-            Live GFM preview, drag & drop, paste images, export HTML/PDF.
+            Clean, flexible editor with live preview, GFM, and handy export tools.
           </p>
         </div>
-
         <div className="flex flex-wrap gap-2">
           <Input
             value={filename}
-            onChange={(e) => setFilename(e.target.value)}
-            className="w-40 sm:w-56"
+            onChange={(e) => set({ filename: e.target.value })}
+            className="w-44 sm:w-56"
             placeholder="document.md"
+            aria-label="Filename"
           />
-          <Button variant="outline" onClick={resetAll} className="gap-2">
+          <Button variant="outline" onClick={resetAll} className="gap-2" title="Reset to sample">
             <RotateCcw className="h-4 w-4" /> Reset
           </Button>
-          <Button variant="outline" className="gap-2" onClick={() => setMd(SAMPLE_MD)}>
+          <Button variant="outline" className="gap-2" onClick={() => set({ md: SAMPLE_MD })}>
             <Wand2 className="h-4 w-4" /> Sample
           </Button>
           <label className="inline-flex">
@@ -343,7 +540,7 @@ ${html}
               type="file"
               accept=".md,.markdown,.txt"
               className="hidden"
-              onChange={(e) => handleImport(e.target.files?.[0])}
+              onChange={(e) => void handleImport(e.target.files?.[0])}
             />
             <Button variant="outline" className="gap-2" asChild>
               <span>
@@ -351,13 +548,28 @@ ${html}
               </span>
             </Button>
           </label>
-          <Button variant="outline" className="gap-2" onClick={handleExportMd}>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleExportMd}
+            title="Export Markdown"
+          >
             <Download className="h-4 w-4" /> .md
           </Button>
-          <Button variant="outline" className="gap-2" onClick={handleExportHtml}>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleExportHtml}
+            title="Export HTML"
+          >
             <Download className="h-4 w-4" /> .html
           </Button>
-          <Button className="gap-2" onClick={() => setFullscreen((v) => !v)}>
+          <Button
+            className="gap-2"
+            onClick={() => setFullscreen((v) => !v)}
+            aria-pressed={fullscreen}
+            aria-label="Toggle fullscreen"
+          >
             {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Fullscreen className="h-4 w-4" />}
             {fullscreen ? "Exit" : "Fullscreen"}
           </Button>
@@ -368,203 +580,312 @@ ${html}
       <GlassCard className="shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Settings</CardTitle>
-          <CardDescription>Rendering options & layout preferences.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-4">
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="space-y-0.5">
-              <Label className="flex items-center gap-2">
-                <Github className="h-4 w-4" /> GitHub Flavored Markdown
-              </Label>
-              <p className="text-xs text-muted-foreground">Tables, task lists, strikethrough.</p>
-            </div>
-            <Switch checked={useGfm} onCheckedChange={setUseGfm} />
-          </div>
+          <Panel
+            title="GitHub Flavored Markdown"
+            right={<Switch checked={useGfm} onCheckedChange={(v) => set({ useGfm: v })} />}
+          >
+            <p className="text-xs text-muted-foreground">Tables, task lists, strikethrough.</p>
+          </Panel>
 
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="space-y-0.5">
-              <Label className="flex items-center gap-2">
-                <WrapText className="h-4 w-4" /> Soft Wrap (Editor)
-              </Label>
-              <p className="text-xs text-muted-foreground">Wrap long lines in the editor.</p>
-            </div>
-            <Switch checked={softWrap} onCheckedChange={setSoftWrap} />
-          </div>
+          <Panel
+            title="Soft Wrap (Editor)"
+            right={<Switch checked={softWrap} onCheckedChange={(v) => set({ softWrap: v })} />}
+          >
+            <p className="text-xs text-muted-foreground">Wrap long lines in the editor.</p>
+          </Panel>
 
-          <div className="sm:col-span-2 rounded-lg border p-3">
-            <Label className="flex items-center gap-2 mb-2">
-              <SplitSquareHorizontal className="h-4 w-4" /> Split (Desktop)
-            </Label>
-            <div className="flex items-center gap-3">
-              <Input
-                type="range"
-                min={25}
-                max={75}
-                value={split}
-                onChange={(e) => setSplit(Number(e.target.value))}
-              />
-              <span className="w-10 text-right text-xs text-muted-foreground">{split}%</span>
-              <div className="ml-auto flex gap-2">
-                <Button size="sm" variant="outline" className="gap-2" onClick={handlePrint}>
-                  <Printer className="h-4 w-4" /> Print
-                </Button>
+          <Panel
+            title="Split (Desktop)"
+            subtitle="Adjust editor width. Preview gets the rest."
+            right={
+              <div className="inline-flex items-center gap-2">
+                <SplitSquareHorizontal className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">{split}%</span>
               </div>
+            }
+            className="sm:col-span-2"
+          >
+            <Input
+              type="range"
+              min={25}
+              max={75}
+              value={split}
+              onChange={(e) => set({ split: Number(e.target.value) })}
+              aria-label="Split percentage"
+            />
+            <div className="mt-2">
+              <Button size="sm" variant="outline" className="gap-2" onClick={() => window.print()}>
+                <Printer className="h-4 w-4" /> Print
+              </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Adjust editor width (preview gets the rest). Printing uses the preview.
-            </p>
-          </div>
+          </Panel>
         </CardContent>
       </GlassCard>
 
       <Separator />
 
-      {/* Main workspace */}
+      {/* Workspace */}
       <div className={clsx(fullscreen ? "fixed inset-2 z-50" : "relative", "rounded-2xl")}>
-        <GlassCard className={clsx("shadow-sm h-full", fullscreen && "ring-1 ring-primary/30")}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Editor & Preview</CardTitle>
-                <CardDescription>
-                  Use tabs on mobile; split view on larger screens. Drag & drop a file anywhere.
-                </CardDescription>
-              </div>
-              <div className="hidden sm:flex items-center gap-2">
-                <ListTree className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{outline.length} headings</span>
-              </div>
-            </div>
-          </CardHeader>
+        <GlassCard
+          className={clsx(
+            "shadow-sm h-full relative overflow-hidden",
+            fullscreen && "ring-1 ring-primary/30",
+          )}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+          onDragLeave={() => setDragOver(false)}
+        >
+          <DropZone active={dragOver} text="Drop your .md file to import" />
 
-          <CardContent onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
-            {/* Mobile tabs */}
-            <div className="sm:hidden mb-4">
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="editor" className="gap-2">
-                    <FileText className="h-4 w-4" /> Editor
-                  </TabsTrigger>
-                  <TabsTrigger value="preview" className="gap-2">
-                    <Eye className="h-4 w-4" /> Preview
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="editor" className="mt-4">
-                  <EditorCard
-                    ref={editorRef}
-                    value={md}
-                    onChange={onCursor}
-                    softWrap={softWrap}
-                    onCopy={handleCopy}
-                    copied={copied}
-                    onPaste={handlePaste}
+          {/* Mobile */}
+          <div className="sm:hidden p-3">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="editor" className="gap-2">
+                  <FileText className="h-4 w-4" /> Editor
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="gap-2">
+                  <Eye className="h-4 w-4" /> Preview
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="editor" className="mt-4">
+                <EditorPanel
+                  ref={editorRef}
+                  value={md}
+                  onChange={onEditorChange}
+                  softWrap={softWrap}
+                  copyMd={copyMarkdown}
+                  copyHtml={copyHTML}
+                  copiedMd={copiedMd}
+                  copiedHtml={copiedHtml}
+                  onCmd={{
+                    bold: () => wrapSelection("**"),
+                    italic: () => wrapSelection("_"),
+                    strike: () => wrapSelection("~~"),
+                    codeInline: () => wrapSelection("`"),
+                    codeBlock: () => {
+                      const el = editorRef.current;
+                      const sel = el ? md.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0) : "";
+                      insertAtCursor(`\`\`\`\n${sel || "code"}\n\`\`\`\n`);
+                    },
+                    h1: () => insertAtCursor(`# `),
+                    h2: () => insertAtCursor(`## `),
+                    link: () => wrapSelection("[", "](https://)", "link text"),
+                    list: () => prefixLines("- "),
+                    olist: () => prefixLines("1. "),
+                    clist: () => prefixLines("- [ ] "),
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="preview" className="mt-4">
+                <PreviewPanel
+                  md={md}
+                  useGfm={useGfm}
+                  remarkPlugins={remarkPlugins}
+                  rehypePlugins={rehypePlugins}
+                />
+                <div className="mt-4">
+                  <Panel title="Outline">
+                    <OutlineList items={outline} />
+                  </Panel>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Desktop split */}
+          <div className="hidden sm:block p-3">
+            <SplitPane
+              value={split}
+              onChange={(v) => set({ split: v })}
+              left={
+                <EditorPanel
+                  ref={editorRef}
+                  value={md}
+                  onChange={onEditorChange}
+                  softWrap={softWrap}
+                  copyMd={copyMarkdown}
+                  copyHtml={copyHTML}
+                  copiedMd={copiedMd}
+                  copiedHtml={copiedHtml}
+                  onCmd={{
+                    bold: () => wrapSelection("**"),
+                    italic: () => wrapSelection("_"),
+                    strike: () => wrapSelection("~~"),
+                    codeInline: () => wrapSelection("`"),
+                    codeBlock: () => {
+                      const el = editorRef.current;
+                      const sel = el ? md.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0) : "";
+                      insertAtCursor(`\`\`\`\n${sel || "code"}\n\`\`\`\n`);
+                    },
+                    h1: () => insertAtCursor(`# `),
+                    h2: () => insertAtCursor(`## `),
+                    link: () => wrapSelection("[", "](https://)", "link text"),
+                    list: () => prefixLines("- "),
+                    olist: () => prefixLines("1. "),
+                    clist: () => prefixLines("- [ ] "),
+                  }}
+                />
+              }
+              right={
+                <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
+                  <PreviewPanel
+                    md={md}
+                    useGfm={useGfm}
+                    remarkPlugins={remarkPlugins}
+                    rehypePlugins={rehypePlugins}
                   />
-                </TabsContent>
-                <TabsContent value="preview" className="mt-4">
-                  <div className="grid gap-4">
-                    <PreviewWithOutline
-                      md={md}
-                      useGfm={useGfm}
-                      remarkPlugins={remarkPlugins}
-                      rehypePlugins={rehypePlugins}
-                      outline={outline}
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
+                  <Panel title="Outline">
+                    <OutlineList items={outline} />
+                  </Panel>
+                </div>
+              }
+            />
+          </div>
 
-            {/* Desktop split */}
-            <div
-              className="hidden sm:grid gap-4"
-              style={{ gridTemplateColumns: `minmax(280px, ${split}%) 1fr 240px` }}
-            >
-              <EditorCard
-                ref={editorRef}
-                value={md}
-                onChange={onCursor}
-                softWrap={softWrap}
-                onCopy={handleCopy}
-                copied={copied}
-                onPaste={handlePaste}
-              />
-              <PreviewPane
-                md={md}
-                useGfm={useGfm}
-                remarkPlugins={remarkPlugins}
-                rehypePlugins={rehypePlugins}
-              />
-              <OutlinePane outline={outline} />
+          {/* Status bar */}
+          <div className="m-3 mt-0 flex flex-wrap items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs">
+            <div className="flex gap-2">
+              <Stat label="Words" value={counts.words} />
+              <Stat label="Chars" value={counts.chars} />
+              <Stat label="Lines" value={counts.lines} />
             </div>
-
-            {/* Status bar */}
-            <div className="mt-3 flex flex-wrap items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs">
-              <div className="flex gap-3">
-                <span>
-                  Words: <b>{counts.words}</b>
-                </span>
-                <span>
-                  Chars: <b>{counts.chars}</b>
-                </span>
-                <span>
-                  Lines: <b>{counts.lines}</b>
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-muted-foreground">
-                  Ln {cursorRowCol.row}, Col {cursorRowCol.col}
-                </span>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button size="sm" variant="outline" className="gap-2" onClick={handleCopy}>
-                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{" "}
-                        {copied ? "Copied" : "Copy MD"}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Copy raw Markdown</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">
+                Ln {cursorRowCol.row}, Col {cursorRowCol.col}
+              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-2" onClick={copyMarkdown}>
+                      {copiedMd ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} MD
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy raw Markdown</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-2" onClick={copyHTML}>
+                      {copiedHtml ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{" "}
+                      HTML
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy rendered HTML</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-          </CardContent>
+          </div>
         </GlassCard>
       </div>
     </MotionGlassCard>
   );
 }
 
-/* ------------------------------ Subcomponents ------------------------------ */
+/* -----------------------------------------------------------------------------
+   Reusable Editor & Preview panels
+----------------------------------------------------------------------------- */
 
-const EditorCard = React.forwardRef<
+const EditorPanel = React.forwardRef<
   HTMLTextAreaElement,
   {
     value: string;
     onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-    onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
     softWrap: boolean;
-    copied: boolean;
-    onCopy: () => void;
+    copyMd: () => void;
+    copyHtml: () => void;
+    copiedMd: boolean;
+    copiedHtml: boolean;
+    onCmd: {
+      bold: () => void;
+      italic: () => void;
+      strike: () => void;
+      codeInline: () => void;
+      codeBlock: () => void;
+      h1: () => void;
+      h2: () => void;
+      link: () => void;
+      list: () => void;
+      olist: () => void;
+      clist: () => void;
+    };
   }
->(({ value, onChange, onPaste, softWrap, copied, onCopy }, ref) => {
+>(function EditorPanel(
+  { value, onChange, softWrap, copyMd, copyHtml, copiedMd, copiedHtml, onCmd },
+  ref,
+) {
   return (
-    <div className="flex flex-col rounded-lg border overflow-hidden">
-      <div className="flex items-center justify-between border-b bg-muted/40 px-3 py-2">
-        <div className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
-          Editor
-        </div>
+    <Panel
+      title="Editor"
+      right={
         <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="sm" variant="outline" className="gap-2" onClick={onCopy}>
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  {copied ? "Copied" : "Copy MD"}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Copy raw Markdown</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button size="sm" variant="outline" className="gap-2" onClick={copyMd}>
+            {copiedMd ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} MD
+          </Button>
+          <Button size="sm" variant="outline" className="gap-2" onClick={copyHtml}>
+            {copiedHtml ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} HTML
+          </Button>
+        </div>
+      }
+    >
+      <div className="mb-2">
+        <Toolbar
+          groups={[
+            [
+              {
+                title: "Bold (Ctrl/Cmd+B)",
+                icon: <Bold className="h-4 w-4" />,
+                onClick: onCmd.bold,
+              },
+              {
+                title: "Italic (Ctrl/Cmd+I)",
+                icon: <Italic className="h-4 w-4" />,
+                onClick: onCmd.italic,
+              },
+              {
+                title: "Strikethrough",
+                icon: <Code className="h-4 w-4 rotate-45" />,
+                onClick: onCmd.strike,
+              },
+              {
+                title: "Inline code",
+                icon: <Code className="h-4 w-4" />,
+                onClick: onCmd.codeInline,
+              },
+              {
+                title: "Code block",
+                icon: <Redo2 className="h-4 w-4 rotate-90" />,
+                onClick: onCmd.codeBlock,
+              },
+            ],
+            [
+              { title: "Heading 1", icon: <Heading1 className="h-4 w-4" />, onClick: onCmd.h1 },
+              { title: "Heading 2", icon: <Heading2 className="h-4 w-4" />, onClick: onCmd.h2 },
+              { title: "Link", icon: <LinkIcon className="h-4 w-4" />, onClick: onCmd.link },
+            ],
+            [
+              { title: "Bullet list", icon: <List className="h-4 w-4" />, onClick: onCmd.list },
+              {
+                title: "Numbered list",
+                icon: <ListOrdered className="h-4 w-4" />,
+                onClick: onCmd.olist,
+              },
+              {
+                title: "Checkbox list",
+                icon: <ListChecks className="h-4 w-4" />,
+                onClick: onCmd.clist,
+              },
+            ],
+          ]}
+        />
+        <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+          <Github className="h-3.5 w-3.5" />
+          <span>GFM shortcuts supported</span>
         </div>
       </div>
 
@@ -572,20 +893,20 @@ const EditorCard = React.forwardRef<
         ref={ref}
         value={value}
         onChange={onChange}
-        onPaste={onPaste}
         className={clsx(
-          "min-h-[360px] resize-y rounded-none border-0 focus-visible:ring-0 font-mono text-sm",
+          "min-h-[360px] resize-none rounded-md border bg-background/70 font-mono text-sm",
           softWrap ? "whitespace-pre-wrap" : "whitespace-pre",
         )}
         spellCheck={false}
         placeholder="Start typing your Markdown here… (paste images directly)"
+        aria-label="Markdown editor"
       />
-    </div>
+    </Panel>
   );
 });
-EditorCard.displayName = "EditorCard";
+EditorPanel.displayName = "EditorPanel";
 
-function PreviewPane({
+function PreviewPanel({
   md,
   useGfm,
   remarkPlugins,
@@ -597,14 +918,17 @@ function PreviewPane({
   rehypePlugins: any[];
 }) {
   return (
-    <div className="flex flex-col rounded-lg border overflow-hidden">
-      <div className="flex items-center justify-between border-b bg-muted/40 px-3 py-2">
-        <div className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
-          Preview
+    <Panel
+      title="Preview"
+      subtitle={useGfm ? "GFM ON" : "GFM OFF"}
+      right={
+        <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+          <WrapText className="h-3.5 w-3.5" />
+          <span>Rendered</span>
         </div>
-        <div className="text-[10px] text-muted-foreground">{useGfm ? "GFM ON" : "GFM OFF"}</div>
-      </div>
-      <div className="prose prose-sm dark:prose-invert max-w-none p-4 print:p-0">
+      }
+    >
+      <div className="prose prose-sm dark:prose-invert max-w-none">
         <ReactMarkdown
           remarkPlugins={remarkPlugins}
           rehypePlugins={rehypePlugins}
@@ -613,69 +937,13 @@ function PreviewPane({
           {md || "_Nothing to preview yet…_"}
         </ReactMarkdown>
       </div>
-    </div>
+    </Panel>
   );
 }
 
-function PreviewWithOutline({
-  md,
-  useGfm,
-  remarkPlugins,
-  rehypePlugins,
-  outline,
-}: {
-  md: string;
-  useGfm: boolean;
-  remarkPlugins: any[];
-  rehypePlugins: any[];
-  outline: { level: number; text: string; id: string }[];
-}) {
-  return (
-    <>
-      <PreviewPane
-        md={md}
-        useGfm={useGfm}
-        remarkPlugins={remarkPlugins}
-        rehypePlugins={rehypePlugins}
-      />
-      <OutlinePane outline={outline} />
-    </>
-  );
-}
-
-function OutlinePane({ outline }: { outline: { level: number; text: string; id: string }[] }) {
-  return (
-    <div className="rounded-lg border overflow-hidden">
-      <div className="border-b bg-muted/40 px-3 py-2 text-xs font-medium tracking-wide uppercase text-muted-foreground">
-        Outline
-      </div>
-      <div className="max-h-[420px] overflow-auto p-2 text-sm">
-        {outline.length === 0 && (
-          <p className="text-muted-foreground text-xs px-1">No headings yet.</p>
-        )}
-        <ul className="space-y-1">
-          {outline.map((h, i) => (
-            <li key={i} style={{ paddingLeft: (h.level - 1) * 10 }}>
-              <a
-                className="text-foreground/80 hover:underline"
-                href={`#${h.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  const el = document.getElementById(h.id);
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-              >
-                {h.text}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-/* --------------------------- MD components (UI) --------------------------- */
+/* -----------------------------------------------------------------------------
+   Markdown render components
+----------------------------------------------------------------------------- */
 
 const markdownComponents = {
   code(props: any) {

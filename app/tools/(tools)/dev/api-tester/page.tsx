@@ -28,10 +28,10 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
-// ---------- Types ----------
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
-type Pair = { id: string; key: string; value: string; enabled: boolean };
 type BodyMode = "none" | "json" | "text" | "form" | "multipart";
+type AuthType = "none" | "bearer" | "basic";
+type Pair = { id: string; key: string; value: string; enabled: boolean };
 
 type Preset = {
   id: string;
@@ -41,7 +41,7 @@ type Preset = {
   query: Pair[];
   headers: Pair[];
   auth: {
-    type: "none" | "bearer" | "basic";
+    type: AuthType;
     bearer?: string;
     basicUser?: string;
     basicPass?: string;
@@ -52,48 +52,44 @@ type Preset = {
   multipart: Pair[];
 };
 
-type HistoryItem = Omit<Preset, "id" | "title"> & {
-  id: string;
+type HistoryItem = Omit<Preset, "title"> & {
   when: string;
   status?: number;
   ms?: number;
 };
 
-// ---------- Helpers ----------
 const METHODS: Method[] = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
+const STORAGE_PRESETS = "api-tester-presets";
+const STORAGE_HISTORY = "api-tester-history";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
-const w = () => (typeof window !== "undefined" ? window : undefined);
-const ls = () => (typeof window !== "undefined" ? window.localStorage : undefined);
+const isBrowser = typeof window !== "undefined";
+const getLS = () => (isBrowser ? window.localStorage : undefined);
 
-function kvToObject(pairs: Pair[], includeDisabled = false) {
+function pairsEnabled(pairs: Pair[]): Pair[] {
+  return pairs.filter((p) => p.enabled && p.key.trim() !== "");
+}
+function pairsToObject(pairs: Pair[]): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const p of pairs) {
-    if (!p.key) continue;
-    if (!includeDisabled && !p.enabled) continue;
-    out[p.key] = p.value;
-  }
+  for (const p of pairsEnabled(pairs)) out[p.key] = p.value;
   return out;
 }
-function filterEnabled(pairs: Pair[]) {
-  return pairs.filter((p) => p.enabled && p.key);
-}
-function parseJSONMaybe(text: string) {
+function safeParseJSON(s: string): unknown | undefined {
   try {
-    return JSON.parse(text);
+    return JSON.parse(s);
   } catch {
     return undefined;
   }
 }
-function prettyJSON(text: string) {
-  const j = parseJSONMaybe(text);
-  return j ? JSON.stringify(j, null, 2) : text;
+function maybePrettyJSON(text: string): string {
+  const parsed = safeParseJSON(text);
+  return parsed !== undefined ? JSON.stringify(parsed, null, 2) : text;
 }
-function buildURL(base: string, query: Pair[]) {
+function buildURL(base: string, query: Pair[]): string {
   try {
     const u = new URL(base);
-    for (const q of filterEnabled(query)) u.searchParams.set(q.key, q.value);
+    for (const q of pairsEnabled(query)) u.searchParams.set(q.key, q.value);
     return u.toString();
   } catch {
     return base;
@@ -109,22 +105,23 @@ function downloadBlob(data: Blob, filename: string) {
   a.remove();
   URL.revokeObjectURL(url);
 }
-async function copy(text: string, setCopied: (s: string | null) => void, what: string) {
+
+async function copyToClipboard(text: string, setCopied: (k: string | null) => void, k: string) {
   await navigator.clipboard.writeText(text);
-  setCopied(what);
+  setCopied(k);
   setTimeout(() => setCopied(null), 1000);
 }
 
-// Simple cURL (subset) parser: method, URL, headers, data
+/** super small cURL importer (subset) */
 function importCurl(curl: string): Partial<Preset> | null {
-  // Handles: curl -X POST 'https://x' -H 'k: v' --data '{"a":1}'
-  const tokens: string[] = (curl.match(/'[^']*'|"[^"]*"|\S+/g) ?? []) as string[];
+  const tokens = (curl.match(/'[^']*'|"[^"]*"|\S+/g) ?? []) as string[];
   if (tokens.length === 0 || !/curl/i.test(tokens[0] ?? "")) return null;
 
   let method: Method | undefined;
   let url = "";
   const headers: Pair[] = [];
   let data = "";
+
   for (let i = 1; i < tokens.length; i++) {
     const t = tokens[i]!;
     const clean = t.replace(/^['"]|['"]$/g, "");
@@ -156,7 +153,7 @@ function importCurl(curl: string): Partial<Preset> | null {
 }
 
 function toCurl(p: Preset) {
-  const h = filterEnabled(p.headers)
+  const h = pairsEnabled(p.headers)
     .map((x) => `-H ${JSON.stringify(`${x.key}: ${x.value}`)}`)
     .join(" ");
   const qUrl = buildURL(p.url, p.query);
@@ -165,7 +162,7 @@ function toCurl(p: Preset) {
     if (p.bodyText) data = ` --data ${JSON.stringify(p.bodyText)}`;
   } else if (p.bodyMode === "form") {
     const params = new URLSearchParams();
-    for (const f of filterEnabled(p.form)) params.append(f.key, f.value);
+    for (const f of pairsEnabled(p.form)) params.append(f.key, f.value);
     const s = params.toString();
     if (s) data = ` --data ${JSON.stringify(s)}`;
   }
@@ -173,7 +170,107 @@ function toCurl(p: Preset) {
   return `curl -X ${p.method} ${JSON.stringify(qUrl)} ${h}${data}`.trim();
 }
 
-// ---------- Page ----------
+/* -------------------------------------------------------------------------- */
+/*                                   KV UI                                    */
+/* -------------------------------------------------------------------------- */
+
+function KVRow({
+  row,
+  onChange,
+  onRemove,
+  checkboxAriaLabel = "enable",
+  keyPlaceholder = "key",
+  valPlaceholder = "value",
+}: {
+  row: Pair;
+  onChange: (patch: Partial<Pair>) => void;
+  onRemove: () => void;
+  checkboxAriaLabel?: string;
+  keyPlaceholder?: string;
+  valPlaceholder?: string;
+}) {
+  return (
+    <div className="grid grid-cols-[20px_1fr_1fr_36px] gap-2">
+      <input
+        type="checkbox"
+        checked={row.enabled}
+        aria-label={checkboxAriaLabel}
+        onChange={(e) => onChange({ enabled: e.target.checked })}
+      />
+      <Input
+        placeholder={keyPlaceholder}
+        value={row.key}
+        onChange={(e) => onChange({ key: e.target.value })}
+      />
+      <Input
+        placeholder={valPlaceholder}
+        value={row.value}
+        onChange={(e) => onChange({ value: e.target.value })}
+      />
+      <Button variant="outline" size="icon" onClick={onRemove}>
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+function KVSection({
+  label,
+  rows,
+  setRows,
+  keyPlaceholder,
+  valPlaceholder,
+  addLabel,
+}: {
+  label: string;
+  rows: Pair[];
+  setRows: React.Dispatch<React.SetStateAction<Pair[]>>;
+  keyPlaceholder: string;
+  valPlaceholder: string;
+  addLabel: string;
+}) {
+  const onAdd = React.useCallback(
+    () => setRows((prev) => [...prev, { id: uid(), key: "", value: "", enabled: true }]),
+    [setRows],
+  );
+
+  const onChangeRow = React.useCallback(
+    (id: string, patch: Partial<Pair>) =>
+      setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r))),
+    [setRows],
+  );
+
+  const onRemoveRow = React.useCallback(
+    (id: string) => setRows((prev) => prev.filter((r) => r.id !== id)),
+    [setRows],
+  );
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="grid gap-2">
+        {rows.map((row) => (
+          <KVRow
+            key={row.id}
+            row={row}
+            onChange={(patch) => onChangeRow(row.id, patch)}
+            onRemove={() => onRemoveRow(row.id)}
+            keyPlaceholder={keyPlaceholder}
+            valPlaceholder={valPlaceholder}
+          />
+        ))}
+        <Button variant="outline" size="sm" onClick={onAdd} className="w-fit gap-2">
+          <Plus className="h-4 w-4" /> {addLabel}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 MAIN PAGE                                  */
+/* -------------------------------------------------------------------------- */
+
 export default function ApiTesterPage() {
   // Request state
   const [method, setMethod] = React.useState<Method>("GET");
@@ -185,7 +282,7 @@ export default function ApiTesterPage() {
     { id: uid(), key: "", value: "", enabled: true },
   ]);
 
-  const [authType, setAuthType] = React.useState<"none" | "bearer" | "basic">("none");
+  const [authType, setAuthType] = React.useState<AuthType>("none");
   const [bearer, setBearer] = React.useState("");
   const [basicUser, setBasicUser] = React.useState("");
   const [basicPass, setBasicPass] = React.useState("");
@@ -197,7 +294,7 @@ export default function ApiTesterPage() {
   ]);
   const [multipart, setMultipart] = React.useState<Pair[]>([
     { id: uid(), key: "", value: "", enabled: true },
-  ]); // text parts only
+  ]); // text-only
 
   const [timeoutMs, setTimeoutMs] = React.useState<number>(30000);
   const [followRedirects, setFollowRedirects] = React.useState<boolean>(true);
@@ -221,30 +318,26 @@ export default function ApiTesterPage() {
 
   // Share URL (basic fields)
   React.useEffect(() => {
-    const ww = w();
-    if (!ww) return;
+    if (!isBrowser) return;
     const sp = new URLSearchParams();
     sp.set("m", method);
     if (url) sp.set("u", url);
-    const qs = filterEnabled(query)
+    const qs = pairsEnabled(query)
       .map((q) => `${encodeURIComponent(q.key)}=${encodeURIComponent(q.value)}`)
       .join("&");
     if (qs) sp.set("q", qs);
     if (authType === "bearer" && bearer) sp.set("b", bearer);
     if (authType === "basic" && basicUser) sp.set("bu", basicUser);
     if (authType === "basic" && basicPass) sp.set("bp", basicPass);
-    const next = `${ww.location.pathname}?${sp.toString()}`;
-    ww.history.replaceState({}, "", next);
-  }, [method, url, query, authType, bearer, basicUser, basicPass]);
+    const next = `${window.location.pathname}?${sp.toString()}`;
+    window.history.replaceState({}, "", next);
+  }, [authType, basicPass, basicUser, bearer, method, query, url]);
 
-  // Load share on mount + presets/history
+  // Load from URL + presets/history
   React.useEffect(() => {
-    const ww = w();
-    const store = ls();
-    if (!ww) return;
-
+    if (!isBrowser) return;
     try {
-      const sp = new URLSearchParams(ww.location.search);
+      const sp = new URLSearchParams(window.location.search);
       const m = (sp.get("m") as Method) || "GET";
       const u = sp.get("u") || "";
       const q = sp.get("q");
@@ -252,7 +345,7 @@ export default function ApiTesterPage() {
       const bu = sp.get("bu");
       const bp = sp.get("bp");
 
-      setMethod(METHODS.includes(m as Method) ? (m as Method) : "GET");
+      setMethod(METHODS.includes(m) ? m : "GET");
       if (u) setUrl(u);
       if (q) {
         const pairs: Pair[] = q.split("&").map((pair) => {
@@ -270,42 +363,32 @@ export default function ApiTesterPage() {
         setBasicUser(bu ?? "");
         setBasicPass(bp ?? "");
       }
-    } catch {}
+    } catch {
+      // ignore
+    }
 
     try {
-      const rawPresets = store?.getItem("api-tester-presets");
-      if (rawPresets) setPresets(JSON.parse(rawPresets));
-      const rawHist = store?.getItem("api-tester-history");
-      if (rawHist) setHistory(JSON.parse(rawHist));
-    } catch {}
+      const store = getLS();
+      const rawPresets = store?.getItem(STORAGE_PRESETS);
+      if (rawPresets) setPresets(JSON.parse(rawPresets) as Preset[]);
+      const rawHist = store?.getItem(STORAGE_HISTORY);
+      if (rawHist) setHistory(JSON.parse(rawHist) as HistoryItem[]);
+    } catch {
+      // ignore
+    }
   }, []);
 
-  function persistPresets(next: Preset[]) {
+  const persistPresets = React.useCallback((next: Preset[]) => {
     setPresets(next);
-    ls()?.setItem("api-tester-presets", JSON.stringify(next));
-  }
-  function persistHistory(next: HistoryItem[]) {
-    // cap to 100
+    getLS()?.setItem(STORAGE_PRESETS, JSON.stringify(next));
+  }, []);
+  const persistHistory = React.useCallback((next: HistoryItem[]) => {
     const trimmed = next.slice(-100);
     setHistory(trimmed);
-    ls()?.setItem("api-tester-history", JSON.stringify(trimmed));
-  }
+    getLS()?.setItem(STORAGE_HISTORY, JSON.stringify(trimmed));
+  }, []);
 
-  function addRow(setter: React.Dispatch<React.SetStateAction<Pair[]>>) {
-    setter((rows) => [...rows, { id: uid(), key: "", value: "", enabled: true }]);
-  }
-  function setRow(
-    setter: React.Dispatch<React.SetStateAction<Pair[]>>,
-    id: string,
-    patch: Partial<Pair>,
-  ) {
-    setter((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-  }
-  function removeRow(setter: React.Dispatch<React.SetStateAction<Pair[]>>, id: string) {
-    setter((rows) => rows.filter((r) => r.id !== id));
-  }
-
-  function resetAll() {
+  const resetAll = React.useCallback(() => {
     setMethod("GET");
     setUrl("");
     setQuery([{ id: uid(), key: "", value: "", enabled: true }]);
@@ -328,10 +411,89 @@ export default function ApiTesterPage() {
     setRespBody("");
     setCopied(null);
     setViewRaw(false);
-  }
+  }, []);
 
-  async function send() {
+  const exportResponse = React.useCallback(() => {
+    const blob = new Blob([respBody], { type: "text/plain;charset=utf-8" });
+    downloadBlob(blob, "response.txt");
+  }, [respBody]);
+
+  const savePreset = React.useCallback(() => {
+    const title =
+      (isBrowser ? window.prompt("Preset title?") : null) || `${method} ${url}`.slice(0, 60);
+    const preset: Preset = {
+      id: uid(),
+      title,
+      method,
+      url,
+      query,
+      headers,
+      auth: { type: authType, bearer, basicUser, basicPass },
+      bodyMode,
+      bodyText,
+      form,
+      multipart,
+    };
+    persistPresets([...presets, preset]);
+  }, [
+    authType,
+    basicPass,
+    basicUser,
+    bearer,
+    bodyMode,
+    bodyText,
+    form,
+    headers,
+    method,
+    multipart,
+    persistPresets,
+    presets,
+    query,
+    url,
+  ]);
+
+  const applyPreset = React.useCallback((p: Preset) => {
+    setMethod(p.method);
+    setUrl(p.url);
+    setQuery(p.query.length ? p.query : [{ id: uid(), key: "", value: "", enabled: true }]);
+    setHeaders(p.headers.length ? p.headers : [{ id: uid(), key: "", value: "", enabled: true }]);
+    setAuthType(p.auth.type);
+    setBearer(p.auth.bearer ?? "");
+    setBasicUser(p.auth.basicUser ?? "");
+    setBasicPass(p.auth.basicPass ?? "");
+    setBodyMode(p.bodyMode);
+    setBodyText(p.bodyText);
+    setForm(p.form.length ? p.form : [{ id: uid(), key: "", value: "", enabled: true }]);
+    setMultipart(
+      p.multipart.length ? p.multipart : [{ id: uid(), key: "", value: "", enabled: true }],
+    );
+  }, []);
+
+  const removePreset = React.useCallback(
+    (id: string) => persistPresets(presets.filter((p) => p.id !== id)),
+    [persistPresets, presets],
+  );
+
+  const importFromCurl = React.useCallback(() => {
+    const curl = isBrowser ? window.prompt("Paste cURL command:") : null;
+    if (!curl) return;
+    const patch = importCurl(curl);
+    if (!patch) {
+      if (isBrowser) window.alert("Could not parse this cURL.");
+      return;
+    }
+    if (patch.method) setMethod(patch.method);
+    if (patch.url) setUrl(patch.url);
+    if (patch.headers) setHeaders(patch.headers);
+    if (patch.bodyText !== undefined) setBodyText(maybePrettyJSON(patch.bodyText));
+    if (patch.bodyMode) setBodyMode(patch.bodyMode);
+  }, []);
+
+  const stop = React.useCallback(() => controller?.abort("user"), [controller]);
+
+  const send = React.useCallback(async () => {
     if (loading) return;
+
     setLoading(true);
     setStatus(undefined);
     setStatusText("");
@@ -342,38 +504,42 @@ export default function ApiTesterPage() {
 
     const ac = new AbortController();
     setController(ac);
-    const timer = setTimeout(() => ac.abort("timeout"), Math.max(1, timeoutMs));
+    const guard = setTimeout(() => ac.abort("timeout"), Math.max(1, timeoutMs));
 
-    const reqHeaders: Record<string, string> = kvToObject(headers);
-    // add auth
-    if (authType === "bearer" && bearer) reqHeaders["Authorization"] = `Bearer ${bearer}`;
+    const reqHeaders = { ...pairsToObject(headers) };
+
+    if (authType === "bearer" && bearer)
+      // auth
+      reqHeaders["Authorization"] = `Bearer ${bearer}`;
     if (authType === "basic") {
-      const b64 = typeof btoa !== "undefined" ? btoa(`${basicUser}:${basicPass}`) : "";
+      const basic = `${basicUser}:${basicPass}`;
+      const b64 = typeof btoa !== "undefined" ? btoa(basic) : "";
       reqHeaders["Authorization"] = `Basic ${b64}`;
     }
 
     let body: BodyInit | undefined;
-    const ct = reqHeaders["Content-Type"] || reqHeaders["content-type"];
+    const providedCT = reqHeaders["Content-Type"] ?? reqHeaders["content-type"];
 
     try {
       if (method !== "GET" && method !== "HEAD") {
         if (bodyMode === "json") {
           body = bodyText || "";
-          if (!ct) reqHeaders["Content-Type"] = "application/json;charset=utf-8";
+          if (!providedCT) reqHeaders["Content-Type"] = "application/json;charset=utf-8";
         } else if (bodyMode === "text") {
           body = bodyText || "";
-          if (!ct) reqHeaders["Content-Type"] = "text/plain;charset=utf-8";
+          if (!providedCT) reqHeaders["Content-Type"] = "text/plain;charset=utf-8";
         } else if (bodyMode === "form") {
           const params = new URLSearchParams();
-          for (const f of filterEnabled(form)) params.append(f.key, f.value);
+          for (const f of pairsEnabled(form)) params.append(f.key, f.value);
           body = params.toString();
           reqHeaders["Content-Type"] = "application/x-www-form-urlencoded;charset=utf-8";
         } else if (bodyMode === "multipart") {
           const fd = new FormData();
-          for (const m of filterEnabled(multipart)) fd.append(m.key, m.value);
+          for (const m of pairsEnabled(multipart)) fd.append(m.key, m.value);
           body = fd;
-          // Let browser set boundary; delete any manual content-type
-          delete reqHeaders["Content-Type"];
+          // Let the browser set boundary for multipart
+          delete (reqHeaders as Record<string, string>)["Content-Type"];
+          delete (reqHeaders as Record<string, string>)["content-type"];
         }
       }
 
@@ -398,7 +564,6 @@ export default function ApiTesterPage() {
       res.headers.forEach((v, k) => hdrs.push([k, v]));
       setRespHeaders(hdrs);
 
-      // try to read as text always (covers json too)
       const buf = await res.arrayBuffer();
       setSizeBytes(buf.byteLength);
       let text = "";
@@ -409,7 +574,6 @@ export default function ApiTesterPage() {
       }
       setRespBody(text);
 
-      // history entry
       const hist: HistoryItem = {
         id: uid(),
         when: new Date().toISOString(),
@@ -426,79 +590,71 @@ export default function ApiTesterPage() {
         ms: t1 - t0,
       };
       persistHistory([...history, hist]);
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
       setStatus(undefined);
-      setStatusText(String(e?.message || e || "Request failed"));
+      setStatusText(msg);
     } finally {
-      clearTimeout(timer);
+      clearTimeout(guard);
       setLoading(false);
       setController(null);
     }
-  }
+  }, [
+    authType,
+    basicPass,
+    basicUser,
+    bearer,
+    bodyMode,
+    bodyText,
+    followRedirects,
+    form,
+    headers,
+    history,
+    loading,
+    method,
+    multipart,
+    persistHistory,
+    query,
+    timeoutMs,
+    url,
+  ]);
 
-  function stop() {
-    controller?.abort("user");
-  }
-
-  function savePreset() {
-    const title = prompt("Preset title?") || `${method} ${url}`.slice(0, 60);
-    const preset: Preset = {
-      id: uid(),
-      title,
-      method,
-      url,
-      query,
-      headers,
-      auth: { type: authType, bearer, basicUser, basicPass },
+  const curlString = React.useMemo(
+    () =>
+      toCurl({
+        id: "tmp",
+        title: "",
+        method,
+        url,
+        query,
+        headers,
+        auth: { type: authType, bearer, basicUser, basicPass },
+        bodyMode,
+        bodyText,
+        form,
+        multipart,
+      }),
+    [
+      authType,
+      basicPass,
+      basicUser,
+      bearer,
       bodyMode,
       bodyText,
       form,
+      headers,
+      method,
       multipart,
-    };
-    const next = [...presets, preset];
-    persistPresets(next);
-  }
+      query,
+      url,
+    ],
+  );
 
-  function applyPreset(p: Preset) {
-    setMethod(p.method);
-    setUrl(p.url);
-    setQuery(p.query.length ? p.query : [{ id: uid(), key: "", value: "", enabled: true }]);
-    setHeaders(p.headers.length ? p.headers : [{ id: uid(), key: "", value: "", enabled: true }]);
-    setAuthType(p.auth.type);
-    setBearer(p.auth.bearer ?? "");
-    setBasicUser(p.auth.basicUser ?? "");
-    setBasicPass(p.auth.basicPass ?? "");
-    setBodyMode(p.bodyMode);
-    setBodyText(p.bodyText);
-    setForm(p.form.length ? p.form : [{ id: uid(), key: "", value: "", enabled: true }]);
-    setMultipart(
-      p.multipart.length ? p.multipart : [{ id: uid(), key: "", value: "", enabled: true }],
-    );
-  }
+  const responseLooksJSON = React.useMemo(() => {
+    const ct = respHeaders.find(([k]) => k.toLowerCase() === "content-type")?.[1] ?? "";
+    return /\bapplication\/(json|.+\+json)\b/i.test(ct);
+  }, [respHeaders]);
 
-  function removePreset(id: string) {
-    const next = presets.filter((p) => p.id !== id);
-    persistPresets(next);
-  }
-
-  function importFromCurl() {
-    const curl = prompt("Paste cURL command:");
-    if (!curl) return;
-    const patch = importCurl(curl);
-    if (!patch) return alert("Could not parse this cURL.");
-    if (patch.method) setMethod(patch.method);
-    if (patch.url) setUrl(patch.url);
-    if (patch.headers) setHeaders(patch.headers);
-    if (patch.bodyText !== undefined) setBodyText(prettyJSON(patch.bodyText));
-    if (patch.bodyMode) setBodyMode(patch.bodyMode);
-  }
-
-  function exportResponse() {
-    const blob = new Blob([respBody], { type: "text/plain;charset=utf-8" });
-    downloadBlob(blob, "response.txt");
-  }
-
-  // ---------- UI ----------
   return (
     <MotionGlassCard>
       {/* Header */}
@@ -523,25 +679,7 @@ export default function ApiTesterPage() {
           </Button>
           <Button
             variant="outline"
-            onClick={() =>
-              copy(
-                toCurl({
-                  id: "tmp",
-                  title: "",
-                  method,
-                  url,
-                  query,
-                  headers,
-                  auth: { type: authType, bearer, basicUser, basicPass },
-                  bodyMode,
-                  bodyText,
-                  form,
-                  multipart,
-                }),
-                setCopied,
-                "curl",
-              )
-            }
+            onClick={() => copyToClipboard(curlString, setCopied, "curl")}
             className="gap-2"
           >
             <Link2 className="h-4 w-4" /> Copy cURL{" "}
@@ -554,12 +692,10 @@ export default function ApiTesterPage() {
       <GlassCard className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Request</CardTitle>
-          <CardDescription>
-            Configure method, URL, query params, headers, auth, and body.
-          </CardDescription>
+          <CardDescription>Configure method, URL, params, headers, auth, and body.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Method + URL (dropdown) */}
+          {/* Method + URL */}
           <div className="grid gap-2 sm:grid-cols-[160px_1fr]">
             <div className="flex items-center gap-2">
               <Label className="text-xs">Method</Label>
@@ -582,86 +718,54 @@ export default function ApiTesterPage() {
             />
           </div>
 
-          {/* Query params */}
-          <div className="space-y-2">
-            <Label>Query Params</Label>
-            <div className="grid gap-2">
-              {query.map((row) => (
-                <div key={row.id} className="grid grid-cols-[20px_1fr_1fr_36px] gap-2">
-                  <input
-                    type="checkbox"
-                    checked={row.enabled}
-                    onChange={(e) => setRow(setQuery, row.id, { enabled: e.target.checked })}
-                    aria-label="enable"
-                  />
-                  <Input
-                    placeholder="key"
-                    value={row.key}
-                    onChange={(e) => setRow(setQuery, row.id, { key: e.target.value })}
-                  />
-                  <Input
-                    placeholder="value"
-                    value={row.value}
-                    onChange={(e) => setRow(setQuery, row.id, { value: e.target.value })}
-                  />
-                  <Button variant="outline" size="icon" onClick={() => removeRow(setQuery, row.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => addRow(setQuery)}
-                className="w-fit gap-2"
-              >
-                <Plus className="h-4 w-4" /> Add param
-              </Button>
-            </div>
-          </div>
+          {/* Query */}
+          <KVSection
+            label="Query Params"
+            rows={query}
+            setRows={setQuery}
+            keyPlaceholder="key"
+            valPlaceholder="value"
+            addLabel="Add param"
+          />
 
           <Separator />
 
           {/* Headers */}
-          <div className="space-y-2">
-            <Label>Headers</Label>
-            <div className="grid gap-2">
-              {headers.map((row) => (
-                <div key={row.id} className="grid grid-cols-[20px_1fr_1fr_36px] gap-2">
-                  <input
-                    type="checkbox"
-                    checked={row.enabled}
-                    onChange={(e) => setRow(setHeaders, row.id, { enabled: e.target.checked })}
-                    aria-label="enable"
-                  />
-                  <Input
-                    placeholder="Header-Name"
-                    value={row.key}
-                    onChange={(e) => setRow(setHeaders, row.id, { key: e.target.value })}
-                  />
-                  <Input
-                    placeholder="header value"
-                    value={row.value}
-                    onChange={(e) => setRow(setHeaders, row.id, { value: e.target.value })}
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeRow(setHeaders, row.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => addRow(setHeaders)}
-                className="w-fit gap-2"
-              >
-                <Plus className="h-4 w-4" /> Add header
-              </Button>
-            </div>
+          <KVSection
+            label="Headers"
+            rows={headers}
+            setRows={setHeaders}
+            keyPlaceholder="Header-Name"
+            valPlaceholder="header value"
+            addLabel="Add header"
+          />
+
+          {/* Quick common headers */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setHeaders((r) => [
+                  ...r,
+                  { id: uid(), key: "Accept", value: "application/json", enabled: true },
+                ])
+              }
+            >
+              Accept: application/json
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setHeaders((r) => [
+                  ...r,
+                  { id: uid(), key: "Content-Type", value: "application/json", enabled: true },
+                ])
+              }
+            >
+              Content-Type: application/json
+            </Button>
           </div>
 
           {/* Auth */}
@@ -727,98 +831,58 @@ export default function ApiTesterPage() {
               ))}
             </div>
 
-            {bodyMode === "json" || bodyMode === "text" ? (
-              <Textarea
-                value={bodyText}
-                onChange={(e) => setBodyText(e.target.value)}
-                className="min-h-[160px] font-mono"
-                placeholder={bodyMode === "json" ? '{ "name": "Alice" }' : "Plain text body"}
-              />
-            ) : null}
-
-            {bodyMode === "form" && (
-              <div className="grid gap-2">
-                {form.map((row) => (
-                  <div key={row.id} className="grid grid-cols-[20px_1fr_1fr_36px] gap-2">
-                    <input
-                      type="checkbox"
-                      checked={row.enabled}
-                      onChange={(e) => setRow(setForm, row.id, { enabled: e.target.checked })}
-                    />
-                    <Input
-                      placeholder="key"
-                      value={row.key}
-                      onChange={(e) => setRow(setForm, row.id, { key: e.target.value })}
-                    />
-                    <Input
-                      placeholder="value"
-                      value={row.value}
-                      onChange={(e) => setRow(setForm, row.id, { value: e.target.value })}
-                    />
+            {(bodyMode === "json" || bodyMode === "text") && (
+              <>
+                <Textarea
+                  value={bodyText}
+                  onChange={(e) => setBodyText(e.target.value)}
+                  className="min-h-[160px] font-mono"
+                  placeholder={bodyMode === "json" ? '{ "name": "Alice" }' : "Plain text body"}
+                />
+                {bodyMode === "json" && (
+                  <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      size="icon"
-                      onClick={() => removeRow(setForm, row.id)}
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setBodyText(maybePrettyJSON(bodyText))}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Wand2 className="h-4 w-4" /> Prettify JSON
                     </Button>
                   </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addRow(setForm)}
-                  className="w-fit gap-2"
-                >
-                  <Plus className="h-4 w-4" /> Add field
-                </Button>
-              </div>
+                )}
+              </>
+            )}
+
+            {bodyMode === "form" && (
+              <KVSection
+                label="Form Fields"
+                rows={form}
+                setRows={setForm}
+                keyPlaceholder="key"
+                valPlaceholder="value"
+                addLabel="Add field"
+              />
             )}
 
             {bodyMode === "multipart" && (
-              <div className="grid gap-2">
+              <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">
                   For simplicity, multipart here only sends text fields (no files).
                 </p>
-                {multipart.map((row) => (
-                  <div key={row.id} className="grid grid-cols-[20px_1fr_1fr_36px] gap-2">
-                    <input
-                      type="checkbox"
-                      checked={row.enabled}
-                      onChange={(e) => setRow(setMultipart, row.id, { enabled: e.target.checked })}
-                    />
-                    <Input
-                      placeholder="field name"
-                      value={row.key}
-                      onChange={(e) => setRow(setMultipart, row.id, { key: e.target.value })}
-                    />
-                    <Input
-                      placeholder="value"
-                      value={row.value}
-                      onChange={(e) => setRow(setMultipart, row.id, { value: e.target.value })}
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeRow(setMultipart, row.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addRow(setMultipart)}
-                  className="w-fit gap-2"
-                >
-                  <Plus className="h-4 w-4" /> Add field
-                </Button>
+                <KVSection
+                  label="Multipart Fields"
+                  rows={multipart}
+                  setRows={setMultipart}
+                  keyPlaceholder="field name"
+                  valPlaceholder="value"
+                  addLabel="Add field"
+                />
               </div>
             )}
           </div>
 
-          {/* Options (sticky send row feel) */}
+          {/* Options + Send */}
           <div className="grid gap-3 md:grid-cols-3">
             <div className="space-y-1">
               <Label>Timeout (ms)</Label>
@@ -890,7 +954,7 @@ export default function ApiTesterPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => copy(respBody, setCopied, "resp")}
+                onClick={() => copyToClipboard(respBody, setCopied, "resp")}
                 className="gap-2"
                 disabled={!respBody}
               >
@@ -935,7 +999,7 @@ export default function ApiTesterPage() {
             <Textarea
               readOnly
               className="min-h-[220px] font-mono"
-              value={viewRaw ? respBody : prettyJSON(respBody)}
+              value={viewRaw || !responseLooksJSON ? respBody : maybePrettyJSON(respBody)}
               placeholder="—"
             />
           </div>
