@@ -3,85 +3,78 @@
 import {
   AlignLeft,
   Braces,
-  Check,
   ClipboardPaste,
-  Copy,
   Download,
   FileJson,
   Hash,
-  Info,
   Link2,
   Minimize2,
   RotateCcw,
   Search,
   SortAsc,
   Trash2,
-  Type,
-  Upload,
+  Type as TypeIcon,
   Wand2,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from "react";
 import {
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+
+const LS_KEY = "tools:json-formatter:input";
+
+type IndentOpt = "2" | "4" | "tab";
 
 export default function JsonFormatterPage() {
   const [input, setInput] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [error, setError] = useState<string>("");
-  const [indent, setIndent] = useState<"2" | "4" | "tab">("2");
+  const [indent, setIndent] = useState<IndentOpt>("2");
   const [sortKeys, setSortKeys] = useState<boolean>(false);
-  const [copied, setCopied] = useState<boolean>(false);
   const [autoOnPaste, setAutoOnPaste] = useState<boolean>(true);
 
   // Tools tab state
   const [pathQuery, setPathQuery] = useState<string>("");
   const [pathResult, setPathResult] = useState<string>("");
 
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Persist input across sessions
+  /* Persistence */
   useEffect(() => {
-    const saved = localStorage.getItem("tools:json-formatter:input");
-    if (saved) setInput(saved);
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) setInput(saved);
+    } catch {}
   }, []);
   useEffect(() => {
-    localStorage.setItem("tools:json-formatter:input", input);
+    try {
+      localStorage.setItem(LS_KEY, input);
+    } catch {}
   }, [input]);
 
-  const stats = useMemo(() => {
-    const lines = input.split(/\n/).length;
-    const chars = input.length;
-    return { lines, chars };
-  }, [input]);
+  // const stats = useMemo(() => {
+  //   const lines = input ? input.split(/\n/).length : 0;
+  //   const chars = input.length;
+  //   return { lines, chars };
+  // }, [input]);
 
-  // --- Helpers ---
-  function parseSafe(text: string) {
-    return JSON.parse(text);
+  /* Helpers */
+  function parseSafe<T = unknown>(text: string): T {
+    return JSON.parse(text) as T;
   }
 
   function sortObjectDeep<T>(value: T): T {
@@ -100,10 +93,9 @@ export default function JsonFormatterPage() {
     return indent === "tab" ? "\t" : Number(indent);
   }
 
-  // Lightweight object path reader: user enters e.g. meta.site or products[0].title
-  function readByPath(root: any, path: string) {
+  function readByPath(root: unknown, path: string): unknown {
     if (!path.trim()) return root;
-    // Tokenize dot/bracket paths: foo.bar[0].baz
+
     const tokens: (string | number)[] = [];
     path.replace(/\[(.*?)\]|[^.[\]]+/g, (m, g1) => {
       if (m.startsWith("[")) {
@@ -115,15 +107,16 @@ export default function JsonFormatterPage() {
       }
       return "";
     });
-    let cur = root;
+
+    let cur: unknown = root;
     for (const t of tokens) {
-      if (cur == null) return undefined;
-      cur = cur[t as any];
+      if (cur == null || (typeof cur !== "object" && !Array.isArray(cur))) return undefined;
+      cur = (cur as Record<string | number, unknown>)[t];
     }
     return cur;
   }
 
-  // --- Actions ---
+  /* Actions */
   function prettify() {
     try {
       const json = parseSafe(input);
@@ -131,8 +124,9 @@ export default function JsonFormatterPage() {
       const pretty = JSON.stringify(value, null, getIndentValue());
       setOutput(pretty);
       setError("");
-    } catch (e: any) {
-      setError(e?.message || "Invalid JSON");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Invalid JSON";
+      setError(msg);
       setOutput("");
     }
   }
@@ -144,8 +138,9 @@ export default function JsonFormatterPage() {
       const compact = JSON.stringify(value);
       setOutput(compact);
       setError("");
-    } catch (e: any) {
-      setError(e?.message || "Invalid JSON");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Invalid JSON";
+      setError(msg);
       setOutput("");
     }
   }
@@ -155,38 +150,30 @@ export default function JsonFormatterPage() {
       parseSafe(input);
       setError("");
       setOutput("✅ Valid JSON");
-    } catch (e: any) {
-      setError(e?.message || "Invalid JSON");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Invalid JSON";
+      setError(msg);
       setOutput("");
     }
-  }
-
-  function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
-    if (!autoOnPaste) return;
-    const text = e.clipboardData.getData("text");
-    if (!text) return;
-    try {
-      const json = parseSafe(text);
-      const pretty = JSON.stringify(json, null, getIndentValue());
-      e.preventDefault();
-      setInput(pretty);
-      setError("");
-      setOutput("");
-    } catch {
-      // leave default paste if not JSON
-    }
-  }
-
-  async function copy(text: string) {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
   }
 
   async function pasteIn() {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) setInput(text);
+      if (!text) return;
+      if (autoOnPaste) {
+        try {
+          const json = parseSafe(text);
+          const pretty = JSON.stringify(json, null, getIndentValue());
+          setInput(pretty);
+          setError("");
+          setOutput("");
+          return;
+        } catch {
+          // fallthrough to raw paste
+        }
+      }
+      setInput(text);
     } catch {}
   }
 
@@ -197,36 +184,16 @@ export default function JsonFormatterPage() {
     setPathResult("");
   }
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setInput(String(reader.result || ""));
-    reader.readAsText(file);
-    e.currentTarget.value = "";
-  }
-
-  function download(text: string, name = "data.json") {
-    const blob = new Blob([text], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  // --- Utilities ---
+  // Utilities
   function toTypescript() {
     try {
       const json = parseSafe(input);
       const out = jsonToTs("Root", json);
       setOutput(out);
       setError("");
-    } catch (e: any) {
-      setError(e?.message || "Invalid JSON");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Invalid JSON";
+      setError(msg);
       setOutput("");
     }
   }
@@ -237,35 +204,29 @@ export default function JsonFormatterPage() {
       const val = readByPath(json, pathQuery);
       setPathResult(JSON.stringify(val, null, getIndentValue()));
       setError("");
-    } catch (e: any) {
-      setError(e?.message || "Invalid JSON");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Invalid JSON";
+      setError(msg);
       setPathResult("");
     }
   }
 
   function b64Encode() {
     try {
-      const buff =
-        typeof window === "undefined" ? Buffer.from(input) : new TextEncoder().encode(input);
-      const b64 =
-        typeof window === "undefined"
-          ? (buff as any).toString("base64")
-          : btoa(String.fromCharCode(...buff));
+      const buff = new TextEncoder().encode(input);
+      const b64 = btoa(String.fromCharCode(...buff));
       setOutput(b64);
       setError("");
-    } catch (e: any) {
+    } catch {
       setError("Base64 encode failed");
     }
   }
   function b64Decode() {
     try {
-      const str =
-        typeof window === "undefined"
-          ? Buffer.from(input, "base64").toString("utf-8")
-          : new TextDecoder().decode(Uint8Array.from(atob(input), (c) => c.charCodeAt(0)));
+      const str = new TextDecoder().decode(Uint8Array.from(atob(input), (c) => c.charCodeAt(0)));
       setOutput(str);
       setError("");
-    } catch (e: any) {
+    } catch {
       setError("Base64 decode failed");
     }
   }
@@ -291,369 +252,314 @@ export default function JsonFormatterPage() {
     setError("");
   }
 
-  // --- Render ---
+  // Keyboard shortcuts
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey && e.key.toLowerCase() === "enter") {
+        e.preventDefault();
+        (document.querySelector("[data-prettify]") as HTMLButtonElement | null)?.click();
+      } else if (e.ctrlKey && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        (document.querySelector("[data-minify]") as HTMLButtonElement | null)?.click();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <TooltipProvider>
-      <MotionGlassCard className="p-6">
-        {/* Options Bar */}
-        <GlassCard className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-              <FileJson className="h-6 w-6" />
-              JSON Formatter
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Pretty, minify, validate, sort keys, JSONPath, TypeScript, Base64/URL tools.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="hidden items-center gap-2 md:flex">
-              <Badge variant="outline">Lines: {stats.lines}</Badge>
-              <Badge variant="outline">Chars: {stats.chars}</Badge>
+      {/* Header */}
+      <ToolPageHeader
+        icon={FileJson}
+        title="JSON Formatter"
+        description="Pretty print & validate JSON data"
+        actions={
+          <>
+            {/* Import file */}
+            <InputField
+              accept="application/json,.json,.txt,text/plain"
+              type="file"
+              onFilesChange={async (files) => {
+                const f = files?.[0];
+                if (!f) return;
+                const txt = await f.text();
+                setInput(txt);
+              }}
+            />
+            {/* Export output or input */}
+            <ExportTextButton
+              filename="formatted.json"
+              getText={() => output || input || "{}"}
+              label="Export"
+              disabled={!output && !input}
+            />
+            <ResetButton onClick={clearAll} />
+            <CopyButton variant="default" getText={() => output || ""} disabled={!output} />
+          </>
+        }
+      />
+
+      {/* Options */}
+      <GlassCard className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-base">Options</CardTitle>
+          <CardDescription>Tune formatting and behavior.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <SelectField
+            label="Indent"
+            options={[
+              { value: "2", label: "2 spaces" },
+              { value: "4", label: "4 spaces" },
+              { value: "tab", label: "Tabs" },
+            ]}
+            value={indent}
+            onValueChange={(v) => setIndent(v as IndentOpt)}
+          />
+          <SwitchRow
+            label="Sort keys"
+            hint="Sort object keys alphabetically (deep)."
+            checked={sortKeys}
+            onCheckedChange={(v) => setSortKeys(Boolean(v))}
+          />
+          <SwitchRow
+            label="Auto-format on paste"
+            checked={autoOnPaste}
+            onCheckedChange={(v) => setAutoOnPaste(Boolean(v))}
+          />
+        </CardContent>
+      </GlassCard>
+
+      {/* Workbench */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Input */}
+        <GlassCard>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Input</CardTitle>
+              <div className="flex items-center gap-2">
+                <ActionButton size="sm" icon={ClipboardPaste} label="Paste" onClick={pasteIn} />
+                <ActionButton
+                  size="sm"
+                  icon={Trash2}
+                  label="Clear"
+                  onClick={() => setInput("")}
+                  variant="destructive"
+                />
+              </div>
             </div>
-            <Button variant="outline" onClick={clearAll} className="gap-2">
-              <Trash2 className="h-4 w-4" /> Clear
-            </Button>
+            <CardDescription>
+              Paste or type JSON. Strict JSON (no comments or trailing commas).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <TextareaField
+              ref={inputRef}
+              value={input}
+              onValueChange={setInput}
+              placeholder='{"hello":"world"}'
+              textareaClassName={cn("min-h-[320px] font-mono", error && "border-destructive")}
+              onPaste={(e) => {
+                if (!autoOnPaste) return;
+                const text = e.clipboardData.getData("text");
+                if (!text) return;
+                try {
+                  const json = parseSafe(text);
+                  const pretty = JSON.stringify(json, null, getIndentValue());
+                  e.preventDefault();
+                  setInput(pretty);
+                  setError("");
+                  setOutput("");
+                } catch {
+                  // allow normal paste
+                }
+              }}
+            />
+            {error ? (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                <div className="font-medium mb-1">Invalid JSON</div>
+                <div className="whitespace-pre-wrap break-words">{error}</div>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Tip: <kbd className="rounded bg-muted px-1">Ctrl</kbd> +{" "}
+                <kbd className="rounded bg-muted px-1">Enter</kbd> to prettify •{" "}
+                <kbd className="rounded bg-muted px-1">Ctrl</kbd> +{" "}
+                <kbd className="rounded bg-muted px-1">M</kbd> to minify
+              </p>
+            )}
+          </CardContent>
+          <div className="px-6 pb-6 flex flex-wrap gap-2">
+            <ActionButton icon={Wand2} label="Prettify" onClick={prettify} data-prettify />
+            <ActionButton
+              icon={Minimize2}
+              label="Minify"
+              onClick={minify}
+              variant="secondary"
+              data-minify
+            />
+            <ActionButton icon={AlignLeft} label="Validate" onClick={validate} />
+            <ActionButton
+              icon={RotateCcw}
+              label="Example"
+              onClick={() => {
+                setOutput("");
+                setError("");
+                setInput(EXAMPLE_JSON);
+              }}
+              className="ml-auto"
+            />
           </div>
         </GlassCard>
 
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            <div className="flex items-center justify-between gap-3 md:justify-start">
-              <Label htmlFor="indent" className="whitespace-nowrap">
-                Indent
-              </Label>
-              <Select value={indent} onValueChange={(v: any) => setIndent(v)}>
-                <SelectTrigger id="indent" className="w-[160px]">
-                  <SelectValue placeholder="Indent" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2">2 spaces</SelectItem>
-                  <SelectItem value="4">4 spaces</SelectItem>
-                  <SelectItem value="tab">Tabs</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 md:justify-start">
-              <Label htmlFor="sortKeys" className="whitespace-nowrap">
-                Sort keys
-              </Label>
+        {/* Output */}
+        <GlassCard>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Output</CardTitle>
               <div className="flex items-center gap-2">
-                <Switch id="sortKeys" checked={sortKeys} onCheckedChange={setSortKeys} />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Sort object keys alphabetically (deep). Arrays are preserved.</p>
-                  </TooltipContent>
-                </Tooltip>
+                <ActionButton
+                  icon={SortAsc}
+                  label={sortKeys ? "Unsort" : "Sort keys"}
+                  onClick={() => setSortKeys((v) => !v)}
+                  variant="ghost"
+                />
+                <CopyButton size="sm" getText={() => output || ""} disabled={!output} />
               </div>
             </div>
+            <CardDescription>Formatted/minified JSON or tool results.</CardDescription>
+          </CardHeader>
 
-            <div className="flex items-center justify-between gap-3 md:justify-start">
-              <Label htmlFor="autoPaste" className="whitespace-nowrap">
-                Auto-format on paste
-              </Label>
-              <Switch id="autoPaste" checked={autoOnPaste} onCheckedChange={setAutoOnPaste} />
-            </div>
+          <CardContent>
+            <Tabs defaultValue="formatted" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="formatted">Formatted</TabsTrigger>
+                <TabsTrigger value="raw">Raw</TabsTrigger>
+                <TabsTrigger value="tools">Tools</TabsTrigger>
+              </TabsList>
 
-            <div className="flex items-center justify-between gap-3 md:justify-start">
-              <input
-                ref={fileRef}
-                type="file"
-                accept="application/json,.json,.txt"
-                className="hidden"
-                onChange={handleFile}
-              />
-              <Button
-                variant="outline"
-                onClick={() => fileRef.current?.click()}
-                className="w-full gap-2"
-              >
-                <Upload className="h-4 w-4" /> Import JSON
-              </Button>
-            </div>
+              {/* Formatted */}
+              <TabsContent value="formatted">
+                <TextareaField
+                  readOnly
+                  value={output}
+                  onValueChange={() => {}}
+                  placeholder="Your formatted JSON will appear here"
+                  textareaClassName="min-h-[320px] font-mono"
+                />
+              </TabsContent>
 
-            <div className="flex items-center justify-between gap-3 md:justify-start">
-              <Button
-                variant="outline"
-                onClick={() => download(output || input || "{}", "data.json")}
-                className="w-full gap-2"
-              >
-                <Download className="h-4 w-4" /> Download
-              </Button>
+              {/* Raw */}
+              <TabsContent value="raw">
+                <TextareaField
+                  readOnly
+                  value={input}
+                  onValueChange={() => {}}
+                  placeholder="Original input (read-only)"
+                  textareaClassName="min-h-[320px] font-mono"
+                />
+              </TabsContent>
+
+              {/* Tools */}
+              <TabsContent value="tools" className="mt-3 space-y-4">
+                {/* JSON Path */}
+                <GlassCard>
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Search className="h-4 w-4" /> JSON Path
+                    </CardTitle>
+                    <CardDescription>
+                      Read a value by path (e.g., products[0].title or meta.site).
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <InputField
+                        value={pathQuery}
+                        onChange={(e) => setPathQuery(e.target.value)}
+                        placeholder="products[0].title"
+                        className="w-full"
+                      />
+                      <ActionButton icon={Search} label="Query" onClick={doPathQuery} />
+                    </div>
+                    <TextareaField
+                      readOnly
+                      value={pathResult}
+                      onValueChange={() => {}}
+                      placeholder="Result"
+                      textareaClassName="min-h-[120px] font-mono"
+                    />
+                  </CardContent>
+                </GlassCard>
+
+                {/* TypeScript */}
+                <GlassCard>
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TypeIcon className="h-4 w-4" /> JSON → TypeScript
+                    </CardTitle>
+                    <CardDescription>
+                      Infer TypeScript interfaces from the current JSON.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <ActionButton icon={Braces} label="Generate Types" onClick={toTypescript} />
+                    <TextareaField
+                      readOnly
+                      value={output}
+                      onValueChange={() => {}}
+                      placeholder="TypeScript output appears in the main Output box"
+                      textareaClassName="min-h-[120px] font-mono"
+                    />
+                  </CardContent>
+                </GlassCard>
+
+                {/* Conversions */}
+                <GlassCard>
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Hash className="h-4 w-4" /> Base64 / URL / Escapes
+                    </CardTitle>
+                    <CardDescription>Quick text conversions using the main input.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                    <ActionButton label="Base64 Encode" onClick={b64Encode} />
+                    <ActionButton label="Base64 Decode" onClick={b64Decode} />
+                    <ActionButton label="URL Encode" onClick={urlEncode} icon={Link2} />
+                    <ActionButton label="URL Decode" onClick={urlDecode} />
+                    <ActionButton label="Escape" onClick={escapeStr} />
+                    <ActionButton label="Unescape" onClick={unescapeStr} />
+                  </CardContent>
+                </GlassCard>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+
+          {/* Output footer */}
+          <div className="px-6 pb-6 flex flex-wrap items-center gap-2">
+            <div className="text-xs text-muted-foreground">
+              Indent: {indent === "tab" ? "tab" : indent} • Sort keys: {String(sortKeys)} •
+              Auto-paste: {String(autoOnPaste)}
             </div>
+            <Separator orientation="vertical" className="mx-2 h-4" />
+            <ExportTextButton
+              filename="formatted.json"
+              getText={() => output || "{}"}
+              label="Download output"
+              disabled={!output}
+              icon={Download}
+            />
           </div>
-        </CardContent>
-
-        {/* Workbench */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Input */}
-          <MotionGlassCard className="h-full">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span>Input</span>
-                <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-1" onClick={pasteIn}>
-                        <ClipboardPaste className="h-4 w-4" /> Paste
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Paste from clipboard</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => setInput("")}
-                      >
-                        <Trash2 className="h-4 w-4" /> Clear
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Clear input</TooltipContent>
-                  </Tooltip>
-                </div>
-              </CardTitle>
-              <CardDescription>
-                Paste or type your JSON on the left. Use the toolbar to format or validate.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea
-                ref={inputRef}
-                value={input}
-                onPaste={handlePaste}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder='{"hello":"world"}'
-                className={cn("min-h-[360px] font-mono", error && "border-destructive")}
-              />
-              {error ? (
-                <Alert variant="destructive">
-                  <AlertTitle>Invalid JSON</AlertTitle>
-                  <AlertDescription className="whitespace-pre-wrap break-words">
-                    {error}
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Tip: Strict JSON (no comments/trailing commas). Enable auto-format on paste above.
-                </p>
-              )}
-            </CardContent>
-            <CardFooter className="flex flex-wrap gap-2">
-              <Button data-prettify onClick={prettify} className="gap-2">
-                <Wand2 className="h-4 w-4" /> Prettify
-              </Button>
-              <Button data-minify variant="secondary" onClick={minify} className="gap-2">
-                <Minimize2 className="h-4 w-4" /> Minify
-              </Button>
-              <Button variant="outline" onClick={validate} className="gap-2">
-                <AlignLeft className="h-4 w-4" /> Validate
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setOutput("");
-                  setError("");
-                  setInput(example);
-                }}
-                className="ml-auto gap-2"
-              >
-                <RotateCcw className="h-4 w-4" /> Load example
-              </Button>
-            </CardFooter>
-          </MotionGlassCard>
-
-          {/* Output */}
-          <MotionGlassCard className="h-full">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span>Output</span>
-                <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => setSortKeys((v) => !v)}
-                      >
-                        <SortAsc className="h-4 w-4" /> {sortKeys ? "Unsort" : "Sort keys"}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Toggle deep key sorting</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={!output}
-                        className="gap-1"
-                        onClick={() => copy(output)}
-                      >
-                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{" "}
-                        {copied ? "Copied" : "Copy"}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Copy output to clipboard</TooltipContent>
-                  </Tooltip>
-                </div>
-              </CardTitle>
-              <CardDescription>
-                Formatted/minified JSON or tool results will appear here.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="formatted" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="formatted">Formatted</TabsTrigger>
-                  <TabsTrigger value="raw">Raw</TabsTrigger>
-                  <TabsTrigger value="tools">Tools</TabsTrigger>
-                </TabsList>
-                <TabsContent value="formatted" className="mt-3">
-                  <Textarea
-                    value={output}
-                    readOnly
-                    placeholder="Your formatted JSON will appear here"
-                    className="min-h-[360px] font-mono"
-                  />
-                </TabsContent>
-                <TabsContent value="raw" className="mt-3">
-                  <Textarea
-                    value={input}
-                    readOnly
-                    placeholder="Original input (read-only)"
-                    className="min-h-[360px] font-mono"
-                  />
-                </TabsContent>
-                <TabsContent value="tools" className="mt-3 space-y-4">
-                  {/* JSONPath-lite */}
-                  <GlassCard>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Search className="h-4 w-4" /> JSON Path
-                      </CardTitle>
-                      <CardDescription>
-                        Read a value by path (e.g., products[0].title or meta.site).
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={pathQuery}
-                          onChange={(e) => setPathQuery(e.target.value)}
-                          placeholder="products[0].title"
-                        />
-                        <Button variant="outline" onClick={doPathQuery} className="gap-2">
-                          <Search className="h-4 w-4" /> Query
-                        </Button>
-                      </div>
-                      <Textarea
-                        value={pathResult}
-                        readOnly
-                        placeholder="Result"
-                        className="min-h-[120px] font-mono"
-                      />
-                    </CardContent>
-                  </GlassCard>
-
-                  {/* TypeScript */}
-                  <GlassCard>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Type className="h-4 w-4" /> JSON → TypeScript
-                      </CardTitle>
-                      <CardDescription>
-                        Infer TypeScript types from the current JSON.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <Button variant="outline" onClick={toTypescript} className="gap-2">
-                        <Braces className="h-4 w-4" /> Generate Types
-                      </Button>
-                      <Textarea
-                        value={output}
-                        readOnly
-                        placeholder="TypeScript output will appear in the main Output box"
-                        className="min-h-[120px] font-mono"
-                      />
-                    </CardContent>
-                  </GlassCard>
-
-                  {/* Conversions */}
-                  <GlassCard>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Hash className="h-4 w-4" /> Base64 / URL / Escapes
-                      </CardTitle>
-                      <CardDescription>
-                        Quick text conversions using the main input.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                      <Button variant="outline" onClick={b64Encode}>
-                        Base64 Encode
-                      </Button>
-                      <Button variant="outline" onClick={b64Decode}>
-                        Base64 Decode
-                      </Button>
-                      <Button variant="outline" onClick={urlEncode}>
-                        <Link2 className="mr-2 h-4 w-4" />
-                        URL Encode
-                      </Button>
-                      <Button variant="outline" onClick={urlDecode}>
-                        URL Decode
-                      </Button>
-                      <Button variant="outline" onClick={escapeStr}>
-                        Escape
-                      </Button>
-                      <Button variant="outline" onClick={unescapeStr}>
-                        Unescape
-                      </Button>
-                    </CardContent>
-                  </GlassCard>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-            <CardFooter className="flex flex-wrap items-center gap-2">
-              <div className="text-xs text-muted-foreground">
-                Indent: {indent === "tab" ? "tab" : indent} • Sort keys: {String(sortKeys)} •
-                Auto-paste: {String(autoOnPaste)}
-              </div>
-              <Separator orientation="vertical" className="mx-2 h-4" />
-              <Button
-                variant="outline"
-                onClick={() => download(output || "{}", "formatted.json")}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" /> Download output
-              </Button>
-            </CardFooter>
-          </MotionGlassCard>
-        </div>
-
-        {/* Footer help */}
-        <div className="text-center text-xs text-muted-foreground">
-          <p>
-            Keyboard: <kbd className="rounded bg-muted px-1">Ctrl</kbd> +{" "}
-            <kbd className="rounded bg-muted px-1">Enter</kbd> to prettify •{" "}
-            <kbd className="rounded bg-muted px-1">Ctrl</kbd> +{" "}
-            <kbd className="rounded bg-muted px-1">M</kbd> to minify
-          </p>
-        </div>
-      </MotionGlassCard>
+        </GlassCard>
+      </div>
     </TooltipProvider>
   );
 }
 
-// --- Example JSON ---
-const example = `{
+/* Example JSON */
+
+const EXAMPLE_JSON = `{
   "name": "Tariqul Islam",
   "title": "Full-Stack Developer",
   "skills": ["NextJS", "Express", "MongoDB", "Postgresql", "TypeScript", "Javascript", "Prisma", "Firebase", "Docker"],
@@ -663,34 +569,54 @@ const example = `{
   "yearsOfExperience": "1++"
 }`;
 
-// --- Simple JSON → TS inference ---
-function jsonToTs(name: string, val: any): string {
-  const seen = new Map<any, string>();
+/* Simple JSON → TS inference */
+function jsonToTs(name: string, val: unknown): string {
+  const seen = new Map<object, string>();
   const lines: string[] = [];
-  function typeOf(v: any): string {
+
+  function typeOf(
+    v: unknown,
+  ): "null" | "array" | "object" | "string" | "number" | "boolean" | "unknown" {
     if (v === null) return "null";
     if (Array.isArray(v)) return "array";
-    return typeof v;
+    switch (typeof v) {
+      case "string":
+        return "string";
+      case "number":
+        return "number";
+      case "boolean":
+        return "boolean";
+      case "object":
+        return "object";
+      default:
+        return "unknown";
+    }
   }
+
   function pascal(s: string) {
     return s
-      .replace(/(^|[_\-\s]+)([a-z])/g, (_, __, c) => c.toUpperCase())
+      .replace(/(^|[_\-\s]+)([a-z])/g, (_: string, __: string, c: string) => c.toUpperCase())
       .replace(/[^a-zA-Z0-9]/g, "");
   }
-  function emitInterface(intName: string, obj: any) {
-    if (seen.has(obj)) return seen.get(obj)!;
+
+  function emitInterface(intName: string, obj: Record<string, unknown>) {
+    const keyObj = obj as unknown as object;
+    const existing = seen.get(keyObj);
+    if (existing) return existing;
+
     const rows: string[] = [];
     for (const [k, v] of Object.entries(obj)) {
-      const key = /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(k) ? k : JSON.stringify(k);
+      const safeKey = /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(k) ? k : JSON.stringify(k);
       const t = tsFor(v, pascal(k));
-      rows.push(`  ${key}: ${t};`);
+      rows.push(`  ${safeKey}: ${t};`);
     }
     const block = `export interface ${intName} {\n${rows.join("\n")}\n}`;
     lines.push(block);
-    seen.set(obj, intName);
+    seen.set(keyObj, intName);
     return intName;
   }
-  function tsFor(v: any, hint: string): string {
+
+  function tsFor(v: unknown, hint: string): string {
     switch (typeOf(v)) {
       case "string":
         return "string";
@@ -701,39 +627,27 @@ function jsonToTs(name: string, val: any): string {
       case "null":
         return "null";
       case "array": {
-        const arr = v as any[];
+        const arr = v as unknown[];
         if (arr.length === 0) return "unknown[]";
-        const types = Array.from(new Set(arr.map((x) => tsFor(x, hint + "Item"))));
+        const types = Array.from(new Set(arr.map((x) => tsFor(x, `${hint}Item`))));
         return types.length === 1 ? `${types[0]}[]` : `(${types.join(" | ")})[]`;
       }
       case "object": {
+        const obj = v as Record<string, unknown>;
         const nameHere = pascal(hint || "Object");
-        emitInterface(nameHere, v);
+        emitInterface(nameHere, obj);
         return nameHere;
       }
       default:
         return "unknown";
     }
   }
+
   const rootName = pascal(name || "Root");
   const rootType = tsFor(val, rootName);
   if (!lines.find((l) => l.includes(`interface ${rootType} `))) {
-    // Primitive root
     lines.unshift(`export type ${rootName} = ${rootType}`);
   }
   return lines.join("\n\n");
 }
 
-// Bind keyboard shortcuts
-if (typeof window !== "undefined") {
-  window.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.key.toLowerCase() === "enter") {
-      e.preventDefault();
-      (document.querySelector("[data-prettify]") as HTMLButtonElement | null)?.click();
-    }
-    if (e.ctrlKey && e.key.toLowerCase() === "m") {
-      e.preventDefault();
-      (document.querySelector("[data-minify]") as HTMLButtonElement | null)?.click();
-    }
-  });
-}
