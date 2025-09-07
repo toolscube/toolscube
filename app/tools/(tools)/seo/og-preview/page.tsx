@@ -1,4 +1,3 @@
-// app/tools/(tools)/seo/og-preview/page.tsx
 "use client";
 
 import {
@@ -44,7 +43,7 @@ type OgResult = {
   allMeta: Record<string, string[]>;
 };
 
-const EXAMPLES = ["https://naturalsefaa.com/", "https://example.com/", "https://nextjs.org/"];
+const EXAMPLES = ["https://nextjs.org", "https://tariqul.dev", "https://youtube.com"];
 
 function hostnameOf(u?: string) {
   try {
