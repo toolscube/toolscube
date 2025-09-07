@@ -2,7 +2,6 @@
 
 import {
   Calculator,
-  ClipboardPaste,
   Copy,
   Delete,
   Divide,
@@ -10,58 +9,59 @@ import {
   Eraser,
   FunctionSquare,
   Percent,
-  RotateCcw,
   X,
 } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import * as React from "react";
 import toast from "react-hot-toast";
 import { CalcButton } from "@/components/calculators/calc-button";
 import { Display } from "@/components/calculators/display";
-import { Button } from "@/components/ui/button";
+import { ActionButton, LinkButton, ResetButton } from "@/components/shared/action-buttons";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
 import { safeEval } from "@/lib/safe-eval";
 
-export default function StandardCalculatorPage() {
-  const [expr, setExpr] = useState("");
-  const [ans, setAns] = useState<string>("");
-  const [lastAns, setLastAns] = useState<string>("");
+export default function StandardCalculatorClient() {
+  const [expr, setExpr] = React.useState<string>("");
+  const [ans, setAns] = React.useState<string>("");
+  const [lastAns, setLastAns] = React.useState<string>("");
 
-  // "ANS" টোকেনকে runtime এ সংখ্যায় রিপ্লেস করি
-  const exprWithAns = useMemo(() => {
+  const exprWithAns = React.useMemo(() => {
     if (!expr) return "";
     if (!lastAns) return expr;
-    // শুধুমাত্র ANS শব্দটাকে রিপ্লেস (ভ্যারিয়েবল-সেইফ)
     return expr.replace(/\bANS\b/g, lastAns);
   }, [expr, lastAns]);
 
-  // live preview
-  useEffect(() => {
+  // Live preview
+  React.useEffect(() => {
     const v = safeEval(exprWithAns);
     setAns(v == null ? "" : String(v));
   }, [exprWithAns]);
 
   const push = (t: string) => setExpr((e) => e + t);
 
-  const clear = () => {
+  const clear = React.useCallback(() => {
     setExpr("");
     setAns("");
-  };
+  }, []);
 
-  const back = () => setExpr((e) => e.slice(0, -1));
+  const back = React.useCallback(() => {
+    setExpr((e) => e.slice(0, -1));
+  }, []);
 
-  const equal = () => {
+  const equal = React.useCallback(() => {
     const v = safeEval(exprWithAns);
     if (v == null) return;
-    setExpr(String(v));
-    setLastAns(String(v));
+    const s = String(v);
+    setExpr(s);
+    setLastAns(s);
     setAns("");
-  };
+  }, [exprWithAns]);
 
   const copyExpr = async () => {
     try {
       await navigator.clipboard.writeText(expr || "0");
-      toast.success("Expression copied!");
+      toast.success("Expression copied");
     } catch {
       toast.error("Copy failed");
     }
@@ -69,106 +69,98 @@ export default function StandardCalculatorPage() {
 
   const copyAns = async () => {
     try {
-      const v = ans || expr; // preview থাকলে ans, না থাকলে current expr
+      const v = ans || expr;
       if (!v) return;
       await navigator.clipboard.writeText(String(v));
-      toast.success("Result copied!");
+      toast.success("Result copied");
     } catch {
       toast.error("Copy failed");
     }
   };
 
-  const pasteClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (!text) return;
-      // হালকা স্যানিটাইজ: অনুমোদিত ক্যারেক্টার ছাড়া বাদ
-      const sanitized = text.replace(/[^0-9.+\-*/()% ()A-Z]/gi, "");
-      setExpr((e) => e + sanitized);
-      toast.success("Pasted!");
-    } catch {
-      toast.error("Paste failed");
-    }
-  };
-
-  // keyboard support
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+  // stable key handler that references the stable handlers
+  const onKey = React.useCallback(
+    (e: KeyboardEvent) => {
       const k = e.key;
-      if (/^[0-9.+\-*/()% ]$/.test(k)) setExpr((x) => x + k);
-      else if (k === "Enter") equal();
-      else if (k === "Backspace") back();
-      else if (k.toLowerCase() === "c") clear();
-    };
+      if (/^[0-9.+\-*/()% ]$/.test(k)) {
+        setExpr((x) => x + k);
+      } else if (k === "Enter") {
+        equal();
+      } else if (k === "Backspace") {
+        back();
+      } else if (k.toLowerCase() === "c") {
+        clear();
+      }
+    },
+    [equal, back, clear],
+  );
+
+  // effect depends on the stable onKey
+  React.useEffect(() => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [onKey]);
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-10 space-y-6">
-      {/* <SectionHeader
+    <>
+      <ToolPageHeader
+        icon={Calculator}
         title="Standard Calculator"
-        desc="Basic arithmetic with glass UI, keyboard support, ANS token, and live preview."
-      /> */}
+        description="Type freely; preview updates live. Use ANS to reuse the last result."
+        actions={
+          <>
+            <ResetButton onClick={clear} />
+            <ActionButton icon={Copy} label="Copy Expr" onClick={copyExpr} />
+            <ActionButton
+              variant="default"
+              icon={Copy}
+              label="Copy Result"
+              onClick={copyAns}
+              disabled={!ans && !expr}
+            />
+          </>
+        }
+      />
 
       {/* Quick nav */}
-      <div className="mb-1 flex flex-wrap gap-2">
-        <Link href="/tools/calc/standard">
-          <CalcButton variantIntent="primary" className="px-3">
-            <Calculator className="mr-2 h-4 w-4" />
-            Standard
-          </CalcButton>
-        </Link>
-        <Link href="/tools/calc/scientific">
-          <CalcButton variantIntent="ghost" className="px-3">
-            <FunctionSquare className="mr-2 h-4 w-4" />
-            Scientific
-          </CalcButton>
-        </Link>
-        <Link href="/tools/calc/percentage">
-          <CalcButton variantIntent="ghost" className="px-3">
-            <Percent className="mr-2 h-4 w-4" />
-            Percentage
-          </CalcButton>
-        </Link>
-      </div>
-
-      <MotionGlassCard className="space-y-4 p-4">
-        {/* Flowing action header */}
-        <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3">
-          <div className="text-sm text-muted-foreground">
-            Live preview updates as you type. Use <span className="font-mono">ANS</span> to reuse
-            last result.
+      <GlassCard className="px-4 py-3">
+        <div className="mb-1 flex flex-wrap gap-2 items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            <LinkButton
+              size="sm"
+              variant="default"
+              icon={Calculator}
+              label="Standard"
+              href="/tools/calc/standard"
+            />
+            <LinkButton
+              size="sm"
+              icon={FunctionSquare}
+              label="Scientific"
+              href="/tools/calc/scientific"
+            />
+            <LinkButton size="sm" icon={Percent} label="Percentage" href="/tools/calc/percentage" />
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={clear} className="gap-2" title="Clear">
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
-            <Button variant="outline" onClick={copyExpr} className="gap-2" title="Copy expression">
-              <Copy className="h-4 w-4" /> Copy Expr
-            </Button>
-            <Button
-              variant="outline"
-              onClick={copyAns}
-              className="gap-2"
-              title="Copy result/preview"
-            >
-              <Copy className="h-4 w-4" /> Copy Result
-            </Button>
-            <Button
-              variant="outline"
-              onClick={pasteClipboard}
-              className="gap-2"
-              title="Paste from clipboard"
-            >
-              <ClipboardPaste className="h-4 w-4" /> Paste
-            </Button>
+            <ActionButton size="sm" icon={Delete} label="Back" onClick={back} />
+            <ActionButton
+              size="sm"
+              icon={Calculator}
+              variant="default"
+              label="Equals"
+              onClick={equal}
+              aria-label="Equals"
+            />
           </div>
-        </GlassCard>
+        </div>
+      </GlassCard>
 
+      <Separator className="my-4" />
+
+      <MotionGlassCard>
         {/* Calculator */}
         <div className="grid grid-cols-4 gap-3">
-          {/* Display (spans all columns) */}
+          {/* Display spans all columns */}
           <Display value={expr || "0"} hint={ans ? `= ${ans}` : ""} />
 
           {/* Top row */}
@@ -191,9 +183,9 @@ export default function StandardCalculatorPage() {
 
           {/* Digits & ops grid */}
           {["7", "8", "9", "*", "4", "5", "6", "-", "1", "2", "3", "+", "0", ".", "(", ")"].map(
-            (t, i) => (
+            (t) => (
               <CalcButton
-                key={i}
+                key={t}
                 onClick={() => push(t)}
                 variantIntent={["*", "-", "+"].includes(t) ? "accent" : "ghost"}
                 title={t === "*" ? "Multiply" : t}
@@ -226,6 +218,6 @@ export default function StandardCalculatorPage() {
           </CalcButton>
         </div>
       </MotionGlassCard>
-    </div>
+    </>
   );
 }
