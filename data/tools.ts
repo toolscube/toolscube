@@ -287,12 +287,12 @@ export const ToolsData = [
         description: "Preview and convert Markdown to HTML",
         popular: false,
       },
-      // {
-      //   title: 'Regex Library',
-      //   url: '/tools/dev/regex-library',
-      //   description: 'Collection of useful regular expressions',
-      //   popular: false,
-      // },
+      {
+        title: "Regex Library",
+        url: "/tools/dev/regex-library",
+        description: "Collection of useful regular expressions",
+        popular: false,
+      },
       {
         title: "API Request Tester",
         url: "/tools/dev/api-tester",
