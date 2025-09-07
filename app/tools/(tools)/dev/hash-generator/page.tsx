@@ -32,12 +32,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 
 // ---- Helpers: bytes / encoders ----
 const enc = new TextEncoder();
-const dec = new TextDecoder();
+// const dec = new TextDecoder();
 
 function toBytes(s: string) {
   return enc.encode(s);

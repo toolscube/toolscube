@@ -3,7 +3,6 @@
 import {
   AlignLeft,
   Braces,
-  ClipboardPaste,
   Download,
   FileJson,
   Hash,
@@ -21,6 +20,7 @@ import {
   ActionButton,
   CopyButton,
   ExportTextButton,
+  PasteButton,
   ResetButton,
 } from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
@@ -155,26 +155,6 @@ export default function JsonFormatterClient() {
       setError(msg);
       setOutput("");
     }
-  }
-
-  async function pasteIn() {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (!text) return;
-      if (autoOnPaste) {
-        try {
-          const json = parseSafe(text);
-          const pretty = JSON.stringify(json, null, getIndentValue());
-          setInput(pretty);
-          setError("");
-          setOutput("");
-          return;
-        } catch {
-          // fallthrough to raw paste
-        }
-      }
-      setInput(text);
-    } catch {}
   }
 
   function clearAll() {
@@ -339,7 +319,37 @@ export default function JsonFormatterClient() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Input</CardTitle>
               <div className="flex items-center gap-2">
-                <ActionButton size="sm" icon={ClipboardPaste} label="Paste" onClick={pasteIn} />
+                <PasteButton
+                  size="sm"
+                  mode="replace"
+                  smartNewline={false}
+                  getExisting={() => input}
+                  setValue={(next) => {
+                    if (autoOnPaste) {
+                      try {
+                        const json = parseSafe(next);
+                        const pretty = JSON.stringify(json, null, getIndentValue());
+                        setInput(pretty);
+                        setError("");
+                        setOutput("");
+                        return;
+                      } catch {}
+                    }
+                    setInput(next);
+                  }}
+                  onText={(raw) => {
+                    if (!autoOnPaste) return;
+                    try {
+                      const json = parseSafe(raw);
+                      const pretty = JSON.stringify(json, null, getIndentValue());
+                      setInput(pretty);
+                      setError("");
+                      setOutput("");
+                    } catch {
+                      setInput(raw);
+                    }
+                  }}
+                />
                 <ActionButton
                   size="sm"
                   icon={Trash2}

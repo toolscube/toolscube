@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Copy, Download, Hash, Info, RefreshCw, Settings2 } from "lucide-react";
+import { Calculator, Download, Hash, Info, RefreshCw, Settings2 } from "lucide-react";
 import React from "react";
 import {
   ActionButton,
@@ -14,17 +14,21 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Base converter core (2–36), supports sign, fraction, underscores/spaces
-   Integer part uses BigInt, fractional part as rational (num/den) with
-   configurable precision, exact while converting.
-   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Types */
 
 type ResultRow = { base: number; label: string; value: string };
 
+/* BigInt-safe constants (no 1n) */
+const B0 = BigInt(0);
+const B1 = BigInt(1);
+type Sign = bigint;
+
+/* Conversion Utilities */
 const DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz";
 const DIGIT_VAL: Record<string, number> = Object.fromEntries(
   Array.from(DIGITS).map((c, i) => [c, i]),
@@ -63,16 +67,16 @@ function sanitize(body: string) {
 function parseToRational(
   input: string,
   base: number,
-): { sign: 1n | -1n; int: bigint; fracNum: bigint; fracDen: bigint } {
+): { sign: Sign; int: bigint; fracNum: bigint; fracDen: bigint } {
   const s = sanitize(input);
-  const sign: 1n | -1n = s.startsWith("-") ? -1n : 1n;
+  const sign: Sign = s.startsWith("-") ? -B1 : B1;
   const clean = s.startsWith("-") || s.startsWith("+") ? s.slice(1) : s;
 
   const [intStr, fracStr = ""] = clean.split(".");
   const B = BigInt(base);
 
   // integer
-  let int = 0n;
+  let int = B0;
   for (const ch of intStr || "0") {
     const v = charToVal(ch);
     if (v < 0 || v >= base) throw new Error(`Invalid digit "${ch}" for base ${base}.`);
@@ -80,8 +84,8 @@ function parseToRational(
   }
 
   // fraction → numerator/denominator over B^n
-  let num = 0n;
-  let den = 1n;
+  let num = B0;
+  let den = B1;
   if (fracStr.length) {
     den = B ** BigInt(fracStr.length);
     for (const ch of fracStr) {
@@ -105,7 +109,7 @@ function groupDigits(s: string, size: number, sep = " ") {
 }
 
 function toBaseString(
-  sign: 1n | -1n,
+  sign: Sign,
   int: bigint,
   fracNum: bigint,
   fracDen: bigint,
@@ -119,8 +123,8 @@ function toBaseString(
   // integer part
   let n = int;
   const d: string[] = [];
-  if (n === 0n) d.push("0");
-  while (n > 0n) {
+  if (n === B0) d.push("0");
+  while (n > B0) {
     d.push(toDigit(Number(n % T)));
     n = n / T;
   }
@@ -131,7 +135,7 @@ function toBaseString(
   // fractional part
   const frac: string[] = [];
   let num = fracNum;
-  for (let i = 0; i < precision && num !== 0n; i++) {
+  for (let i = 0; i < precision && num !== B0; i++) {
     num *= T;
     const q = num / fracDen;
     num %= fracDen;
@@ -139,7 +143,8 @@ function toBaseString(
   }
   const tail = frac.length ? `.${frac.join("")}` : "";
 
-  const signStr = sign < 0n && (int !== 0n || fracNum !== 0n) ? "-" : "";
+  const isNegative = sign < B0 && (int !== B0 || fracNum !== B0);
+  const signStr = isNegative ? "-" : "";
   const prefix =
     opt.showPrefix && (targetBase === 2 || targetBase === 8 || targetBase === 16)
       ? targetBase === 2
@@ -153,25 +158,25 @@ function toBaseString(
 }
 
 function toDecimalString(
-  sign: 1n | -1n,
+  sign: Sign,
   int: bigint,
   fracNum: bigint,
   fracDen: bigint,
   precision: number,
 ) {
   const intStr = int.toString();
-  if (fracNum === 0n || precision <= 0) return (sign < 0n ? "-" : "") + intStr;
+  if (fracNum === B0 || precision <= 0) return (sign < B0 ? "-" : "") + intStr;
 
   const digits: string[] = [];
   let num = fracNum;
-  for (let i = 0; i < precision && num !== 0n; i++) {
-    num *= 10n;
+  for (let i = 0; i < precision && num !== B0; i++) {
+    num *= BigInt(10);
     const q = num / fracDen;
     num %= fracDen;
     digits.push(q.toString());
   }
   while (digits.length && digits[digits.length - 1] === "0") digits.pop();
-  const signStr = sign < 0n && (int !== 0n || fracNum !== 0n) ? "-" : "";
+  const signStr = sign < B0 && (int !== B0 || fracNum !== B0) ? "-" : "";
   return digits.length ? `${signStr}${intStr}.${digits.join("")}` : `${signStr}${intStr}`;
 }
 
@@ -180,11 +185,7 @@ function detectBase(raw: string): number | undefined {
   return baseFromPrefix;
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Page
-   ─────────────────────────────────────────────────────────────────────────── */
-
-export default function BaseConverterPage() {
+export default function BaseConverterClient() {
   // Inputs (multi-output mode)
   const [raw, setRaw] = React.useState("");
   const [fromBase, setFromBase] = React.useState(10);
@@ -209,7 +210,6 @@ export default function BaseConverterPage() {
   const [qPrecision, setQPrecision] = React.useState(16);
 
   const [error, setError] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState<string | null>(null);
 
   // Main cards (Binary / Octal / Decimal / Hex / extra)
   const results = React.useMemo<ResultRow[]>(() => {
@@ -217,33 +217,34 @@ export default function BaseConverterPage() {
     if (!raw.trim()) return [];
 
     try {
-      const { sign, body, baseFromPrefix } = stripPrefix(raw);
+      const { sign: signTxt, body, baseFromPrefix } = stripPrefix(raw);
       const base = autoDetect && baseFromPrefix ? baseFromPrefix : fromBase;
       if (base < 2 || base > 36) throw new Error("Base must be between 2 and 36.");
 
-      const { int, fracNum, fracDen } = parseToRational(`${sign}${body}`, base);
+      // IMPORTANT: use the parsed sign from parseToRational
+      const { sign: sgn, int, fracNum, fracDen } = parseToRational(`${signTxt}${body}`, base);
       const opts = { uppercase, showPrefix, groupSize: grouping ? groupSize : 0 };
 
       const core: ResultRow[] = [
         {
           base: 2,
           label: "Binary",
-          value: toBaseString(sign, int, fracNum, fracDen, 2, precision, opts),
+          value: toBaseString(sgn, int, fracNum, fracDen, 2, precision, opts),
         },
         {
           base: 8,
           label: "Octal",
-          value: toBaseString(sign, int, fracNum, fracDen, 8, precision, opts),
+          value: toBaseString(sgn, int, fracNum, fracDen, 8, precision, opts),
         },
         {
           base: 10,
           label: "Decimal",
-          value: toDecimalString(sign, int, fracNum, fracDen, precision),
+          value: toDecimalString(sgn, int, fracNum, fracDen, precision),
         },
         {
           base: 16,
           label: "Hex",
-          value: toBaseString(sign, int, fracNum, fracDen, 16, precision, opts),
+          value: toBaseString(sgn, int, fracNum, fracDen, 16, precision, opts),
         },
       ];
 
@@ -253,14 +254,14 @@ export default function BaseConverterPage() {
               {
                 base: customBase,
                 label: `Base ${customBase}`,
-                value: toBaseString(sign, int, fracNum, fracDen, customBase, precision, opts),
+                value: toBaseString(sgn, int, fracNum, fracDen, customBase, precision, opts),
               } as ResultRow,
             ]
           : [];
 
       return [...core, ...extra];
-    } catch (e: any) {
-      setError(e?.message || "Conversion failed.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Conversion failed.");
       return [];
     }
   }, [
@@ -279,11 +280,11 @@ export default function BaseConverterPage() {
   const quickOut = React.useMemo(() => {
     if (!qValue.trim()) return "";
     try {
-      const { sign, body, baseFromPrefix } = stripPrefix(qValue);
+      const { sign: signTxt, body, baseFromPrefix } = stripPrefix(qValue);
       const base = baseFromPrefix ?? qFrom;
       if (base < 2 || base > 36 || qTo < 2 || qTo > 36) return "";
-      const { int, fracNum, fracDen } = parseToRational(`${sign}${body}`, base);
-      return toBaseString(sign, int, fracNum, fracDen, qTo, qPrecision, {
+      const { sign: sgn, int, fracNum, fracDen } = parseToRational(`${signTxt}${body}`, base);
+      return toBaseString(sgn, int, fracNum, fracDen, qTo, qPrecision, {
         uppercase: qUpper,
         showPrefix: qShowPrefix,
         groupSize: 0,
@@ -308,12 +309,6 @@ export default function BaseConverterPage() {
     [raw, fromBase, autoDetect, precision, uppercase, showPrefix, grouping, groupSize, results],
   );
 
-  const copyOne = async (s: string) => {
-    await navigator.clipboard.writeText(s);
-    setCopied(s);
-    setTimeout(() => setCopied(null), 900);
-  };
-
   const resetAll = () => {
     setRaw("");
     setFromBase(10);
@@ -335,10 +330,8 @@ export default function BaseConverterPage() {
     setError(null);
   };
 
-  /* ─────────────────────────────── render ─────────────────────────────── */
-
   return (
-    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+    <>
       <ToolPageHeader
         title="Number Base Converter"
         description="Convert between binary, octal, decimal, hex — plus any base 2–36. Fractions supported."
@@ -350,7 +343,6 @@ export default function BaseConverterPage() {
               label="Normalize"
               onClick={() => setRaw((v) => v.trim())}
             />
-
             <ExportTextButton
               icon={Download}
               label="Export JSON"
@@ -363,299 +355,309 @@ export default function BaseConverterPage() {
       />
 
       {/* Quick “From → To” converter */}
-      <GlassCard className="shadow-sm mb-6">
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <InputField
-              id="qvalue"
-              label="Value"
-              placeholder="Examples: 10 (dec), 0x10 (hex), 1111_1111 (bin), 7.2"
-              value={qValue}
-              onChange={(e) => setQValue(e.target.value)}
-            />
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <SelectField
-                id="qfrom"
-                label="From base"
-                value={String(qFrom)}
-                onValueChange={(v) => setQFrom(Number(v))}
-                options={Array.from({ length: 35 }, (_, i) => ({
-                  value: String(i + 2),
-                  label: String(i + 2),
-                }))}
-                // helper="Explicitly set if no 0b/0o/0x prefix."
-              />
-              <SelectField
-                id="qto"
-                label="To base"
-                value={String(qTo)}
-                onValueChange={(v) => setQTo(Number(v))}
-                options={Array.from({ length: 35 }, (_, i) => ({
-                  value: String(i + 2),
-                  label: String(i + 2),
-                }))}
-              />
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <SwitchRow
-                label="Uppercase letters (A–F)"
-                checked={qUpper}
-                onCheckedChange={setQUpper}
-              />
-              <SwitchRow
-                label="Show prefixes (0b/0o/0x)"
-                checked={qShowPrefix}
-                onCheckedChange={setQShowPrefix}
-              />
-            </div>
-
-            <div className="mt-2 grid grid-cols-2 gap-3">
+      <GlassCard>
+        <CardHeader>
+          <CardTitle>Quick Convert</CardTitle>
+          <CardDescription>Instantly convert one number between any two bases.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
               <InputField
-                id="qprec"
-                type="number"
-                label="Fraction precision (digits)"
-                min={0}
-                max={64}
-                value={String(qPrecision)}
-                onChange={(e) => setQPrecision(clamp(Number(e.target.value) || 0, 0, 64))}
+                id="qvalue"
+                label="Value"
+                placeholder="Examples: 10 (dec), 0x10 (hex), 1111_1111 (bin), 7.2"
+                value={qValue}
+                onChange={(e) => setQValue(e.target.value)}
               />
-              <div className="flex items-end">
-                <CopyButton
-                  icon={Copy}
-                  onClick={() => quickOut && copyOne(quickOut)}
-                  disabled={!quickOut}
-                >
-                  Copy Result
-                </CopyButton>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <SelectField
+                  id="qfrom"
+                  label="From base"
+                  value={String(qFrom)}
+                  onValueChange={(v) => setQFrom(Number(v))}
+                  options={Array.from({ length: 35 }, (_, i) => ({
+                    value: String(i + 2),
+                    label: String(i + 2),
+                  }))}
+                />
+                <SelectField
+                  id="qto"
+                  label="To base"
+                  value={String(qTo)}
+                  onValueChange={(v) => setQTo(Number(v))}
+                  options={Array.from({ length: 35 }, (_, i) => ({
+                    value: String(i + 2),
+                    label: String(i + 2),
+                  }))}
+                />
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <SwitchRow
+                  label="Uppercase letters (A–F)"
+                  checked={qUpper}
+                  onCheckedChange={setQUpper}
+                />
+                <SwitchRow
+                  label="Show prefixes (0b/0o/0x)"
+                  checked={qShowPrefix}
+                  onCheckedChange={setQShowPrefix}
+                />
+              </div>
+
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <InputField
+                  id="qprec"
+                  type="number"
+                  label="Fraction precision (digits)"
+                  min={0}
+                  max={64}
+                  value={String(qPrecision)}
+                  onChange={(e) => setQPrecision(clamp(Number(e.target.value) || 0, 0, 64))}
+                />
+                <div className="flex items-end">
+                  <CopyButton getText={() => quickOut} />
+                </div>
+              </div>
+            </div>
+
+            {/* Output card */}
+            <div className="rounded-lg border p-3">
+              <div className="mb-2 text-sm font-medium">Converted</div>
+              <div className="rounded-md border bg-muted/30 p-2">
+                <code className="block max-h-[140px] overflow-auto break-words font-mono text-xs">
+                  {quickOut || "—"}
+                </code>
+              </div>
+
+              {/* Presets */}
+              <div className="mt-3">
+                <div className="text-xs text-muted-foreground mb-1">Examples</div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setQValue("10");
+                      setQFrom(10);
+                      setQTo(16);
+                      setQUpper(true);
+                      setQShowPrefix(false);
+                    }}
+                  >
+                    10 (dec) → hex = A
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setQValue("10");
+                      setQFrom(16);
+                      setQTo(10);
+                      setQUpper(true);
+                      setQShowPrefix(true);
+                    }}
+                  >
+                    0x10 → dec = 16
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setQValue("77");
+                      setQFrom(8);
+                      setQTo(2);
+                    }}
+                  >
+                    77 (oct) → bin
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setQValue("z");
+                      setQFrom(36);
+                      setQTo(2);
+                    }}
+                  >
+                    z (base36) → bin
+                  </Badge>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Output card */}
-          <div className="rounded-lg border p-3">
-            <div className="mb-2 text-sm font-medium">Converted</div>
-            <div className="rounded-md border bg-muted/30 p-2">
-              <code className="block max-h-[140px] overflow-auto break-words font-mono text-xs">
-                {quickOut || "—"}
-              </code>
-            </div>
-
-            {/* Presets */}
-            <div className="mt-3">
-              <div className="text-xs text-muted-foreground mb-1">Examples</div>
-              <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setQValue("10");
-                    setQFrom(10);
-                    setQTo(16);
-                    setQUpper(true);
-                    setQShowPrefix(false);
-                  }}
-                >
-                  10 (dec) → hex = A
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setQValue("10");
-                    setQFrom(16);
-                    setQTo(10);
-                    setQUpper(true);
-                    setQShowPrefix(true);
-                  }}
-                >
-                  0x10 → dec = 16
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setQValue("77");
-                    setQFrom(8);
-                    setQTo(2);
-                  }}
-                >
-                  77 (oct) → bin
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setQValue("z");
-                    setQFrom(36);
-                    setQTo(2);
-                  }}
-                >
-                  z (base36) → bin
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
+        </CardContent>
       </GlassCard>
+
+      <Separator className="my-4" />
 
       {/* Multi-output (cards) */}
       <GlassCard>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* Input & options */}
-          <div className="lg:col-span-2">
-            <TextareaField
-              id="input"
-              label="Input number"
-              placeholder="Examples: 255, 0xff, 0b1111_1111, -101.101, 7.2"
-              value={raw}
-              onChange={(e) => setRaw(e.target.value)}
-              autoResize
-              className="min-h-[120px]"
-            />
-            <div className="mt-2 grid grid-cols-2 gap-3">
+        <CardHeader>
+          <CardTitle>Multi-Output</CardTitle>
+          <CardDescription>
+            Enter one number and view it in common bases and one extra base.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {/* Input & options */}
+            <div className="lg:col-span-2">
+              <TextareaField
+                id="input"
+                label="Input number"
+                placeholder="Examples: 255, 0xff, 0b1111_1111, -101.101, 7.2"
+                value={raw}
+                onChange={(e) => setRaw(e.target.value)}
+                autoResize
+                className="min-h-[120px]"
+              />
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <SelectField
+                  id="from"
+                  label="From base"
+                  value={String(fromBase)}
+                  onValueChange={(v) => setFromBase(Number(v))}
+                  options={Array.from({ length: 35 }, (_, i) => ({
+                    value: String(i + 2),
+                    label: String(i + 2),
+                  }))}
+                  disabled={autoDetect && !!detectBase(raw)}
+                />
+                <SwitchRow
+                  label="Auto-detect base from prefix (0b / 0o / 0x)"
+                  checked={autoDetect}
+                  onCheckedChange={setAutoDetect}
+                />
+              </div>
+
+              {error && (
+                <div className="mt-3 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-destructive">
+                  <Info className="mt-0.5 h-4 w-4" />
+                  <div className="text-sm">{error}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Output settings */}
+            <div className="rounded-lg border p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <Settings2 className="h-4 w-4" />
+                <div className="text-sm font-medium">Output options</div>
+              </div>
+              <div className="grid gap-2">
+                <InputField
+                  id="precision"
+                  type="number"
+                  label="Fraction precision (digits)"
+                  min={0}
+                  max={64}
+                  value={String(precision)}
+                  onChange={(e) => setPrecision(clamp(Number(e.target.value) || 0, 0, 64))}
+                />
+                <SwitchRow
+                  label="Uppercase letters (A–F)"
+                  checked={uppercase}
+                  onCheckedChange={setUppercase}
+                />
+                <SwitchRow
+                  label="Show prefixes (0b / 0o / 0x)"
+                  checked={showPrefix}
+                  onCheckedChange={setShowPrefix}
+                />
+                <SwitchRow
+                  label="Group integer digits"
+                  checked={grouping}
+                  onCheckedChange={setGrouping}
+                />
+                <InputField
+                  id="groupSize"
+                  type="number"
+                  label="Group size"
+                  min={2}
+                  max={8}
+                  value={String(groupSize)}
+                  onChange={(e) => setGroupSize(clamp(Number(e.target.value) || 0, 0, 8))}
+                  disabled={!grouping}
+                />
+              </div>
+
+              <Separator className="my-3" />
+
               <SelectField
-                id="from"
-                label="From base"
-                value={String(fromBase)}
-                onValueChange={(v) => setFromBase(Number(v))}
+                id="extra"
+                label="Extra target base"
+                value={String(customBase)}
+                onValueChange={(v) => setCustomBase(Number(v))}
                 options={Array.from({ length: 35 }, (_, i) => ({
                   value: String(i + 2),
                   label: String(i + 2),
                 }))}
-                disabled={autoDetect && !!detectBase(raw)}
               />
-              <SwitchRow
-                label="Auto-detect base from prefix (0b / 0o / 0x)"
-                checked={autoDetect}
-                onCheckedChange={setAutoDetect}
-              />
-            </div>
-
-            {error && (
-              <div className="mt-3 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-destructive">
-                <Info className="mt-0.5 h-4 w-4" />
-                <div className="text-sm">{error}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Standard cards show bases 2/8/10/16; add any one extra base here.
               </div>
-            )}
-          </div>
-
-          {/* Output settings */}
-          <div className="rounded-lg border p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <Settings2 className="h-4 w-4" />
-              <div className="text-sm font-medium">Output options</div>
-            </div>
-            <div className="grid gap-2">
-              <InputField
-                id="precision"
-                type="number"
-                label="Fraction precision (digits)"
-                min={0}
-                max={64}
-                value={String(precision)}
-                onChange={(e) => setPrecision(clamp(Number(e.target.value) || 0, 0, 64))}
-              />
-              <SwitchRow
-                label="Uppercase letters (A–F)"
-                checked={uppercase}
-                onCheckedChange={setUppercase}
-              />
-              <SwitchRow
-                label="Show prefixes (0b / 0o / 0x)"
-                checked={showPrefix}
-                onCheckedChange={setShowPrefix}
-              />
-              <SwitchRow
-                label="Group integer digits"
-                checked={grouping}
-                onCheckedChange={setGrouping}
-              />
-              <InputField
-                id="groupSize"
-                type="number"
-                label="Group size"
-                min={2}
-                max={8}
-                value={String(groupSize)}
-                onChange={(e) => setGroupSize(clamp(Number(e.target.value) || 0, 0, 8))}
-                disabled={!grouping}
-              />
-            </div>
-
-            <Separator className="my-3" />
-
-            <SelectField
-              id="extra"
-              label="Extra target base"
-              value={String(customBase)}
-              onValueChange={(v) => setCustomBase(Number(v))}
-              options={Array.from({ length: 35 }, (_, i) => ({
-                value: String(i + 2),
-                label: String(i + 2),
-              }))}
-            />
-            <div className="text-xs text-muted-foreground mt-1">
-              Standard cards show bases 2/8/10/16; add any one extra base here.
             </div>
           </div>
-        </div>
+        </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       {/* Results cards */}
       <GlassCard>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 p-3">
-          {results.length === 0 ? (
-            <div className="rounded-md border p-3 text-sm text-muted-foreground">
-              Enter a number above to see conversions. Tips:
-              <ul className="mt-1 list-disc pl-4">
-                <li>
-                  Use <code>0b</code>, <code>0o</code>, <code>0x</code> to auto-detect base.
-                </li>
-                <li>
-                  Underscores/spaces are ignored: <code>1111_0000</code>.
-                </li>
-                <li>
-                  Fractions work: <code>101.101</code>, <code>0xA.F</code>.
-                </li>
-              </ul>
-            </div>
-          ) : (
-            results.map((r) => (
-              <ResultCard
-                key={r.label}
-                label={r.label}
-                base={r.base}
-                value={r.value}
-                onCopy={() => copyOne(r.value)}
-                copied={copied === r.value}
-              />
-            ))
-          )}
-        </div>
+        <CardHeader>
+          <CardTitle>Results</CardTitle>
+          <CardDescription>Copy any representation with one click.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 p-1">
+            {results.length === 0 ? (
+              <div className="rounded-md border p-3 text-sm text-muted-foreground col-span-full">
+                Enter a number above to see conversions. Tips:
+                <ul className="mt-1 list-disc pl-4">
+                  <li>
+                    Use <code>0b</code>, <code>0o</code>, <code>0x</code> to auto-detect base.
+                  </li>
+                  <li>
+                    Underscores/spaces are ignored: <code>1111_0000</code>.
+                  </li>
+                  <li>
+                    Fractions work: <code>101.101</code>, <code>0xA.F</code>.
+                  </li>
+                </ul>
+              </div>
+            ) : (
+              results.map((r) => (
+                <ResultCard
+                  key={r.label}
+                  label={r.label}
+                  base={r.base}
+                  value={r.value}
+                  onCopyText={r.value}
+                />
+              ))
+            )}
+          </div>
+        </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Small UI piece
-   ─────────────────────────────────────────────────────────────────────────── */
+/* Small UI piece */
 
 function ResultCard({
   label,
   base,
   value,
-  onCopy,
-  copied,
+  onCopyText,
 }: {
   label: string;
   base: number;
   value: string;
-  onCopy: () => void;
-  copied: boolean;
+  onCopyText: string;
 }) {
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3">
@@ -667,9 +669,7 @@ function ResultCard({
             base {base}
           </Badge>
         </div>
-        <CopyButton icon={Copy} active={copied} onClick={onCopy}>
-          Copy
-        </CopyButton>
+        <CopyButton size="sm" getText={() => onCopyText} />
       </div>
       <div className="rounded-md border bg-muted/30 p-2">
         <code className="block max-h-[140px] overflow-auto break-words font-mono text-xs">

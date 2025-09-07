@@ -3,7 +3,6 @@
 import {
   Check,
   ClipboardCopy,
-  ClipboardPaste,
   Clock,
   Download as DownloadIcon,
   Eye,
@@ -11,8 +10,6 @@ import {
   FileJson,
   FileKey2,
   KeyRound,
-  Link2,
-  RefreshCw,
   ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
@@ -21,6 +18,7 @@ import {
   ActionButton,
   CopyButton,
   ExportTextButton,
+  PasteButton,
   ResetButton,
 } from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
@@ -31,6 +29,7 @@ import ToolPageHeader from "@/components/shared/tool-page-header";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -236,20 +235,9 @@ export default function JwtDecodeClient() {
       <ToolPageHeader
         icon={FileJson}
         title="JWT Decoder & Verifier"
-        description="Decode header/payload, check expiry, and verify HS256/RS256 tokens — all in your browser."
+        description="Decode and inspect JWT tokens safely."
         actions={
           <>
-            <ActionButton
-              icon={Link2}
-              label="Load from URL"
-              onClick={() => {
-                const t = new URLSearchParams(window.location.search).get("token");
-                if (t) {
-                  setToken(t);
-                  decodeToken(t);
-                }
-              }}
-            />
             <ExportTextButton
               filename="jwt-token.txt"
               getText={() => token}
@@ -275,6 +263,7 @@ export default function JwtDecodeClient() {
             <Badge>kid: {header?.kid ?? "—"}</Badge>
           </div>
           <SwitchRow
+            disabled
             label="Auto-decode on paste"
             checked={autoOnPaste}
             onCheckedChange={(v) => setAutoOnPaste(Boolean(v))}
@@ -285,58 +274,42 @@ export default function JwtDecodeClient() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left: Token input */}
         <GlassCard>
-          <div className="p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-semibold">Token</span>
-              <div className="flex items-center gap-2">
-                <ActionButton
-                  variant="ghost"
-                  size="sm"
-                  icon={Eye}
-                  label="Select all"
-                  onClick={() => tokenRef.current?.select()}
-                />
-                <ActionButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => copy(token, "token")}
-                  label={copied === "token" ? "Copied" : "Copy"}
-                  icon={copied === "token" ? Check : ClipboardCopy}
-                />
-                <ActionButton
-                  variant="ghost"
-                  size="sm"
-                  icon={ClipboardPaste}
-                  label="Paste"
-                  onClick={async () => {
-                    try {
-                      const t = await navigator.clipboard.readText();
-                      if (t) {
-                        const cand = extractToken(t) || t;
-                        setToken(cand);
-                        decodeToken(cand);
-                      }
-                    } catch {}
-                  }}
-                />
-              </div>
-            </div>
+          <CardHeader className="flex items-center justify-between">
+            <span className="font-semibold">Token</span>
 
+            <div className="flex gap-4">
+              <Badge variant="secondary">
+                parts: {token.split(".").length >= 2 ? (signatureB64u ? 3 : 2) : 0}
+              </Badge>
+              <PasteButton
+                size="sm"
+                mode="replace"
+                smartNewline={false}
+                getExisting={() => token}
+                setValue={(next) => {
+                  const cand = extractToken(next) || next;
+                  setToken(cand);
+                  decodeToken(cand);
+                }}
+                onText={(text) => {
+                  if (!autoOnPaste) return;
+                  const cand = extractToken(text) || text;
+                  setToken(cand);
+                  decodeToken(cand);
+                }}
+              />
+            </div>
+          </CardHeader>
+
+          <CardContent>
             <TextareaField
               ref={tokenRef}
               value={token}
               onValueChange={setToken}
               onPaste={onPaste}
               placeholder="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM..."
-              textareaClassName="min-h-[180px] font-mono"
+              textareaClassName="min-h-[200px] font-mono"
             />
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <ActionButton icon={RefreshCw} label="Decode" onClick={() => decodeToken()} />
-              <Badge variant="secondary">
-                parts: {token.split(".").length >= 2 ? (signatureB64u ? 3 : 2) : 0}
-              </Badge>
-            </div>
 
             {error && (
               <Alert variant="destructive" className="mt-3">
@@ -346,12 +319,12 @@ export default function JwtDecodeClient() {
                 </AlertDescription>
               </Alert>
             )}
-          </div>
+          </CardContent>
         </GlassCard>
 
         {/* Right: Summary / Header / Payload */}
         <GlassCard>
-          <div className="p-4">
+          <CardContent>
             {/* Quick status stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
               <Stat
@@ -481,72 +454,78 @@ export default function JwtDecodeClient() {
                 />
               </TabsContent>
             </Tabs>
-          </div>
+          </CardContent>
         </GlassCard>
       </div>
 
+      <Separator className="my-4" />
+
       {/* Verify */}
       <GlassCard>
-        <div className="p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileKey2 className="h-5 w-5" />
-              <h2 className="text-base font-semibold">Verify signature</h2>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              Supports HS256 (HMAC) & RS256 (RSA)
-            </span>
-          </div>
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <FileKey2 className="h-5 w-5" />
+            <h2 className="text-base font-semibold">Verify signature</h2>
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
+            Supports HS256 (HMAC) & RS256 (RSA)
+          </CardDescription>
+        </CardHeader>
 
+        <CardContent>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* HS256 */}
-            <GlassCard className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+            <GlassCard>
+              <CardHeader className="flex items-center gap-2">
                 <KeyRound className="h-4 w-4" />
                 <div className="font-medium">HS256 (HMAC secret)</div>
-              </div>
-              <div className="grid gap-2">
-                <InputField
-                  type={showSecret ? "text" : "password"}
-                  value={secret}
-                  onChange={(e) => setSecret(e.target.value)}
-                  placeholder="Your HMAC secret"
-                />
-                <div className="flex gap-2">
-                  <ActionButton
-                    onClick={verify}
-                    disabled={!token || !header || header?.alg !== "HS256" || verifying}
-                    label={verifying ? "Verifying…" : "Verify HS256"}
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2">
+                  <InputField
+                    type={showSecret ? "text" : "password"}
+                    value={secret}
+                    onChange={(e) => setSecret(e.target.value)}
+                    placeholder="Your HMAC secret"
                   />
-                  <ActionButton
-                    variant="ghost"
-                    onClick={() => setShowSecret((s) => !s)}
-                    label={showSecret ? "Hide" : "Show"}
-                    icon={showSecret ? EyeOff : Eye}
-                  />
+                  <div className="flex gap-2">
+                    <ActionButton
+                      onClick={verify}
+                      disabled={!token || !header || header?.alg !== "HS256" || verifying}
+                      label={verifying ? "Verifying…" : "Verify HS256"}
+                    />
+                    <ActionButton
+                      variant="ghost"
+                      onClick={() => setShowSecret((s) => !s)}
+                      label={showSecret ? "Hide" : "Show"}
+                      icon={showSecret ? EyeOff : Eye}
+                    />
+                  </div>
                 </div>
-              </div>
+              </CardContent>
             </GlassCard>
 
             {/* RS256 */}
-            <GlassCard className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+            <GlassCard>
+              <CardHeader className="flex items-center gap-2">
                 <FileKey2 className="h-4 w-4" />
                 <div className="font-medium">RS256 (Public key PEM)</div>
-              </div>
-              <TextareaField
-                value={publicKeyPem}
-                onValueChange={setPublicKeyPem}
-                placeholder={`-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...\n-----END PUBLIC KEY-----`}
-                textareaClassName="min-h-[120px] font-mono"
-              />
-              <div className="flex gap-2 mt-2">
-                <ActionButton
-                  onClick={verify}
-                  disabled={!token || !header || header?.alg !== "RS256" || verifying}
-                  label={verifying ? "Verifying…" : "Verify RS256"}
+              </CardHeader>
+              <CardContent>
+                <TextareaField
+                  value={publicKeyPem}
+                  onValueChange={setPublicKeyPem}
+                  placeholder={`-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...\n-----END PUBLIC KEY-----`}
+                  textareaClassName="min-h-[120px] font-mono"
                 />
-              </div>
+                <div className="flex gap-2 mt-2">
+                  <ActionButton
+                    onClick={verify}
+                    disabled={!token || !header || header?.alg !== "RS256" || verifying}
+                    label={verifying ? "Verifying…" : "Verify RS256"}
+                  />
+                </div>
+              </CardContent>
             </GlassCard>
           </div>
 
@@ -569,13 +548,13 @@ export default function JwtDecodeClient() {
               )}
             </div>
           )}
-        </div>
+        </CardContent>
       </GlassCard>
     </TooltipProvider>
   );
 }
 
-/* ------------------------- Helpers ------------------------- */
+/* Helpers */
 function base64urlDecodeToString(b64u: string): string {
   return new TextDecoder().decode(base64urlToUint8Array(b64u));
 }
