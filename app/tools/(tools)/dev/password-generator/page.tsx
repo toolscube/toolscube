@@ -1,170 +1,327 @@
 "use client";
 
-import { Check, Copy, Key, RotateCcw } from "lucide-react";
-import React from "react";
-import { Button } from "@/components/ui/button";
+import { Download, Key, RotateCcw, ShieldAlert, ShieldCheck } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import Stat from "@/components/shared/stat";
+// Shared components
+import ToolPageHeader from "@/components/shared/tool-page-header";
+
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
-function generatePassword(
-  length: number,
-  opts: { upper: boolean; lower: boolean; numbers: boolean; symbols: boolean },
-): string {
-  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const lower = "abcdefghijklmnopqrstuvwxyz";
-  const numbers = "0123456789";
-  const symbols = "!@#$%^&*()-_=+[]{};:,.<>/?";
+/*
+  Password Generator — Tools Hub
+  Path: app/tools/(tools)/dev/password-generator/page.tsx
+*/
+
+type GenFlags = {
+  upper: boolean;
+  lower: boolean;
+  numbers: boolean;
+  symbols: boolean;
+  excludeAmbiguous: boolean;
+  requireEachSet: boolean;
+};
+
+const DEFAULT_SYMBOLS = `!@#$%^&*()-_=+[]{};:,.<>/?`;
+const AMBIGUOUS = "0OoIlI|`'\"{}[]()<>"; // characters users often avoid
+
+function uniqueChars(s: string): string {
+  return Array.from(new Set(s.split(""))).join("");
+}
+
+function buildCharset(flags: GenFlags, customSymbols: string): string {
+  const U = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const L = "abcdefghijklmnopqrstuvwxyz";
+  const N = "0123456789";
+  const S = customSymbols || DEFAULT_SYMBOLS;
 
   let chars = "";
-  if (opts.upper) chars += upper;
-  if (opts.lower) chars += lower;
-  if (opts.numbers) chars += numbers;
-  if (opts.symbols) chars += symbols;
-  if (!chars) chars = lower;
+  if (flags.upper) chars += U;
+  if (flags.lower) chars += L;
+  if (flags.numbers) chars += N;
+  if (flags.symbols) chars += S;
+  if (!chars) chars = L; // fallback
 
-  let pwd = "";
-  const array = new Uint32Array(length);
-  crypto.getRandomValues(array);
-  for (let i = 0; i < length; i++) {
-    pwd += chars[array[i] % chars.length];
+  if (flags.excludeAmbiguous) {
+    const amb = new Set(AMBIGUOUS.split(""));
+    chars = chars
+      .split("")
+      .filter((c) => !amb.has(c))
+      .join("");
   }
-  return pwd;
+
+  return uniqueChars(chars);
+}
+
+// Rejection-sampling to avoid modulo bias
+function randInt(maxExclusive: number): number {
+  if (maxExclusive <= 0) return 0;
+  const maxUint = 0xffffffff; // 2^32 - 1
+  const limit = Math.floor((maxUint + 1) / maxExclusive) * maxExclusive;
+  const buf = new Uint32Array(1);
+  while (true) {
+    crypto.getRandomValues(buf);
+    const x = buf[0];
+    if (x < limit) return x % maxExclusive;
+  }
+}
+
+function shuffleInPlace<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pick(charset: string): string {
+  return charset.charAt(randInt(charset.length));
+}
+
+function ensureAtLeastOneFromEach(
+  length: number,
+  flags: GenFlags,
+  charset: string,
+  customSymbols: string,
+): string {
+  const req: string[] = [];
+  if (flags.upper) req.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+  if (flags.lower) req.push("abcdefghijklmnopqrstuvwxyz");
+  if (flags.numbers) req.push("0123456789");
+  if (flags.symbols) req.push(customSymbols || DEFAULT_SYMBOLS);
+
+  const out: string[] = [];
+  if (flags.requireEachSet) {
+    // Guarantee one from each selected set
+    for (const set of req) {
+      const setFiltered = charset
+        .split("")
+        .filter((c) => set.includes(c))
+        .join("");
+      if (setFiltered.length > 0) out.push(pick(setFiltered));
+    }
+  }
+  // Fill the rest
+  while (out.length < length) out.push(pick(charset));
+  // Shuffle so the guaranteed characters don't end up at the front
+  return shuffleInPlace(out).join("");
+}
+
+function entropyBits(length: number, charsetSize: number): number {
+  return length * Math.log2(Math.max(1, charsetSize));
+}
+
+function strengthLabel(bits: number): { label: string; tone: "ok" | "warn" | "good" } {
+  if (bits < 60) return { label: "Weak", tone: "warn" };
+  if (bits < 80) return { label: "Okay", tone: "ok" };
+  if (bits < 100) return { label: "Strong", tone: "good" };
+  return { label: "Very strong", tone: "good" };
 }
 
 export default function PasswordGeneratorPage() {
-  const [length, setLength] = React.useState(16);
-  const [upper, setUpper] = React.useState(true);
-  const [lower, setLower] = React.useState(true);
-  const [numbers, setNumbers] = React.useState(true);
-  const [symbols, setSymbols] = React.useState(false);
-  const [count, setCount] = React.useState(5);
+  const [length, setLength] = useState<number>(16);
+  const [count, setCount] = useState<number>(5);
+  const [flags, setFlags] = useState<GenFlags>({
+    upper: true,
+    lower: true,
+    numbers: true,
+    symbols: false,
+    excludeAmbiguous: true,
+    requireEachSet: true,
+  });
+  const [customSymbols, setCustomSymbols] = useState<string>(DEFAULT_SYMBOLS);
+  const [autoRun, setAutoRun] = useState<boolean>(true);
+  const [passwords, setPasswords] = useState<string[]>([]);
 
-  const [passwords, setPasswords] = React.useState<string[]>([]);
-  const [copied, setCopied] = React.useState<string | null>(null);
+  const charset = useMemo(() => buildCharset(flags, customSymbols), [flags, customSymbols]);
+  const bits = useMemo(() => entropyBits(length, charset.length), [length, charset.length]);
+  const strength = useMemo(() => strengthLabel(bits), [bits]);
 
-  function run() {
-    const list: string[] = [];
-    for (let i = 0; i < count; i++) {
-      list.push(generatePassword(length, { upper, lower, numbers, symbols }));
+  const run = useCallback(() => {
+    const out: string[] = [];
+    for (let i = 0; i < Math.max(1, count); i++) {
+      out.push(ensureAtLeastOneFromEach(Math.max(4, length), flags, charset, customSymbols));
     }
-    setPasswords(list);
-  }
+    setPasswords(out);
+  }, [count, length, flags, charset, customSymbols]);
+
+  useEffect(() => {
+    if (autoRun) run();
+  }, [autoRun, run]);
 
   function resetAll() {
     setLength(16);
-    setUpper(true);
-    setLower(true);
-    setNumbers(true);
-    setSymbols(false);
     setCount(5);
+    setFlags({
+      upper: true,
+      lower: true,
+      numbers: true,
+      symbols: false,
+      excludeAmbiguous: true,
+      requireEachSet: true,
+    });
+    setCustomSymbols(DEFAULT_SYMBOLS);
     setPasswords([]);
+    setAutoRun(true);
   }
 
-  async function copyOne(pwd: string) {
-    await navigator.clipboard.writeText(pwd);
-    setCopied(pwd);
-    setTimeout(() => setCopied(null), 1200);
-  }
+  const allText = useMemo(() => passwords.join("\n"), [passwords]);
 
   return (
-    <MotionGlassCard>
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Key className="h-6 w-6" /> Password Generator
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Generate secure random passwords with custom rules.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button onClick={run} className="gap-2">
-            <Key className="h-4 w-4" /> Generate
-          </Button>
-        </div>
-      </GlassCard>
-
-      <GlassCard className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">Settings</CardTitle>
-          <CardDescription>Customize password length and character sets.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="length">Length</Label>
-            <Input
-              id="length"
-              type="number"
-              min={4}
-              max={128}
-              value={length}
-              onChange={(e) => setLength(Number(e.target.value) || 4)}
+    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+      <ToolPageHeader
+        icon={Key}
+        title="Password Generator"
+        description="Secure, customizable passwords with entropy and bias‑free randomness."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} icon={RotateCcw} />
+            <CopyButton getText={() => allText} disabled={!allText} />
+            <ExportTextButton
+              variant="outline"
+              filename="passwords.txt"
+              icon={Download}
+              getText={() => allText || ""}
+              disabled={!allText}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="count">Count</Label>
-            <Input
-              id="count"
-              type="number"
-              min={1}
-              max={50}
-              value={count}
-              onChange={(e) => setCount(Number(e.target.value) || 1)}
+            <ActionButton label="Generate" icon={Key} onClick={run} />
+          </>
+        }
+      />
+
+      {/* Quick stats */}
+      <div className="mb-4 grid gap-3 sm:grid-cols-4">
+        <Stat label="Count" value={count} />
+        <Stat label="Length" value={length} />
+        <Stat label="Charset" value={charset.length} hint="unique characters" />
+        <Stat
+          label="Entropy"
+          value={`${bits.toFixed(1)} bits`}
+          hint={strength.label}
+          Icon={strength.tone === "warn" ? ShieldAlert : ShieldCheck}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Left: Settings */}
+        <GlassCard className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Settings</CardTitle>
+            <CardDescription>Length, count, character sets, and rules.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <InputField
+                label="Length"
+                type="number"
+                min={4}
+                max={128}
+                value={String(length)}
+                onChange={(e) => setLength(Math.min(128, Math.max(4, Number(e.target.value) || 4)))}
+              />
+              <InputField
+                label="Count"
+                type="number"
+                min={1}
+                max={100}
+                value={String(count)}
+                onChange={(e) => setCount(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+              />
+            </div>
+
+            <SwitchRow
+              label="Uppercase (A–Z)"
+              checked={flags.upper}
+              onCheckedChange={(v) => setFlags((f) => ({ ...f, upper: Boolean(v) }))}
             />
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Label>Character Sets</Label>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <Switch checked={upper} onCheckedChange={setUpper} /> Uppercase
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={lower} onCheckedChange={setLower} /> Lowercase
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={numbers} onCheckedChange={setNumbers} /> Numbers
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={symbols} onCheckedChange={setSymbols} /> Symbols
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </GlassCard>
+            <SwitchRow
+              label="Lowercase (a–z)"
+              checked={flags.lower}
+              onCheckedChange={(v) => setFlags((f) => ({ ...f, lower: Boolean(v) }))}
+            />
+            <SwitchRow
+              label="Numbers (0–9)"
+              checked={flags.numbers}
+              onCheckedChange={(v) => setFlags((f) => ({ ...f, numbers: Boolean(v) }))}
+            />
+            <SwitchRow
+              label="Symbols"
+              checked={flags.symbols}
+              onCheckedChange={(v) => setFlags((f) => ({ ...f, symbols: Boolean(v) }))}
+            />
+            <TextareaField
+              label="Custom symbols"
+              value={customSymbols}
+              onValueChange={setCustomSymbols}
+              textareaClassName="min-h-[64px] font-mono"
+              placeholder={DEFAULT_SYMBOLS}
+              disabled={!flags.symbols}
+            />
 
-      <Separator />
+            <Separator />
 
-      <GlassCard className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">Generated Passwords</CardTitle>
-          <CardDescription>Click copy to save a password.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2">
-          {passwords.length === 0 && (
-            <p className="text-sm text-muted-foreground">No passwords yet. Click Generate.</p>
-          )}
-          {passwords.map((pwd, i) => (
-            <div key={i} className="flex flex-col gap-2 rounded-md border p-3">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-sm">Password {i + 1}</span>
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => copyOne(pwd)}>
-                  {copied === pwd ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  Copy
-                </Button>
+            <SwitchRow
+              label="Exclude ambiguous characters"
+              hint="Avoid 0/O, 1/l/I, brackets, angle brackets, quotes, etc."
+              checked={flags.excludeAmbiguous}
+              onCheckedChange={(v) => setFlags((f) => ({ ...f, excludeAmbiguous: Boolean(v) }))}
+            />
+            <SwitchRow
+              label="Require at least one from each selected set"
+              checked={flags.requireEachSet}
+              onCheckedChange={(v) => setFlags((f) => ({ ...f, requireEachSet: Boolean(v) }))}
+            />
+
+            <Separator />
+
+            <SwitchRow
+              label="Auto‑generate"
+              checked={autoRun}
+              onCheckedChange={(v) => setAutoRun(Boolean(v))}
+            />
+          </CardContent>
+        </GlassCard>
+
+        {/* Right: Output */}
+        <GlassCard className="shadow-sm lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Generated Passwords</CardTitle>
+            <CardDescription>Click a copy button or export all as a text file.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            {passwords.length === 0 ? (
+              <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                No passwords yet. Click <em>Generate</em> or enable Auto‑generate.
               </div>
-              <Textarea readOnly value={pwd} className="min-h-[60px] font-mono" />
-            </div>
-          ))}
-        </CardContent>
-      </GlassCard>
+            ) : null}
+            {passwords.map((pwd, i) => (
+              <GlassCard key={`${pwd}-${i as number}`} className="p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground">Password {i + 1}</div>
+                  <CopyButton size="sm" getText={() => pwd} />
+                </div>
+                <TextareaField
+                  readOnly
+                  value={pwd}
+                  onValueChange={() => {}}
+                  textareaClassName="min-h-[64px] font-mono"
+                />
+              </GlassCard>
+            ))}
+          </CardContent>
+        </GlassCard>
+      </div>
     </MotionGlassCard>
   );
 }

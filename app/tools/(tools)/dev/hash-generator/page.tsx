@@ -2,7 +2,6 @@
 
 import {
   Check,
-  Copy,
   DownloadCloud,
   Hash,
   Lock,
@@ -10,9 +9,22 @@ import {
   TimerReset as Timer,
   Upload,
 } from "lucide-react";
-import React from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import Stat from "@/components/shared/stat";
+/* Shared, reusable UI */
+import ToolPageHeader from "@/components/shared/tool-page-header";
+
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   CardContent,
   CardDescription,
@@ -21,11 +33,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
 // ---- Helpers: bytes / encoders ----
 const enc = new TextEncoder();
@@ -47,10 +55,13 @@ function base64(bytes: Uint8Array) {
   let str = "";
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {
-    str += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)));
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+    str += String.fromCharCode.apply(
+      null,
+      Array.from(bytes.subarray(i, i + chunk)) as unknown as number[],
+    );
   }
   // btoa works on Latin1/Binary strings
-  // eslint-disable-next-line unicorn/prefer-atob
   return btoa(str);
 }
 
@@ -157,7 +168,7 @@ async function digest(
   data: Uint8Array,
 ): Promise<Uint8Array> {
   if (algo === "MD5") return md5(data);
-  const ab = await crypto.subtle.digest(algo, toArrayBufferStrict(data)); // <-- pass ArrayBuffer
+  const ab = await crypto.subtle.digest(algo, toArrayBufferStrict(data));
   return new Uint8Array(ab);
 }
 
@@ -191,47 +202,50 @@ async function hmac(
 type AlgoKey = "MD5" | "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
 const ALL_ALGOS: AlgoKey[] = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
 
-export default function HashGeneratorPage() {
-  const [mode, setMode] = React.useState<"text" | "file">("text");
-  const [text, setText] = React.useState("Hello, World!");
-  const [fileName, setFileName] = React.useState<string>("");
-  const [fileBytes, setFileBytes] = React.useState<Uint8Array | null>(null);
+type ResultRow = { name: AlgoKey; value: string };
 
-  const [algos, setAlgos] = React.useState<Record<AlgoKey, boolean>>({
+export default function HashGeneratorClient() {
+  const [mode, setMode] = useState<"text" | "file">("text");
+  const [text, setText] = useState<string>("Hello, World!");
+  const [fileName, setFileName] = useState<string>("");
+  const [fileBytes, setFileBytes] = useState<Uint8Array | null>(null);
+
+  const [algos, setAlgos] = useState<Record<AlgoKey, boolean>>({
     MD5: true,
     "SHA-1": true,
     "SHA-256": true,
     "SHA-384": false,
     "SHA-512": false,
   });
-  const [useHmac, setUseHmac] = React.useState(false);
-  const [hmacKey, setHmacKey] = React.useState("");
-  const [salt, setSalt] = React.useState("");
-  const [saltBefore, setSaltBefore] = React.useState(true);
+  const [useHmac, setUseHmac] = useState<boolean>(false);
+  const [hmacKey, setHmacKey] = useState<string>("");
+  const [salt, setSalt] = useState<string>("");
+  const [saltBefore, setSaltBefore] = useState<boolean>(true);
 
-  const [encoding, setEncoding] = React.useState<"hex" | "base64">("hex");
-  const [uppercase, setUppercase] = React.useState(false);
-  const [autoRun, setAutoRun] = React.useState(true);
+  const [encoding, setEncoding] = useState<"hex" | "base64">("hex");
+  const [uppercase, setUppercase] = useState<boolean>(false);
+  const [autoRun, setAutoRun] = useState<boolean>(true);
 
-  const [results, setResults] = React.useState<{ name: AlgoKey; value: string }[]>([]);
-  const [copied, setCopied] = React.useState<string | null>(null);
-  const [perf, setPerf] = React.useState<number | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
+  const [results, setResults] = useState<ResultRow[]>([]);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [perf, setPerf] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const sourceBytes = React.useMemo(() => {
+  const selectedAlgoList = useMemo(() => ALL_ALGOS.filter((a) => algos[a]), [algos]);
+
+  const sourceBytes = useMemo(() => {
     const payload = mode === "text" ? toBytes(text) : (fileBytes ?? new Uint8Array());
     const s = toBytes(salt);
     if (s.length === 0) return payload;
     return saltBefore ? new Uint8Array([...s, ...payload]) : new Uint8Array([...payload, ...s]);
   }, [mode, text, fileBytes, salt, saltBefore]);
 
-  async function run() {
+  const run = useCallback(async () => {
     setError(null);
     const start = performance.now();
     try {
-      const list: { name: AlgoKey; value: string }[] = [];
-      for (const algo of ALL_ALGOS) {
-        if (!algos[algo]) continue;
+      const list: ResultRow[] = [];
+      for (const algo of selectedAlgoList) {
         let outBytes: Uint8Array;
         if (useHmac) {
           const keyBytes = toBytes(hmacKey);
@@ -244,17 +258,16 @@ export default function HashGeneratorPage() {
       }
       setResults(list);
       setPerf(performance.now() - start);
-    } catch (e: any) {
-      setError(e?.message || "Failed to hash input.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to hash input.");
       setResults([]);
       setPerf(null);
     }
-  }
+  }, [selectedAlgoList, useHmac, hmacKey, sourceBytes, encoding, uppercase]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (autoRun) void run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, text, fileBytes, algos, useHmac, hmacKey, salt, saltBefore, encoding, uppercase]);
+  }, [autoRun, run]);
 
   function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -286,56 +299,62 @@ export default function HashGeneratorPage() {
     setError(null);
   }
 
-  async function copy(text: string) {
-    await navigator.clipboard.writeText(text);
-    setCopied(text);
-    setTimeout(() => setCopied(null), 1200);
-  }
-
-  function downloadResults() {
-    const payload = {
-      mode,
-      fileName,
-      algorithms: Object.keys(algos).filter((k) => (algos as any)[k]),
-      hmac: useHmac,
-      encoding,
-      uppercase,
-      salt,
-      saltBefore,
-      generatedAt: new Date().toISOString(),
-      results,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "hash-results.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
-    <MotionGlassCard>
-      <GlassCard className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Hash className="h-6 w-6" /> Hash Generator
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            MD5, SHA‑1, SHA‑256/384/512 • Text or File • Hex/Base64 • Optional HMAC & Salt.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button variant="outline" onClick={downloadResults} className="gap-2">
-            <DownloadCloud className="h-4 w-4" /> Export JSON
-          </Button>
-        </div>
-      </GlassCard>
+    <>
+      <ToolPageHeader
+        icon={Hash}
+        title="Hash Generator"
+        description="MD5, SHA‑1, SHA‑256/384/512 • Text or File • Hex/Base64 • Optional HMAC & Salt."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} icon={RotateCcw} />
+            <ExportTextButton
+              variant="outline"
+              label="Export JSON"
+              filename="hash-results.json"
+              icon={DownloadCloud}
+              getText={() =>
+                JSON.stringify(
+                  {
+                    mode,
+                    fileName,
+                    algorithms: selectedAlgoList,
+                    hmac: useHmac,
+                    encoding,
+                    uppercase,
+                    salt,
+                    saltBefore,
+                    generatedAt: new Date().toISOString(),
+                    results,
+                  },
+                  null,
+                  2,
+                )
+              }
+            />
+          </>
+        }
+      />
+
+      {/* Top stats */}
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        <Stat
+          label="Input bytes"
+          value={mode === "text" ? toBytes(text).length : (fileBytes?.length ?? 0)}
+          hint={mode === "file" ? fileName || "No file" : "UTF‑8 length"}
+        />
+        <Stat
+          label="Algorithms"
+          value={selectedAlgoList.length}
+          hint={selectedAlgoList.join(", ") || "None"}
+        />
+        <Stat
+          label="Last run"
+          value={perf ? `${perf.toFixed(2)} ms` : "—"}
+          hint={autoRun ? "Auto‑run on" : "Manual"}
+          Icon={Timer}
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Settings */}
@@ -345,116 +364,102 @@ export default function HashGeneratorPage() {
             <CardDescription>Choose input type, algorithms and output format.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Mode</Label>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant={mode === "text" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setMode("text")}
-                >
-                  Text
-                </Button>
-                <Button
-                  variant={mode === "file" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setMode("file")}
-                >
-                  File
-                </Button>
-              </div>
+            {/* Mode */}
+            <div className="grid grid-cols-2 gap-2">
+              <ActionButton
+                label="Text"
+                variant={mode === "text" ? "default" : "outline"}
+                onClick={() => setMode("text")}
+              />
+              <ActionButton
+                label="File"
+                variant={mode === "file" ? "default" : "outline"}
+                onClick={() => setMode("file")}
+              />
             </div>
 
+            {/* Algorithms */}
             <div className="space-y-2">
-              <Label>Algorithms</Label>
+              <div className="text-sm font-medium">Algorithms</div>
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                 {ALL_ALGOS.map((name) => (
-                  <Button
+                  <ActionButton
                     key={name}
-                    type="button"
-                    variant={algos[name] ? "default" : "outline"}
                     size="sm"
+                    variant={algos[name] ? "default" : "outline"}
+                    label={name}
                     onClick={() => setAlgos((p) => ({ ...p, [name]: !p[name] }))}
-                  >
-                    {name}
-                  </Button>
+                  />
                 ))}
               </div>
             </div>
 
+            {/* Output encoding */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Encoding</Label>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={encoding === "hex" ? "default" : "outline"}
-                    onClick={() => setEncoding("hex")}
-                  >
-                    Hex
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={encoding === "base64" ? "default" : "outline"}
-                    onClick={() => setEncoding("base64")}
-                  >
-                    Base64
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label>Uppercase</Label>
-                <div className="flex items-center gap-2">
-                  <Switch checked={uppercase} onCheckedChange={setUppercase} />{" "}
-                  <span className="text-sm text-muted-foreground">Apply to hex</span>
-                </div>
-              </div>
+              <ActionButton
+                label="Hex"
+                variant={encoding === "hex" ? "default" : "outline"}
+                onClick={() => setEncoding("hex")}
+              />
+              <ActionButton
+                label="Base64"
+                variant={encoding === "base64" ? "default" : "outline"}
+                onClick={() => setEncoding("base64")}
+              />
             </div>
+
+            <SwitchRow
+              label="Uppercase"
+              hint="Applied for hex output"
+              checked={uppercase}
+              onCheckedChange={(v) => setUppercase(Boolean(v))}
+            />
 
             <Separator />
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" /> HMAC
-                </Label>
-                <Switch checked={useHmac} onCheckedChange={setUseHmac} />
-              </div>
-              <Input
-                placeholder="Secret key (UTF‑8)"
-                value={hmacKey}
-                onChange={(e) => setHmacKey(e.target.value)}
-                disabled={!useHmac}
-              />
-              <p className="text-xs text-muted-foreground">
-                When enabled, computes HMAC-
-                {Object.keys(algos)
-                  .filter((k) => (algos as any)[k])
-                  .join(", ")}{" "}
-                over the input.
-              </p>
-            </div>
+            {/* HMAC */}
+            <SwitchRow
+              label={
+                (
+                  <span className="inline-flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    HMAC
+                  </span>
+                ) as unknown as string
+              }
+              hint={`Compute HMAC over the input using ${selectedAlgoList.length ? selectedAlgoList.join(", ") : "selected algos"}.`}
+              checked={useHmac}
+              onCheckedChange={(v) => setUseHmac(Boolean(v))}
+            />
+            <InputField
+              label="Secret key (UTF‑8)"
+              value={hmacKey}
+              onChange={(e) => setHmacKey(e.target.value)}
+              disabled={!useHmac}
+              placeholder="Enter HMAC key"
+            />
 
-            <div className="space-y-2">
-              <Label>Salt (optional)</Label>
-              <Input
-                placeholder="Salt string (UTF‑8)"
-                value={salt}
-                onChange={(e) => setSalt(e.target.value)}
-              />
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Switch checked={saltBefore} onCheckedChange={setSaltBefore} />
-                <span>Prefix salt (off = suffix)</span>
-              </div>
-            </div>
+            {/* Salt */}
+            <InputField
+              label="Salt (optional)"
+              value={salt}
+              onChange={(e) => setSalt(e.target.value)}
+              placeholder="Salt string"
+            />
+            <SwitchRow
+              label="Prefix salt"
+              hint="Off = suffix"
+              checked={saltBefore}
+              onCheckedChange={(v) => setSaltBefore(Boolean(v))}
+            />
 
-            <div className="flex items-center justify-between rounded-md border p-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <Timer className="h-3.5 w-3.5" /> {perf ? `${perf.toFixed(2)}ms` : "—"}{" "}
-              </span>
-              <span>Auto-run</span>
-              <Switch checked={autoRun} onCheckedChange={setAutoRun} />
-            </div>
+            {/* Perf & autorun */}
+            <SwitchRow
+              label="Auto‑run"
+              hint="Re-run on every change"
+              checked={autoRun}
+              onCheckedChange={(v) => setAutoRun(Boolean(v))}
+            />
 
             {error && (
               <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-destructive">
@@ -463,12 +468,8 @@ export default function HashGeneratorPage() {
             )}
           </CardContent>
           <CardFooter className="flex gap-2">
-            <Button onClick={run} className="gap-2">
-              <Hash className="h-4 w-4" /> Hash
-            </Button>
-            <Button variant="outline" onClick={resetAll} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
+            <ActionButton label="Hash" onClick={() => void run()} icon={Hash} />
+            <ActionButton label="Reset" variant="outline" onClick={resetAll} icon={RotateCcw} />
           </CardFooter>
         </GlassCard>
 
@@ -482,28 +483,28 @@ export default function HashGeneratorPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {mode === "text" ? (
-              <div className="space-y-2">
-                <Label htmlFor="text">Text</Label>
-                <Textarea
-                  id="text"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  className="min-h-[140px] font-mono"
-                  placeholder="Type or paste text here..."
-                />
-              </div>
+              <TextareaField
+                label="Text"
+                value={text}
+                onValueChange={setText}
+                textareaClassName="min-h-[140px] font-mono"
+                placeholder="Type or paste text here..."
+              />
             ) : (
               <div className="space-y-2">
-                <Label>Pick a file</Label>
+                <div className="text-sm font-medium">Pick a file</div>
                 <div className="relative inline-flex items-center">
                   <input
                     type="file"
                     className="absolute inset-0 z-10 cursor-pointer opacity-0"
                     onChange={onPickFile}
                   />
-                  <Button variant="outline" className="pointer-events-none gap-2">
-                    <Upload className="h-4 w-4" /> Choose file
-                  </Button>
+                  <ActionButton
+                    variant="outline"
+                    label="Choose file"
+                    icon={Upload}
+                    className="pointer-events-none"
+                  />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {fileName ? `Selected: ${fileName}` : "No file selected."}
@@ -514,7 +515,7 @@ export default function HashGeneratorPage() {
             <Separator />
 
             <div className="space-y-2">
-              <Label>Results</Label>
+              <div className="text-sm font-medium">Results</div>
               <div className="grid gap-2 md:grid-cols-2">
                 {results.length === 0 && (
                   <div className="rounded-md border p-3 text-sm text-muted-foreground">
@@ -525,21 +526,24 @@ export default function HashGeneratorPage() {
                   <div key={r.name} className="flex flex-col gap-2 rounded-md border p-3">
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary">{useHmac ? `HMAC-${r.name}` : r.name}</Badge>
-                      <Button
+                      <CopyButton
                         variant="outline"
                         size="sm"
-                        className="gap-2"
-                        onClick={() => copy(r.value)}
-                      >
-                        {copied === r.value ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                        Copy
-                      </Button>
+                        label={copiedKey === r.name ? "Copied" : "Copy"}
+                        icon={copiedKey === r.name ? Check : undefined}
+                        getText={() => r.value}
+                        onCopied={() => {
+                          setCopiedKey(r.name);
+                          setTimeout(() => setCopiedKey(null), 1200);
+                        }}
+                      />
                     </div>
-                    <Textarea readOnly value={r.value} className="min-h-[72px] font-mono" />
+                    <TextareaField
+                      readOnly
+                      value={r.value}
+                      onValueChange={() => {}}
+                      textareaClassName="min-h-[72px] font-mono"
+                    />
                   </div>
                 ))}
               </div>
@@ -548,7 +552,7 @@ export default function HashGeneratorPage() {
         </GlassCard>
       </div>
 
-      <Separator />
+      <Separator className="my-4" />
 
       <GlassCard className="shadow-sm">
         <CardHeader>
@@ -562,12 +566,10 @@ export default function HashGeneratorPage() {
             <li>
               HMAC block size is 64 bytes for MD5/SHA‑1/SHA‑256 and 128 bytes for SHA‑384/512.
             </li>
-            <li>
-              Salt is simply concatenated (prefix or suffix) before hashing; not the same as a KDF.
-            </li>
+            <li>Salt is concatenated (prefix or suffix) before hashing; this is not a KDF.</li>
           </ul>
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }

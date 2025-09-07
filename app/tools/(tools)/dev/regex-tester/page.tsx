@@ -16,9 +16,21 @@ import {
   Timer,
   Upload,
 } from "lucide-react";
-import React from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+/* Shared components */
+import ToolPageHeader from "@/components/shared/tool-page-header";
+
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   CardContent,
   CardDescription,
@@ -27,13 +39,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 
-// ---- Types ----
+/* ---------------- Types ---------------- */
 type Flag = "g" | "i" | "m" | "s" | "u" | "y";
 
 type MatchItem = {
@@ -60,15 +68,10 @@ const PRESETS: { name: string; pattern: string }[] = [
   { name: "Word (Bengali)", pattern: String.raw`[\u0980-\u09FF]+` },
 ];
 
-// Small utils
+/* ---------------- Small utils ---------------- */
 function escapeHtml(str: string) {
   return str.replaceAll(/&/g, "&amp;").replaceAll(/</g, "&lt;").replaceAll(/>/g, "&gt;");
 }
-
-function classNames(...xs: Array<string | false | undefined | null>) {
-  return xs.filter(Boolean).join(" ");
-}
-
 function downloadFile(name: string, text: string) {
   const blob = new Blob([text], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -79,7 +82,7 @@ function downloadFile(name: string, text: string) {
   URL.revokeObjectURL(url);
 }
 
-// ---- FlagToggle ----
+/* FlagToggle using primary/outline variants from your design system */
 function FlagToggle({
   flag,
   active,
@@ -90,26 +93,26 @@ function FlagToggle({
   onClick: () => void;
 }) {
   return (
-    <Button
-      type="button"
-      variant={active ? "default" : "outline"}
+    <ActionButton
       size="sm"
-      className={classNames("h-8 w-8 p-0 font-mono", active && "shadow")}
+      variant={active ? "default" : "outline"}
+      label={FLAG_META[flag].label}
       title={FLAG_META[flag].title}
       onClick={onClick}
-    >
-      {FLAG_META[flag].label}
-    </Button>
+      className="h-8 w-8 p-0 font-mono"
+    />
   );
 }
 
-export default function RegexTesterPage() {
-  const [pattern, setPattern] = React.useState<string>("\\b[A-Za-z]+\\b");
-  const [testText, setTestText] = React.useState<string>(
-    "Hello, World!\nবাংলা বাংলা বাংলা\nEmail: foo@example.com" as string,
+/* ---------------- Page ---------------- */
+export default function RegexTesterClient() {
+  const [pattern, setPattern] = useState<string>(String.raw`\b[A-Za-z]+\b`);
+  const [testText, setTestText] = useState<string>(
+    "Hello, World!\nবাংলা বাংলা বাংলা\nEmail: foo@example.com",
   );
-  const [replaceWith, setReplaceWith] = React.useState<string>("[$$&]");
-  const [flags, setFlags] = React.useState<Record<Flag, boolean>>({
+  const [replaceWith, setReplaceWith] = useState<string>("[$$&]");
+
+  const [flags, setFlags] = useState<Record<Flag, boolean>>({
     g: true,
     i: false,
     m: false,
@@ -117,92 +120,72 @@ export default function RegexTesterPage() {
     u: false,
     y: false,
   });
-  const [error, setError] = React.useState<string | null>(null);
-  const [matches, setMatches] = React.useState<MatchItem[]>([]);
-  const [highlighted, setHighlighted] = React.useState<string>("");
-  const [replaced, setReplaced] = React.useState<string>("");
-  const [copied, setCopied] = React.useState<"share" | "result" | null>(null);
-  const [activeTab, setActiveTab] = React.useState<"match" | "replace" | "ops" | "lines">("match");
 
-  // New features state
-  const [limit, setLimit] = React.useState<number>(5000); // max matches displayed
-  const [timeoutMs, setTimeoutMs] = React.useState<number>(250); // guard against backtracking
-  const [autoRun, setAutoRun] = React.useState<boolean>(true);
-  const [perf, setPerf] = React.useState<{ took: number; limited: boolean } | null>(null);
-  const [opResult, setOpResult] = React.useState<string>("");
-  const [lineFilterKeep, setLineFilterKeep] = React.useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [matches, setMatches] = useState<MatchItem[]>([]);
+  const [highlighted, setHighlighted] = useState<string>("");
+  const [replaced, setReplaced] = useState<string>("");
 
-  const activeFlags = React.useMemo(
-    () =>
-      Object.entries(flags)
-        .filter(([, v]) => v)
-        .map(([k]) => k)
-        .join(""),
+  const [copied, setCopied] = useState<"share" | "result" | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "match" | "replace" | "ops" | "lines" | "snippet" | "help"
+  >("match");
+
+  // Features
+  const [limit, setLimit] = useState<number>(5000);
+  const [timeoutMs, setTimeoutMs] = useState<number>(250);
+  const [autoRun, setAutoRun] = useState<boolean>(true);
+  const [perf, setPerf] = useState<{ took: number; limited: boolean } | null>(null);
+  const [lineFilterKeep, setLineFilterKeep] = useState<boolean>(true);
+
+  const activeFlags = useMemo(
+    () => (Object.keys(FLAG_META) as Flag[]).filter((k) => flags[k]).join(""),
     [flags],
   );
 
-  React.useEffect(() => {
-    if (autoRun) run();
-  }, [pattern, testText, replaceWith, activeFlags, activeTab, limit, timeoutMs, autoRun]);
-
-  function toggleFlag(f: Flag) {
-    setFlags((prev) => ({ ...prev, [f]: !prev[f] }));
-  }
-
-  function loadPreset(p: string) {
-    setPattern(p);
-  }
-
-  function resetAll() {
-    setPattern("[A-Za-z]+");
-    setTestText("Hello, World!\nআমার সোনার বাংলা\nEmail: foo@example.com");
-    setReplaceWith("[$$&]");
-    setFlags({ g: true, i: false, m: false, s: false, u: false, y: false });
-    setError(null);
-    setPerf(null);
-  }
-
-  function buildRegex(): RegExp | null {
+  const buildRegex = useCallback((): RegExp | null => {
     try {
       return new RegExp(pattern, activeFlags);
-    } catch (e: any) {
-      setError(e.message || "Invalid pattern");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Invalid pattern");
       return null;
     }
-  }
+  }, [pattern, activeFlags]);
 
-  function run() {
+  const run = useCallback(() => {
     setError(null);
     const rx = buildRegex();
     if (!rx) {
       setMatches([]);
       setHighlighted(escapeHtml(testText));
       setReplaced("");
+      setPerf(null);
       return;
     }
 
     const start = performance.now();
 
-    // Guarded global reader
-    const globalReader = new RegExp(rx.source, rx.flags.includes("g") ? rx.flags : rx.flags + "g");
+    // Ensure "g" for streaming read
+    const reader = new RegExp(rx.source, rx.flags.includes("g") ? rx.flags : rx.flags + "g");
 
     const items: MatchItem[] = [];
     let m: RegExpExecArray | null;
-    const endTime = Date.now() + timeoutMs;
+    const deadline = Date.now() + timeoutMs;
 
-    while ((m = globalReader.exec(testText))) {
-      if (Date.now() > endTime) {
+    while ((m = reader.exec(testText))) {
+      if (Date.now() > deadline) {
         setError(`Stopped after ${timeoutMs}ms (possible catastrophic backtracking).`);
         break;
       }
       const groups: Record<string, string | undefined> = {};
-      if (m.groups) {
-        for (const [k, v] of Object.entries(m.groups)) groups[k] = v;
-      }
+      if (m.groups) for (const [k, v] of Object.entries(m.groups)) groups[k] = v;
       items.push({ text: m[0], index: m.index, length: m[0].length, groups });
       if (items.length >= limit) break;
-      if (m.index === globalReader.lastIndex) globalReader.lastIndex++;
+      if (m.index === reader.lastIndex)
+        // Avoid zero-length match infinite loop
+        reader.lastIndex++;
     }
+
     const took = performance.now() - start;
     setPerf({ took, limited: items.length >= limit });
     setMatches(items);
@@ -224,57 +207,51 @@ export default function RegexTesterPage() {
 
     // Replace preview
     try {
-      const replacedText = testText.replace(rx, replaceWith);
-      setReplaced(replacedText);
+      setReplaced(testText.replace(rx, replaceWith));
     } catch {
       setReplaced("");
     }
+  }, [buildRegex, testText, replaceWith, limit, timeoutMs]);
 
+  // Auto-run (lint-friendly)
+  useEffect(() => {
+    if (autoRun) run();
+  }, [autoRun, run]);
+
+  // Load share-hash from URL once
+  useEffect(() => {
     try {
-      setOpResult(String(testText.match(rx) !== null));
+      const raw = window.location.hash.slice(1);
+      if (!raw) return;
+      const parsed = JSON.parse(decodeURIComponent(atob(raw)));
+      if (parsed?.p) setPattern(parsed.p);
+      if (parsed?.t) setTestText(parsed.t);
+      if (parsed?.r) setReplaceWith(parsed.r);
+      if (parsed?.f) setFlags(parsed.f as Record<Flag, boolean>);
+      if (parsed?.tab) setActiveTab(parsed.tab);
+      if (parsed?.limit) setLimit(parsed.limit);
+      if (parsed?.timeoutMs) setTimeoutMs(parsed.timeoutMs);
+      if (parsed?.autoRun !== undefined) setAutoRun(Boolean(parsed.autoRun));
     } catch {
-      setOpResult("false");
+      // ignore
     }
+  }, []);
+
+  function toggleFlag(f: Flag) {
+    setFlags((prev) => ({ ...prev, [f]: !prev[f] }));
   }
 
-  async function copyShare() {
-    const payload = {
-      p: pattern,
-      t: testText,
-      r: replaceWith,
-      f: flags,
-      tab: activeTab,
-      limit,
-      timeoutMs,
-      autoRun,
-    };
-    const hash = btoa(encodeURIComponent(JSON.stringify(payload)));
-    const url = `${window.location.origin}/tools/dev/regex-tester#${hash}`;
-    await navigator.clipboard.writeText(url);
-    setCopied("share");
-    setTimeout(() => setCopied(null), 1200);
+  function loadPreset(p: string) {
+    setPattern(p);
   }
 
-  async function copyResult() {
-    let data = testText;
-    if (activeTab === "replace") data = replaced;
-    else if (activeTab === "lines") {
-      const rx = buildRegex();
-      if (rx) {
-        const out: string[] = [];
-        for (const line of testText.split(/\n/)) {
-          const ok = rx.test(line);
-          if ((lineFilterKeep && ok) || (!lineFilterKeep && !ok)) out.push(line);
-        }
-        data = out.join("\n");
-      } else {
-        data = "";
-      }
-    }
-
-    await navigator.clipboard.writeText(data);
-    setCopied("result");
-    setTimeout(() => setCopied(null), 1200);
+  function resetAll() {
+    setPattern(String.raw`\b[A-Za-z]+\b`);
+    setTestText("Hello, World!\nআমার সোনার বাংলা\nEmail: foo@example.com");
+    setReplaceWith("[$$&]");
+    setFlags({ g: true, i: false, m: false, s: false, u: false, y: false });
+    setError(null);
+    setPerf(null);
   }
 
   function exportMatchesJSON() {
@@ -297,23 +274,6 @@ export default function RegexTesterPage() {
     downloadFile("regex-matches.csv", csv);
   }
 
-  function savePresetLocal() {
-    const name = prompt("Preset name?")?.trim();
-    if (!name) return;
-    const list = JSON.parse(localStorage.getItem("regexLocalPresets") || "[]") as any[];
-    list.push({ name, pattern });
-    localStorage.setItem("regexLocalPresets", JSON.stringify(list));
-    alert("Saved!");
-  }
-
-  function loadLocalPresets(): { name: string; pattern: string }[] {
-    try {
-      return JSON.parse(localStorage.getItem("regexLocalPresets") || "[]");
-    } catch {
-      return [];
-    }
-  }
-
   function importStateFromFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -324,33 +284,53 @@ export default function RegexTesterPage() {
         if (parsed?.p) setPattern(parsed.p);
         if (parsed?.t) setTestText(parsed.t);
         if (parsed?.r) setReplaceWith(parsed.r);
-        if (parsed?.f) setFlags(parsed.f);
+        if (parsed?.f) setFlags(parsed.f as Record<Flag, boolean>);
         if (parsed?.tab) setActiveTab(parsed.tab);
         if (parsed?.limit) setLimit(parsed.limit);
         if (parsed?.timeoutMs) setTimeoutMs(parsed.timeoutMs);
-        if (parsed?.autoRun !== undefined) setAutoRun(parsed.autoRun);
-      } catch (err) {
+        if (parsed?.autoRun !== undefined) setAutoRun(Boolean(parsed.autoRun));
+      } catch {
         alert("Invalid file");
       }
     };
     reader.readAsText(file);
   }
 
-  React.useEffect(() => {
+  function savePresetLocal() {
+    const name = prompt("Preset name?")?.trim();
+    if (!name) return;
+    const list = loadLocalPresets();
+    list.push({ name, pattern });
+    localStorage.setItem("regexLocalPresets", JSON.stringify(list));
+    alert("Saved!");
+  }
+
+  function loadLocalPresets(): { name: string; pattern: string }[] {
     try {
-      const raw = window.location.hash.slice(1);
-      if (!raw) return;
-      const parsed = JSON.parse(decodeURIComponent(atob(raw)));
-      if (parsed?.p) setPattern(parsed.p);
-      if (parsed?.t) setTestText(parsed.t);
-      if (parsed?.r) setReplaceWith(parsed.r);
-      if (parsed?.f) setFlags(parsed.f);
-      if (parsed?.tab) setActiveTab(parsed.tab);
-      if (parsed?.limit) setLimit(parsed.limit);
-      if (parsed?.timeoutMs) setTimeoutMs(parsed.timeoutMs);
-      if (parsed?.autoRun !== undefined) setAutoRun(parsed.autoRun);
-    } catch {}
-  }, []);
+      const raw = localStorage.getItem("regexLocalPresets");
+      return raw ? (JSON.parse(raw) as { name: string; pattern: string }[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async function copyShare() {
+    const payload = {
+      p: pattern,
+      t: testText,
+      r: replaceWith,
+      f: flags,
+      tab: activeTab,
+      limit,
+      timeoutMs,
+      autoRun,
+    };
+    const hash = btoa(encodeURIComponent(JSON.stringify(payload)));
+    const url = `${window.location.origin}/tools/dev/regex-tester#${hash}`;
+    await navigator.clipboard.writeText(url);
+    setCopied("share");
+    setTimeout(() => setCopied(null), 1200);
+  }
 
   const jsSnippet = `// JavaScript snippet
 const rx = /${pattern.replaceAll("/", "\\/")}/${activeFlags || ""};
@@ -363,59 +343,55 @@ for (const m of matches) {
   const localPresets = loadLocalPresets();
 
   return (
-    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div className="w-1/2">
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Regex className="h-6 w-6" /> Regex Tester
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Interactive tester with flags, highlights, replace, performance guard, line tools, and
-            exports.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button
-            variant="outline"
-            onClick={copyShare}
-            className="gap-2"
-            title="Copy shareable link with current state"
-          >
-            {copied === "share" ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}{" "}
-            Share
-          </Button>
-          <Button variant="outline" onClick={exportMatchesJSON} className="gap-2">
-            <Download className="h-4 w-4" /> JSON
-          </Button>
-          <Button variant="outline" onClick={exportMatchesCSV} className="gap-2">
-            <Download className="h-4 w-4" /> CSV
-          </Button>
-        </div>
-      </GlassCard>
+    <>
+      <ToolPageHeader
+        icon={Regex}
+        title="Regex Tester"
+        description="Interactive tester with flags, highlights, replace preview, performance guard, line tools, and exports."
+        actions={
+          <>
+            <ActionButton variant="outline" onClick={resetAll} label="Reset" icon={RotateCcw} />
+            <ActionButton
+              variant="outline"
+              onClick={copyShare}
+              label={copied === "share" ? "Copied Link" : "Share"}
+              icon={copied === "share" ? Check : Share2}
+              // title="Copy shareable link with current state"
+            />
+            <ActionButton
+              variant="outline"
+              onClick={exportMatchesJSON}
+              label="JSON"
+              icon={Download}
+            />
+            <ActionButton
+              variant="outline"
+              onClick={exportMatchesCSV}
+              label="CSV"
+              icon={Download}
+            />
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {/* Left column */}
         <GlassCard className="shadow-sm xl:col-span-1">
           <CardHeader>
             <CardTitle className="text-base">Pattern & Flags</CardTitle>
             <CardDescription>Write your regex, toggle flags, tweak limits.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="pattern">Pattern</Label>
-              <Input
-                id="pattern"
-                value={pattern}
-                onChange={(e) => setPattern(e.target.value)}
-                placeholder={String.raw`e.g. \b[A-Za-z]+\b`}
-                className="font-mono"
-              />
-            </div>
+            <InputField
+              label="Pattern"
+              value={pattern}
+              onChange={(e) => setPattern(e.target.value)}
+              placeholder={String.raw`e.g. \b[A-Za-z]+\b`}
+              className="font-mono"
+            />
 
             <div className="space-y-2">
-              <Label>Flags</Label>
+              <div className="text-sm font-medium">Flags</div>
               <div className="flex flex-wrap gap-2">
                 {(Object.keys(FLAG_META) as Flag[]).map((k) => (
                   <FlagToggle key={k} flag={k} active={flags[k]} onClick={() => toggleFlag(k)} />
@@ -427,57 +403,52 @@ for (const m of matches) {
             </div>
 
             <div className="space-y-2">
-              <Label>Presets</Label>
+              <div className="text-sm font-medium">Presets</div>
               <div className="flex flex-wrap gap-2">
-                {PRESETS.concat(localPresets).map((p, idx) => (
-                  <Button
-                    key={idx}
+                {PRESETS.concat(localPresets).map((p) => (
+                  <ActionButton
+                    key={`${p.name}-${p.pattern}`}
                     variant="secondary"
                     size="sm"
+                    label={p.name}
                     onClick={() => loadPreset(p.pattern)}
-                  >
-                    {p.name}
-                  </Button>
+                  />
                 ))}
-                <Button variant="outline" size="sm" onClick={savePresetLocal} className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Save
-                </Button>
+                <ActionButton
+                  variant="outline"
+                  size="sm"
+                  onClick={savePresetLocal}
+                  label="Save"
+                  icon={Save}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="limit">Match limit</Label>
-                <Input
-                  id="limit"
-                  type="number"
-                  min={1}
-                  max={1000000}
-                  value={limit}
-                  onChange={(e) => setLimit(Number(e.target.value) || 1)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="timeout">Timeout (ms)</Label>
-                <Input
-                  id="timeout"
-                  type="number"
-                  min={50}
-                  max={10000}
-                  value={timeoutMs}
-                  onChange={(e) => setTimeoutMs(Math.max(50, Number(e.target.value) || 50))}
-                />
-              </div>
+              <InputField
+                label="Match limit"
+                type="number"
+                min={1}
+                max={1000000}
+                value={String(limit)}
+                onChange={(e) => setLimit(Number(e.target.value) || 1)}
+              />
+              <InputField
+                label="Timeout (ms)"
+                type="number"
+                min={50}
+                max={10000}
+                value={String(timeoutMs)}
+                onChange={(e) => setTimeoutMs(Math.max(50, Number(e.target.value) || 50))}
+              />
             </div>
 
-            <div className="flex items-center justify-between rounded-md border p-2">
-              <div className="space-y-0.5">
-                <Label className="text-sm">Auto-run</Label>
-                <p className="text-xs text-muted-foreground">Re-run on every change</p>
-              </div>
-              <Switch checked={autoRun} onCheckedChange={setAutoRun} />
-            </div>
+            <SwitchRow
+              label="Auto-run"
+              hint="Re-run on every change"
+              checked={autoRun}
+              onCheckedChange={(v) => setAutoRun(Boolean(v))}
+            />
 
             {error && (
               <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-destructive">
@@ -496,35 +467,33 @@ for (const m of matches) {
             {perf && (
               <span className="inline-flex items-center gap-1">
                 <Timer className="h-3.5 w-3.5" /> {perf.took.toFixed(2)}ms{" "}
-                {perf.limited && "(limited)"}{" "}
+                {perf.limited && "(limited)"}
               </span>
             )}
-            <Button
+
+            <ExportTextButton
               variant="outline"
               size="sm"
-              className="ml-auto gap-2"
-              onClick={() =>
-                downloadFile(
-                  "regex-state.json",
-                  JSON.stringify(
-                    {
-                      p: pattern,
-                      t: testText,
-                      r: replaceWith,
-                      f: flags,
-                      tab: activeTab,
-                      limit,
-                      timeoutMs,
-                      autoRun,
-                    },
-                    null,
-                    2,
-                  ),
+              className="ml-auto"
+              filename="regex-state.json"
+              label="State"
+              getText={() =>
+                JSON.stringify(
+                  {
+                    p: pattern,
+                    t: testText,
+                    r: replaceWith,
+                    f: flags,
+                    tab: activeTab,
+                    limit,
+                    timeoutMs,
+                    autoRun,
+                  },
+                  null,
+                  2,
                 )
               }
-            >
-              <Download className="h-4 w-4" /> State
-            </Button>
+            />
             <div className="relative inline-flex items-center">
               <input
                 title="Import state JSON"
@@ -533,28 +502,30 @@ for (const m of matches) {
                 className="absolute inset-0 z-10 cursor-pointer opacity-0"
                 onChange={importStateFromFile}
               />
-              <Button variant="outline" size="sm" className="pointer-events-none gap-2">
-                <Upload className="h-4 w-4" /> Import
-              </Button>
+              <ActionButton
+                variant="outline"
+                size="sm"
+                label="Import"
+                icon={Upload}
+                className="pointer-events-none"
+              />
             </div>
           </CardFooter>
         </GlassCard>
 
+        {/* Right column */}
         <GlassCard className="shadow-sm xl:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Test Area</CardTitle>
             <CardDescription>Type or paste your text to test the pattern on.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="test-text">Test Text</Label>
-              <Textarea
-                id="test-text"
-                value={testText}
-                onChange={(e) => setTestText(e.target.value)}
-                className="min-h-[180px] font-mono"
-              />
-            </div>
+            <TextareaField
+              label="Test Text"
+              value={testText}
+              onValueChange={setTestText}
+              textareaClassName="min-h-[180px] font-mono"
+            />
 
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
               <TabsList className="flex-wrap">
@@ -566,22 +537,24 @@ for (const m of matches) {
                 <TabsTrigger value="help">Cheatsheet</TabsTrigger>
               </TabsList>
 
+              {/* Match */}
               <TabsContent value="match" className="space-y-3">
                 <div className="rounded-md border p-3">
                   <div
                     className="prose prose-sm max-w-none whitespace-pre-wrap font-mono leading-relaxed dark:prose-invert"
+                    /* Safe: we escaped the content before highlighting */
                     dangerouslySetInnerHTML={{ __html: highlighted }}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Matches ({matches.length})</Label>
+                  <div className="text-sm font-medium">Matches ({matches.length})</div>
                   <div className="max-h-56 space-y-2 overflow-auto rounded-md border p-2">
                     {matches.length === 0 && (
                       <p className="text-sm text-muted-foreground">No matches found.</p>
                     )}
                     {matches.map((m, i) => (
-                      <div key={i} className="rounded-md bg-muted/50 p-2 text-xs">
+                      <div key={`${m.index}-${i}`} className="rounded-md bg-muted/50 p-2 text-xs">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="secondary" className="font-mono">
                             #{i + 1}
@@ -611,22 +584,18 @@ for (const m of matches) {
                 </div>
               </TabsContent>
 
+              {/* Replace */}
               <TabsContent value="replace" className="space-y-3">
+                <InputField
+                  label="Replace With"
+                  value={replaceWith}
+                  onChange={(e) => setReplaceWith(e.target.value)}
+                  placeholder="$$&"
+                  className="font-mono"
+                  hint="Use tokens like $$&, $1, $<name>"
+                />
                 <div className="space-y-2">
-                  <Label htmlFor="replace">Replace With</Label>
-                  <Input
-                    id="replace"
-                    value={replaceWith}
-                    onChange={(e) => setReplaceWith(e.target.value)}
-                    placeholder="$$&"
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Use tokens like <code>$$&</code>, <code>$$1</code>, <code>$$&lt;name&gt;</code>.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Preview</Label>
+                  <div className="text-sm font-medium">Preview</div>
                   <div className="rounded-md border bg-muted/30 p-3">
                     <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-sm">
                       {replaced}
@@ -635,17 +604,16 @@ for (const m of matches) {
                 </div>
               </TabsContent>
 
+              {/* Operations */}
               <TabsContent value="ops" className="space-y-3">
                 <div className="grid gap-3 md:grid-cols-2">
                   <GlassCard>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <ListChecks className="h-4 w-4" />
-                        Test()
+                        test()
                       </CardTitle>
-                      <CardDescription>
-                        Return whether the pattern matches at least once.
-                      </CardDescription>
+                      <CardDescription>Whether the pattern matches at least once.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="rounded border bg-muted/30 p-3 font-mono text-sm">
@@ -658,7 +626,7 @@ for (const m of matches) {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <Filter className="h-4 w-4" />
-                        Split()
+                        split()
                       </CardTitle>
                       <CardDescription>Split text by the regex.</CardDescription>
                     </CardHeader>
@@ -673,11 +641,9 @@ for (const m of matches) {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <Scissors className="h-4 w-4" />
-                        MatchAll()
+                        matchAll()
                       </CardTitle>
-                      <CardDescription>
-                        JSON export of matches with indices and groups.
-                      </CardDescription>
+                      <CardDescription>Export of matches with indices and groups.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="rounded border bg-muted/30 p-3 font-mono text-xs max-h-72 overflow-auto">
@@ -688,20 +654,14 @@ for (const m of matches) {
                 </div>
               </TabsContent>
 
+              {/* Line tools */}
               <TabsContent value="lines" className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={lineFilterKeep}
-                      onCheckedChange={setLineFilterKeep}
-                      id="keep"
-                    />
-                    <Label htmlFor="keep">Keep matching lines</Label>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Toggle to switch between keep / remove.
-                  </div>
-                </div>
+                <SwitchRow
+                  label="Keep matching lines"
+                  hint="Toggle to switch between keep / remove."
+                  checked={lineFilterKeep}
+                  onCheckedChange={(v) => setLineFilterKeep(Boolean(v))}
+                />
                 <div className="rounded-md border bg-muted/30 p-3">
                   <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-sm">
                     {(() => {
@@ -712,31 +672,31 @@ for (const m of matches) {
                         const ok = rx.test(line);
                         if ((lineFilterKeep && ok) || (!lineFilterKeep && !ok)) out.push(line);
                       }
-                      const result = out.join("\n");
-                      return result;
+                      return out.join("\n");
                     })()}
                   </pre>
                 </div>
               </TabsContent>
 
+              {/* Snippet */}
               <TabsContent value="snippet" className="space-y-2">
                 <div className="rounded-md border bg-muted/30 p-3">
                   <pre className="font-mono text-xs leading-relaxed">{jsSnippet}</pre>
                 </div>
-                <Button
+                <ActionButton
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  label="Copy snippet"
+                  icon={Code}
                   onClick={async () => {
                     await navigator.clipboard.writeText(jsSnippet);
                     setCopied("result");
                     setTimeout(() => setCopied(null), 1200);
                   }}
-                >
-                  <Code className="h-4 w-4" /> Copy snippet
-                </Button>
+                />
               </TabsContent>
 
+              {/* Cheatsheet */}
               <TabsContent value="help" className="space-y-2 text-sm text-muted-foreground">
                 <div className="rounded-md border p-3">
                   <p className="mb-2 text-foreground">Cheatsheet</p>
@@ -760,7 +720,7 @@ for (const m of matches) {
                       <code>(?&lt;=…)</code>/<code>(?&lt;!…)</code> — lookbehind
                     </li>
                     <li>
-                      <code>(?&lt;name&gt;…)</code> — named capture; use <code>$$&lt;name&gt;</code>{" "}
+                      <code>(?&lt;name&gt;…)</code> — named capture; use <code>$&lt;name&gt;</code>{" "}
                       in replace
                     </li>
                     <li>
@@ -774,14 +734,32 @@ for (const m of matches) {
               </TabsContent>
             </Tabs>
           </CardContent>
+
           <CardFooter className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2" onClick={copyResult}>
-              {copied === "result" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{" "}
-              Copy Current View
-            </Button>
+            <CopyButton
+              variant="outline"
+              label="Copy Current View"
+              icon={Copy}
+              getText={() => {
+                if (activeTab === "replace") return replaced;
+                if (activeTab === "snippet") return jsSnippet;
+                if (activeTab === "lines") {
+                  const rx = buildRegex();
+                  if (!rx) return "";
+                  const out: string[] = [];
+                  for (const line of testText.split(/\n/)) {
+                    const ok = rx.test(line);
+                    if ((lineFilterKeep && ok) || (!lineFilterKeep && !ok)) out.push(line);
+                  }
+                  return out.join("\n");
+                }
+                // default to original text or highlighted raw
+                return testText;
+              }}
+            />
           </CardFooter>
         </GlassCard>
       </div>
-    </MotionGlassCard>
+    </>
   );
 }

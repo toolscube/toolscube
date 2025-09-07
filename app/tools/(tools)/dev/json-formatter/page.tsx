@@ -39,7 +39,7 @@ const LS_KEY = "tools:json-formatter:input";
 
 type IndentOpt = "2" | "4" | "tab";
 
-export default function JsonFormatterPage() {
+export default function JsonFormatterClient() {
   const [input, setInput] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [error, setError] = useState<string>("");

@@ -13,30 +13,37 @@ import {
   RotateCcw,
   Settings2,
   Shuffle,
-  Type,
+  Type as TypeIcon,
   Upload,
   Wand2,
 } from "lucide-react";
-// Deps: uuid + nanoid
 import { customAlphabet, nanoid as nanoidFn } from "nanoid";
 import { useEffect, useMemo, useState } from "react";
 import * as uuid from "uuid";
-import { Button } from "@/components/ui/button";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import { InputField } from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import Stat from "@/components/shared/stat";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 
 /* -------------------------------- constants ------------------------------- */
 
 const STORAGE_KEY = "toolshub.uuid-nanoid.v1";
 
 type Mode = "uuid" | "nanoid";
-type UuidVersion = "v1" | "v4" | "v5" | "v7";
+export type UuidVersion = "v1" | "v4" | "v5" | "v7";
 
 const DEFAULT_NANO_ALPHABET = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const PRESETS: Record<string, string> = {
@@ -47,89 +54,87 @@ const PRESETS: Record<string, string> = {
   "Numbers only": "0123456789",
 };
 
+/* -------------------------------- helpers --------------------------------- */
 function clsx(...arr: Array<string | false | undefined>) {
   return arr.filter(Boolean).join(" ");
 }
-function downloadBlob(filename: string, content: string, type: string) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+function deEscapeDelimiter(s: string) {
+  return s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+}
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function clampInt(v: string, min: number, max: number) {
+  const n = parseInt(v.replace(/[^\d-]/g, ""), 10);
+  if (Number.isNaN(n)) return min;
+  return Math.max(min, Math.min(max, n));
 }
 
 /* ---------------------------------- page ---------------------------------- */
 
-export default function UuidNanoidPage() {
+export default function UuidNanoidClient() {
   const [mode, setMode] = useState<Mode>("uuid");
 
   // shared
-  const [count, setCount] = useState(10);
-  const [uniqueOnly, setUniqueOnly] = useState(true);
-  const [prefix, setPrefix] = useState("");
-  const [suffix, setSuffix] = useState("");
-  const [delimiter, setDelimiter] = useState("\n");
-  const [fullscreen, setFullscreen] = useState(false);
+  const [count, setCount] = useState<number>(10);
+  const [uniqueOnly, setUniqueOnly] = useState<boolean>(true);
+  const [prefix, setPrefix] = useState<string>("");
+  const [suffix, setSuffix] = useState<string>("");
+  const [delimiter, setDelimiter] = useState<string>("\\n");
+  const [fullscreen, setFullscreen] = useState<boolean>(false);
 
   // uuid
   const [uuidVersion, setUuidVersion] = useState<UuidVersion>("v4");
-  const [uuidUpper, setUuidUpper] = useState(false);
-  const [uuidHyphens, setUuidHyphens] = useState(true);
-  const [uuidBraces, setUuidBraces] = useState(false);
+  const [uuidUpper, setUuidUpper] = useState<boolean>(false);
+  const [uuidHyphens, setUuidHyphens] = useState<boolean>(true);
+  const [uuidBraces, setUuidBraces] = useState<boolean>(false);
   const [v5NamespacePreset, setV5NamespacePreset] = useState<"URL" | "DNS" | "Custom">("URL");
-  const [v5Namespace, setV5Namespace] = useState<string>(""); // used when Custom
+  const [v5Namespace, setV5Namespace] = useState<string>("");
   const [v5Name, setV5Name] = useState<string>("");
 
   // nanoid
-  const [nanoSize, setNanoSize] = useState(21);
+  const [nanoSize, setNanoSize] = useState<number>(21);
   const [nanoAlphabet, setNanoAlphabet] = useState<string>(DEFAULT_NANO_ALPHABET);
   const [nanoPreset, setNanoPreset] = useState<string>("URL-safe (default)");
 
   // output + state
   const [list, setList] = useState<string[]>([]);
   const [copied, setCopied] = useState<string | "ALL" | null>(null);
-  const [filename, setFilename] = useState("ids.txt");
-  const [validationInput, setValidationInput] = useState("");
+  const [filename, setFilename] = useState<string>("ids.txt");
+  const [validationInput, setValidationInput] = useState<string>("");
   const [errors, setErrors] = useState<string | null>(null);
 
   // restore persisted state
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const s = JSON.parse(raw);
-        setMode(s.mode ?? "uuid");
-        setCount(s.count ?? 10);
-        setUniqueOnly(s.uniqueOnly ?? true);
-        setPrefix(s.prefix ?? "");
-        setSuffix(s.suffix ?? "");
-        setDelimiter(s.delimiter ?? "\n");
-        setFullscreen(false);
-
-        setUuidVersion(s.uuidVersion ?? "v4");
-        setUuidUpper(s.uuidUpper ?? false);
-        setUuidHyphens(s.uuidHyphens ?? true);
-        setUuidBraces(s.uuidBraces ?? false);
-        setV5NamespacePreset(s.v5NamespacePreset ?? "URL");
-        setV5Namespace(s.v5Namespace ?? "");
-        setV5Name(s.v5Name ?? "");
-
-        setNanoSize(s.nanoSize ?? 21);
-        setNanoAlphabet(s.nanoAlphabet ?? DEFAULT_NANO_ALPHABET);
-        setNanoPreset(s.nanoPreset ?? "URL-safe (default)");
-
-        setFilename(s.filename ?? "ids.txt");
-      }
-    } catch {}
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      setMode((s.mode as Mode) ?? "uuid");
+      setCount(Number.isFinite(s.count) ? s.count : 10);
+      setUniqueOnly(Boolean(s.uniqueOnly ?? true));
+      setPrefix(String(s.prefix ?? ""));
+      setSuffix(String(s.suffix ?? ""));
+      setDelimiter(String(s.delimiter ?? "\\n"));
+      setUuidVersion((s.uuidVersion as UuidVersion) ?? "v4");
+      setUuidUpper(Boolean(s.uuidUpper ?? false));
+      setUuidHyphens(Boolean(s.uuidHyphens ?? true));
+      setUuidBraces(Boolean(s.uuidBraces ?? false));
+      setV5NamespacePreset((s.v5NamespacePreset as "URL" | "DNS" | "Custom") ?? "URL");
+      setV5Namespace(String(s.v5Namespace ?? ""));
+      setV5Name(String(s.v5Name ?? ""));
+      setNanoSize(Number.isFinite(s.nanoSize) ? s.nanoSize : 21);
+      setNanoAlphabet(String(s.nanoAlphabet ?? DEFAULT_NANO_ALPHABET));
+      setNanoPreset(String(s.nanoPreset ?? "URL-safe (default)"));
+      setFilename(String(s.filename ?? "ids.txt"));
+    } catch {
+      /* ignore */
+    }
   }, []);
 
-  // persist
+  // persist (debounced)
   useEffect(() => {
-    const t = setTimeout(() => {
+    const t = window.setTimeout(() => {
       try {
         localStorage.setItem(
           STORAGE_KEY,
@@ -153,9 +158,11 @@ export default function UuidNanoidPage() {
             filename,
           }),
         );
-      } catch {}
+      } catch {
+        /* ignore */
+      }
     }, 180);
-    return () => clearTimeout(t);
+    return () => window.clearTimeout(t);
   }, [
     mode,
     count,
@@ -179,10 +186,11 @@ export default function UuidNanoidPage() {
   const entropyBits = useMemo(() => {
     if (mode === "uuid") {
       if (uuidVersion === "v5") return 0; // deterministic hash
-      return 122; // uuid v1/v4/v7 effective randomness
+      return 122; // effective randomness for v1/v4/v7
     }
     const L = Math.max(1, nanoAlphabet.length);
-    return Math.round(nanoSize * Math.log2(L));
+    const bits = nanoSize * Math.log2(L);
+    return Math.round(bits);
   }, [mode, uuidVersion, nanoAlphabet, nanoSize]);
 
   /* ------------------------------- generation ------------------------------ */
@@ -217,12 +225,8 @@ export default function UuidNanoidPage() {
         return formatUuid(uuid.v5(v5Name, ns));
       }
       case "v7": {
-        const v7 = (uuid as any).v7 as (() => string) | undefined;
-        if (typeof v7 !== "function") {
-          // fallback to v4 if package < 9
-          return formatUuid(uuid.v4());
-        }
-        return formatUuid(v7());
+        const v7 = (uuid as unknown as { v7?: () => string }).v7;
+        return formatUuid(typeof v7 === "function" ? v7() : uuid.v4());
       }
       case "v4":
       default:
@@ -245,8 +249,8 @@ export default function UuidNanoidPage() {
       const seen = new Set<string>();
       const target = Math.max(1, Math.min(1000, count));
       let attempts = 0;
-      while (out.length < target && attempts < target * 10) {
-        attempts++;
+      while (out.length < target && attempts < target * 20) {
+        attempts += 1;
         const next = mode === "uuid" ? genUuidOnce() : genNanoOnce();
         if (uniqueOnly) {
           if (seen.has(next)) continue;
@@ -255,8 +259,9 @@ export default function UuidNanoidPage() {
         out.push(next);
       }
       setList(out);
-    } catch (e: any) {
-      setErrors(String(e?.message || e));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setErrors(msg);
       setList([]);
     }
   };
@@ -267,7 +272,7 @@ export default function UuidNanoidPage() {
     setUniqueOnly(true);
     setPrefix("");
     setSuffix("");
-    setDelimiter("\n");
+    setDelimiter("\\n");
     setUuidVersion("v4");
     setUuidUpper(false);
     setUuidHyphens(true);
@@ -287,229 +292,206 @@ export default function UuidNanoidPage() {
     try {
       await navigator.clipboard.writeText(s);
       setCopied(s);
-      setTimeout(() => setCopied(null), 900);
-    } catch {}
-  };
-  const copyAll = async () => {
-    try {
-      await navigator.clipboard.writeText(list.join(delimiter || "\n"));
-      setCopied("ALL");
-      setTimeout(() => setCopied(null), 900);
-    } catch {}
+      window.setTimeout(() => setCopied(null), 900);
+    } catch {
+      /* ignore */
+    }
   };
 
-  const exportTxt = () => {
-    const body = list.join(delimiter || "\n");
-    downloadBlob(filename || "ids.txt", body, "text/plain;charset=utf-8");
+  const copyAll = async () => {
+    try {
+      const delim = deEscapeDelimiter(delimiter || "\n");
+      await navigator.clipboard.writeText(list.join(delim));
+      setCopied("ALL");
+      window.setTimeout(() => setCopied(null), 900);
+    } catch {
+      /* ignore */
+    }
   };
+
+  const getExportText = () => list.join(deEscapeDelimiter(delimiter || "\n"));
 
   /* -------------------------------- validate ------------------------------- */
 
   const validation = useMemo(() => {
-    const s = validationInput.trim();
-    if (!s) return { type: "empty" as const };
-    if (uuid.validate(s.replace(/[{}]/g, ""))) {
-      const ver = uuid.version(s.replace(/[{}]/g, ""));
+    const raw = validationInput.trim();
+    if (!raw) return { type: "empty" as const };
+    const stripped = raw.replace(/[{}]/g, "");
+    if (uuid.validate(stripped)) {
+      const ver = uuid.version(stripped);
       return { type: "uuid" as const, valid: true, version: ver };
     }
-    // simple nano check: current alphabet + size
     const alpha = nanoAlphabet || DEFAULT_NANO_ALPHABET;
     const rx = new RegExp(`^[${escapeRegExp(alpha)}]+$`);
-    return {
-      type: "nanoid" as const,
-      valid: rx.test(s),
-      length: s.length,
-      expected: nanoSize,
-    };
+    return { type: "nanoid" as const, valid: rx.test(raw), length: raw.length, expected: nanoSize };
   }, [validationInput, nanoAlphabet, nanoSize]);
 
   /* ---------------------------------- UI ---------------------------------- */
 
   return (
-    <MotionGlassCard>
-      {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Hash className="h-6 w-6" /> UUID & NanoID Generator
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Secure IDs with custom rules, batch generation, formatting, validation & export.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button variant="outline" onClick={() => setList([])} className="gap-2">
-            <RefreshCw className="h-4 w-4" /> Clear
-          </Button>
-          <Button onClick={run} className="gap-2">
-            <Shuffle className="h-4 w-4" /> Generate
-          </Button>
-        </div>
-      </GlassCard>
+    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+      <ToolPageHeader
+        icon={Hash}
+        title="UUID & NanoID Generator"
+        description="Secure IDs with custom rules, batch generation, formatting, validation & export."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <ActionButton
+              icon={RefreshCw}
+              label="Clear"
+              variant="outline"
+              onClick={() => setList([])}
+            />
+            <ActionButton icon={Shuffle} label="Generate" onClick={run} />
+            <CopyButton getText={getExportText} disabled={list.length === 0} />
+            <ExportTextButton
+              filename={filename || "ids.txt"}
+              getText={getExportText}
+              label="Export .txt"
+              icon={Download}
+              disabled={list.length === 0}
+            />
+          </>
+        }
+      />
 
-      {/* Settings */}
       <GlassCard className="shadow-sm">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Choose generator, size/count, formatting & uniqueness.</CardDescription>
         </CardHeader>
-
-        <CardContent className="grid gap-4 lg:grid-cols-3">
+        <CardContent className="grid gap-6 lg:grid-cols-3">
           {/* Left: mode & common */}
           <div className="rounded-lg border p-3 space-y-3">
-            <Label className="flex items-center gap-2">
-              <Settings2 className="h-4 w-4" /> Generator
-            </Label>
             <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="w-full">
               <TabsList className="grid grid-cols-2">
                 <TabsTrigger value="uuid" className="gap-2">
                   <Key className="h-4 w-4" /> UUID
                 </TabsTrigger>
                 <TabsTrigger value="nanoid" className="gap-2">
-                  <Type className="h-4 w-4" /> NanoID
+                  <TypeIcon className="h-4 w-4" /> NanoID
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="uuid" className="mt-3 space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label>Version</Label>
-                    <select
-                      className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                      value={uuidVersion}
-                      onChange={(e) => setUuidVersion(e.target.value as UuidVersion)}
-                    >
-                      <option value="v1">v1 — time-based</option>
-                      <option value="v4">v4 — random</option>
-                      <option value="v5">v5 — namespace/name</option>
-                      <option value="v7">v7 — Unix time + rand</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label>Count</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={1000}
-                      value={count}
-                      onChange={(e) => setCount(clampInt(e.target.value, 1, 1000))}
-                    />
-                  </div>
+                  <SelectField
+                    label="Version"
+                    value={uuidVersion}
+                    onValueChange={(v) => setUuidVersion(v as UuidVersion)}
+                    options={[
+                      { value: "v1", label: "v1 — time-based" },
+                      { value: "v4", label: "v4 — random" },
+                      { value: "v5", label: "v5 — namespace/name" },
+                      { value: "v7", label: "v7 — Unix time + rand" },
+                    ]}
+                  />
+                  <InputField
+                    label="Count"
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={String(count)}
+                    onChange={(e) => setCount(clampInt(e.target.value, 1, 1000))}
+                  />
 
                   {uuidVersion === "v5" && (
                     <>
-                      <div className="space-y-1.5">
-                        <Label>v5 Namespace</Label>
-                        <select
-                          className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                          value={v5NamespacePreset}
-                          onChange={(e) => setV5NamespacePreset(e.target.value as any)}
-                        >
-                          <option>URL</option>
-                          <option>DNS</option>
-                          <option>Custom</option>
-                        </select>
-                      </div>
+                      <SelectField
+                        label="v5 Namespace"
+                        value={v5NamespacePreset}
+                        onValueChange={(v) => setV5NamespacePreset(v as "URL" | "DNS" | "Custom")}
+                        options={[
+                          { value: "URL", label: "URL (6ba7b811-...)" },
+                          { value: "DNS", label: "DNS (6ba7b810-...)" },
+                          { value: "Custom", label: "Custom (paste UUID)" },
+                        ]}
+                      />
                       {v5NamespacePreset === "Custom" && (
-                        <div className="space-y-1.5">
-                          <Label>Custom Namespace (UUID)</Label>
-                          <Input
-                            placeholder="e.g. 6ba7b811-9dad-11d1-80b4-00c04fd430c8"
-                            value={v5Namespace}
-                            onChange={(e) => setV5Namespace(e.target.value)}
-                          />
-                        </div>
-                      )}
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <Label>Name (string)</Label>
-                        <Input
-                          placeholder="e.g. https://tariqul.dev"
-                          value={v5Name}
-                          onChange={(e) => setV5Name(e.target.value)}
+                        <InputField
+                          label="Custom Namespace (UUID)"
+                          placeholder="e.g. 6ba7b811-9dad-11d1-80b4-00c04fd430c8"
+                          value={v5Namespace}
+                          onChange={(e) => setV5Namespace(e.target.value)}
                         />
-                      </div>
+                      )}
+                      <InputField
+                        label="Name (string)"
+                        placeholder="e.g. https://tariqul.dev"
+                        value={v5Name}
+                        onChange={(e) => setV5Name(e.target.value)}
+                      />
                     </>
                   )}
 
-                  <div className="col-span-2 grid grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <span className="text-sm">Uppercase</span>
-                      <Switch checked={uuidUpper} onCheckedChange={setUuidUpper} />
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <span className="text-sm">Hyphens</span>
-                      <Switch checked={uuidHyphens} onCheckedChange={setUuidHyphens} />
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <span className="text-sm">Braces</span>
-                      <Switch checked={uuidBraces} onCheckedChange={setUuidBraces} />
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <span className="text-sm">Unique only</span>
-                      <Switch checked={uniqueOnly} onCheckedChange={setUniqueOnly} />
-                    </div>
+                  <div className="sm:col-span-2 grid grid-cols-2 gap-3">
+                    <SwitchRow
+                      label="Uppercase"
+                      checked={uuidUpper}
+                      onCheckedChange={(v) => setUuidUpper(Boolean(v))}
+                    />
+                    <SwitchRow
+                      label="Hyphens"
+                      checked={uuidHyphens}
+                      onCheckedChange={(v) => setUuidHyphens(Boolean(v))}
+                    />
+                    <SwitchRow
+                      label="Braces"
+                      checked={uuidBraces}
+                      onCheckedChange={(v) => setUuidBraces(Boolean(v))}
+                    />
+                    <SwitchRow
+                      label="Unique only"
+                      checked={uniqueOnly}
+                      onCheckedChange={(v) => setUniqueOnly(Boolean(v))}
+                    />
                   </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="nanoid" className="mt-3 space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label>Size</Label>
-                    <Input
-                      type="number"
-                      min={3}
-                      max={200}
-                      value={nanoSize}
-                      onChange={(e) => setNanoSize(clampInt(e.target.value, 3, 200))}
+                  <InputField
+                    label="Size"
+                    type="number"
+                    min={3}
+                    max={200}
+                    value={String(nanoSize)}
+                    onChange={(e) => setNanoSize(clampInt(e.target.value, 3, 200))}
+                  />
+                  <InputField
+                    label="Count"
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={String(count)}
+                    onChange={(e) => setCount(clampInt(e.target.value, 1, 1000))}
+                  />
+                  <SelectField
+                    label="Alphabet Preset"
+                    value={nanoPreset}
+                    onValueChange={(k) => {
+                      setNanoPreset(k);
+                      setNanoAlphabet(PRESETS[k] ?? DEFAULT_NANO_ALPHABET);
+                    }}
+                    options={Object.keys(PRESETS).map((k) => ({ value: k, label: k }))}
+                  />
+                  <InputField
+                    label="Custom Alphabet"
+                    value={nanoAlphabet}
+                    onChange={(e) => {
+                      setNanoAlphabet(e.target.value);
+                      setNanoPreset("Custom");
+                    }}
+                    hint={`Alphabet length ${nanoAlphabet.length}`}
+                  />
+                  <div className="sm:col-span-2">
+                    <SwitchRow
+                      label="Unique only"
+                      checked={uniqueOnly}
+                      onCheckedChange={(v) => setUniqueOnly(Boolean(v))}
                     />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Count</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={1000}
-                      value={count}
-                      onChange={(e) => setCount(clampInt(e.target.value, 1, 1000))}
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Alphabet Preset</Label>
-                    <select
-                      className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                      value={nanoPreset}
-                      onChange={(e) => {
-                        const k = e.target.value;
-                        setNanoPreset(k);
-                        setNanoAlphabet(PRESETS[k] ?? DEFAULT_NANO_ALPHABET);
-                      }}
-                    >
-                      {Object.keys(PRESETS).map((k) => (
-                        <option key={k}>{k}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Custom Alphabet</Label>
-                    <Input
-                      value={nanoAlphabet}
-                      onChange={(e) => {
-                        setNanoAlphabet(e.target.value);
-                        setNanoPreset("Custom");
-                      }}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Entropy ≈ <b>{entropyBits}</b> bits • Alphabet length {nanoAlphabet.length}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border p-3 sm:col-span-2">
-                    <span className="text-sm">Unique only</span>
-                    <Switch checked={uniqueOnly} onCheckedChange={setUniqueOnly} />
                   </div>
                 </div>
               </TabsContent>
@@ -518,89 +500,85 @@ export default function UuidNanoidPage() {
 
           {/* Middle: formatting */}
           <div className="rounded-lg border p-3 space-y-3">
-            <Label className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
               <ListChecks className="h-4 w-4" /> Formatting
-            </Label>
-            <div className="grid gap-3">
-              <div className="space-y-1.5">
-                <Label>Prefix</Label>
-                <Input
-                  value={prefix}
-                  onChange={(e) => setPrefix(e.target.value)}
-                  placeholder="e.g. id_"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Suffix</Label>
-                <Input
-                  value={suffix}
-                  onChange={(e) => setSuffix(e.target.value)}
-                  placeholder="e.g. _prod"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Join delimiter (for copy/export)</Label>
-                <Input
-                  value={delimiter}
-                  onChange={(e) => setDelimiter(e.target.value)}
-                  placeholder="\\n for newline"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Filename (export)</Label>
-                <Input
-                  value={filename}
-                  onChange={(e) => setFilename(e.target.value)}
-                  placeholder="ids.txt"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Entropy ≈ <b>{entropyBits}</b> bits{" "}
-                {mode === "uuid" && uuidVersion !== "v5" ? "(per ID)" : ""}
-              </p>
+            </div>
+            <InputField
+              label="Prefix"
+              value={prefix}
+              onChange={(e) => setPrefix(e.target.value)}
+              placeholder="e.g. id_"
+            />
+            <InputField
+              label="Suffix"
+              value={suffix}
+              onChange={(e) => setSuffix(e.target.value)}
+              placeholder="e.g. _prod"
+            />
+            <InputField
+              label="Join delimiter"
+              value={delimiter}
+              onChange={(e) => setDelimiter(e.target.value)}
+              hint="Use \\n or \\t for newline/tab"
+            />
+            <InputField
+              label="Filename (export)"
+              value={filename}
+              onChange={(e) => setFilename(e.target.value)}
+              placeholder="ids.txt"
+            />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Stat
+                label="Entropy"
+                value={`${entropyBits} bits`}
+                hint={
+                  mode === "uuid" && uuidVersion !== "v5"
+                    ? "per ID (v1/v4/v7)"
+                    : uuidVersion === "v5"
+                      ? "deterministic"
+                      : undefined
+                }
+              />
+              <Stat label="Planned count" value={count} hint="IDs to generate" />
             </div>
           </div>
 
-          {/* Right: quick tools */}
+          {/* Right: quick tools & validate */}
           <div className="rounded-lg border p-3 space-y-3">
-            <Label className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
               <Wand2 className="h-4 w-4" /> Quick Tools
-            </Label>
+            </div>
             <div className="grid gap-2">
-              <Button variant="outline" className="gap-2" onClick={() => setList([])}>
-                <RefreshCw className="h-4 w-4" /> Clear results
-              </Button>
-              <Button
+              <ActionButton
+                icon={RefreshCw}
+                label="Clear results"
                 variant="outline"
-                className="gap-2"
+                onClick={() => setList([])}
+              />
+              <ActionButton
+                icon={Copy}
+                label={copied === "ALL" ? "Copied" : "Copy all"}
                 onClick={copyAll}
                 disabled={list.length === 0}
-              >
-                {copied === "ALL" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{" "}
-                Copy all
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={exportTxt}
+              />
+              <ExportTextButton
+                filename={filename || "ids.txt"}
+                getText={getExportText}
+                label="Export .txt"
+                icon={Download}
                 disabled={list.length === 0}
-              >
-                <Download className="h-4 w-4" /> Export .txt
-              </Button>
-              <Button className="gap-2" onClick={() => setFullscreen((v) => !v)}>
-                {fullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
-                ) : (
-                  <Fullscreen className="h-4 w-4" />
-                )}
-                {fullscreen ? "Exit fullscreen" : "Fullscreen"}
-              </Button>
+              />
+              <ActionButton
+                icon={fullscreen ? Minimize2 : Fullscreen}
+                label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+                onClick={() => setFullscreen((v) => !v)}
+              />
             </div>
             <Separator className="my-2" />
-            <Label className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
               <Upload className="h-4 w-4" /> Validate
-            </Label>
-            <Input
+            </div>
+            <InputField
               placeholder="Paste an ID to validate (UUID or NanoID)"
               value={validationInput}
               onChange={(e) => setValidationInput(e.target.value)}
@@ -610,7 +588,7 @@ export default function UuidNanoidPage() {
         </CardContent>
       </GlassCard>
 
-      <Separator />
+      <Separator className="my-6" />
 
       {/* Results */}
       <div className={clsx(fullscreen ? "fixed inset-2 z-50" : "relative", "rounded-2xl")}>
@@ -650,7 +628,7 @@ export default function UuidNanoidPage() {
                 <div className="hidden md:grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {list.map((id, i) => (
                     <IdCard
-                      key={i}
+                      key={`${id}-${i}`}
                       idx={i}
                       id={id}
                       onCopy={() => copyOne(id)}
@@ -662,19 +640,18 @@ export default function UuidNanoidPage() {
                 {/* Mobile textarea */}
                 <div className="md:hidden">
                   <div className="flex justify-end mb-2">
-                    <Button size="sm" variant="outline" className="gap-2" onClick={copyAll}>
-                      {copied === "ALL" ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}{" "}
-                      Copy all
-                    </Button>
+                    <ActionButton
+                      icon={Copy}
+                      label={copied === "ALL" ? "Copied" : "Copy all"}
+                      variant="outline"
+                      onClick={copyAll}
+                    />
                   </div>
-                  <Textarea
+                  <TextareaField
                     readOnly
-                    className="min-h-[260px] font-mono text-xs"
                     value={list.join("\n")}
+                    onValueChange={() => {}}
+                    textareaClassName="min-h-[260px] font-mono text-xs"
                   />
                 </div>
               </>
@@ -703,11 +680,20 @@ function IdCard({
     <div className="flex flex-col gap-2 rounded-lg border p-3">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">ID {idx + 1}</span>
-        <Button size="sm" variant="outline" className="gap-2" onClick={onCopy}>
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
-        </Button>
+        <ActionButton
+          icon={copied ? Check : Copy}
+          label={copied ? "Copied" : "Copy"}
+          variant="outline"
+          size="sm"
+          onClick={onCopy}
+        />
       </div>
-      <Textarea readOnly value={id} className="min-h-[60px] font-mono text-xs" />
+      <TextareaField
+        readOnly
+        value={id}
+        onValueChange={() => {}}
+        textareaClassName="min-h-[60px] font-mono text-xs"
+      />
     </div>
   );
 }
@@ -720,9 +706,8 @@ function ValidationResult({
     | { type: "uuid"; valid: boolean; version: number }
     | { type: "nanoid"; valid: boolean; length: number; expected: number };
 }) {
-  if (validation.type === "empty") {
+  if (validation.type === "empty")
     return <p className="text-xs text-muted-foreground">Paste an ID above.</p>;
-  }
   if (validation.type === "uuid") {
     return (
       <p className="text-xs">
@@ -748,15 +733,4 @@ function ValidationResult({
       • length <b>{validation.length}</b> (expected ~{validation.expected})
     </p>
   );
-}
-
-/* --------------------------------- helpers -------------------------------- */
-
-function clampInt(v: string, min: number, max: number) {
-  const n = parseInt(v.replace(/[^\d-]/g, ""), 10);
-  if (Number.isNaN(n)) return min;
-  return Math.max(min, Math.min(max, n));
-}
-function escapeRegExp(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
