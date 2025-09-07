@@ -1,22 +1,6 @@
 "use client";
 
-import {
-  Check,
-  Copy,
-  Download,
-  Fullscreen,
-  Hash,
-  Key,
-  ListChecks,
-  Minimize2,
-  RefreshCw,
-  RotateCcw,
-  Settings2,
-  Shuffle,
-  Type as TypeIcon,
-  Upload,
-  Wand2,
-} from "lucide-react";
+import { Hash, Key, ListChecks, Shuffle, Type as TypeIcon, Upload, Wand2 } from "lucide-react";
 import { customAlphabet, nanoid as nanoidFn } from "nanoid";
 import { useEffect, useMemo, useState } from "react";
 import * as uuid from "uuid";
@@ -34,11 +18,11 @@ import Stat from "@/components/shared/stat";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-/* -------------------------------- constants ------------------------------- */
+/* constants */
 
 const STORAGE_KEY = "toolshub.uuid-nanoid.v1";
 
@@ -54,23 +38,15 @@ const PRESETS: Record<string, string> = {
   "Numbers only": "0123456789",
 };
 
-/* -------------------------------- helpers --------------------------------- */
-function clsx(...arr: Array<string | false | undefined>) {
-  return arr.filter(Boolean).join(" ");
-}
+/* helpers */
 function deEscapeDelimiter(s: string) {
   return s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
-}
-function escapeRegExp(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function clampInt(v: string, min: number, max: number) {
   const n = parseInt(v.replace(/[^\d-]/g, ""), 10);
   if (Number.isNaN(n)) return min;
   return Math.max(min, Math.min(max, n));
 }
-
-/* ---------------------------------- page ---------------------------------- */
 
 export default function UuidNanoidClient() {
   const [mode, setMode] = useState<Mode>("uuid");
@@ -81,7 +57,6 @@ export default function UuidNanoidClient() {
   const [prefix, setPrefix] = useState<string>("");
   const [suffix, setSuffix] = useState<string>("");
   const [delimiter, setDelimiter] = useState<string>("\\n");
-  const [fullscreen, setFullscreen] = useState<boolean>(false);
 
   // uuid
   const [uuidVersion, setUuidVersion] = useState<UuidVersion>("v4");
@@ -99,7 +74,6 @@ export default function UuidNanoidClient() {
 
   // output + state
   const [list, setList] = useState<string[]>([]);
-  const [copied, setCopied] = useState<string | "ALL" | null>(null);
   const [filename, setFilename] = useState<string>("ids.txt");
   const [validationInput, setValidationInput] = useState<string>("");
   const [errors, setErrors] = useState<string | null>(null);
@@ -185,15 +159,13 @@ export default function UuidNanoidClient() {
 
   const entropyBits = useMemo(() => {
     if (mode === "uuid") {
-      if (uuidVersion === "v5") return 0; // deterministic hash
-      return 122; // effective randomness for v1/v4/v7
+      if (uuidVersion === "v5") return 0;
+      return 122; 
     }
     const L = Math.max(1, nanoAlphabet.length);
     const bits = nanoSize * Math.log2(L);
     return Math.round(bits);
   }, [mode, uuidVersion, nanoAlphabet, nanoSize]);
-
-  /* ------------------------------- generation ------------------------------ */
 
   const formatUuid = (id: string) => {
     let s = id;
@@ -288,30 +260,7 @@ export default function UuidNanoidClient() {
     setErrors(null);
   };
 
-  const copyOne = async (s: string) => {
-    try {
-      await navigator.clipboard.writeText(s);
-      setCopied(s);
-      window.setTimeout(() => setCopied(null), 900);
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const copyAll = async () => {
-    try {
-      const delim = deEscapeDelimiter(delimiter || "\n");
-      await navigator.clipboard.writeText(list.join(delim));
-      setCopied("ALL");
-      window.setTimeout(() => setCopied(null), 900);
-    } catch {
-      /* ignore */
-    }
-  };
-
   const getExportText = () => list.join(deEscapeDelimiter(delimiter || "\n"));
-
-  /* -------------------------------- validate ------------------------------- */
 
   const validation = useMemo(() => {
     const raw = validationInput.trim();
@@ -322,14 +271,13 @@ export default function UuidNanoidClient() {
       return { type: "uuid" as const, valid: true, version: ver };
     }
     const alpha = nanoAlphabet || DEFAULT_NANO_ALPHABET;
-    const rx = new RegExp(`^[${escapeRegExp(alpha)}]+$`);
-    return { type: "nanoid" as const, valid: rx.test(raw), length: raw.length, expected: nanoSize };
+    const allowed = new Set([...alpha]);
+    const valid = [...raw].every((ch) => allowed.has(ch));
+    return { type: "nanoid" as const, valid, length: raw.length, expected: nanoSize };
   }, [validationInput, nanoAlphabet, nanoSize]);
 
-  /* ---------------------------------- UI ---------------------------------- */
-
   return (
-    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+    <>
       <ToolPageHeader
         icon={Hash}
         title="UUID & NanoID Generator"
@@ -337,19 +285,11 @@ export default function UuidNanoidClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ActionButton
-              icon={RefreshCw}
-              label="Clear"
-              variant="outline"
-              onClick={() => setList([])}
-            />
-            <ActionButton icon={Shuffle} label="Generate" onClick={run} />
-            <CopyButton getText={getExportText} disabled={list.length === 0} />
+            <CopyButton label="Copy All" getText={getExportText} disabled={list.length === 0} />
             <ExportTextButton
-              filename={filename || "ids.txt"}
+              variant="default"
+              filename={filename}
               getText={getExportText}
-              label="Export .txt"
-              icon={Download}
               disabled={list.length === 0}
             />
           </>
@@ -357,14 +297,14 @@ export default function UuidNanoidClient() {
       />
 
       <GlassCard>
-        <CardHeader className="pb-2">
+        <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Choose generator, size/count, formatting & uniqueness.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 lg:grid-cols-3">
           {/* Left: mode & common */}
           <div className="rounded-lg border p-3 space-y-3">
-            <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="w-full">
+            <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="w-full h-full">
               <TabsList className="grid grid-cols-2">
                 <TabsTrigger value="uuid" className="gap-2">
                   <Key className="h-4 w-4" /> UUID
@@ -472,8 +412,8 @@ export default function UuidNanoidClient() {
                     label="Alphabet Preset"
                     value={nanoPreset}
                     onValueChange={(k) => {
-                      setNanoPreset(k);
-                      setNanoAlphabet(PRESETS[k] ?? DEFAULT_NANO_ALPHABET);
+                      setNanoPreset(k as string);
+                      setNanoAlphabet(PRESETS[k as string] ?? DEFAULT_NANO_ALPHABET);
                     }}
                     options={Object.keys(PRESETS).map((k) => ({ value: k, label: k }))}
                   />
@@ -495,6 +435,13 @@ export default function UuidNanoidClient() {
                   </div>
                 </div>
               </TabsContent>
+              <ActionButton
+                className="mb-auto"
+                variant="default"
+                icon={Shuffle}
+                label="Generate"
+                onClick={run}
+              />
             </Tabs>
           </div>
 
@@ -549,29 +496,13 @@ export default function UuidNanoidClient() {
               <Wand2 className="h-4 w-4" /> Quick Tools
             </div>
             <div className="grid gap-2">
-              <ActionButton
-                icon={RefreshCw}
-                label="Clear results"
-                variant="outline"
-                onClick={() => setList([])}
-              />
-              <ActionButton
-                icon={Copy}
-                label={copied === "ALL" ? "Copied" : "Copy all"}
-                onClick={copyAll}
-                disabled={list.length === 0}
-              />
+              <ResetButton label="Clear results" onClick={() => setList([])} />
+              <CopyButton label="Copy All" getText={getExportText} disabled={list.length === 0} />
+
               <ExportTextButton
-                filename={filename || "ids.txt"}
+                filename={filename}
                 getText={getExportText}
-                label="Export .txt"
-                icon={Download}
                 disabled={list.length === 0}
-              />
-              <ActionButton
-                icon={fullscreen ? Minimize2 : Fullscreen}
-                label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
-                onClick={() => setFullscreen((v) => !v)}
               />
             </div>
             <Separator className="my-2" />
@@ -591,8 +522,8 @@ export default function UuidNanoidClient() {
       <Separator className="my-6" />
 
       {/* Results */}
-      <div className={clsx(fullscreen ? "fixed inset-2 z-50" : "relative", "rounded-2xl")}>
-        <GlassCard className={clsx("shadow-sm h-full", fullscreen && "ring-1 ring-primary/30")}>
+      <div className="relative rounded-2xl">
+        <GlassCard className="shadow-sm h-full">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
@@ -627,26 +558,23 @@ export default function UuidNanoidClient() {
                 {/* Desktop grid */}
                 <div className="hidden md:grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {list.map((id, i) => (
-                    <IdCard
-                      key={`${id}-${i}`}
-                      idx={i}
-                      id={id}
-                      onCopy={() => copyOne(id)}
-                      copied={copied === id}
-                    />
+                    <div
+                      key={`id-${i as number}`}
+                      className="flex items-center justify-between rounded-md border p-3"
+                    >
+                      <span className="font-mono text-sm break-all">{id}</span>
+                      <CopyButton size="sm" getText={() => id} />
+                    </div>
                   ))}
                 </div>
 
                 {/* Mobile textarea */}
                 <div className="md:hidden">
-                  <div className="flex justify-end mb-2">
-                    <ActionButton
-                      icon={Copy}
-                      label={copied === "ALL" ? "Copied" : "Copy all"}
-                      variant="outline"
-                      onClick={copyAll}
-                    />
-                  </div>
+                  <CopyButton
+                    label="Copy All"
+                    getText={getExportText}
+                    disabled={list.length === 0}
+                  />
                   <TextareaField
                     readOnly
                     value={list.join("\n")}
@@ -659,45 +587,11 @@ export default function UuidNanoidClient() {
           </CardContent>
         </GlassCard>
       </div>
-    </MotionGlassCard>
+    </>
   );
 }
 
-/* -------------------------------- sub-views -------------------------------- */
-
-function IdCard({
-  idx,
-  id,
-  onCopy,
-  copied,
-}: {
-  idx: number;
-  id: string;
-  onCopy: () => void;
-  copied: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-2 rounded-lg border p-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">ID {idx + 1}</span>
-        <ActionButton
-          icon={copied ? Check : Copy}
-          label={copied ? "Copied" : "Copy"}
-          variant="outline"
-          size="sm"
-          onClick={onCopy}
-        />
-      </div>
-      <TextareaField
-        readOnly
-        value={id}
-        onValueChange={() => {}}
-        textareaClassName="min-h-[60px] font-mono text-xs"
-      />
-    </div>
-  );
-}
-
+/* sub-views */
 function ValidationResult({
   validation,
 }: {
