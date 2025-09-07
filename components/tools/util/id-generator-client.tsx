@@ -411,7 +411,7 @@ export default function IdGeneratorClient() {
               {processed.map((id) => (
                 <div key={id} className="flex items-center justify-between rounded-md border p-3">
                   <span className="font-mono text-sm break-all">{id}</span>
-                  <CopyButton getText={() => id} />
+                  <CopyButton size="sm" getText={() => id} />
                 </div>
               ))}
             </div>

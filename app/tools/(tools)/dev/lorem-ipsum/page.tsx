@@ -1,7 +1,7 @@
 "use client";
 
-import { AlignLeft, Download, RotateCcw } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { AlignLeft } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionButton,
   CopyButton,
@@ -12,7 +12,6 @@ import InputField from "@/components/shared/form-fields/input-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import Stat from "@/components/shared/stat";
-// Shared, reusable UI
 import ToolPageHeader from "@/components/shared/tool-page-header";
 
 import {
@@ -22,13 +21,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-
-/*
-  Lorem Ipsum Generator — Tools Hub
-  Path: app/tools/(tools)/dev/lorem-ipsum/page.tsx
-*/
 
 // Static Latin word bank (classic + a bit extended)
 const WORDS =
@@ -82,10 +76,8 @@ function generateParagraph(opts: GenOptions): string {
 
   if (startWithClassic) {
     const classic = "Lorem ipsum dolor sit amet,";
-    // Only prefix if it doesn't already start with it
     if (!sentence.startsWith("Lorem ipsum")) {
       sentence = `${classic} ${sentence.charAt(0).toLowerCase()}${sentence.slice(1)}`;
-      // Capitalize the very beginning
       sentence = capitalizeFirst(sentence);
     }
   }
@@ -108,10 +100,10 @@ export default function LoremIpsumPage() {
   const [output, setOutput] = useState<string[]>([]);
 
   // Derived
-  const rng = useMemo(
-    () => (deterministic ? mulberry32(seed) : Math.random),
-    [deterministic, seed],
-  );
+  // const rng = useMemo(
+  //   () => (deterministic ? mulberry32(seed) : Math.random),
+  //   [deterministic, seed],
+  // );
 
   const run = useCallback(() => {
     const localRng = deterministic ? mulberry32(seed) : Math.random; // stable for a single run
@@ -164,13 +156,11 @@ export default function LoremIpsumPage() {
         description="Fast, tweakable filler text for mockups, layouts, and testing."
         actions={
           <>
-            <ResetButton onClick={resetAll} icon={RotateCcw} />
+            <ResetButton onClick={resetAll} />
             <CopyButton getText={() => outputText} disabled={!outputText} />
             <ExportTextButton
-              variant="outline"
+              variant="default"
               filename="lorem-ipsum.txt"
-              label="Export"
-              icon={Download}
               getText={() => outputText || ""}
               disabled={!outputText}
             />
@@ -298,17 +288,15 @@ export default function LoremIpsumPage() {
                 readOnly
                 value={outputText}
                 onValueChange={() => {}}
-                textareaClassName="min-h-[240px] font-serif"
+                textareaClassName="min-h-[240px] font-mono"
               />
             )}
           </CardContent>
           <CardFooter className="flex flex-wrap gap-2">
             <CopyButton getText={() => outputText} disabled={!outputText} />
             <ExportTextButton
-              variant="outline"
               filename="lorem-ipsum.txt"
               getText={() => outputText}
-              icon={Download}
               disabled={!outputText}
             />
           </CardFooter>

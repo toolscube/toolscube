@@ -21,7 +21,6 @@ import InputField from "@/components/shared/form-fields/input-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import Stat from "@/components/shared/stat";
-/* Shared, reusable UI */
 import ToolPageHeader from "@/components/shared/tool-page-header";
 
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +34,7 @@ import {
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 
-// ---- Helpers: bytes / encoders ----
+// Helpers: bytes / encoders
 const enc = new TextEncoder();
 // const dec = new TextDecoder();
 
@@ -51,21 +50,18 @@ function hex(bytes: Uint8Array, uppercase: boolean) {
 }
 
 function base64(bytes: Uint8Array) {
-  // Convert to binary string in chunks to avoid call stack issues for large arrays
   let str = "";
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
     str += String.fromCharCode.apply(
       null,
       Array.from(bytes.subarray(i, i + chunk)) as unknown as number[],
     );
   }
-  // btoa works on Latin1/Binary strings
   return btoa(str);
 }
 
-// ---- MD5 (RFC 1321) — tiny implementation for Uint8Array ----
+// MD5 (RFC 1321) — tiny implementation for Uint8Array
 // Public domain implementation adapted for TS + Uint8Array
 function md5(input: Uint8Array): Uint8Array {
   const K = new Uint32Array(64);
@@ -155,7 +151,7 @@ function md5(input: Uint8Array): Uint8Array {
   return out;
 }
 
-// Always return a fresh, plain ArrayBuffer (never SharedArrayBuffer)
+// Always return a fresh, plain ArrayBuffer
 function toArrayBufferStrict(u8: Uint8Array): ArrayBuffer {
   const buf = new ArrayBuffer(u8.byteLength);
   new Uint8Array(buf).set(u8);
@@ -196,8 +192,6 @@ async function hmac(
   const outer = await digest(algo, new Uint8Array([...o, ...inner]));
   return outer;
 }
-
-// ---- UI Component ----
 
 type AlgoKey = "MD5" | "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
 const ALL_ALGOS: AlgoKey[] = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
@@ -506,6 +500,9 @@ export default function HashGeneratorClient() {
                     className="pointer-events-none"
                   />
                 </div>
+
+                {/* <InputField type="file" /> */}
+
                 <p className="text-xs text-muted-foreground">
                   {fileName ? `Selected: ${fileName}` : "No file selected."}
                 </p>
@@ -552,9 +549,9 @@ export default function HashGeneratorClient() {
         </GlassCard>
       </div>
 
-      <Separator className="my-4" />
+      {/* <Separator className="my-4" /> */}
 
-      <GlassCard>
+      {/* <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Notes</CardTitle>
           <CardDescription>About algorithms & file hashing.</CardDescription>
@@ -569,7 +566,7 @@ export default function HashGeneratorClient() {
             <li>Salt is concatenated (prefix or suffix) before hashing; this is not a KDF.</li>
           </ul>
         </CardContent>
-      </GlassCard>
+      </GlassCard> */}
     </>
   );
 }

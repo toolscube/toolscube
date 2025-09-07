@@ -1,7 +1,7 @@
 "use client";
 
-import { Download, Key, RotateCcw, ShieldAlert, ShieldCheck } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Key, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionButton,
   CopyButton,
@@ -12,17 +12,11 @@ import InputField from "@/components/shared/form-fields/input-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import Stat from "@/components/shared/stat";
-// Shared components
 import ToolPageHeader from "@/components/shared/tool-page-header";
 
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-
-/*
-  Password Generator — Tools Hub
-  Path: app/tools/(tools)/dev/password-generator/page.tsx
-*/
 
 type GenFlags = {
   upper: boolean;
@@ -34,7 +28,7 @@ type GenFlags = {
 };
 
 const DEFAULT_SYMBOLS = `!@#$%^&*()-_=+[]{};:,.<>/?`;
-const AMBIGUOUS = "0OoIlI|`'\"{}[]()<>"; // characters users often avoid
+const AMBIGUOUS = "0OoIlI|`'\"{}[]()<>";
 
 function uniqueChars(s: string): string {
   return Array.from(new Set(s.split(""))).join("");
@@ -51,7 +45,7 @@ function buildCharset(flags: GenFlags, customSymbols: string): string {
   if (flags.lower) chars += L;
   if (flags.numbers) chars += N;
   if (flags.symbols) chars += S;
-  if (!chars) chars = L; // fallback
+  if (!chars) chars = L;
 
   if (flags.excludeAmbiguous) {
     const amb = new Set(AMBIGUOUS.split(""));
@@ -67,7 +61,7 @@ function buildCharset(flags: GenFlags, customSymbols: string): string {
 // Rejection-sampling to avoid modulo bias
 function randInt(maxExclusive: number): number {
   if (maxExclusive <= 0) return 0;
-  const maxUint = 0xffffffff; // 2^32 - 1
+  const maxUint = 0xffffffff;
   const limit = Math.floor((maxUint + 1) / maxExclusive) * maxExclusive;
   const buf = new Uint32Array(1);
   while (true) {
@@ -103,7 +97,6 @@ function ensureAtLeastOneFromEach(
 
   const out: string[] = [];
   if (flags.requireEachSet) {
-    // Guarantee one from each selected set
     for (const set of req) {
       const setFiltered = charset
         .split("")
@@ -114,7 +107,6 @@ function ensureAtLeastOneFromEach(
   }
   // Fill the rest
   while (out.length < length) out.push(pick(charset));
-  // Shuffle so the guaranteed characters don't end up at the front
   return shuffleInPlace(out).join("");
 }
 
@@ -131,7 +123,7 @@ function strengthLabel(bits: number): { label: string; tone: "ok" | "warn" | "go
 
 export default function PasswordGeneratorPage() {
   const [length, setLength] = useState<number>(16);
-  const [count, setCount] = useState<number>(5);
+  const [count, setCount] = useState<number>(18);
   const [flags, setFlags] = useState<GenFlags>({
     upper: true,
     lower: true,
@@ -162,7 +154,7 @@ export default function PasswordGeneratorPage() {
 
   function resetAll() {
     setLength(16);
-    setCount(5);
+    setCount(18);
     setFlags({
       upper: true,
       lower: true,
@@ -179,23 +171,21 @@ export default function PasswordGeneratorPage() {
   const allText = useMemo(() => passwords.join("\n"), [passwords]);
 
   return (
-    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+    <>
       <ToolPageHeader
         icon={Key}
         title="Password Generator"
         description="Secure, customizable passwords with entropy and bias‑free randomness."
         actions={
           <>
-            <ResetButton onClick={resetAll} icon={RotateCcw} />
+            <ResetButton onClick={resetAll} />
             <CopyButton getText={() => allText} disabled={!allText} />
             <ExportTextButton
-              variant="outline"
               filename="passwords.txt"
-              icon={Download}
               getText={() => allText || ""}
               disabled={!allText}
             />
-            <ActionButton label="Generate" icon={Key} onClick={run} />
+            <ActionButton variant="default" label="Generate" icon={Key} onClick={run} />
           </>
         }
       />
@@ -306,22 +296,17 @@ export default function PasswordGeneratorPage() {
               </div>
             ) : null}
             {passwords.map((pwd, i) => (
-              <GlassCard key={`${pwd}-${i as number}`} className="p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="text-xs text-muted-foreground">Password {i + 1}</div>
-                  <CopyButton size="sm" getText={() => pwd} />
-                </div>
-                <TextareaField
-                  readOnly
-                  value={pwd}
-                  onValueChange={() => {}}
-                  textareaClassName="min-h-[64px] font-mono"
-                />
-              </GlassCard>
+              <div
+                key={`pwd-${i as number}`}
+                className="flex items-center justify-between rounded-md border p-3"
+              >
+                <span className="font-mono text-sm break-all">{pwd}</span>
+                <CopyButton size="sm" getText={() => pwd} />
+              </div>
             ))}
           </CardContent>
         </GlassCard>
       </div>
-    </MotionGlassCard>
+    </>
   );
 }
