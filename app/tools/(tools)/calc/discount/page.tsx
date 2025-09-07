@@ -345,7 +345,7 @@ export default function DiscountFinderClient() {
       />
 
       {/* Inputs */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Inputs</CardTitle>
           <CardDescription>

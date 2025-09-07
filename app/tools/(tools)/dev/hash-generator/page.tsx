@@ -358,7 +358,7 @@ export default function HashGeneratorClient() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Input & Settings</CardTitle>
             <CardDescription>Choose input type, algorithms and output format.</CardDescription>
@@ -554,7 +554,7 @@ export default function HashGeneratorClient() {
 
       <Separator className="my-4" />
 
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Notes</CardTitle>
           <CardDescription>About algorithms & file hashing.</CardDescription>

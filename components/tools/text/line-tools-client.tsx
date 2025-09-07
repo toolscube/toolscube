@@ -279,7 +279,7 @@ export default function LineToolsClient() {
       />
 
       {/* Input */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Input</CardTitle>
           <CardDescription>
@@ -334,7 +334,7 @@ export default function LineToolsClient() {
       <Separator />
 
       {/* Operations */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Operations</CardTitle>
           <CardDescription>
@@ -482,7 +482,7 @@ export default function LineToolsClient() {
       <Separator />
 
       {/* Output */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

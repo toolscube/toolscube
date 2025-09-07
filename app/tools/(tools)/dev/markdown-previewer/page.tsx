@@ -577,7 +577,7 @@ ${html}
       </GlassCard>
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Settings</CardTitle>
         </CardHeader>

@@ -703,7 +703,7 @@ export default function OGBuilderPage() {
       />
 
       {/* Top: Quick presets */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] p-3">
           <div className="flex flex-wrap items-center gap-2">
             <Label className="flex items-center gap-2">
@@ -750,7 +750,7 @@ export default function OGBuilderPage() {
         {/* Left: Controls */}
         <div className="space-y-6">
           {/* Content */}
-          <GlassCard className="shadow-sm">
+          <GlassCard>
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
@@ -943,7 +943,7 @@ export default function OGBuilderPage() {
           </GlassCard>
 
           {/* Colors */}
-          <GlassCard className="shadow-sm">
+          <GlassCard>
             <div className="p-4 space-y-3">
               <Label className="flex items-center gap-2">
                 <Palette className="h-4 w-4" /> Colors
@@ -1006,7 +1006,7 @@ export default function OGBuilderPage() {
           </GlassCard>
 
           {/* Media */}
-          <GlassCard className="shadow-sm">
+          <GlassCard>
             <div className="p-4 space-y-3">
               <Label className="flex items-center gap-2">
                 <ImageIcon className="h-4 w-4" /> Background & Logo
@@ -1137,7 +1137,7 @@ export default function OGBuilderPage() {
           </GlassCard>
 
           {/* Effects & Guides */}
-          <GlassCard className="shadow-sm">
+          <GlassCard>
             <div className="p-4 space-y-3">
               <Label className="flex items-center gap-2">
                 <Layers className="h-4 w-4" /> Effects & Guides
@@ -1240,7 +1240,7 @@ export default function OGBuilderPage() {
           </GlassCard>
 
           {/* Canvas size (custom) */}
-          <GlassCard className="shadow-sm">
+          <GlassCard>
             <div className="p-4 space-y-3">
               <Label className="flex items-center gap-2">
                 <LayoutGrid className="h-4 w-4" /> Canvas

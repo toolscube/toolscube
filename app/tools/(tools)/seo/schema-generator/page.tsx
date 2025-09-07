@@ -373,7 +373,7 @@ export default function SchemaGeneratorPage() {
       </GlassCard>
 
       {/* Type Switcher */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Type</CardTitle>
           <CardDescription>Select a schema type and fill the fields below.</CardDescription>
@@ -417,7 +417,7 @@ export default function SchemaGeneratorPage() {
       <Separator />
 
       {/* Output & Tips */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Generated JSON-LD</CardTitle>
           <CardDescription>
@@ -489,7 +489,7 @@ function ArticleForm({ s, setS }: { s: State; setS: React.Dispatch<React.SetStat
   const titleOk = a.headline.trim().length >= 20 && a.headline.trim().length <= 110;
 
   return (
-    <GlassCard className="shadow-sm">
+    <GlassCard>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Article</CardTitle>
         <CardDescription>Headline, author, dates, images, and publisher.</CardDescription>
@@ -632,7 +632,7 @@ function ProductForm({ s, setS }: { s: State; setS: React.Dispatch<React.SetStat
   const imgCount = lsSplit(p.images).length;
 
   return (
-    <GlassCard className="shadow-sm">
+    <GlassCard>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Product</CardTitle>
         <CardDescription>Core attributes, offers, and ratings.</CardDescription>
@@ -805,7 +805,7 @@ function OrgForm({ s, setS }: { s: State; setS: React.Dispatch<React.SetStateAct
   const sameCount = lsSplit(o.sameAs).length;
 
   return (
-    <GlassCard className="shadow-sm">
+    <GlassCard>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Organization</CardTitle>
         <CardDescription>Brand identity, social profiles, contact, and address.</CardDescription>

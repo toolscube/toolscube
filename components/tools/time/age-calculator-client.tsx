@@ -263,7 +263,7 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
       />
 
       {/* INPUTS */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Your Birth Details</CardTitle>
           <CardDescription>
@@ -301,7 +301,7 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
       <Separator />
 
       {/* RESULTS */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Results</CardTitle>
           <CardDescription>Live as the seconds tick by. Copy a summary to share.</CardDescription>

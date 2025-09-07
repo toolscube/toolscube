@@ -275,7 +275,7 @@ export default function SpriteSheetPage() {
         </GlassCard>
 
         {/* Upload & List */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Icons</CardTitle>
             <CardDescription>Upload multiple images and reorder as needed.</CardDescription>
@@ -380,7 +380,7 @@ export default function SpriteSheetPage() {
         </GlassCard>
 
         {/* Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Layout & Output</CardTitle>
             <CardDescription>Configure grid, sizes, and output format.</CardDescription>
@@ -575,7 +575,7 @@ export default function SpriteSheetPage() {
         <Separator />
 
         {/* Log */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Process Log</CardTitle>
             <CardDescription>Sprite + CSS + JSON will download automatically.</CardDescription>

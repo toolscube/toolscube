@@ -461,7 +461,7 @@ export default function RegexLibraryPage() {
       </GlassCard>
 
       {/* Tester */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Regex Tester</CardTitle>
           <CardDescription>
@@ -705,7 +705,7 @@ export default function RegexLibraryPage() {
       {/* Library grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((item) => (
-          <GlassCard key={item.id} className="shadow-sm">
+          <GlassCard key={item.id}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">{item.title}</CardTitle>
@@ -751,7 +751,7 @@ export default function RegexLibraryPage() {
       <Separator className="my-6" />
 
       {/* Favorites */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Favorites</CardTitle>
           <CardDescription>Save and reuse your most common patterns.</CardDescription>
@@ -811,7 +811,7 @@ export default function RegexLibraryPage() {
       <Separator className="my-6" />
 
       {/* Cheatsheet */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Regex Cheatsheet</CardTitle>
           <CardDescription>Common tokens, anchors & quantifiers (JS flavor).</CardDescription>

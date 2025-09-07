@@ -246,7 +246,7 @@ export default function IdGeneratorClient() {
       />
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Pick the ID type and customize generation.</CardDescription>
@@ -379,7 +379,7 @@ export default function IdGeneratorClient() {
       <Separator />
 
       {/* Results */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Generated IDs</CardTitle>
           <CardDescription>Copy individual IDs or use “Copy All”.</CardDescription>

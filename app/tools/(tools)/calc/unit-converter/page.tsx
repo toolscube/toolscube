@@ -200,7 +200,7 @@ export default function UnitConverterClient() {
       />
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <div className="flex items-center gap-2">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -330,7 +330,7 @@ export default function UnitConverterClient() {
 
       {/* Optional full table */}
       {showTable && (
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">All Conversions in {category}</CardTitle>
             <CardDescription>

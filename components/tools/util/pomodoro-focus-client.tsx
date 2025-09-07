@@ -338,7 +338,7 @@ export default function PomodoroFocusClient() {
       />
 
       {/* Timer */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-base">
@@ -525,7 +525,7 @@ export default function PomodoroFocusClient() {
       <Separator />
 
       {/* History */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <div className="flex items-center gap-2">
             <History className="h-4 w-4" />

@@ -407,7 +407,7 @@ export default function ColorConverterPage() {
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_1fr]">
         {/* LEFT: Inputs */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <div className="grid gap-4 p-4">
             {/* picker & hex */}
             <ColorField
@@ -643,7 +643,7 @@ export default function ColorConverterPage() {
         </GlassCard>
 
         {/* RIGHT: Preview, palette, tools */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <div className="grid gap-4 p-4">
             {/* Preview & format quick copies */}
             <div className="rounded-xl border overflow-hidden">

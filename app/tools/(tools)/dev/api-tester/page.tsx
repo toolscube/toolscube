@@ -689,7 +689,7 @@ export default function ApiTesterPage() {
       </GlassCard>
 
       {/* Request Builder */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Request</CardTitle>
           <CardDescription>Configure method, URL, params, headers, auth, and body.</CardDescription>
@@ -919,7 +919,7 @@ export default function ApiTesterPage() {
       <Separator className="my-6" />
 
       {/* Response */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Response</CardTitle>
           <CardDescription>Status, time, size, headers and body preview.</CardDescription>
@@ -1009,7 +1009,7 @@ export default function ApiTesterPage() {
       <Separator className="my-6" />
 
       {/* Presets */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Presets</CardTitle>
           <CardDescription>Save and reuse frequent requests.</CardDescription>
@@ -1057,7 +1057,7 @@ export default function ApiTesterPage() {
       <Separator className="my-6" />
 
       {/* History */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">History</CardTitle>
           <CardDescription>Recent requests (stored locally).</CardDescription>

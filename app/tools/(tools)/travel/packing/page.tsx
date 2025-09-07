@@ -246,7 +246,7 @@ export default function PackingChecklistClient() {
       />
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Trip Settings</CardTitle>
           <CardDescription>
@@ -329,7 +329,7 @@ export default function PackingChecklistClient() {
       </GlassCard>
 
       {/* Checklist */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Your List</CardTitle>
           <CardDescription>

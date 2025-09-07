@@ -191,7 +191,7 @@ export default function OGPreviewPage() {
       </GlassCard>
 
       {/* Input */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Enter URL</CardTitle>
           <CardDescription>
@@ -246,7 +246,7 @@ export default function OGPreviewPage() {
         <>
           <Separator />
 
-          <GlassCard className="shadow-sm">
+          <GlassCard>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Preview</CardTitle>
               <CardDescription>
@@ -379,7 +379,7 @@ export default function OGPreviewPage() {
           </GlassCard>
 
           {/* Meta & Actions */}
-          <GlassCard className="shadow-sm">
+          <GlassCard>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Extracted Meta</CardTitle>
               <CardDescription>Copy tags, inspect JSON, or open the page.</CardDescription>

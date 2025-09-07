@@ -212,7 +212,7 @@ export default function ClipboardCleanerClient() {
       />
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Choose how text should be cleaned.</CardDescription>
@@ -310,7 +310,7 @@ export default function ClipboardCleanerClient() {
       <Separator />
 
       {/* Editors */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Editor</CardTitle>
           <CardDescription>Paste on the left, get clean text on the right.</CardDescription>
@@ -382,7 +382,7 @@ export default function ClipboardCleanerClient() {
       </GlassCard>
 
       {/* History */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">History</CardTitle>
           <CardDescription>Last 20 results (local only)</CardDescription>

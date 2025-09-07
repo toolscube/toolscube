@@ -393,7 +393,7 @@ export default function CountdownTimerClient() {
       />
 
       {/* Quick Add */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Quick Start</CardTitle>
           <CardDescription>
@@ -413,7 +413,7 @@ export default function CountdownTimerClient() {
       </GlassCard>
 
       {/* Builders */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Create Your Timer</CardTitle>
           <CardDescription>
@@ -549,7 +549,7 @@ export default function CountdownTimerClient() {
       </GlassCard>
 
       {/* Active Timers */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Active Timers</CardTitle>
           <CardDescription>

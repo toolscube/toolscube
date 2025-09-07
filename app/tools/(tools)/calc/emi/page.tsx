@@ -256,7 +256,7 @@ export default function EmiCalculatorClient() {
       />
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Inputs</CardTitle>
           <CardDescription>Enter your loan details and optional extra payment.</CardDescription>
@@ -413,7 +413,7 @@ export default function EmiCalculatorClient() {
       </div>
 
       {/* Schedule */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Amortization Schedule</CardTitle>
           <CardDescription>Month-by-month breakdown including extra payments.</CardDescription>

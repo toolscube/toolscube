@@ -261,7 +261,7 @@ export default function WeekNumberClient() {
       />
 
       {/* Controls */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Pick a Date</CardTitle>
           <CardDescription>
@@ -368,7 +368,7 @@ export default function WeekNumberClient() {
       <Separator />
 
       {/* Results */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Results</CardTitle>
           <CardDescription>ISO info and the Monday–Sunday range.</CardDescription>

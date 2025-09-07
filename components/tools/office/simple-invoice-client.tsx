@@ -253,7 +253,7 @@ export default function SimpleInvoiceClient() {
       />
 
       {/* Details */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Details</CardTitle>
           <CardDescription>Invoice meta, currency, parties & status.</CardDescription>
@@ -423,7 +423,7 @@ export default function SimpleInvoiceClient() {
       </GlassCard>
 
       {/* Items */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Items</CardTitle>
           <CardDescription>Add products or services with quantity and rate.</CardDescription>
@@ -520,7 +520,7 @@ export default function SimpleInvoiceClient() {
       </GlassCard>
 
       {/* Summary */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Summary</CardTitle>
           <CardDescription>Discounts, tax, shipping, and total.</CardDescription>

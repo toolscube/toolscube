@@ -341,7 +341,7 @@ export default function DiffCheckerPage() {
       />
 
       {/* Inputs */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <div className="grid gap-4 lg:grid-cols-2">
           <TextareaField
             id="original"
@@ -439,7 +439,7 @@ export default function DiffCheckerPage() {
       <Separator className="my-6" />
 
       {/* Results */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
           <div className="flex flex-wrap items-center justify-between gap-2 p-3">
             <TabsList className="flex-1">

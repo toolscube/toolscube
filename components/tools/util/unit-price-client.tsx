@@ -295,7 +295,7 @@ export default function UnitPriceClient() {
       />
 
       {/* Global Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>
@@ -519,7 +519,7 @@ export default function UnitPriceClient() {
       <Separator />
 
       {/* Bulk Import */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Bulk paste</CardTitle>
           <CardDescription>

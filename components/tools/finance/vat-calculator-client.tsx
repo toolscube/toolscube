@@ -66,7 +66,7 @@ export default function VatCalculatorClient() {
       />
 
       {/* Inputs */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Inputs</CardTitle>
           <CardDescription>
@@ -141,7 +141,7 @@ export default function VatCalculatorClient() {
       <Separator />
 
       {/* Results */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Results</CardTitle>
           <CardDescription>Calculated amounts based on your inputs.</CardDescription>

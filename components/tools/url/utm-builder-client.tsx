@@ -302,7 +302,7 @@ export default function UTMBuilderClient() {
       />
 
       {/* Base & Options */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Base URL</CardTitle>
           <CardDescription>
@@ -378,7 +378,7 @@ export default function UTMBuilderClient() {
       <Separator />
 
       {/* UTM Params */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">UTM Parameters</CardTitle>
           <CardDescription>
@@ -485,7 +485,7 @@ export default function UTMBuilderClient() {
       <Separator />
 
       {/* Output */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Output</CardTitle>
           <CardDescription>
@@ -625,7 +625,7 @@ export default function UTMBuilderClient() {
       <Separator />
 
       {/* Presets & History */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Presets & Quick Apply</CardTitle>
           <CardDescription>

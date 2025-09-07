@@ -346,7 +346,7 @@ export default function RobotsGeneratorPage() {
       </GlassCard>
 
       {/* Presets */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Presets</CardTitle>
           <CardDescription>Start fast, then customize below.</CardDescription>
@@ -385,7 +385,7 @@ export default function RobotsGeneratorPage() {
       </GlassCard>
 
       {/* Global settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Global</CardTitle>
           <CardDescription>Host, sitemaps, and optional comments.</CardDescription>
@@ -464,7 +464,7 @@ export default function RobotsGeneratorPage() {
       </GlassCard>
 
       {/* Agents & rules */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">User-Agents & Rules</CardTitle>
           <CardDescription>
@@ -650,7 +650,7 @@ export default function RobotsGeneratorPage() {
       <Separator />
 
       {/* Preview */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Preview</CardTitle>
           <CardDescription>Review and export your robots.txt.</CardDescription>

@@ -182,7 +182,7 @@ export default function TextToListClient() {
       />
 
       {/* Input */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Input Text</CardTitle>
           <CardDescription>
@@ -214,7 +214,7 @@ pear`}
       <Separator />
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Clean and format your list exactly how you want.</CardDescription>
@@ -344,7 +344,7 @@ pear`}
       <Separator />
 
       {/* Output */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Result</CardTitle>
           <CardDescription>Clean list preview and exports.</CardDescription>

@@ -216,7 +216,7 @@ React.useEffect(() => {
       />
 
       {/* Content + Selects (using reusable SelectField) */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Content</CardTitle>
           <CardDescription>
@@ -271,7 +271,7 @@ React.useEffect(() => {
 
       {/* Appearance & Export */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Appearance</CardTitle>
             <CardDescription>Size, margin, colors, quiet zone, and logo.</CardDescription>
@@ -364,7 +364,7 @@ React.useEffect(() => {
           </CardContent>
         </GlassCard>
 
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Export & Utilities</CardTitle>
             <CardDescription>High-res exports and quick copy.</CardDescription>
@@ -407,7 +407,7 @@ React.useEffect(() => {
       </div>
 
       {/* Live Preview */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Live Preview</CardTitle>
           <CardDescription>Canvas preview (PNG). Toggle SVG to see vector markup.</CardDescription>

@@ -356,7 +356,7 @@ export default function UuidNanoidClient() {
         }
       />
 
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Choose generator, size/count, formatting & uniqueness.</CardDescription>

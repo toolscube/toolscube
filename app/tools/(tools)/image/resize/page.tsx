@@ -198,7 +198,7 @@ export default function ImageResizePage() {
         </GlassCard>
 
         {/* Uploader / Preview */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Image</CardTitle>
             <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
@@ -255,7 +255,7 @@ export default function ImageResizePage() {
         </GlassCard>
 
         {/* Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Settings</CardTitle>
             <CardDescription>Customize size, fit mode, format, and quality.</CardDescription>
@@ -387,7 +387,7 @@ export default function ImageResizePage() {
         <Separator />
 
         {/* Output Preview & Logs */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Output Preview & Log</CardTitle>
             <CardDescription>

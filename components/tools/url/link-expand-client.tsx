@@ -171,7 +171,7 @@ export default function LinkExpandClient() {
       />
 
       {/* Input & Options */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Input</CardTitle>
           <CardDescription>Enter a short or tracking link to reveal the final URL.</CardDescription>
@@ -225,7 +225,7 @@ export default function LinkExpandClient() {
       <Separator />
 
       {/* Result */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Result</CardTitle>
           <CardDescription>Redirect chain & final destination details.</CardDescription>
@@ -352,7 +352,7 @@ export default function LinkExpandClient() {
       <Separator />
 
       {/* History */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">History</CardTitle>
           <CardDescription>Recent lookups (last 20). Data stays in your browser.</CardDescription>

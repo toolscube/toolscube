@@ -73,7 +73,7 @@ export default function TodoOfflineClient() {
       />
 
       {/* Add new task */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">New Task</CardTitle>
           <CardDescription>Quickly add a task with optional notes.</CardDescription>
@@ -102,7 +102,7 @@ export default function TodoOfflineClient() {
       <Separator />
 
       {/* List */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="flex items-end justify-between">
           <div>
             <CardTitle className="text-base">Tasks</CardTitle>

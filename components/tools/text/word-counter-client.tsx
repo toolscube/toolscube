@@ -287,7 +287,7 @@ export default function WordCounterClient() {
       />
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Live cleanup & density options.</CardDescription>

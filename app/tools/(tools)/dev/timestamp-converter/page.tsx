@@ -279,7 +279,7 @@ export default function TimestampConverterPage() {
         }
       />
 
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
           {/* Left: Inputs */}
           <div className="rounded-xl border p-4 space-y-4">

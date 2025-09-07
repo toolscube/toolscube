@@ -313,7 +313,7 @@ export default function CaseConverterClient() {
       />
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Choose a case style and optional clean-up pipeline.</CardDescription>

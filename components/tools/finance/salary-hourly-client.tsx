@@ -117,7 +117,7 @@ export default function SalaryHourlyClient() {
       />
 
       {/* Inputs */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Inputs</CardTitle>
           <CardDescription>Switch modes and set schedule assumptions.</CardDescription>
@@ -226,7 +226,7 @@ export default function SalaryHourlyClient() {
       <Separator />
 
       {/* Results */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Results</CardTitle>
           <CardDescription>

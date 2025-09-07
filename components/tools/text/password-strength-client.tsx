@@ -240,7 +240,7 @@ export default function PasswordStrengthClient() {
       />
 
       {/* Input & Meter */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Enter Password</CardTitle>
           <CardDescription>
@@ -328,7 +328,7 @@ export default function PasswordStrengthClient() {
       <Separator />
 
       {/* Crack time & Hints */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Estimated Crack Times</CardTitle>
           <CardDescription>
@@ -411,7 +411,7 @@ export default function PasswordStrengthClient() {
       </GlassCard>
 
       {/* Optional: quick scratchpad to test multiple candidates */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Batch Test (Optional)</CardTitle>
           <CardDescription>

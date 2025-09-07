@@ -434,7 +434,7 @@ export default function TimezoneConverterClient() {
       />
 
       {/* SETTINGS */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Pick the source city and time. We handle the rest.</CardDescription>
@@ -485,7 +485,7 @@ export default function TimezoneConverterClient() {
       <Separator />
 
       {/* ADD TARGETS */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Add Cities</CardTitle>
           <CardDescription>Choose where you want to see the converted time.</CardDescription>
@@ -557,7 +557,7 @@ export default function TimezoneConverterClient() {
       </GlassCard>
 
       {/* RESULTS */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Converted Times</CardTitle>
           <CardDescription>

@@ -187,7 +187,7 @@ export default function LoremIpsumPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Settings</CardTitle>
             <CardDescription>Adjust paragraphs and words per paragraph.</CardDescription>

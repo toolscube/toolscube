@@ -249,7 +249,7 @@ tags: [a, b, c]`;
         }
       />
 
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <div className="grid gap-4 lg:grid-cols-3">
           {/* Left: input */}
           <div className="lg:col-span-2">
@@ -345,7 +345,7 @@ tags: [a, b, c]`;
       <Separator className="my-6" />
 
       {/* Output */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <div className="flex items-center justify-between px-3 pt-3">
           <div className="text-sm font-medium">Output</div>
           <div className="flex gap-2">

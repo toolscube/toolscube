@@ -423,7 +423,7 @@ export default function SitemapGeneratorPage() {
       </GlassCard>
 
       {/* Input */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Input URLs</CardTitle>
           <CardDescription>
@@ -515,7 +515,7 @@ export default function SitemapGeneratorPage() {
       </GlassCard>
 
       {/* Defaults & Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Defaults & Settings</CardTitle>
           <CardDescription>Applied where a row doesn’t specify its own values.</CardDescription>
@@ -693,7 +693,7 @@ export default function SitemapGeneratorPage() {
       <Separator />
 
       {/* Preview */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Preview</CardTitle>
           <CardDescription>First file’s XML. Copy or download each file above.</CardDescription>

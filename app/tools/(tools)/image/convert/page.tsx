@@ -148,7 +148,7 @@ export default function ImageConvertPage() {
         </GlassCard>
 
         {/* Uploader / Preview */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Image</CardTitle>
             <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
@@ -205,7 +205,7 @@ export default function ImageConvertPage() {
         </GlassCard>
 
         {/* Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Settings</CardTitle>
             <CardDescription>Choose output format and fine-tune quality.</CardDescription>
@@ -281,7 +281,7 @@ export default function ImageConvertPage() {
         <Separator />
 
         {/* Output & Log */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Output & Log</CardTitle>
             <CardDescription>Click Convert & Download to save the converted file.</CardDescription>

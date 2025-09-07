@@ -363,7 +363,7 @@ export default function MeetingNotesClient() {
       </GlassCard>
 
       {/* Notes list */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Notes</CardTitle>
           <CardDescription>Newest first</CardDescription>
@@ -392,7 +392,7 @@ export default function MeetingNotesClient() {
       </GlassCard>
 
       {/* Decisions & Actions */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Decisions & Action Items</CardTitle>
           <CardDescription>Track outcomes and owners</CardDescription>

@@ -385,7 +385,7 @@ export default function Base64ToolPage() {
       </GlassCard>
 
       {/* Settings */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>Choose operation, safety, wrapping & Data URI options.</CardDescription>
@@ -493,7 +493,7 @@ export default function Base64ToolPage() {
       <Separator />
 
       {/* Editor & Result */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Editor & Result</CardTitle>
           <CardDescription>

@@ -95,7 +95,7 @@ export default function RandomPickerClient() {
       />
 
       {/* Input */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Add Entries</CardTitle>
           <CardDescription>One name per line.</CardDescription>
@@ -114,7 +114,7 @@ export default function RandomPickerClient() {
       <Separator />
 
       {/* Entries list */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Entries</CardTitle>
           <CardDescription>All current names</CardDescription>
@@ -130,7 +130,7 @@ export default function RandomPickerClient() {
       </GlassCard>
 
       {/* Winner */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Winner</CardTitle>
           <CardDescription>Click Pick to choose randomly</CardDescription>
@@ -154,7 +154,7 @@ export default function RandomPickerClient() {
       </GlassCard>
 
       {/* History */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">History</CardTitle>
           <CardDescription>Last 20 picks</CardDescription>

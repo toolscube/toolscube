@@ -269,7 +269,7 @@ export default function MetaGeneratorPage() {
       </GlassCard>
 
       {/* Basics */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Basics</CardTitle>
           <CardDescription>Title, description, canonical, robots & author.</CardDescription>
@@ -482,7 +482,7 @@ export default function MetaGeneratorPage() {
       </GlassCard>
 
       {/* Social */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Social (OG & Twitter)</CardTitle>
           <CardDescription>Configure Open Graph and Twitter cards.</CardDescription>
@@ -646,7 +646,7 @@ export default function MetaGeneratorPage() {
       <Separator />
 
       {/* Live Previews */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Live Preview</CardTitle>
           <CardDescription>How it’ll look on OG (Facebook/LinkedIn) and Twitter.</CardDescription>
@@ -746,7 +746,7 @@ export default function MetaGeneratorPage() {
       <Separator />
 
       {/* Output */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Generated Tags</CardTitle>
           <CardDescription>Paste these into your page’s &lt;head&gt;.</CardDescription>

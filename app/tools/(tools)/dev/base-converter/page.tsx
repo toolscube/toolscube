@@ -500,7 +500,7 @@ export default function BaseConverterPage() {
       </GlassCard>
 
       {/* Multi-output (cards) */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <div className="grid gap-4 lg:grid-cols-3">
           {/* Input & options */}
           <div className="lg:col-span-2">
@@ -605,7 +605,7 @@ export default function BaseConverterPage() {
       <Separator className="my-6" />
 
       {/* Results cards */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 p-3">
           {results.length === 0 ? (
             <div className="rounded-md border p-3 text-sm text-muted-foreground">

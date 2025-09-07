@@ -193,7 +193,7 @@ export default function ExifRemovePage() {
         </GlassCard>
 
         {/* Uploader / Preview */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Image</CardTitle>
             <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
@@ -250,7 +250,7 @@ export default function ExifRemovePage() {
         </GlassCard>
 
         {/* Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Settings</CardTitle>
             <CardDescription>
@@ -311,7 +311,7 @@ export default function ExifRemovePage() {
         <Separator />
 
         {/* Detected Metadata & Log */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Detected Metadata</CardTitle>
             <CardDescription>

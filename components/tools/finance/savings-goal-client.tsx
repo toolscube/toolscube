@@ -84,7 +84,7 @@ export default function SavingsGoalClient() {
       />
 
       {/* Inputs */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Inputs</CardTitle>
           <CardDescription>
@@ -188,7 +188,7 @@ export default function SavingsGoalClient() {
       <Separator />
 
       {/* Results */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Results</CardTitle>
           <CardDescription>Based on your inputs with monthly compounding.</CardDescription>
@@ -225,7 +225,7 @@ export default function SavingsGoalClient() {
       </GlassCard>
 
       {/* Amortization / Schedule */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-base">Monthly Schedule</CardTitle>

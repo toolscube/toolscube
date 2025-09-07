@@ -137,7 +137,7 @@ export default function BMIClient() {
       />
 
       {/* Settings / Inputs */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Inputs</CardTitle>
           <CardDescription>Choose your units and provide your measurements.</CardDescription>
@@ -196,7 +196,7 @@ export default function BMIClient() {
       <Separator />
 
       {/* Results */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Results</CardTitle>
           <CardDescription>Your BMI, category, and healthy weight range.</CardDescription>

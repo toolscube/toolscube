@@ -260,7 +260,7 @@ export default function DistanceETAPage() {
         </GlassCard>
 
         {/* Map & Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <div className="flex items-center gap-2">
               <CardTitle className="text-base">Map & Settings</CardTitle>
@@ -397,7 +397,7 @@ export default function DistanceETAPage() {
         <Separator className="my-2" />
 
         {/* Results */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Results</CardTitle>
             <CardDescription>

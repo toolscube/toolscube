@@ -305,7 +305,7 @@ export default function TipSplitterClient() {
       />
 
       {/* Inputs */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Bill & People</CardTitle>
           <CardDescription>

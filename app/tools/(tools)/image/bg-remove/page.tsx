@@ -291,7 +291,7 @@ export default function BgRemovePage() {
         </GlassCard>
 
         {/* Uploader / Preview */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Image</CardTitle>
             <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
@@ -360,7 +360,7 @@ export default function BgRemovePage() {
         </GlassCard>
 
         {/* Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Settings</CardTitle>
             <CardDescription>Choose a method and refine the edges.</CardDescription>
@@ -546,7 +546,7 @@ export default function BgRemovePage() {
         <Separator />
 
         {/* Log */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Process Log</CardTitle>
             <CardDescription>Export is PNG with transparency.</CardDescription>

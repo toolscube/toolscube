@@ -272,7 +272,7 @@ export default function CurrencyConverterClient() {
       />
 
       {/* Inputs */}
-      <GlassCard className="shadow-sm">
+      <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Amount & Currencies</CardTitle>
           <CardDescription>Pick currencies and set the amount to convert.</CardDescription>
@@ -421,7 +421,7 @@ export default function CurrencyConverterClient() {
       {(favorites.length > 0 || history.length > 0) && (
         <div className="grid gap-4 lg:grid-cols-2">
           {favorites.length > 0 && (
-            <GlassCard className="shadow-sm">
+            <GlassCard>
               <CardHeader>
                 <CardTitle className="text-base">Favorites</CardTitle>
                 <CardDescription>Quickly jump to your frequent pairs.</CardDescription>
@@ -444,7 +444,7 @@ export default function CurrencyConverterClient() {
           )}
 
           {history.length > 0 && (
-            <GlassCard className="shadow-sm">
+            <GlassCard>
               <CardHeader>
                 <CardTitle className="text-base">Recent Conversions</CardTitle>
                 <CardDescription>Last 50 conversions are saved locally.</CardDescription>

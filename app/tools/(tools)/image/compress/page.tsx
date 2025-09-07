@@ -226,7 +226,7 @@ export default function ImageCompressPage() {
         </GlassCard>
 
         {/* Uploader / Preview */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Image</CardTitle>
             <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
@@ -283,7 +283,7 @@ export default function ImageCompressPage() {
         </GlassCard>
 
         {/* Settings */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Settings</CardTitle>
             <CardDescription>
@@ -472,7 +472,7 @@ export default function ImageCompressPage() {
         <Separator />
 
         {/* Output & Log */}
-        <GlassCard className="shadow-sm">
+        <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Output & Log</CardTitle>
             <CardDescription>Click Compress & Download to save the result.</CardDescription>
