@@ -22,7 +22,7 @@ import {
   ResetButton,
 } from "@/components/shared/action-buttons";
 import { ColorField } from "@/components/shared/color-field";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import { QRCodeBox } from "@/components/shared/qr-code";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";

@@ -14,7 +14,7 @@ import {
 import type * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";

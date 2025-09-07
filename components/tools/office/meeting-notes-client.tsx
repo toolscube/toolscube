@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";

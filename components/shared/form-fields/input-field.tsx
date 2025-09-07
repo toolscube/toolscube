@@ -48,7 +48,10 @@ export type InputFieldProps<
   name?: TName;
 };
 
-export function InputField<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>>({
+export default function InputField<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+>({
   name,
   icon: Icon,
   label,

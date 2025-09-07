@@ -4,7 +4,7 @@ import { Eraser, Info, List, Type, Wand2 as Wand } from "lucide-react";
 import * as React from "react";
 import toast from "react-hot-toast";
 import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";

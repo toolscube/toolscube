@@ -1,6 +1,6 @@
 "use client";
 
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 

@@ -8,7 +8,7 @@ import {
   ExportCSVButton,
   ResetButton,
 } from "@/components/shared/action-buttons";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";

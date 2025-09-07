@@ -10,7 +10,7 @@ import {
   LinkButton,
   ResetButton,
 } from "@/components/shared/action-buttons";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import ToolPageHeader from "@/components/shared/tool-page-header";

@@ -3,7 +3,7 @@
 import { Calendar, CalendarDays, CalendarRange, Info, RefreshCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import Stat from "@/components/shared/stat";
 import ToolPageHeader from "@/components/shared/tool-page-header";

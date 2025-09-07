@@ -19,7 +19,7 @@ import {
   ExportTextButton,
   ResetButton,
 } from "@/components/shared/action-buttons";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 
 // Reusables you mentioned
 

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { ColorField } from "@/components/shared/color-field";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import { Button } from "@/components/ui/button";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";

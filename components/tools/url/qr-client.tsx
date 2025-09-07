@@ -12,7 +12,7 @@ import * as React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
 import { ColorField } from "@/components/shared/color-field";
-import { InputField } from "@/components/shared/form-fields/input-field";
+import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import { QRCodeBox } from "@/components/shared/qr-code";
