@@ -20,6 +20,7 @@ import {
   CopyButton,
   ExportBlobButton,
   ExportTextButton,
+  ResetButton,
 } from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
@@ -462,7 +463,7 @@ export default function OGBuilderPage() {
           ctx.strokeText(line, x, curY + i * s.subtitleSize * 1.35);
         }
 
-        ctx.fillStyle = s.fg + "cc";
+        ctx.fillStyle = `${s.fg} cc`;
         if (s.dropShadow) {
           ctx.shadowColor = "rgba(0,0,0,0.12)";
           ctx.shadowBlur = Math.max(8, Math.round(s.shadowStrength / 1.8));
@@ -531,7 +532,6 @@ export default function OGBuilderPage() {
     };
     img.src = url;
     return () => URL.revokeObjectURL(url);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.bgImage]);
 
   React.useEffect(() => {
@@ -548,13 +548,11 @@ export default function OGBuilderPage() {
     };
     img.src = url;
     return () => URL.revokeObjectURL(url);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.logo]);
 
   // Redraw on state changes
   React.useEffect(() => {
     draw();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s]);
 
   function resetAll() {
@@ -583,7 +581,6 @@ export default function OGBuilderPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch {
-      // Fallback: download PNG
       canvas.toBlob((blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob);
@@ -655,19 +652,17 @@ export default function OGBuilderPage() {
     ctx.closePath();
   }
 
-  /* ---------------------------------- UI ---------------------------------- */
-
   const previewScale = 0.42;
   const importRef = React.useRef<HTMLInputElement | null>(null);
 
   return (
-    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+    <>
       <ToolPageHeader
         title="OG Image Builder"
         description="Create crisp Open Graph images with presets, gradients, images, logos, text outline, and exports."
         icon={Sparkles}
         actions={
-          <div className="flex flex-wrap gap-2">
+          <>
             <ActionButton
               icon={Upload}
               label="Import Config"
@@ -702,8 +697,8 @@ export default function OGBuilderPage() {
               filename="og-config.json"
               getText={exportConfigText}
             />
-            <ActionButton onClick={resetAll} />
-          </div>
+            <ResetButton onClick={resetAll} />
+          </>
         }
       />
 
@@ -1292,32 +1287,30 @@ export default function OGBuilderPage() {
             </Badge>
           </div>
 
-          <GlassCard className="shadow-sm">
-            <div className="rounded-xl border bg-muted/20 p-4 overflow-auto">
-              <div
-                className="relative mx-auto"
+          <div className="rounded-xl border bg-muted/20 p-4 overflow-auto">
+            <div
+              className="relative mx-auto"
+              style={{
+                width: Math.round(s.w * previewScale),
+                height: Math.round(s.h * previewScale),
+              }}
+            >
+              <canvas
+                ref={canvasRef}
+                className="h-full w-full rounded-lg shadow-sm"
                 style={{
                   width: Math.round(s.w * previewScale),
                   height: Math.round(s.h * previewScale),
+                  imageRendering: "auto",
                 }}
-              >
-                <canvas
-                  ref={canvasRef}
-                  className="h-full w-full rounded-lg shadow-sm"
-                  style={{
-                    width: Math.round(s.w * previewScale),
-                    height: Math.round(s.h * previewScale),
-                    imageRendering: "auto",
-                  }}
-                />
-              </div>
+              />
             </div>
-            <div className="px-4 pb-4 text-xs text-muted-foreground">
-              Tip: Keep titles concise. Use high-contrast colors. Test multiple sizes.
-            </div>
-          </GlassCard>
+          </div>
+          <div className="px-4 pb-4 text-xs text-muted-foreground">
+            Tip: Keep titles concise. Use high-contrast colors. Test multiple sizes.
+          </div>
         </div>
       </div>
-    </MotionGlassCard>
+    </>
   );
 }

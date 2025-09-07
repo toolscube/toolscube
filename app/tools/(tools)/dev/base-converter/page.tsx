@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Calculator,
-  Copy,
-  Download,
-  Hash,
-  Info,
-  RefreshCw,
-  RotateCcw,
-  Settings2,
-} from "lucide-react";
+import { Calculator, Copy, Download, Hash, Info, RefreshCw, Settings2 } from "lucide-react";
 import React from "react";
 import {
   ActionButton,
