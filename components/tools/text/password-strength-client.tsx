@@ -456,6 +456,7 @@ P@ssw0rd!
 Tr0ub4dor&3
 correct horse battery staple"
         textareaClassName="min-h-[140px]"
+        autoResize
       />
       <div className="rounded-md border p-2 overflow-x-auto">
         {rows.length === 0 ? (

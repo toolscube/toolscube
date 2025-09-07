@@ -324,12 +324,13 @@ React.useEffect(() => {
                 <Switch checked={logoEnabled} onCheckedChange={setLogoEnabled} />
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2 items-center">
                 <div className="space-y-2">
                   <Label htmlFor="logo-upload">Upload Logo (PNG/SVG)</Label>
                   <div className="flex gap-2">
                     <InputField
                       accept="image/*"
+                      type="file"
                       onFilesChange={async (files) => {
                         const f = files?.[0];
                         if (!f) return;

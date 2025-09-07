@@ -333,7 +333,7 @@ export function SaveButton({
 export function ExportTextButton({
   filename = "text.txt",
   getText,
-  label = "Export",
+  label = "Export TXT",
   mime = "text/plain;charset=utf-8;",
   variant = "outline",
   size = "default",

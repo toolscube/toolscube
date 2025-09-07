@@ -171,24 +171,10 @@ export default function TextToListClient() {
               getText={() => processed.join("\n")}
               disabled={!processed.length}
             />
-            <CopyButton
-              label="Copy (comma)"
-              copiedLabel="Copied"
-              getText={() => processed.join(", ")}
-              disabled={!processed.length}
-            />
-            <ExportCSVButton
-              variant="default"
-              filename="clean-list.csv"
-              label="CSV"
-              disabled={!processed.length}
-              getRows={() => [["Item"], ...processed.map((s) => [s])]}
-            />
             <ExportTextButton
               variant="default"
               filename="clean-list.txt"
               getText={() => processed.join("\n")}
-              label="TXT"
               disabled={!processed.length}
             />
           </>
@@ -385,30 +371,16 @@ pear`}
               <CopyButton
                 variant="outline"
                 size="sm"
-                label={copiedKind === "list" ? "Copied" : "Copy (newline)"}
-                getText={() => processed.join("\n")}
-                disabled={!processed.length}
-              />
-              <CopyButton
-                variant="outline"
-                size="sm"
                 label={copiedKind === "joined" ? "Copied" : "Copy (comma)"}
                 getText={() => processed.join(", ")}
                 disabled={!processed.length}
               />
               <ExportCSVButton
-                variant="outline"
+                size="sm"
+                variant="default"
                 filename="clean-list.csv"
-                label="CSV"
                 disabled={!processed.length}
                 getRows={() => [["Item"], ...processed.map((s) => [s])]}
-              />
-              <ExportTextButton
-                size="sm"
-                filename="clean-list.txt"
-                getText={() => processed.join("\n")}
-                label="TXT"
-                disabled={!processed.length}
               />
             </div>
           </div>
