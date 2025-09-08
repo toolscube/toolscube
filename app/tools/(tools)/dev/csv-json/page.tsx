@@ -1,7 +1,6 @@
-// app/tools/(tools)/dev/csv-json/page.tsx
 "use client";
 
-import { Copy, Download, Info, RefreshCw, RotateCcw, Settings2, Table } from "lucide-react";
+import { Download, Info, RefreshCw, Table } from "lucide-react";
 import React from "react";
 import {
   ActionButton,
@@ -14,18 +13,14 @@ import SelectField from "@/components/shared/form-fields/select-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 
 type Direction = "auto" | "csv-to-json" | "json-to-csv";
 
-/* ------------------------------- CSV helpers ------------------------------ */
-
-type ParseOpts = {
-  delimiter: string;
-  quote: string;
-  trim: boolean;
-};
+/* CSV helpers */
+type ParseOpts = { delimiter: string; quote: string; trim: boolean };
 
 function parseCSV(text: string, opts: ParseOpts): string[][] {
   const { delimiter, quote, trim } = opts;
@@ -41,6 +36,7 @@ function parseCSV(text: string, opts: ParseOpts): string[][] {
     if (inQuotes) {
       if (c === quote) {
         if (text[i + 1] === quote) {
+          // escaped quote ("")
           field += quote;
           i += 2;
         } else {
@@ -79,14 +75,16 @@ function parseCSV(text: string, opts: ParseOpts): string[][] {
       }
     }
   }
+
+  // push the last field and row
   row.push(trim ? field.trim() : field);
   rows.push(row);
-  // drop trailing empty line
-  if (rows.length && rows[rows.length - 1].length === 1 && rows[rows.length - 1][0] === "") {
     rows.pop();
-  }
+
+
   return rows;
 }
+
 
 function stringifyCSV(
   rows: string[][],
@@ -112,9 +110,8 @@ function stringifyCSV(
     .join(newline);
 }
 
-/* ------------------------------- JSON helpers ----------------------------- */
-
-function tryParseJSON(text: string): any {
+/* JSON helpers */
+function tryParseJSON(text: string) {
   try {
     return JSON.parse(text);
   } catch {
@@ -122,9 +119,7 @@ function tryParseJSON(text: string): any {
   }
 }
 
-/* ---------------------------------- Page ---------------------------------- */
-
-export default function CsvJsonPage() {
+export default function CsvJsonClient() {
   // IO
   const [input, setInput] = React.useState("");
   const [output, setOutput] = React.useState("");
@@ -142,7 +137,7 @@ export default function CsvJsonPage() {
 
   // JSON opts
   const [jsonSpaces, setJsonSpaces] = React.useState(2);
-  const [jsonLines, setJsonLines] = React.useState(false); // CSV → JSON lines
+  const [jsonLines, setJsonLines] = React.useState(false);
 
   // JSON → CSV opts
   const [includeHeaders, setIncludeHeaders] = React.useState(true);
@@ -150,7 +145,6 @@ export default function CsvJsonPage() {
   const [alwaysQuote, setAlwaysQuote] = React.useState(false);
 
   const [error, setError] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState(false);
 
   // detect direction
   const detectDirection = React.useCallback((s: string): Direction => {
@@ -168,7 +162,7 @@ export default function CsvJsonPage() {
     if (!rows.length) return "";
 
     if (headers) {
-      const hdr = rows[0]!.map((h) => (trimCells ? h.trim() : h));
+      const hdr = rows[0].map((h) => (trimCells ? h.trim() : h));
       const body = rows.slice(1);
       if (jsonLines) {
         return body
@@ -191,34 +185,38 @@ export default function CsvJsonPage() {
     const data = tryParseJSON(input);
     if (data === undefined) throw new Error("Invalid JSON input.");
 
+    const toCell = (v: unknown): string => {
+      if (v === null || v === undefined) return "";
+      if (typeof v === "object") return JSON.stringify(v);
+      return String(v);
+    };
+
     const toRows = (): string[][] => {
       if (Array.isArray(data)) {
         if (data.length === 0) return [];
         if (Array.isArray(data[0])) {
-          // array of arrays
-          return data.map((r: any[]) => r.map((v) => String(v ?? "")));
+          return data.map((r: unknown[]) => r.map((v) => toCell(v)));
         } else if (typeof data[0] === "object") {
-          const arr: Record<string, any>[] = data;
+          const arr = data as Record<string, unknown>[];
           let keys: string[];
           if (fieldOrder === "first") {
-            keys = Object.keys(arr[0]!);
+            keys = Object.keys(arr[0] ?? {});
           } else {
             keys = Array.from(new Set(arr.flatMap((o) => Object.keys(o)))).sort((a, b) =>
               a.localeCompare(b),
             );
           }
-          const rows = arr.map((obj) => keys.map((k) => String(obj?.[k] ?? "")));
+          const rows = arr.map((obj) => keys.map((k) => toCell(obj?.[k])));
           return includeHeaders ? [keys, ...rows] : rows;
         }
       }
-      // single object → one row
       if (data && typeof data === "object") {
-        const keys = Object.keys(data);
-        const row = keys.map((k) => String((data as any)[k] ?? ""));
+        const obj = data as Record<string, unknown>;
+        const keys = Object.keys(obj);
+        const row = keys.map((k) => toCell(obj[k]));
         return includeHeaders ? [keys, row] : [row];
       }
-      // primitive → single cell
-      return [[String(data)]];
+      return [[toCell(data)]];
     };
 
     const rows = toRows();
@@ -241,37 +239,15 @@ export default function CsvJsonPage() {
       } else {
         setOutput(convertJsonToCsv());
       }
-    } catch (e: any) {
-      setError(String(e?.message || e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "something went wrong");
       setOutput("");
     }
   }, [input, direction, detectDirection, convertCsvToJson, convertJsonToCsv]);
 
   React.useEffect(() => {
     if (autoRun) convert();
-  }, [
-    input,
-    direction,
-    autoRun,
-    delimiter,
-    quote,
-    trimCells,
-    headers,
-    jsonSpaces,
-    jsonLines,
-    includeHeaders,
-    fieldOrder,
-    alwaysQuote,
-    newline,
-    convert,
-  ]);
-
-  const copyOut = async () => {
-    if (!output) return;
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
-  };
+  }, [autoRun, convert]);
 
   const resetAll = () => {
     setInput("");
@@ -288,7 +264,6 @@ export default function CsvJsonPage() {
     setFieldOrder("first");
     setAlwaysQuote(false);
     setNewline("\n");
-    setCopied(false);
     setError(null);
   };
 
@@ -327,61 +302,92 @@ export default function CsvJsonPage() {
   );
 
   return (
-    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+    <>
       <ToolPageHeader
         title="CSV ⇄ JSON"
         description="Convert tabular data into JSON and back. Header-aware, JSON Lines, custom delimiter/quotes."
         icon={Table}
         actions={
-          <div className="flex flex-wrap gap-2">
-            <ActionButton
-              icon={RefreshCw}
-              label="Normalize"
-              onClick={() => setInput((s) => s.trim())}
-            />
-
-            <ActionButton
-              label="Load CSV Sample"
-              onClick={() => {
-                setInput(sampleCSV);
-                setDirection("csv-to-json");
-              }}
-            />
-
-            <ActionButton
-              label="Load JSON Sample"
-              onClick={() => {
-                setInput(sampleJSON);
-                setDirection("json-to-csv");
-              }}
-            />
-
+          <>
+            <ResetButton onClick={resetAll} />
             <ExportTextButton
-              icon={Download}
+              variant="default"
               label="Export JSON"
               filename="csv-json-session.json"
               getText={() => JSON.stringify(exportPayload, null, 2)}
+              mime="application/json"
             />
-            <ResetButton onClick={resetAll} />
-          </div>
+          </>
         }
       />
 
       <GlassCard>
-        <div className="grid gap-4 lg:grid-cols-3">
+        <CardContent className="grid gap-4 lg:grid-cols-3">
           {/* Left: input */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-3">
             <TextareaField
               id="input"
-              label="Input"
               placeholder="Paste CSV or JSON here…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               autoResize
-              className="min-h-[180px]"
+              textareaClassName="min-h-[590px]"
             />
 
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <ActionButton
+                icon={RefreshCw}
+                label="Normalize"
+                onClick={() => setInput((s) => s.trim())}
+              />
+              <InputField
+                type="file"
+                fileButtonLabel="Import JSON"
+                accept="application/json"
+                onFilesChange={async (files) => {
+                  const f = files?.[0];
+                  if (!f) return;
+                  const txt = await f.text();
+                  setDirection("json-to-csv");
+                  setInput(txt);
+                }}
+              />
+              <InputField
+                type="file"
+                fileButtonLabel="Import CSV"
+                accept=".csv,text/csv,text/plain,.tsv,text/tab-separated-values"
+                onFilesChange={async (files) => {
+                  const f = files?.[0];
+                  if (!f) return;
+                  const txt = await f.text();
+                  const commaCount = (txt.match(/,/g) || []).length;
+                  const tabCount = (txt.match(/\t/g) || []).length;
+                  if (tabCount > commaCount) {
+                    setDelimiter("\\t");
+                  } else {
+                    setDelimiter(",");
+                  }
+                  setDirection("csv-to-json");
+                  setInput(txt);
+                }}
+              />
+              <ActionButton
+                label="Load CSV"
+                onClick={() => {
+                  setInput(sampleCSV);
+                  setDirection("csv-to-json");
+                }}
+              />
+              <ActionButton
+                label="Load JSON"
+                onClick={() => {
+                  setInput(sampleJSON);
+                  setDirection("json-to-csv");
+                }}
+              />
+            </div>
+
+            <div className="grid items-end gap-3 sm:grid-cols-2">
               <SelectField
                 id="direction"
                 label="Direction"
@@ -393,11 +399,16 @@ export default function CsvJsonPage() {
                   { value: "json-to-csv", label: "JSON → CSV" },
                 ]}
               />
-              <SwitchRow label="Auto-run" checked={autoRun} onCheckedChange={setAutoRun} />
+              <SwitchRow
+                className="h-fit"
+                label="Auto-run"
+                checked={autoRun}
+                onCheckedChange={setAutoRun}
+              />
             </div>
 
             {error && (
-              <div className="mt-3 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-destructive">
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-destructive">
                 <Info className="mt-0.5 h-4 w-4" />
                 <div className="text-sm">{error}</div>
               </div>
@@ -405,18 +416,14 @@ export default function CsvJsonPage() {
           </div>
 
           {/* Right: options */}
-          <div className="rounded-lg border p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <Settings2 className="h-4 w-4" />
-              <div className="text-sm font-medium">CSV Options</div>
-            </div>
-
+          <div className="rounded-lg border p-4 space-y-4">
             <div className="grid gap-2">
+              <div className="text-xs font-medium opacity-80">CSV Options</div>
               <SelectField
                 id="delimiter"
                 label="Delimiter"
                 value={delimiter}
-                onValueChange={(v) => setDelimiter(v)}
+                onValueChange={(v) => setDelimiter(v as string)}
                 options={[
                   { value: ",", label: "Comma (,)" },
                   { value: "\\t", label: "Tab (\\t)" },
@@ -428,7 +435,7 @@ export default function CsvJsonPage() {
                 id="quote"
                 label="Quote"
                 value={quote}
-                onValueChange={(v) => setQuote(v)}
+                onValueChange={(v) => setQuote(v as string)}
                 options={[
                   { value: '"', label: `"` },
                   { value: "'", label: `'` },
@@ -452,7 +459,7 @@ export default function CsvJsonPage() {
               />
             </div>
 
-            <Separator className="my-3" />
+            <Separator />
 
             <div className="grid gap-2">
               <div className="text-xs font-medium opacity-80">JSON Options</div>
@@ -472,7 +479,7 @@ export default function CsvJsonPage() {
               />
             </div>
 
-            <Separator className="my-3" />
+            <Separator />
 
             <div className="grid gap-2">
               <div className="text-xs font-medium opacity-80">JSON → CSV</div>
@@ -498,31 +505,37 @@ export default function CsvJsonPage() {
               />
             </div>
           </div>
-        </div>
+        </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       {/* Output */}
       <GlassCard>
-        <div className="flex items-center justify-between px-3 pt-3">
-          <div className="text-sm font-medium">Output</div>
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle>Result</CardTitle>
           <div className="flex gap-2">
-            <CopyButton icon={Copy} disabled={!copied} onClick={copyOut} />
-
+            <CopyButton disabled={!output} getText={output} />
             <ExportTextButton
+              variant="default"
               icon={Download}
-              label="Download .txt"
+              label="Download"
               filename="converted.txt"
               getText={() => output}
               disabled={!output}
             />
           </div>
-        </div>
-        <div className="p-3">
-          <TextareaField id="output" value={output} readOnly autoResize className="min-h-[220px]" />
-        </div>
+        </CardHeader>
+        <CardContent>
+          <TextareaField
+            id="output"
+            value={output}
+            readOnly
+            autoResize
+            textareaClassName="min-h-[220px]"
+          />
+        </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }

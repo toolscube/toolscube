@@ -28,6 +28,7 @@ import {
 } from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,6 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from "@/component
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 type BodyMode = "none" | "json" | "text" | "form" | "multipart";
@@ -849,7 +849,7 @@ export default function ApiTesterClient() {
           </div>
 
           {/* Options + Send */}
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-3 items-end">
             <InputField
               label="Timeout (ms)"
               type="number"
@@ -857,10 +857,13 @@ export default function ApiTesterClient() {
               value={timeoutMs}
               onChange={(e) => setTimeoutMs(Math.max(1, Number(e.target.value) || 1))}
             />
-            <div className="space-y-1 flex items-end gap-2">
-              <Switch checked={followRedirects} onCheckedChange={setFollowRedirects} />
-              <span className="text-sm text-muted-foreground">Follow redirects</span>
-            </div>
+
+            <SwitchRow
+              className="h-fit"
+              checked={followRedirects}
+              onCheckedChange={setFollowRedirects}
+              label="Follow redirects"
+            />
             <div className="space-y-1 flex items-end gap-2">
               <Button onClick={send} disabled={loading} className="gap-2">
                 {loading ? (
@@ -870,7 +873,7 @@ export default function ApiTesterClient() {
                 )}{" "}
                 Send
               </Button>
-              {loading && <ActionButton icon={Trash2} label="Abort" onClick={stop} />}
+              {loading && <ActionButton icon={Trash2} label="Stop" onClick={stop} />}
             </div>
           </div>
         </CardContent>
