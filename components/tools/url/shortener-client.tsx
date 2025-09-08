@@ -21,7 +21,7 @@ import {
   LinkButton,
   ResetButton,
 } from "@/components/shared/action-buttons";
-import { ColorField } from "@/components/shared/color-field";
+import ColorField from "@/components/shared/color-field";
 import InputField from "@/components/shared/form-fields/input-field";
 import { QRCodeBox } from "@/components/shared/qr-code";
 import ToolPageHeader from "@/components/shared/tool-page-header";
@@ -242,23 +242,17 @@ export default function ShortenerClient() {
           <div className="grid w-full grid-cols-2 gap-2">
             <ColorField
               id="qr-dark"
+              icon={PaintBucket}
+              label="Dark"
               value={qrDark}
               onChange={setQrDark}
-              labelNode={
-                <span className="text-xs flex items-center gap-1">
-                  <PaintBucket className="h-3.5 w-3.5" /> Dark
-                </span>
-              }
             />
             <ColorField
               id="qr-light"
+              icon={PaintBucket}
+              label="Light"
               value={qrLight}
               onChange={setQrLight}
-              labelNode={
-                <span className="text-xs flex items-center gap-1">
-                  <PaintBucket className="h-3.5 w-3.5" /> Light
-                </span>
-              }
             />
           </div>
         </GlassCard>

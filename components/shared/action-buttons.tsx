@@ -40,6 +40,7 @@ export type CopyButtonProps = {
   toastErrorText?: string;
   onCopied?: (value: string) => void;
   onError?: (err: unknown) => void;
+  render?: (props: { onClick: () => void; copied: boolean }) => React.ReactNode;
 };
 
 export function CopyButton({
@@ -60,6 +61,7 @@ export function CopyButton({
   toastErrorText = "Copy failed",
   onCopied,
   onError,
+  render,
 }: CopyButtonProps) {
   const [copied, setCopied] = React.useState(false);
   const timerRef = React.useRef<number | null>(null);
@@ -106,6 +108,10 @@ export function CopyButton({
       onError?.(err);
     }
   };
+
+  if (render) {
+    return <>{render({ onClick: run, copied })}</>;
+  }
 
   const LeftIcon: LucideIcon = copied ? (IconCopied ?? Check) : (Icon ?? Copy);
 
