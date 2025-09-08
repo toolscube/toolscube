@@ -1,7 +1,6 @@
-// app/tools/(tools)/dev/yaml-json/page.tsx
 "use client";
 
-import { Code2, Copy, Download, Info, RefreshCw, Settings2 } from "lucide-react";
+import { Braces, Code2, Download, Info, Settings2 } from "lucide-react";
 import React from "react";
 import {
   ActionButton,
@@ -14,30 +13,43 @@ import SelectField from "@/components/shared/form-fields/select-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 
+/* Types */
 type Direction = "auto" | "yaml-to-json" | "json-to-yaml";
 
-export default function YamlJsonPage() {
-  // libs
-  const [yamlLib, setYamlLib] = React.useState<null | { load: any; dump: any }>(null);
+type YamlLib = {
+  load: (src: string) => unknown;
+  dump: (obj: unknown, opts?: Record<string, unknown>) => string;
+  loadAll?: (src: string, iter?: (doc: unknown) => void) => unknown;
+};
+
+export default function YamlJsonClient() {
+  const [yamlLib, setYamlLib] = React.useState<YamlLib | null>(null);
   React.useEffect(() => {
     let mounted = true;
     (async () => {
       const mod = await import("js-yaml");
-      if (mounted) setYamlLib({ load: mod.load, dump: mod.dump });
+      if (mounted) {
+        setYamlLib({
+          load: mod.load as YamlLib["load"],
+          dump: mod.dump as YamlLib["dump"],
+          loadAll: mod.loadAll as YamlLib["loadAll"],
+        });
+      }
     })();
     return () => {
       mounted = false;
     };
   }, []);
 
-  // io
-  const [input, setInput] = React.useState<string>("");
-  const [output, setOutput] = React.useState<string>("");
+  // IO
+  const [input, setInput] = React.useState("");
+  const [output, setOutput] = React.useState("");
 
-  // options
+  // Options
   const [direction, setDirection] = React.useState<Direction>("auto");
   const [autoRun, setAutoRun] = React.useState(true);
 
@@ -46,147 +58,151 @@ export default function YamlJsonPage() {
   const [jsonSortKeys, setJsonSortKeys] = React.useState(false);
 
   // YAML formatting
-  const [yamlFlow, setYamlFlow] = React.useState(false); // flow style
+  const [yamlFlow, setYamlFlow] = React.useState(false);
   const [yamlLineWidth, setYamlLineWidth] = React.useState(80);
   const [yamlSortKeys, setYamlSortKeys] = React.useState(false);
   const [yamlMultiDocs, setYamlMultiDocs] = React.useState(false);
 
   const [error, setError] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState(false);
 
+  // Helpers
   const detectDirection = React.useCallback((s: string): Direction => {
     const t = s.trim();
     if (!t) return "auto";
-    // quick heuristic
-    if (t.startsWith("{") || t.startsWith("[")) return "json-to-yaml";
+    if (/^[\s\n]*[{[]/.test(t)) return "json-to-yaml";
     if (/^---\s|:\s|-\s/.test(t)) return "yaml-to-json";
-    return "yaml-to-json";
+    try {
+      JSON.parse(t);
+      return "json-to-yaml";
+    } catch {
+      return "yaml-to-json";
+    }
   }, []);
 
-  const normalizeKeys = (val: any) => {
-    if (!jsonSortKeys && !yamlSortKeys) return val;
-    const sort = (x: any): any => {
-      if (Array.isArray(x)) return x.map(sort);
-      if (x && typeof x === "object") {
-        return Object.fromEntries(
-          Object.keys(x)
-            .sort((a, b) => a.localeCompare(b))
-            .map((k) => [k, sort(x[k])]),
-        );
-      }
-      return x;
-    };
-    return sort(val);
-  };
+  const normalizeKeys = React.useCallback(
+    (val: unknown): unknown => {
+      if (!jsonSortKeys && !yamlSortKeys) return val;
+      const sort = (x: unknown): unknown => {
+        if (Array.isArray(x)) return x.map(sort);
+        if (x && typeof x === "object") {
+          const obj = x as Record<string, unknown>;
+          return Object.fromEntries(
+            Object.keys(obj)
+              .sort((a, b) => a.localeCompare(b))
+              .map((k) => [k, sort(obj[k])]),
+          );
+        }
+        return x;
+      };
+      return sort(val);
+    },
+    [jsonSortKeys, yamlSortKeys],
+  );
 
-  const toYaml = (obj: any) => {
-    if (!yamlLib) return "";
-    return yamlLib.dump(normalizeKeys(obj), {
-      noRefs: true,
-      lineWidth: yamlLineWidth || 80,
-      flowLevel: yamlFlow ? 0 : -1,
-      sortKeys: yamlSortKeys,
-    });
-  };
+  const toYaml = React.useCallback(
+    (obj: unknown): string => {
+      if (!yamlLib) return "";
+      return yamlLib.dump(normalizeKeys(obj), {
+        noRefs: true,
+        lineWidth: yamlLineWidth || 80,
+        flowLevel: yamlFlow ? 0 : -1,
+        sortKeys: yamlSortKeys,
+      });
+    },
+    [yamlLib, normalizeKeys, yamlLineWidth, yamlFlow, yamlSortKeys],
+  );
 
-  const toJson = (obj: any) => {
-    return JSON.stringify(normalizeKeys(obj), null, Math.max(0, jsonSpaces));
-  };
+  const toJson = React.useCallback(
+    (obj: unknown): string => JSON.stringify(normalizeKeys(obj), null, Math.max(0, jsonSpaces)),
+    [normalizeKeys, jsonSpaces],
+  );
 
-  const convert = React.useCallback(() => {
-    if (!input.trim()) {
+  const doConvert = React.useCallback(() => {
+    const txt = input.trim();
+    if (!txt) {
       setError(null);
       setOutput("");
       return;
     }
     setError(null);
-
     try {
-      const dir: Direction = direction === "auto" ? detectDirection(input) : direction;
-
+      const dir: Direction = direction === "auto" ? detectDirection(txt) : direction;
       if (dir === "yaml-to-json") {
-        if (!yamlLib) return; // wait for lib
-        if (yamlMultiDocs) {
-          const docs: any[] = [];
-          // loadAll is not typed on mod, but available
-          (yamlLib as any).loadAll
-            ? (yamlLib as any).loadAll(input, (doc: any) => docs.push(doc))
-            : docs.push(yamlLib.load(input));
+        if (!yamlLib) return;
+        if (yamlMultiDocs && yamlLib.loadAll) {
+          const docs: unknown[] = [];
+          yamlLib.loadAll(txt, (doc: unknown) => docs.push(doc));
           setOutput(toJson(docs));
         } else {
-          const obj = yamlLib.load(input);
+          const obj = yamlLib.load(txt);
           setOutput(toJson(obj));
         }
       } else {
-        // json-to-yaml
-        const obj = JSON.parse(input);
+        const obj = JSON.parse(txt);
         setOutput(toYaml(obj));
       }
-    } catch (e: any) {
-      setError(String(e?.message || e));
+    } catch (e) {
       setOutput("");
+      setError(e instanceof Error ? e.message : String(e));
     }
-  }, [
-    input,
-    direction,
-    detectDirection,
-    yamlLib,
-    yamlFlow,
-    yamlLineWidth,
-    yamlSortKeys,
-    yamlMultiDocs,
-    jsonSpaces,
-    jsonSortKeys,
-  ]);
+  }, [input, direction, detectDirection, yamlLib, yamlMultiDocs, toJson, toYaml]);
 
+  // Simple debounce for auto-run
   React.useEffect(() => {
-    if (autoRun && yamlLib) convert();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    input,
-    direction,
-    autoRun,
-    jsonSpaces,
-    jsonSortKeys,
-    yamlFlow,
-    yamlLineWidth,
-    yamlSortKeys,
-    yamlMultiDocs,
-    yamlLib,
-  ]);
+    if (!autoRun || !yamlLib) return;
+    const t = window.setTimeout(() => doConvert(), 250);
+    return () => window.clearTimeout(t);
+  }, [autoRun, yamlLib, doConvert]);
 
-  const copyOut = async () => {
-    if (!output) return;
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
-  };
-
-  const resetAll = () => {
-    setInput("");
-    setOutput("");
-    setDirection("auto");
-    setAutoRun(true);
-    setJsonSpaces(2);
-    setJsonSortKeys(false);
-    setYamlFlow(false);
-    setYamlLineWidth(80);
-    setYamlSortKeys(false);
-    setYamlMultiDocs(false);
-    setCopied(false);
-    setError(null);
-  };
-
+  // Samples
   const sampleYaml = `---
-name: ToolsHub
-features:
-  - YAML
-  - JSON
+app: ToolsHub
+version: 1.0
 active: true
-count: 3
+tags:
+  - dev
+  - utils
+  - converter
+config:
+  theme: dark
+  options:
+    autoSave: true
+    lineWidth: 120
+users:
+  - id: 1
+    name: Alice
+    roles: [admin, editor]
+  - id: 2
+    name: Bob
+    roles:
+      - viewer
+      - tester
 ---
-name: Another
-tags: [a, b, c]`;
+# Another YAML document
+service: API
+endpoints:
+  - path: /login
+    method: POST
+  - path: /logout
+    method: GET
+`;
+
+  const sampleJSON = `[
+  {
+    "id": 1,
+    "name": "Alice",
+    "active": true,
+    "roles": ["admin", "editor"],
+    "profile": { "email": "alice@example.com", "age": 30 }
+  },
+  {
+    "id": 2,
+    "name": "Bob",
+    "active": false,
+    "roles": ["viewer", "tester"],
+    "profile": { "email": "bob@example.com", "age": 25 }
+  }
+]`;
 
   const exportPayload = React.useMemo(
     () => ({
@@ -216,54 +232,100 @@ tags: [a, b, c]`;
     ],
   );
 
+  const resetAll = () => {
+    setInput("");
+    setOutput("");
+    setDirection("auto");
+    setAutoRun(true);
+    setJsonSpaces(2);
+    setJsonSortKeys(false);
+    setYamlFlow(false);
+    setYamlLineWidth(80);
+    setYamlSortKeys(false);
+    setYamlMultiDocs(false);
+    setError(null);
+  };
+
   return (
-    <MotionGlassCard className="p-4 md:p-6 lg:p-8">
+    <>
       <ToolPageHeader
         title="YAML ⇄ JSON"
-        description="Convert YAML to JSON and back. Supports multi-doc YAML, pretty/minified JSON, sorted keys, and flow style."
+        description="Convert YAML to JSON and back. Multi-doc YAML, pretty/minified JSON, sorting, and YAML flow style."
         icon={Code2}
         actions={
-          <div className="flex flex-wrap gap-2">
-            <ActionButton
-              icon={RefreshCw}
-              label="Normalize"
-              onClick={() => setInput((s) => s.trim())}
-            />
-
-            <ActionButton
-              onClick={() => {
-                setInput(sampleYaml);
-                setDirection("yaml-to-json");
-              }}
-              label="Load Sample"
-            />
-
+          <>
+            <ResetButton onClick={resetAll} />
             <ExportTextButton
+              variant="default"
               icon={Download}
-              label="Export JSON"
+              label="Export Session"
               filename="yaml-json-session.json"
               getText={() => JSON.stringify(exportPayload, null, 2)}
             />
-            <ResetButton onClick={resetAll} />
-          </div>
+          </>
         }
       />
 
       <GlassCard>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* Left: input */}
-          <div className="lg:col-span-2">
+        <CardContent className="grid gap-4 lg:grid-cols-3">
+          {/* Left: input & controls */}
+          <div className="lg:col-span-2 space-y-3">
             <TextareaField
               id="input"
-              label="Input"
               placeholder="Paste YAML or JSON here…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              autoResize
-              className="min-h-[180px]"
+              textareaClassName="min-h-[320px]"
             />
 
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <InputField
+                fileButtonSize="sm"
+                type="file"
+                fileButtonLabel="Import JSON"
+                accept="application/json"
+                onFilesChange={async (files) => {
+                  const f = files?.[0];
+                  if (!f) return;
+                  const txt = await f.text();
+                  setDirection("json-to-yaml");
+                  setInput(txt);
+                }}
+              />
+              <InputField
+                fileButtonSize="sm"
+                type="file"
+                fileButtonLabel="Import YAML"
+                accept=".yaml,.yml,text/yaml,text/plain"
+                onFilesChange={async (files) => {
+                  const f = files?.[0];
+                  if (!f) return;
+                  const txt = await f.text();
+                  setDirection("yaml-to-json");
+                  setInput(txt);
+                }}
+              />
+              <ActionButton
+                size="sm"
+                label="Sample YAML"
+                icon={Braces}
+                onClick={() => {
+                  setInput(sampleYaml);
+                  setDirection("yaml-to-json");
+                }}
+              />
+              <ActionButton
+                size="sm"
+                label="Sample JSON"
+                icon={Braces}
+                onClick={() => {
+                  setInput(sampleJSON);
+                  setDirection("json-to-yaml");
+                }}
+              />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 items-end">
               <SelectField
                 id="direction"
                 label="Direction"
@@ -275,11 +337,16 @@ tags: [a, b, c]`;
                   { value: "json-to-yaml", label: "JSON → YAML" },
                 ]}
               />
-              <SwitchRow label="Auto-run" checked={autoRun} onCheckedChange={setAutoRun} />
+              <SwitchRow
+                className="h-fit"
+                label="Auto-run"
+                checked={autoRun}
+                onCheckedChange={setAutoRun}
+              />
             </div>
 
             {error && (
-              <div className="mt-3 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-destructive">
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-destructive">
                 <Info className="mt-0.5 h-4 w-4" />
                 <div className="text-sm">{error}</div>
               </div>
@@ -287,14 +354,14 @@ tags: [a, b, c]`;
           </div>
 
           {/* Right: options */}
-          <div className="rounded-lg border p-3">
-            <div className="mb-2 flex items-center gap-2">
+          <div className="rounded-lg border p-3 space-y-3">
+            <div className="flex items-center gap-2">
               <Settings2 className="h-4 w-4" />
               <div className="text-sm font-medium">Options</div>
             </div>
 
             <div className="grid gap-2">
-              <div className="text-xs font-medium opacity-80">JSON output</div>
+              <div className="text-xs font-medium opacity-80">JSON Output</div>
               <InputField
                 id="jsonSpaces"
                 type="number"
@@ -311,10 +378,10 @@ tags: [a, b, c]`;
               />
             </div>
 
-            <Separator className="my-3" />
+            <Separator className="my-2" />
 
             <div className="grid gap-2">
-              <div className="text-xs font-medium opacity-80">YAML output</div>
+              <div className="text-xs font-medium opacity-80">YAML Output</div>
               <SwitchRow label="Flow style" checked={yamlFlow} onCheckedChange={setYamlFlow} />
               <InputField
                 id="yamlWidth"
@@ -339,32 +406,37 @@ tags: [a, b, c]`;
               />
             </div>
           </div>
-        </div>
+        </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       {/* Output */}
       <GlassCard>
-        <div className="flex items-center justify-between px-3 pt-3">
-          <div className="text-sm font-medium">Output</div>
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle>Output</CardTitle>
           <div className="flex gap-2">
-            <CopyButton icon={Copy} active={copied} onClick={copyOut}>
-              Copy
-            </CopyButton>
+            <CopyButton getText={output} />
             <ExportTextButton
+              variant="default"
               icon={Download}
-              label="Download .txt"
+              label="Download"
               filename="converted.txt"
               getText={() => output}
               disabled={!output}
             />
           </div>
-        </div>
-        <div className="p-3">
-          <TextareaField id="output" value={output} readOnly autoResize className="min-h-[220px]" />
-        </div>
+        </CardHeader>
+        <CardContent>
+          <TextareaField
+            id="output"
+            value={output}
+            readOnly
+            autoResize
+            textareaClassName="min-h-[220px]"
+          />
+        </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }

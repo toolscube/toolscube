@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Info, RefreshCw, Table } from "lucide-react";
+import { Braces, Download, Info, Table } from "lucide-react";
 import React from "react";
 import {
   ActionButton,
@@ -267,13 +267,35 @@ export default function CsvJsonClient() {
     setError(null);
   };
 
-  const sampleCSV = `id,name,active
-1,Alice,true
-2,Bob,false`;
+const sampleCSV = `id,name,active,roles,profile
+1,"Alice Smith",true,"admin;editor","{\\"email\\":\\"alice@example.com\\",\\"age\\":30}"
+2,"Bob Lee",false,"viewer;tester","{\\"email\\":\\"bob@example.com\\",\\"age\\":25}"
+3,"Charlie, Jr.",true,"contributor","{\\"email\\":\\"charlie@example.com\\",\\"age\\":28}"`;
+  
   const sampleJSON = `[
-  {"id":1,"name":"Alice","active":true},
-  {"id":2,"name":"Bob","active":false}
+  {
+    "id": 1,
+    "name": "Alice Smith",
+    "active": true,
+    "roles": ["admin", "editor"],
+    "profile": { "email": "alice@example.com", "age": 30 }
+  },
+  {
+    "id": 2,
+    "name": "Bob Lee",
+    "active": false,
+    "roles": ["viewer", "tester"],
+    "profile": { "email": "bob@example.com", "age": 25 }
+  },
+  {
+    "id": 3,
+    "name": "Charlie, Jr.",
+    "active": true,
+    "roles": ["contributor"],
+    "profile": { "email": "charlie@example.com", "age": 28 }
+  }
 ]`;
+
 
   const exportPayload = React.useMemo(
     () => ({
@@ -335,13 +357,9 @@ export default function CsvJsonClient() {
             />
 
             <div className="flex items-center gap-2 flex-wrap">
-              <ActionButton
-                icon={RefreshCw}
-                label="Normalize"
-                onClick={() => setInput((s) => s.trim())}
-              />
               <InputField
                 type="file"
+                fileButtonSize="sm"
                 fileButtonLabel="Import JSON"
                 accept="application/json"
                 onFilesChange={async (files) => {
@@ -354,6 +372,7 @@ export default function CsvJsonClient() {
               />
               <InputField
                 type="file"
+                fileButtonSize="sm"
                 fileButtonLabel="Import CSV"
                 accept=".csv,text/csv,text/plain,.tsv,text/tab-separated-values"
                 onFilesChange={async (files) => {
@@ -372,14 +391,18 @@ export default function CsvJsonClient() {
                 }}
               />
               <ActionButton
-                label="Load CSV"
+                size="sm"
+                icon={Braces}
+                label="Sample CSV"
                 onClick={() => {
                   setInput(sampleCSV);
                   setDirection("csv-to-json");
                 }}
               />
               <ActionButton
-                label="Load JSON"
+                size="sm"
+                icon={Braces}
+                label="Sample JSON"
                 onClick={() => {
                   setInput(sampleJSON);
                   setDirection("json-to-csv");
