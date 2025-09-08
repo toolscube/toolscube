@@ -2,36 +2,52 @@
 
 import {
   ActivitySquare,
-  Check,
   Clock4,
-  Copy,
-  Download,
+  Edit3,
+  Eye,
   History,
-  Link2,
   Loader2,
+  type LucideIcon,
   Network,
   Plus,
-  RotateCcw,
   Save,
+  ScanLine,
+  Send,
+  Settings2,
+  Trash,
   Trash2,
   Upload,
   Wand2,
 } from "lucide-react";
 import * as React from "react";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 type BodyMode = "none" | "json" | "text" | "form" | "multipart";
 type AuthType = "none" | "bearer" | "basic";
 type Pair = { id: string; key: string; value: string; enabled: boolean };
+
+type Option = {
+  value: Method;
+  label: string;
+  icon?: LucideIcon;
+};
 
 type Preset = {
   id: string;
@@ -95,22 +111,6 @@ function buildURL(base: string, query: Pair[]): string {
     return base;
   }
 }
-function downloadBlob(data: Blob, filename: string) {
-  const url = URL.createObjectURL(data);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-async function copyToClipboard(text: string, setCopied: (k: string | null) => void, k: string) {
-  await navigator.clipboard.writeText(text);
-  setCopied(k);
-  setTimeout(() => setCopied(null), 1000);
-}
 
 /** super small cURL importer (subset) */
 function importCurl(curl: string): Partial<Preset> | null {
@@ -123,7 +123,7 @@ function importCurl(curl: string): Partial<Preset> | null {
   let data = "";
 
   for (let i = 1; i < tokens.length; i++) {
-    const t = tokens[i]!;
+    const t = tokens[i];
     const clean = t.replace(/^['"]|['"]$/g, "");
     if (t === "-X" || t === "--request") {
       const m = tokens[++i]?.replace(/^['"]|['"]$/g, "");
@@ -170,10 +170,7 @@ function toCurl(p: Preset) {
   return `curl -X ${p.method} ${JSON.stringify(qUrl)} ${h}${data}`.trim();
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   KV UI                                    */
-/* -------------------------------------------------------------------------- */
-
+// KV
 function KVRow({
   row,
   onChange,
@@ -190,26 +187,24 @@ function KVRow({
   valPlaceholder?: string;
 }) {
   return (
-    <div className="grid grid-cols-[20px_1fr_1fr_36px] gap-2">
-      <input
+    <div className="grid grid-cols-[20px_1fr_1fr_36px] gap-2 items-end">
+      <InputField
         type="checkbox"
         checked={row.enabled}
         aria-label={checkboxAriaLabel}
         onChange={(e) => onChange({ enabled: e.target.checked })}
       />
-      <Input
+      <InputField
         placeholder={keyPlaceholder}
         value={row.key}
         onChange={(e) => onChange({ key: e.target.value })}
       />
-      <Input
+      <InputField
         placeholder={valPlaceholder}
         value={row.value}
         onChange={(e) => onChange({ value: e.target.value })}
       />
-      <Button variant="outline" size="icon" onClick={onRemove}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <ActionButton size="icon" icon={Trash2} onClick={onRemove} />
     </div>
   );
 }
@@ -259,19 +254,13 @@ function KVSection({
             valPlaceholder={valPlaceholder}
           />
         ))}
-        <Button variant="outline" size="sm" onClick={onAdd} className="w-fit gap-2">
-          <Plus className="h-4 w-4" /> {addLabel}
-        </Button>
+        <ActionButton size="sm" onClick={onAdd} className="w-fit" label={addLabel} icon={Plus} />
       </div>
     </div>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                 MAIN PAGE                                  */
-/* -------------------------------------------------------------------------- */
-
-export default function ApiTesterPage() {
+export default function ApiTesterClient() {
   // Request state
   const [method, setMethod] = React.useState<Method>("GET");
   const [url, setUrl] = React.useState("");
@@ -294,7 +283,7 @@ export default function ApiTesterPage() {
   ]);
   const [multipart, setMultipart] = React.useState<Pair[]>([
     { id: uid(), key: "", value: "", enabled: true },
-  ]); // text-only
+  ]);
 
   const [timeoutMs, setTimeoutMs] = React.useState<number>(30000);
   const [followRedirects, setFollowRedirects] = React.useState<boolean>(true);
@@ -307,7 +296,6 @@ export default function ApiTesterPage() {
   const [sizeBytes, setSizeBytes] = React.useState<number | null>(null);
   const [respHeaders, setRespHeaders] = React.useState<[string, string][]>([]);
   const [respBody, setRespBody] = React.useState<string>("");
-  const [copied, setCopied] = React.useState<string | null>(null);
   const [viewRaw, setViewRaw] = React.useState(false);
 
   const [controller, setController] = React.useState<AbortController | null>(null);
@@ -409,14 +397,8 @@ export default function ApiTesterPage() {
     setSizeBytes(null);
     setRespHeaders([]);
     setRespBody("");
-    setCopied(null);
     setViewRaw(false);
   }, []);
-
-  const exportResponse = React.useCallback(() => {
-    const blob = new Blob([respBody], { type: "text/plain;charset=utf-8" });
-    downloadBlob(blob, "response.txt");
-  }, [respBody]);
 
   const savePreset = React.useCallback(() => {
     const title =
@@ -561,7 +543,9 @@ export default function ApiTesterPage() {
       setTimeMs(t1 - t0);
 
       const hdrs: [string, string][] = [];
-      res.headers.forEach((v, k) => hdrs.push([k, v]));
+      res.headers.forEach((v, k) => {
+        hdrs.push([k, v]);
+      });
       setRespHeaders(hdrs);
 
       const buf = await res.arrayBuffer();
@@ -655,39 +639,37 @@ export default function ApiTesterPage() {
     return /\bapplication\/(json|.+\+json)\b/i.test(ct);
   }, [respHeaders]);
 
-  return (
-    <MotionGlassCard>
-      {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Network className="h-6 w-6" /> API Tester
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Build requests, send, inspect responses — all in your browser.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button variant="outline" onClick={savePreset} className="gap-2">
-            <Save className="h-4 w-4" /> Save Preset
-          </Button>
-          <Button variant="outline" onClick={importFromCurl} className="gap-2">
-            <Upload className="h-4 w-4" /> Import cURL
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => copyToClipboard(curlString, setCopied, "curl")}
-            className="gap-2"
-          >
-            <Link2 className="h-4 w-4" /> Copy cURL{" "}
-            {copied === "curl" ? <Check className="h-4 w-4" /> : null}
-          </Button>
-        </div>
-      </GlassCard>
+  const methodOptions: Option[] = [
+    { value: "GET", label: "GET", icon: Eye },
+    { value: "POST", label: "POST", icon: Send },
+    { value: "PUT", label: "PUT", icon: Upload },
+    { value: "PATCH", label: "PATCH", icon: Edit3 },
+    { value: "DELETE", label: "DELETE", icon: Trash },
+    { value: "HEAD", label: "HEAD", icon: ScanLine },
+    { value: "OPTIONS", label: "OPTIONS", icon: Settings2 },
+  ];
 
+  return (
+    <>
+      {/* Header */}
+      <ToolPageHeader
+        icon={Network}
+        title="API Tester"
+        description="Build requests, send, inspect responses — all in your browser."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <ActionButton icon={Save} label="Save Preset" onClick={savePreset} />
+            <ActionButton icon={Upload} label="Import cURL" onClick={importFromCurl} />
+            <CopyButton
+              variant="default"
+              disabled={!curlString}
+              label="Copy cURL"
+              getText={curlString}
+            />
+          </>
+        }
+      />
       {/* Request Builder */}
       <GlassCard>
         <CardHeader>
@@ -696,22 +678,15 @@ export default function ApiTesterPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Method + URL */}
-          <div className="grid gap-2 sm:grid-cols-[160px_1fr]">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs">Method</Label>
-              <select
-                className="h-9 w-full rounded-md border bg-background px-2 text-sm"
-                value={method}
-                onChange={(e) => setMethod(e.target.value as Method)}
-              >
-                {METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <Input
+          <div className="grid gap-2 sm:grid-cols-[160px_1fr] items-end">
+            <SelectField
+              label="Method"
+              value={method}
+              onValueChange={(value) => setMethod(value as Method)}
+              options={methodOptions}
+            />
+
+            <InputField
               placeholder="https://api.example.com/v1/users"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -742,8 +717,8 @@ export default function ApiTesterPage() {
 
           {/* Quick common headers */}
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
+            <ActionButton
+              label="Accept: application/json"
               size="sm"
               onClick={() =>
                 setHeaders((r) => [
@@ -751,11 +726,9 @@ export default function ApiTesterPage() {
                   { id: uid(), key: "Accept", value: "application/json", enabled: true },
                 ])
               }
-            >
-              Accept: application/json
-            </Button>
-            <Button
-              variant="outline"
+            />
+            <ActionButton
+              label="Content-Type: application/json"
               size="sm"
               onClick={() =>
                 setHeaders((r) => [
@@ -763,9 +736,7 @@ export default function ApiTesterPage() {
                   { id: uid(), key: "Content-Type", value: "application/json", enabled: true },
                 ])
               }
-            >
-              Content-Type: application/json
-            </Button>
+            />
           </div>
 
           {/* Auth */}
@@ -774,21 +745,20 @@ export default function ApiTesterPage() {
               <Label>Auth</Label>
               <div className="flex flex-wrap gap-2">
                 {(["none", "bearer", "basic"] as const).map((t) => (
-                  <Button
+                  <ActionButton
                     key={t}
                     size="sm"
+                    label={t.toUpperCase()}
                     variant={authType === t ? "default" : "outline"}
                     onClick={() => setAuthType(t)}
-                  >
-                    {t.toUpperCase()}
-                  </Button>
+                  />
                 ))}
               </div>
             </div>
             {authType === "bearer" && (
-              <div className="space-y-2 md:col-span-2">
-                <Label>Bearer Token</Label>
-                <Input
+              <div className="md:col-span-2">
+                <InputField
+                  label="Bearer Token"
                   placeholder="eyJhbGciOi..."
                   value={bearer}
                   onChange={(e) => setBearer(e.target.value)}
@@ -797,18 +767,17 @@ export default function ApiTesterPage() {
             )}
             {authType === "basic" && (
               <>
-                <div className="space-y-2">
-                  <Label>Username</Label>
-                  <Input value={basicUser} onChange={(e) => setBasicUser(e.target.value)} />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Password</Label>
-                  <Input
-                    type="password"
-                    value={basicPass}
-                    onChange={(e) => setBasicPass(e.target.value)}
-                  />
-                </div>
+                <InputField
+                  label="Username"
+                  value={basicUser}
+                  onChange={(e) => setBasicUser(e.target.value)}
+                />
+                <InputField
+                  label="Password"
+                  type="password"
+                  value={basicPass}
+                  onChange={(e) => setBasicPass(e.target.value)}
+                />
               </>
             )}
           </div>
@@ -820,35 +789,32 @@ export default function ApiTesterPage() {
             <Label>Body</Label>
             <div className="flex flex-wrap gap-2">
               {(["none", "json", "text", "form", "multipart"] as const).map((m) => (
-                <Button
+                <ActionButton
                   key={m}
+                  label={m.toUpperCase()}
                   size="sm"
                   variant={bodyMode === m ? "default" : "outline"}
                   onClick={() => setBodyMode(m)}
-                >
-                  {m.toUpperCase()}
-                </Button>
+                />
               ))}
             </div>
 
             {(bodyMode === "json" || bodyMode === "text") && (
               <>
-                <Textarea
+                <TextareaField
                   value={bodyText}
                   onChange={(e) => setBodyText(e.target.value)}
-                  className="min-h-[160px] font-mono"
+                  textareaClassName="min-h-[160px] font-mono"
                   placeholder={bodyMode === "json" ? '{ "name": "Alice" }' : "Plain text body"}
                 />
                 {bodyMode === "json" && (
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
+                    <ActionButton
+                      label="Prettify JSON"
                       size="sm"
-                      className="gap-2"
+                      icon={Wand2}
                       onClick={() => setBodyText(maybePrettyJSON(bodyText))}
-                    >
-                      <Wand2 className="h-4 w-4" /> Prettify JSON
-                    </Button>
+                    />
                   </div>
                 )}
               </>
@@ -884,15 +850,13 @@ export default function ApiTesterPage() {
 
           {/* Options + Send */}
           <div className="grid gap-3 md:grid-cols-3">
-            <div className="space-y-1">
-              <Label>Timeout (ms)</Label>
-              <Input
-                type="number"
-                min={1}
-                value={timeoutMs}
-                onChange={(e) => setTimeoutMs(Math.max(1, Number(e.target.value) || 1))}
-              />
-            </div>
+            <InputField
+              label="Timeout (ms)"
+              type="number"
+              min={1}
+              value={timeoutMs}
+              onChange={(e) => setTimeoutMs(Math.max(1, Number(e.target.value) || 1))}
+            />
             <div className="space-y-1 flex items-end gap-2">
               <Switch checked={followRedirects} onCheckedChange={setFollowRedirects} />
               <span className="text-sm text-muted-foreground">Follow redirects</span>
@@ -906,17 +870,13 @@ export default function ApiTesterPage() {
                 )}{" "}
                 Send
               </Button>
-              {loading && (
-                <Button variant="outline" onClick={stop} className="gap-2">
-                  <Trash2 className="h-4 w-4" /> Abort
-                </Button>
-              )}
+              {loading && <ActionButton icon={Trash2} label="Abort" onClick={stop} />}
             </div>
           </div>
         </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       {/* Response */}
       <GlassCard>
@@ -940,40 +900,24 @@ export default function ApiTesterPage() {
               <Wand2 className="h-3.5 w-3.5" /> {sizeBytes != null ? `${sizeBytes} bytes` : "—"}
             </Badge>
             <div className="ml-auto flex items-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>View</span>
-                <select
-                  className="h-8 rounded-md border bg-background px-2 text-xs"
-                  value={viewRaw ? "raw" : "pretty"}
-                  onChange={(e) => setViewRaw(e.target.value === "raw")}
-                >
-                  <option value="pretty">Pretty</option>
-                  <option value="raw">Raw</option>
-                </select>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => copyToClipboard(respBody, setCopied, "resp")}
-                className="gap-2"
+              <SelectField
+                value={viewRaw ? "raw" : "pretty"}
+                onValueChange={(v) => setViewRaw(v === "raw")}
+                options={[
+                  { value: "pretty", label: "Pretty" },
+                  { value: "raw", label: "Raw" },
+                ]}
+              />
+              <CopyButton label="Copy body" getText={respBody} />
+              <ExportTextButton
+                variant="default"
+                getText={() => respBody}
+                filename="response.txt"
+                label="Download"
                 disabled={!respBody}
-              >
-                <Copy className="h-4 w-4" /> Copy body{" "}
-                {copied === "resp" ? <Check className="h-4 w-4" /> : null}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportResponse}
-                className="gap-2"
-                disabled={!respBody}
-              >
-                <Download className="h-4 w-4" /> Download
-              </Button>
+              />
             </div>
           </div>
-
-          {/* Headers */}
           <div className="rounded-md border">
             <div className="px-3 py-2 text-xs text-muted-foreground">Headers</div>
             <div className="divide-y">
@@ -982,7 +926,7 @@ export default function ApiTesterPage() {
               ) : (
                 respHeaders.map(([k, v], i) => (
                   <div
-                    key={`${k}-${i}`}
+                    key={`${k}-${i as number}`}
                     className="grid grid-cols-3 gap-2 p-2 text-sm sm:grid-cols-6"
                   >
                     <div className="col-span-2 font-medium">{k}</div>
@@ -992,13 +936,11 @@ export default function ApiTesterPage() {
               )}
             </div>
           </div>
-
-          {/* Body */}
           <div className="space-y-2">
             <Label>Body</Label>
-            <Textarea
+            <TextareaField
               readOnly
-              className="min-h-[220px] font-mono"
+              textareaClassName="min-h-[220px] font-mono"
               value={viewRaw || !responseLooksJSON ? respBody : maybePrettyJSON(respBody)}
               placeholder="—"
             />
@@ -1006,9 +948,8 @@ export default function ApiTesterPage() {
         </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
-      {/* Presets */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Presets</CardTitle>
@@ -1026,22 +967,13 @@ export default function ApiTesterPage() {
                   <div className="mb-1 flex items-center justify-between">
                     <div className="font-medium">{p.title}</div>
                     <div className="flex gap-1">
-                      <Button
+                      <ActionButton icon={Plus} size="icon" onClick={() => applyPreset(p)} />
+                      <ActionButton
+                        icon={Trash2}
                         size="icon"
-                        variant="outline"
-                        onClick={() => applyPreset(p)}
-                        title="Apply"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="outline"
+                        variant="destructive"
                         onClick={() => removePreset(p.id)}
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      />
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground break-words">
@@ -1054,7 +986,7 @@ export default function ApiTesterPage() {
         </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       {/* History */}
       <GlassCard>
@@ -1090,9 +1022,9 @@ export default function ApiTesterPage() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Button
+                      <ActionButton
+                        label="Apply"
                         size="sm"
-                        variant="outline"
                         onClick={() =>
                           applyPreset({
                             id: "from-hist",
@@ -1108,19 +1040,15 @@ export default function ApiTesterPage() {
                             multipart: h.multipart,
                           })
                         }
-                      >
-                        Apply
-                      </Button>
-                      <Button
+                      />
+                      <ActionButton
+                        label="Delete"
                         size="sm"
-                        variant="outline"
                         onClick={() => {
                           const next = history.filter((x) => x.id !== h.id);
                           persistHistory(next);
                         }}
-                      >
-                        Delete
-                      </Button>
+                      />
                     </div>
                   </div>
                 ))}
@@ -1128,6 +1056,6 @@ export default function ApiTesterPage() {
           )}
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }
