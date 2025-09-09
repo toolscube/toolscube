@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 type ColorFieldProps = {
-  id: string;
+  id?: string;
   icon?: LucideIcon;
   value: string;
   onChange: (v: string) => void;
@@ -15,7 +15,7 @@ type ColorFieldProps = {
 };
 
 export default function ColorField({
-  id,
+  id = "color",
   icon: Icon,
   value,
   onChange,

@@ -1,37 +1,43 @@
 "use client";
 
 import {
-  Check,
-  Copy,
   Download,
-  ExternalLink,
   Globe,
   Image as ImageIcon,
   Link as LinkIcon,
+  ListChecks,
   Palette,
-  RotateCcw,
   Sparkles,
   Twitter,
   Type,
   User,
+  Wand2,
 } from "lucide-react";
 import * as React from "react";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  LinkButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import ColorField from "@/components/shared/color-field";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
-// ---------------- Types ----------------
+/* Types */
 type TwitterCard = "summary" | "summary_large_image" | "app" | "player";
 type OgType = "website" | "article" | "product" | "profile" | "video.other";
 
 type State = {
-  // Basics
   title: string;
   siteName: string;
   description: string;
@@ -40,19 +46,13 @@ type State = {
   robotsIndex: boolean;
   robotsFollow: boolean;
   robotsNoSnippet: boolean;
-
-  // Brand
   themeColor: string;
   favicon: string;
   icon32: string;
   icon180: string;
   manifest: string;
-
-  // Locale
   lang: string;
   dir: "ltr" | "rtl";
-
-  // Open Graph
   useOG: boolean;
   ogType: OgType;
   ogUrl: string;
@@ -60,28 +60,23 @@ type State = {
   ogImageAlt: string;
   ogImageWidth: string;
   ogImageHeight: string;
-
-  // Twitter
   useTwitter: boolean;
   twitterCard: TwitterCard;
   twitterSite: string;
   twitterCreator: string;
   twitterImage: string;
   twitterImageAlt: string;
-
-  // Advanced
   viewport: string;
-
-  // UI
   pretty: boolean;
 };
 
 const DEFAULT: State = {
-  title: "Your Page Title",
-  siteName: "Your Site",
-  description: "Short description for search and social previews.",
-  author: "Your Name",
-  canonical: "https://example.com/page",
+  title: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
+  siteName: "Tools Hub",
+  description:
+    "URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators — all in one place.",
+  author: "Tariqul Islam",
+  canonical: "https://toolshub.dev/tools",
   robotsIndex: true,
   robotsFollow: true,
   robotsNoSnippet: false,
@@ -97,17 +92,17 @@ const DEFAULT: State = {
 
   useOG: true,
   ogType: "website",
-  ogUrl: "https://example.com/page",
-  ogImage: "https://example.com/og-image.jpg",
+  ogUrl: "https://toolshub.dev/tools",
+  ogImage: "https://toolshub.dev/og-image.jpg",
   ogImageAlt: "Open Graph image",
   ogImageWidth: "1200",
   ogImageHeight: "630",
 
   useTwitter: true,
   twitterCard: "summary_large_image",
-  twitterSite: "@yourbrand",
-  twitterCreator: "@yourhandle",
-  twitterImage: "https://example.com/og-image.jpg",
+  twitterSite: "@toolshub",
+  twitterCreator: "@tariqul_420",
+  twitterImage: "https://toolshub.dev/og-image.jpg",
   twitterImageAlt: "Social image",
 
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
@@ -115,11 +110,11 @@ const DEFAULT: State = {
   pretty: true,
 };
 
-// ---------------- Helpers ----------------
+/* Helpers */
 const esc = (s: string) =>
   s.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 
-const isHttpUrl = (s: string) => /^https?:\/\//i.test(s || "");
+const isHttpUrl = (s: string) => /^https?:\/\//i.test((s ?? "").trim());
 
 function robotsValue(s: State) {
   const parts: string[] = [];
@@ -127,6 +122,15 @@ function robotsValue(s: State) {
   parts.push(s.robotsFollow ? "follow" : "nofollow");
   if (s.robotsNoSnippet) parts.push("nosnippet");
   return parts.join(", ");
+}
+
+function safeHostname(u?: string) {
+  try {
+    if (!u) return "";
+    return new URL(u).hostname;
+  } catch {
+    return "";
+  }
 }
 
 function genMeta(state: State) {
@@ -186,86 +190,153 @@ function genMeta(state: State) {
   }
 
   const out = L.join("\n");
-  return s.pretty ? out + "\n" : out;
-}
-
-function downloadTxt(filename: string, content: string) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  return s.pretty ? `${out}\n` : out;
 }
 
 function charCount(s: string) {
   return s.trim().length;
 }
 
-// ---------------- Page ----------------
+/* Page */
 export default function MetaGeneratorPage() {
   const [s, setS] = React.useState<State>(() => {
     if (typeof window !== "undefined") {
       try {
         const raw = localStorage.getItem("meta-gen-v1");
         if (raw) return { ...DEFAULT, ...JSON.parse(raw) } as State;
-      } catch {}
+      } catch {
+        // ignore
+      }
     }
     return DEFAULT;
   });
 
-  const [copied, setCopied] = React.useState(false);
   const output = React.useMemo(() => genMeta(s), [s]);
 
   React.useEffect(() => {
     localStorage.setItem("meta-gen-v1", JSON.stringify(s));
   }, [s]);
 
-  function resetAll() {
-    setS(DEFAULT);
-    setCopied(false);
-  }
-
-  async function copyOut() {
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  }
-
   const titleLen = charCount(s.title);
   const descLen = charCount(s.description);
   const titleOk = titleLen >= 15 && titleLen <= 70;
   const descOk = descLen >= 50 && descLen <= 160;
-
   const previewImage = s.twitterImage || s.ogImage;
 
+  // Derived / helpers for actions
+  const hostname = React.useMemo(
+    () => safeHostname(s.canonical || s.ogUrl),
+    [s.canonical, s.ogUrl],
+  );
+
+  function resetAll() {
+    setS(DEFAULT);
+  }
+
+  function copyPreviewTags() {
+    return output || " ";
+  }
+
+  function presetBlog() {
+    setS((p) => ({
+      ...p,
+      ogType: "article",
+      twitterCard: "summary_large_image",
+      description: p.description || "Short article description.",
+    }));
+  }
+
+  function presetProduct() {
+    setS((p) => ({
+      ...p,
+      ogType: "product",
+      twitterCard: "summary_large_image",
+      description: p.description || "Key benefits and highlights.",
+    }));
+  }
+
+  function presetLanding() {
+    setS((p) => ({
+      ...p,
+      ogType: "website",
+      twitterCard: "summary_large_image",
+      description: p.description || "Concise, compelling landing page summary.",
+    }));
+  }
+
+  function syncOgFromBasics() {
+    setS((p) => ({
+      ...p,
+      ogUrl: p.canonical || p.ogUrl,
+      ogImage: p.ogImage || p.twitterImage,
+      ogImageAlt: p.ogImageAlt || p.twitterImageAlt,
+    }));
+  }
+
+  function syncTwitterFromOg() {
+    setS((p) => ({
+      ...p,
+      twitterImage: p.twitterImage || p.ogImage,
+      twitterImageAlt: p.twitterImageAlt || p.ogImageAlt,
+    }));
+  }
+
+  // Validation / Warnings
+  const warnings = React.useMemo(() => {
+    const w: string[] = [];
+    if (!s.title.trim()) w.push("Missing title.");
+    if (!s.description.trim()) w.push("Missing description.");
+    if (!isHttpUrl(s.canonical)) w.push("Canonical should be an absolute URL (https://…).");
+    if (s.useOG) {
+      if (!isHttpUrl(s.ogUrl)) w.push("OG URL should be an absolute URL.");
+      if (!isHttpUrl(s.ogImage)) w.push("OG image should be an absolute URL.");
+    }
+    if (s.useTwitter) {
+      if (s.twitterCard === "summary_large_image" && !(s.twitterImage || s.ogImage)) {
+        w.push("Twitter large image card requires an image.");
+      }
+    }
+    if (!titleOk) w.push("Title length: aim for 15–70 characters.");
+    if (!descOk) w.push("Description length: aim for 50–160 characters.");
+    return w;
+  }, [s, titleOk, descOk]);
+
+  const hasWarnings = warnings.length > 0;
+
   return (
-    <MotionGlassCard>
-      {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Sparkles className="h-6 w-6" /> Meta Tags Generator
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Head meta preview for SEO & social. Build clean tags for Open Graph + Twitter and copy
-            in one click.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button variant="outline" onClick={copyOut} className="gap-2">
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy Tags
-          </Button>
-          <Button onClick={() => downloadTxt("meta-tags.html", output)} className="gap-2">
-            <Download className="h-4 w-4" /> Download
-          </Button>
-        </div>
+    <>
+      <ToolPageHeader
+        icon={Sparkles}
+        title="Meta Tags Generator"
+        description="Head meta preview for SEO & social. Build clean tags for Open Graph + Twitter."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <CopyButton disabled={!output} getText={copyPreviewTags()} />
+            <ExportTextButton
+              variant="default"
+              disabled={!output}
+              label="Download"
+              getText={() => output || ""}
+              filename="meta-tags.txt"
+            />
+          </>
+        }
+      />
+
+      {/* Quick Presets */}
+      <GlassCard>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Quick presets</CardTitle>
+          <CardDescription>Fast start for common page types.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <ActionButton icon={Wand2} label="Blog Post" onClick={presetBlog} />
+          <ActionButton icon={Wand2} label="Product Page" onClick={presetProduct} />
+          <ActionButton icon={Wand2} label="Landing" onClick={presetLanding} />
+          <ActionButton icon={LinkIcon} label="OG ← Basics" onClick={syncOgFromBasics} />
+          <ActionButton icon={Twitter} label="Twitter ← OG" onClick={syncTwitterFromOg} />
+        </CardContent>
       </GlassCard>
 
       {/* Basics */}
@@ -276,102 +347,89 @@ export default function MetaGeneratorPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="title" className="flex items-center gap-2">
-                <Type className="h-4 w-4" /> Title
-              </Label>
-              <Input
-                id="title"
-                value={s.title}
-                onChange={(e) => setS((p) => ({ ...p, title: e.target.value }))}
-                placeholder="Compelling page title"
-              />
-              <div className="flex items-center justify-between text-xs">
-                <span className={titleOk ? "text-muted-foreground" : "text-orange-600"}>
-                  {titleOk ? "Good length" : "Aim for 15–70 chars"}
-                </span>
-                <span className="text-muted-foreground">{titleLen} chars</span>
-              </div>
-            </div>
+            <InputField
+              id="title"
+              icon={Type}
+              label="Title"
+              placeholder="Compelling page title"
+              value={s.title}
+              onChange={(e) => setS((p) => ({ ...p, title: e.target.value }))}
+              hint={
+                <div className="flex items-center justify-between text-xs">
+                  <span className={titleOk ? "text-muted-foreground" : "text-orange-600"}>
+                    {titleOk ? "Good length" : "Aim for 15–70 chars"}
+                  </span>
+                  <span className="text-muted-foreground">{titleLen} chars</span>
+                </div>
+              }
+            />
 
-            <div className="space-y-1.5">
-              <Label htmlFor="desc">Description</Label>
-              <Textarea
-                id="desc"
-                value={s.description}
-                onChange={(e) => setS((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Short summary that encourages clicks…"
-                className="min-h-[90px]"
-              />
-              <div className="flex items-center justify-between text-xs">
-                <span className={descOk ? "text-muted-foreground" : "text-orange-600"}>
-                  {descOk ? "Good length" : "Aim for 50–160 chars"}
-                </span>
-                <span className="text-muted-foreground">{descLen} chars</span>
-              </div>
-            </div>
+            <TextareaField
+              id="desc"
+              label="Description"
+              placeholder="Short summary that encourages clicks…"
+              value={s.description}
+              onValueChange={(v) => setS((p) => ({ ...p, description: v }))}
+              minHeight="90px"
+              description={
+                <div className="flex items-center justify-between text-xs">
+                  <span className={descOk ? "text-muted-foreground" : "text-orange-600"}>
+                    {descOk ? "Good length" : "Aim for 50–160 chars"}
+                  </span>
+                  <span className="text-muted-foreground">{descLen} chars</span>
+                </div>
+              }
+            />
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="site">Site Name</Label>
-                <Input
-                  id="site"
-                  value={s.siteName}
-                  onChange={(e) => setS((p) => ({ ...p, siteName: e.target.value }))}
-                  placeholder="Your Site"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="author" className="flex items-center gap-2">
-                  <User className="h-4 w-4" /> Author
-                </Label>
-                <Input
-                  id="author"
-                  value={s.author}
-                  onChange={(e) => setS((p) => ({ ...p, author: e.target.value }))}
-                  placeholder="Your Name / Brand"
-                />
-              </div>
+              <InputField
+                id="site"
+                label="Site Name"
+                placeholder="Your Site"
+                value={s.siteName}
+                onChange={(e) => setS((p) => ({ ...p, siteName: e.target.value }))}
+              />
+              <InputField
+                id="author"
+                icon={User}
+                label="Author"
+                placeholder="Your Name / Brand"
+                value={s.author}
+                onChange={(e) => setS((p) => ({ ...p, author: e.target.value }))}
+              />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="canonical" className="flex items-center gap-2">
-                <LinkIcon className="h-4 w-4" /> Canonical URL
-              </Label>
-              <Input
-                id="canonical"
-                value={s.canonical}
-                onChange={(e) => setS((p) => ({ ...p, canonical: e.target.value }))}
-                placeholder="https://example.com/page"
-              />
-              {!isHttpUrl(s.canonical) && s.canonical.trim() !== "" && (
-                <p className="text-xs text-orange-600">Use absolute URL (https://…)</p>
-              )}
-            </div>
+            <InputField
+              id="canonical"
+              icon={LinkIcon}
+              label="Canonical URL"
+              placeholder="https://example.com/page"
+              value={s.canonical}
+              onChange={(e) => setS((p) => ({ ...p, canonical: e.target.value }))}
+              hint={
+                !isHttpUrl(s.canonical) && s.canonical.trim() !== "" ? (
+                  <span className="text-xs text-orange-600">Use absolute URL (https://…)</span>
+                ) : undefined
+              }
+            />
 
             <div className="rounded-md border p-3">
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="flex items-center justify-between">
-                  <Label>Index</Label>
-                  <Switch
-                    checked={s.robotsIndex}
-                    onCheckedChange={(v) => setS((p) => ({ ...p, robotsIndex: v }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>Follow</Label>
-                  <Switch
-                    checked={s.robotsFollow}
-                    onCheckedChange={(v) => setS((p) => ({ ...p, robotsFollow: v }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>No Snippet</Label>
-                  <Switch
-                    checked={s.robotsNoSnippet}
-                    onCheckedChange={(v) => setS((p) => ({ ...p, robotsNoSnippet: v }))}
-                  />
-                </div>
+                <SwitchRow
+                  label="Index"
+                  checked={s.robotsIndex}
+                  onCheckedChange={(v) => setS((p) => ({ ...p, robotsIndex: v }))}
+                />
+                <SwitchRow
+                  label="Follow"
+                  checked={s.robotsFollow}
+                  onCheckedChange={(v) => setS((p) => ({ ...p, robotsFollow: v }))}
+                />
+                <SwitchRow
+                  label="No Snippet"
+                  checked={s.robotsNoSnippet}
+                  onCheckedChange={(v) => setS((p) => ({ ...p, robotsNoSnippet: v }))}
+                />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">Robots: {robotsValue(s)}</p>
             </div>
@@ -384,53 +442,43 @@ export default function MetaGeneratorPage() {
                 <Palette className="h-4 w-4" /> Brand & PWA
               </Label>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="theme">Theme Color</Label>
-                  <Input
-                    id="theme"
-                    type="color"
-                    value={s.themeColor}
-                    onChange={(e) => setS((p) => ({ ...p, themeColor: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="manifest">Manifest</Label>
-                  <Input
-                    id="manifest"
-                    value={s.manifest}
-                    onChange={(e) => setS((p) => ({ ...p, manifest: e.target.value }))}
-                    placeholder="/site.webmanifest"
-                  />
-                </div>
+                <ColorField
+                  id="theme"
+                  icon={Palette}
+                  label="Theme Color"
+                  value={s.themeColor}
+                  onChange={(v) => setS((p) => ({ ...p, themeColor: v }))}
+                />
+                <InputField
+                  id="manifest"
+                  label="Manifest"
+                  placeholder="/site.webmanifest"
+                  value={s.manifest}
+                  onChange={(e) => setS((p) => ({ ...p, manifest: e.target.value }))}
+                />
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="favicon">Favicon</Label>
-                  <Input
-                    id="favicon"
-                    value={s.favicon}
-                    onChange={(e) => setS((p) => ({ ...p, favicon: e.target.value }))}
-                    placeholder="/favicon.ico"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="icon32">Icon 32×32</Label>
-                  <Input
-                    id="icon32"
-                    value={s.icon32}
-                    onChange={(e) => setS((p) => ({ ...p, icon32: e.target.value }))}
-                    placeholder="/icons/icon-32x32.png"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="icon180">Apple Touch 180×180</Label>
-                  <Input
-                    id="icon180"
-                    value={s.icon180}
-                    onChange={(e) => setS((p) => ({ ...p, icon180: e.target.value }))}
-                    placeholder="/icons/apple-touch-icon.png"
-                  />
-                </div>
+                <InputField
+                  id="favicon"
+                  label="Favicon"
+                  placeholder="/favicon.ico"
+                  value={s.favicon}
+                  onChange={(e) => setS((p) => ({ ...p, favicon: e.target.value }))}
+                />
+                <InputField
+                  id="icon32"
+                  label="Icon 32×32"
+                  placeholder="/icons/icon-32x32.png"
+                  value={s.icon32}
+                  onChange={(e) => setS((p) => ({ ...p, icon32: e.target.value }))}
+                />
+                <InputField
+                  id="icon180"
+                  label="Apple Touch 180×180"
+                  placeholder="/icons/apple-touch-icon.png"
+                  value={s.icon180}
+                  onChange={(e) => setS((p) => ({ ...p, icon180: e.target.value }))}
+                />
               </div>
             </div>
 
@@ -438,43 +486,30 @@ export default function MetaGeneratorPage() {
               <Label className="flex items-center gap-2">
                 <Globe className="h-4 w-4" /> Locale & Viewport
               </Label>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="lang">Lang / Locale</Label>
-                  <Input
-                    id="lang"
-                    value={s.lang}
-                    onChange={(e) => setS((p) => ({ ...p, lang: e.target.value }))}
-                    placeholder="en, bn, en_US"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Direction</Label>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={s.dir === "ltr" ? "default" : "outline"}
-                      onClick={() => setS((p) => ({ ...p, dir: "ltr" }))}
-                    >
-                      LTR
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={s.dir === "rtl" ? "default" : "outline"}
-                      onClick={() => setS((p) => ({ ...p, dir: "rtl" }))}
-                    >
-                      RTL
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="viewport">Viewport</Label>
-                  <Input
-                    id="viewport"
-                    value={s.viewport}
-                    onChange={(e) => setS((p) => ({ ...p, viewport: e.target.value }))}
-                  />
-                </div>
+              <div className="grid gap-3 sm:grid-cols-3 items-end">
+                <InputField
+                  id="lang"
+                  label="Lang / Locale"
+                  placeholder="en, bn, en_US"
+                  value={s.lang}
+                  onChange={(e) => setS((p) => ({ ...p, lang: e.target.value }))}
+                />
+                <SelectField
+                  id="dir"
+                  label="Direction"
+                  value={s.dir}
+                  onValueChange={(v) => setS((p) => ({ ...p, dir: (v as "ltr" | "rtl") ?? "ltr" }))}
+                  options={[
+                    { value: "ltr", label: "LTR" },
+                    { value: "rtl", label: "RTL" },
+                  ]}
+                />
+                <InputField
+                  id="viewport"
+                  label="Viewport"
+                  value={s.viewport}
+                  onChange={(e) => setS((p) => ({ ...p, viewport: e.target.value }))}
+                />
               </div>
             </div>
           </div>
@@ -490,155 +525,127 @@ export default function MetaGeneratorPage() {
         <CardContent className="grid gap-6 md:grid-cols-2">
           {/* Open Graph */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="flex items-center gap-2">
-                <Globe className="h-4 w-4" /> Open Graph
-              </Label>
-              <Switch
-                checked={s.useOG}
-                onCheckedChange={(v) => setS((p) => ({ ...p, useOG: v }))}
-              />
-            </div>
+            <SwitchRow
+              icon={Globe}
+              label="Open Graph"
+              checked={s.useOG}
+              onCheckedChange={(v) => setS((p) => ({ ...p, useOG: v }))}
+            />
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Type</Label>
-                <div className="flex flex-wrap gap-2">
-                  {(["website", "article", "product", "profile", "video.other"] as OgType[]).map(
-                    (t) => (
-                      <Button
-                        key={t}
-                        type="button"
-                        size="sm"
-                        variant={s.ogType === t ? "default" : "outline"}
-                        onClick={() => setS((p) => ({ ...p, ogType: t }))}
-                      >
-                        {t}
-                      </Button>
-                    ),
-                  )}
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="ogurl">OG URL</Label>
-                <Input
-                  id="ogurl"
-                  value={s.ogUrl}
-                  onChange={(e) => setS((p) => ({ ...p, ogUrl: e.target.value }))}
-                  placeholder="https://example.com/page"
-                />
-              </div>
+              <SelectField
+                id="og-type"
+                label="Type"
+                value={s.ogType}
+                onValueChange={(v) => setS((p) => ({ ...p, ogType: (v as OgType) ?? "website" }))}
+                options={[
+                  { value: "website", label: "Website" },
+                  { value: "article", label: "Article" },
+                  { value: "product", label: "Product" },
+                  { value: "profile", label: "Profile" },
+                  { value: "video", label: "Video" },
+                  { value: "other", label: " " },
+                ]}
+              />
+              <InputField
+                id="ogurl"
+                label="OG URL"
+                placeholder="https://example.com/page"
+                value={s.ogUrl}
+                onChange={(e) => setS((p) => ({ ...p, ogUrl: e.target.value }))}
+              />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="ogimg" className="flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" /> Image (1200×630 recommended)
-              </Label>
-              <Input
-                id="ogimg"
-                value={s.ogImage}
-                onChange={(e) => setS((p) => ({ ...p, ogImage: e.target.value }))}
-                placeholder="https://example.com/og-image.jpg"
+            <InputField
+              id="ogimg"
+              label={
+                <span className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" /> Image (1200×630)
+                </span>
+              }
+              placeholder="https://example.com/og-image.jpg"
+              value={s.ogImage}
+              onChange={(e) => setS((p) => ({ ...p, ogImage: e.target.value }))}
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <InputField
+                id="ogw"
+                label="Width"
+                type="number"
+                value={s.ogImageWidth}
+                onChange={(e) => setS((p) => ({ ...p, ogImageWidth: e.target.value }))}
               />
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="ogw">Width</Label>
-                  <Input
-                    id="ogw"
-                    type="number"
-                    value={s.ogImageWidth}
-                    onChange={(e) => setS((p) => ({ ...p, ogImageWidth: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="ogh">Height</Label>
-                  <Input
-                    id="ogh"
-                    type="number"
-                    value={s.ogImageHeight}
-                    onChange={(e) => setS((p) => ({ ...p, ogImageHeight: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="ogalt">Alt</Label>
-                  <Input
-                    id="ogalt"
-                    value={s.ogImageAlt}
-                    onChange={(e) => setS((p) => ({ ...p, ogImageAlt: e.target.value }))}
-                    placeholder="Describe the image"
-                  />
-                </div>
-              </div>
+              <InputField
+                id="ogh"
+                label="Height"
+                type="number"
+                value={s.ogImageHeight}
+                onChange={(e) => setS((p) => ({ ...p, ogImageHeight: e.target.value }))}
+              />
+              <InputField
+                id="ogalt"
+                label="Alt"
+                placeholder="Describe the image"
+                value={s.ogImageAlt}
+                onChange={(e) => setS((p) => ({ ...p, ogImageAlt: e.target.value }))}
+              />
             </div>
           </div>
 
           {/* Twitter */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="flex items-center gap-2">
-                <Twitter className="h-4 w-4" /> Twitter
-              </Label>
-              <Switch
-                checked={s.useTwitter}
-                onCheckedChange={(v) => setS((p) => ({ ...p, useTwitter: v }))}
-              />
-            </div>
+            <SwitchRow
+              icon={Twitter}
+              label="Twitter"
+              checked={s.useTwitter}
+              onCheckedChange={(v) => setS((p) => ({ ...p, useTwitter: v }))}
+            />
 
-            <div className="space-y-1.5">
-              <Label>Card</Label>
-              <div className="flex flex-wrap gap-2">
-                {(["summary", "summary_large_image", "app", "player"] as TwitterCard[]).map((t) => (
-                  <Button
-                    key={t}
-                    type="button"
-                    size="sm"
-                    variant={s.twitterCard === t ? "default" : "outline"}
-                    onClick={() => setS((p) => ({ ...p, twitterCard: t }))}
-                  >
-                    {t}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            <SelectField
+              id="tw-card"
+              label="Card"
+              value={s.twitterCard}
+              onValueChange={(v) =>
+                setS((p) => ({ ...p, twitterCard: (v as TwitterCard) ?? "summary_large_image" }))
+              }
+              options={[
+                { value: "summary", label: "summary" },
+                { value: "summary_large_image", label: "summary_large_image" },
+                { value: "app", label: "app" },
+                { value: "player", label: "player" },
+              ]}
+            />
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="twsite">@site</Label>
-                <Input
-                  id="twsite"
-                  value={s.twitterSite}
-                  onChange={(e) => setS((p) => ({ ...p, twitterSite: e.target.value }))}
-                  placeholder="@yourbrand"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="twcreator">@creator</Label>
-                <Input
-                  id="twcreator"
-                  value={s.twitterCreator}
-                  onChange={(e) => setS((p) => ({ ...p, twitterCreator: e.target.value }))}
-                  placeholder="@yourhandle"
-                />
-              </div>
+              <InputField
+                id="twsite"
+                label="@site"
+                placeholder="@yourbrand"
+                value={s.twitterSite}
+                onChange={(e) => setS((p) => ({ ...p, twitterSite: e.target.value }))}
+              />
+              <InputField
+                id="twcreator"
+                label="@creator"
+                placeholder="@yourhandle"
+                value={s.twitterCreator}
+                onChange={(e) => setS((p) => ({ ...p, twitterCreator: e.target.value }))}
+              />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="twimg">Image</Label>
-              <Input
-                id="twimg"
-                value={s.twitterImage}
-                onChange={(e) => setS((p) => ({ ...p, twitterImage: e.target.value }))}
-                placeholder="https://example.com/social-image.jpg"
-              />
-              <div className="space-y-1.5">
-                <Label htmlFor="twalt">Alt</Label>
-                <Input
-                  id="twalt"
-                  value={s.twitterImageAlt}
-                  onChange={(e) => setS((p) => ({ ...p, twitterImageAlt: e.target.value }))}
-                  placeholder="Describe the image"
-                />
-              </div>
-            </div>
+            <InputField
+              id="twimg"
+              label="Image"
+              placeholder="https://example.com/social-image.jpg"
+              value={s.twitterImage}
+              onChange={(e) => setS((p) => ({ ...p, twitterImage: e.target.value }))}
+            />
+            <InputField
+              id="twalt"
+              label="Alt"
+              placeholder="Describe the image"
+              value={s.twitterImageAlt}
+              onChange={(e) => setS((p) => ({ ...p, twitterImageAlt: e.target.value }))}
+            />
           </div>
         </CardContent>
       </GlassCard>
@@ -660,7 +667,7 @@ export default function MetaGeneratorPage() {
                   <Globe className="h-4 w-4" /> Open Graph
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  {s.siteName || new URL(s.canonical || "https://example.com").hostname}
+                  {s.siteName || hostname || "Website"}
                 </p>
               </div>
               <Badge variant="secondary">1200×630</Badge>
@@ -670,7 +677,9 @@ export default function MetaGeneratorPage() {
               {previewImage ? (
                 <div className="relative aspect-[1200/630] bg-muted">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewImage} alt="OG" className="h-full w-full object-cover" />
+                  <picture>
+                    <img src={previewImage} alt="OG" className="h-full w-full object-cover" />
+                  </picture>
                 </div>
               ) : (
                 <div className="aspect-[1200/630] grid place-items-center bg-muted text-muted-foreground">
@@ -681,7 +690,7 @@ export default function MetaGeneratorPage() {
               )}
               <div className="p-4">
                 <div className="text-xs text-muted-foreground">
-                  {s.siteName || (s.canonical ? new URL(s.canonical).hostname : "Website")}
+                  {s.siteName || hostname || "Website"}
                 </div>
                 <div className="mt-1 line-clamp-2 font-semibold">{s.title || "(no title)"}</div>
                 <div className="mt-1 text-sm text-muted-foreground line-clamp-2">
@@ -709,7 +718,7 @@ export default function MetaGeneratorPage() {
                 <div className="min-w-0">
                   <div className="text-sm font-medium truncate">{s.siteName || "Website"}</div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {s.canonical ? new URL(s.canonical).hostname : "example.com"}
+                    {hostname || "example.com"}
                   </div>
                 </div>
               </div>
@@ -718,7 +727,13 @@ export default function MetaGeneratorPage() {
                 previewImage ? (
                   <div className="aspect-video bg-muted">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={previewImage} alt="twitter" className="h-full w-full object-cover" />
+                    <picture>
+                      <img
+                        src={previewImage}
+                        alt="twitter"
+                        className="h-full w-full object-cover"
+                      />
+                    </picture>
                   </div>
                 ) : (
                   <div className="aspect-video grid place-items-center bg-muted text-muted-foreground">
@@ -735,7 +750,7 @@ export default function MetaGeneratorPage() {
                   {s.description || "(no description)"}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  {s.canonical ? new URL(s.canonical).hostname : "example.com"}
+                  {hostname || "example.com"}
                 </div>
               </div>
             </div>
@@ -743,9 +758,9 @@ export default function MetaGeneratorPage() {
         </CardContent>
       </GlassCard>
 
-      <Separator />
+      <Separator className="my-4" />
 
-      {/* Output */}
+      {/* Output + Validation */}
       <GlassCard>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Generated Tags</CardTitle>
@@ -753,58 +768,74 @@ export default function MetaGeneratorPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
-            <Textarea readOnly className="min-h-[320px] font-mono text-sm" value={output} />
+            <TextareaField
+              readOnly
+              rows={16}
+              textareaClassName="font-mono text-sm"
+              value={output}
+            />
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={copyOut}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
-              </Button>
-              <Button
+              <CopyButton size="sm" disabled={!output} getText={output} />
+              <ExportTextButton
                 size="sm"
-                className="gap-2"
-                onClick={() => downloadTxt("meta-tags.html", output)}
-              >
-                <Download className="h-4 w-4" /> Download
-              </Button>
-              {s.canonical && (
-                <a className="inline-flex" href={s.canonical} target="_blank" rel="noreferrer">
-                  <Button size="sm" variant="outline" className="gap-2">
-                    <ExternalLink className="h-4 w-4" /> Open canonical
-                  </Button>
-                </a>
-              )}
+                disabled={!output}
+                filename="meta-tags.txt"
+                getText={() => output}
+                icon={Download}
+              />
+              {s.canonical && isHttpUrl(s.canonical) && <LinkButton size="sm" href={s.canonical} />}
             </div>
           </div>
 
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Tips</Label>
+                <Label>Validation</Label>
                 <p className="text-xs text-muted-foreground">
-                  Keep titles concise and compelling; ensure OG/Twitter images are absolute URLs and
-                  publicly accessible.
+                  Quick checks for common issues. Fix warnings for best results.
                 </p>
               </div>
-              <Badge variant="secondary">{(output.match(/\n/g) || []).length + 1} lines</Badge>
+              <Badge variant="secondary" className="gap-1">
+                <ListChecks className="h-3.5 w-3.5" />{" "}
+                {hasWarnings ? `${warnings.length} issues` : "OK"}
+              </Badge>
             </div>
 
-            <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-              <li>
-                Use <code>summary_large_image</code> for big Twitter previews.
-              </li>
-              <li>Recommended OG image: 1200×630 (≤2MB, JPG/PNG/WebP).</li>
-              <li>
-                Make <code>canonical</code> absolute (<code>https://</code>).
-              </li>
-              <li>
-                For multi-language sites, also add <code>hreflang</code> links.
-              </li>
-              <li>
-                Host icons at predictable paths and include a <code>manifest</code> for PWA.
-              </li>
-            </ul>
+            <div className="rounded-md border p-3">
+              {hasWarnings ? (
+                <ul className="list-disc pl-5 space-y-1 text-orange-700">
+                  {warnings.map((w, i) => (
+                    <li key={i as number}>{w}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Looks good. No obvious issues found.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-md border p-3 text-xs text-muted-foreground">
+              <p className="font-medium mb-1">Tips</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  Use <code>summary_large_image</code> for bigger Twitter previews.
+                </li>
+                <li>Recommended OG image: 1200×630 (≤2MB, JPG/PNG/WebP).</li>
+                <li>
+                  Make <code>canonical</code> absolute (<code>https://</code>).
+                </li>
+                <li>
+                  For multi-language sites, also add <code>hreflang</code> links.
+                </li>
+                <li>
+                  Host icons at predictable paths and include a <code>manifest</code> for PWA.
+                </li>
+              </ul>
+            </div>
           </div>
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }
