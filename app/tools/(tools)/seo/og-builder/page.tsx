@@ -17,7 +17,6 @@ import {
 import React from "react";
 import {
   ActionButton,
-  CopyButton,
   ExportBlobButton,
   ExportTextButton,
   ResetButton,
@@ -29,28 +28,23 @@ import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
-/* -------------------------------------------------------------------------- */
-/*                                    Types                                   */
-/* -------------------------------------------------------------------------- */
-
+// ---------------- Types ----------------
 type Align = "left" | "center" | "right";
 
 type State = {
-  /* Canvas */
   w: number;
   h: number;
 
-  /* Content */
   title: string;
   subtitle: string;
   badge: string;
   brand: string;
 
-  /* Typography */
   titleSize: number;
   subtitleSize: number;
   titleWeight: number;
@@ -62,11 +56,9 @@ type State = {
   padY: number;
   gap: number;
 
-  /* Guides */
   showGrid: boolean;
   showSafe: boolean;
 
-  /* Colors */
   fg: string;
   accent: string;
   useGradient: boolean;
@@ -74,7 +66,6 @@ type State = {
   bg2: string;
   gradAngle: number;
 
-  /* BG image & logo */
   bgImage?: string;
   bgImageOpacity: number;
   bgBlur: number;
@@ -83,29 +74,22 @@ type State = {
   logoCorner: "tl" | "tr" | "bl" | "br";
   logoRound: number;
 
-  /* Effects */
   dropShadow: boolean;
   shadowStrength: number;
   overlayTint: string;
   overlayOn: boolean;
 
-  /* Text outline */
   outlineOn: boolean;
   outlineWidth: number;
   outlineColor: string;
 
-  /* Watermark */
   watermarkOn: boolean;
   watermarkOpacity: number;
 
-  /* Export */
   jpgQuality: number;
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                 Defaults                                   */
-/* -------------------------------------------------------------------------- */
-
+// ---------------- Defaults ----------------
 const DEFAULT: State = {
   w: 1200,
   h: 630,
@@ -113,7 +97,7 @@ const DEFAULT: State = {
   title: "Your Catchy Post Title",
   subtitle: "Optional subtitle goes here to add context for social previews.",
   badge: "Tools Hub",
-  brand: "naturalsefaa.com",
+  brand: "toolshub.dev",
 
   titleSize: 92,
   subtitleSize: 36,
@@ -147,7 +131,7 @@ const DEFAULT: State = {
 
   dropShadow: true,
   shadowStrength: 24,
-  overlayTint: "rgba(255,255,255,0.0)",
+  overlayTint: "rgba(0,0,0,0.0)",
   overlayOn: false,
 
   outlineOn: false,
@@ -160,10 +144,7 @@ const DEFAULT: State = {
   jpgQuality: 0.92,
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                  Helpers                                   */
-/* -------------------------------------------------------------------------- */
-
+// ---------------- Helpers (module scope) ----------------
 const PRESETS_SIZE: Array<[number, number, string]> = [
   [1200, 630, "1200×630"],
   [1024, 512, "1024×512"],
@@ -243,30 +224,21 @@ async function canvasToClipboard(canvas: HTMLCanvasElement) {
   if (typeof window === "undefined") {
     throw new Error("Clipboard copy is only available in the browser.");
   }
-  const ClipboardItemCtor = (window as any).ClipboardItem as
-    | (new (
-        items: Record<string, Blob>,
-      ) => ClipboardItem)
-    | undefined;
-  if (!navigator.clipboard || typeof ClipboardItemCtor !== "function") {
+
+  type ClipboardItemCtor = new (items: Record<string, Blob | Promise<Blob>>) => ClipboardItem;
+  const g = globalThis as unknown as { ClipboardItem?: ClipboardItemCtor };
+  const ClipboardItemCtor = typeof g.ClipboardItem === "function" ? g.ClipboardItem : undefined;
+
+  if (!navigator.clipboard || !ClipboardItemCtor) {
     throw new Error("Clipboard API not supported");
   }
+
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Blob failed"))), "image/png");
   });
+
   const item = new ClipboardItemCtor({ [blob.type]: blob });
   await navigator.clipboard.write([item]);
-}
-
-function downloadBlob(filename: string, blob: Blob) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
 }
 
 async function canvasToBlob(
@@ -279,11 +251,25 @@ async function canvasToBlob(
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
 
-export default function OGBuilderPage() {
+export default function OGBuilderClient() {
   const [s, setS] = React.useState<State>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -294,12 +280,11 @@ export default function OGBuilderPage() {
     return DEFAULT;
   });
 
-  const [copied, setCopied] = React.useState(false);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const bgImgRef = React.useRef<HTMLImageElement | null>(null);
   const logoRef = React.useRef<HTMLImageElement | null>(null);
 
-  function draw() {
+  const draw = React.useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -309,7 +294,6 @@ export default function OGBuilderPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // ---- Background (solid or gradient)
     if (s.useGradient) {
       const ang = degToRad(s.gradAngle);
       const cx = s.w / 2;
@@ -328,7 +312,6 @@ export default function OGBuilderPage() {
     }
     ctx.fillRect(0, 0, s.w, s.h);
 
-    // ---- Optional background image (cover)
     if (bgImgRef.current) {
       const img = bgImgRef.current;
       const scale = Math.max(s.w / img.width, s.h / img.height);
@@ -344,13 +327,11 @@ export default function OGBuilderPage() {
       ctx.restore();
     }
 
-    // ---- Overlay tint
     if (s.overlayOn) {
       ctx.fillStyle = s.overlayTint;
       ctx.fillRect(0, 0, s.w, s.h);
     }
 
-    // ---- Safe area
     if (s.showSafe) {
       ctx.save();
       ctx.strokeStyle = "rgba(0,0,0,0.15)";
@@ -360,7 +341,6 @@ export default function OGBuilderPage() {
       ctx.restore();
     }
 
-    // ---- Grid
     if (s.showGrid) {
       ctx.save();
       ctx.strokeStyle = "rgba(0,0,0,0.06)";
@@ -379,12 +359,10 @@ export default function OGBuilderPage() {
       ctx.restore();
     }
 
-    // ---- Text area
     const areaX = s.padX;
     const areaY = s.padY;
     const areaW = s.w - s.padX * 2;
 
-    // ---- Badge
     if (s.badge.trim()) {
       const badgePadX = 18;
       const badgePadY = 8;
@@ -406,10 +384,8 @@ export default function OGBuilderPage() {
       ctx.restore();
     }
 
-    // ---- Start Y after badge
     let curY = areaY + (s.badge.trim() ? 56 : 0);
 
-    // ---- Title
     ctx.save();
     ctx.textBaseline = "top";
     ctx.font = `${s.titleWeight} ${s.titleSize}px ${s.fontFamily}`;
@@ -442,7 +418,6 @@ export default function OGBuilderPage() {
     curY += titleWrap.height + s.gap;
     ctx.restore();
 
-    // ---- Subtitle
     if (s.subtitle.trim()) {
       ctx.save();
       ctx.textBaseline = "top";
@@ -463,7 +438,7 @@ export default function OGBuilderPage() {
           ctx.strokeText(line, x, curY + i * s.subtitleSize * 1.35);
         }
 
-        ctx.fillStyle = `${s.fg} cc`;
+        ctx.fillStyle = s.fg;
         if (s.dropShadow) {
           ctx.shadowColor = "rgba(0,0,0,0.12)";
           ctx.shadowBlur = Math.max(8, Math.round(s.shadowStrength / 1.8));
@@ -471,13 +446,14 @@ export default function OGBuilderPage() {
         } else {
           ctx.shadowBlur = 0;
         }
+        ctx.globalAlpha = 0.85; // subtle secondary contrast
         ctx.fillText(line, x, curY + i * s.subtitleSize * 1.35);
       }
+      ctx.globalAlpha = 1;
       curY += subWrap.height;
       ctx.restore();
     }
 
-    // ---- Watermark
     if (s.watermarkOn && s.brand.trim()) {
       ctx.save();
       ctx.font = `600 26px ${s.fontFamily}`;
@@ -490,7 +466,6 @@ export default function OGBuilderPage() {
       ctx.restore();
     }
 
-    // ---- Logo
     if (logoRef.current) {
       const img = logoRef.current;
       const size = s.logoSize;
@@ -509,12 +484,11 @@ export default function OGBuilderPage() {
       ctx.drawImage(img, x, y, size, size);
       ctx.restore();
     }
-  }
+  }, [s]);
 
-  // Persist minimal state (skip volatile objectURLs)
+  // Persist minimal state
   React.useEffect(() => {
-    const { bgImage, logo, ...persist } = s;
-    localStorage.setItem("og-builder-v2", JSON.stringify(persist));
+    localStorage.setItem("og-builder-v2", JSON.stringify(s));
   }, [s]);
 
   // Load images when URLs change
@@ -524,15 +498,18 @@ export default function OGBuilderPage() {
       return;
     }
     const url = s.bgImage;
-    const img = new window.Image();
+    const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
       bgImgRef.current = img;
       draw();
     };
     img.src = url;
-    return () => URL.revokeObjectURL(url);
-  }, [s.bgImage]);
+
+    return () => {
+      if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+    };
+  }, [s.bgImage, draw]);
 
   React.useEffect(() => {
     if (!s.logo) {
@@ -540,37 +517,26 @@ export default function OGBuilderPage() {
       return;
     }
     const url = s.logo;
-    const img = new window.Image();
+    const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
       logoRef.current = img;
       draw();
     };
     img.src = url;
-    return () => URL.revokeObjectURL(url);
-  }, [s.logo]);
+
+    return () => {
+      if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+    };
+  }, [s.logo, draw]);
 
   // Redraw on state changes
   React.useEffect(() => {
     draw();
-  }, [s]);
+  }, [draw]);
 
   function resetAll() {
     setS(DEFAULT);
-    setCopied(false);
-  }
-
-  function onBgUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setS((p) => ({ ...p, bgImage: url }));
-  }
-  function onLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setS((p) => ({ ...p, logo: url }));
   }
 
   async function copyImage() {
@@ -578,8 +544,6 @@ export default function OGBuilderPage() {
     if (!canvas) return;
     try {
       await canvasToClipboard(canvas);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
     } catch {
       canvas.toBlob((blob) => {
         if (blob) {
@@ -607,14 +571,14 @@ export default function OGBuilderPage() {
     return canvasToBlob(canvas, "image/jpeg", clamp(s.jpgQuality, 0.1, 1));
   }
 
-  function applyStylePreset(p: (typeof PRESETS_STYLE)[number]) {
+  function applyStylePreset(preset: (typeof PRESETS_STYLE)[number]) {
     setS((prev) => ({
       ...prev,
-      fg: p.fg,
-      accent: p.accent,
-      bg1: p.bg1,
-      bg2: p.bg2,
-      gradAngle: p.angle,
+      fg: preset.fg,
+      accent: preset.accent,
+      bg1: preset.bg1,
+      bg2: preset.bg2,
+      gradAngle: preset.angle,
       useGradient: true,
     }));
   }
@@ -634,24 +598,6 @@ export default function OGBuilderPage() {
     }
   }
 
-  function roundRect(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    r: number,
-  ) {
-    const rr = Math.min(r, w / 2, h / 2);
-    ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
-    ctx.closePath();
-  }
-
   const previewScale = 0.42;
   const importRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -668,7 +614,6 @@ export default function OGBuilderPage() {
               label="Import Config"
               onClick={() => importRef.current?.click()}
             />
-
             <input
               ref={importRef}
               type="file"
@@ -676,9 +621,7 @@ export default function OGBuilderPage() {
               className="hidden"
               onChange={(e) => importConfigFromFile(e.target.files?.[0] || undefined)}
             />
-            {/* <CopyButton icon={Copy} active={copied} onClick={copyImage} label="Copy PNG" /> */}
             <ActionButton icon={Copy} onClick={copyImage} label="Copy PNG" />
-
             <ExportBlobButton
               icon={Download}
               label="Export PNG"
@@ -704,60 +647,64 @@ export default function OGBuilderPage() {
 
       {/* Top: Quick presets */}
       <GlassCard>
-        <div className="grid gap-4 lg:grid-cols-[1fr_auto] p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Label className="flex items-center gap-2">
-              <Palette className="h-4 w-4" /> Quick Styles
-            </Label>
-            {PRESETS_STYLE.map((p) => (
-              <Button
-                key={p.name}
-                size="sm"
-                variant="outline"
-                onClick={() => applyStylePreset(p)}
-                className="gap-2"
-              >
-                <span
-                  className="inline-block h-3 w-3 rounded-full"
-                  style={{ background: `linear-gradient(135deg, ${p.bg1}, ${p.bg2})` }}
-                />
-                {p.name}
-              </Button>
-            ))}
-          </div>
+        <CardContent className="flex items-center justify-between">
+          {/* Quick Styles */}
+          <SelectField
+            id="quick-style"
+            icon={Palette}
+            label="Quick Styles"
+            placeholder="Pick a style"
+            options={PRESETS_STYLE.map((p) => ({
+              value: p.name,
+              label: (
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full"
+                    style={{ background: `linear-gradient(135deg, ${p.bg1}, ${p.bg2})` }}
+                  />
+                  {p.name}
+                </div>
+              ),
+            }))}
+            value={PRESETS_STYLE.find((x) => x.bg1 === s.bg1 && x.bg2 === s.bg2)?.name}
+            onValueChange={(val) => {
+              const preset = PRESETS_STYLE.find((p) => p.name === val);
+              if (preset) applyStylePreset(preset);
+            }}
+          />
 
-          <div className="flex items-center gap-2">
-            <Label className="flex items-center gap-2">
-              <LayoutGrid className="h-4 w-4" /> Size
-            </Label>
-            {PRESETS_SIZE.map(([w, h, label]) => (
-              <Button
-                key={label}
-                size="sm"
-                variant={s.w === w && s.h === h ? "default" : "outline"}
-                onClick={() => setS((p) => ({ ...p, w, h }))}
-              >
-                {label}
-              </Button>
-            ))}
-          </div>
-        </div>
+          {/* Size */}
+          <SelectField
+            id="size"
+            icon={LayoutGrid}
+            label="Size"
+            placeholder="Select size"
+            options={PRESETS_SIZE.map(([w, h, label]) => ({ value: `${w}x${h}`, label }))}
+            value={`${s.w}x${s.h}`}
+            onValueChange={(val) => {
+              if (!val) return;
+              const [w, h] = String(val).split("x").map(Number);
+              if (Number.isFinite(w) && Number.isFinite(h)) {
+                setS((p) => ({ ...p, w, h }));
+              }
+            }}
+          />
+        </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left: Controls */}
         <div className="space-y-6">
           {/* Content */}
           <GlassCard>
-            <div className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2">
-                  <Type className="h-4 w-4" /> Text
-                </Label>
-              </div>
-
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Type className="h-4 w-4" /> Text
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <TextareaField
                 id="title"
                 label="Title"
@@ -939,16 +886,17 @@ export default function OGBuilderPage() {
                   }
                 />
               </div>
-            </div>
+            </CardContent>
           </GlassCard>
 
           {/* Colors */}
           <GlassCard>
-            <div className="p-4 space-y-3">
-              <Label className="flex items-center gap-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Palette className="h-4 w-4" /> Colors
-              </Label>
-
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <InputField
                   id="fg"
@@ -1002,45 +950,52 @@ export default function OGBuilderPage() {
                   }
                 />
               </div>
-            </div>
+            </CardContent>
           </GlassCard>
 
           {/* Media */}
           <GlassCard>
-            <div className="p-4 space-y-3">
-              <Label className="flex items-center gap-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <ImageIcon className="h-4 w-4" /> Background & Logo
-              </Label>
-
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Background image</Label>
-                  <div className="flex gap-2">
-                    <input type="file" accept="image/*" onChange={onBgUpload} />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setS((p) => ({ ...p, bgImage: undefined }))}
-                      disabled={!s.bgImage}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Logo</Label>
-                  <div className="flex gap-2">
-                    <input type="file" accept="image/*" onChange={onLogoUpload} />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setS((p) => ({ ...p, logo: undefined }))}
-                      disabled={!s.logo}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </div>
+                {/* Background image */}
+                <InputField
+                  id="bg-image"
+                  type="file"
+                  icon={ImageIcon}
+                  label="Background image"
+                  accept="image/*"
+                  fileButtonLabel="Choose image"
+                  onFilesChange={(files) => {
+                    const f = files?.[0];
+                    setS((p) => {
+                      if (p.bgImage?.startsWith("blob:")) URL.revokeObjectURL(p.bgImage);
+                      return { ...p, bgImage: f ? URL.createObjectURL(f) : undefined };
+                    });
+                  }}
+                />
+
+                {/* Logo */}
+                <InputField
+                  id="logo-image"
+                  type="file"
+                  icon={ImageIcon}
+                  label="Logo"
+                  accept="image/*"
+                  className="ml-auto"
+                  fileButtonLabel="Choose logo"
+                  onFilesChange={(files) => {
+                    const f = files?.[0];
+                    setS((p) => {
+                      if (p.logo?.startsWith("blob:")) URL.revokeObjectURL(p.logo);
+                      return { ...p, logo: f ? URL.createObjectURL(f) : undefined };
+                    });
+                  }}
+                />
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
@@ -1133,16 +1088,17 @@ export default function OGBuilderPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </CardContent>
           </GlassCard>
 
           {/* Effects & Guides */}
           <GlassCard>
-            <div className="p-4 space-y-3">
-              <Label className="flex items-center gap-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Layers className="h-4 w-4" /> Effects & Guides
-              </Label>
-
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <SwitchRow
@@ -1236,15 +1192,17 @@ export default function OGBuilderPage() {
                   />
                 </div>
               </div>
-            </div>
+            </CardContent>
           </GlassCard>
 
-          {/* Canvas size (custom) */}
+          {/* Canvas size */}
           <GlassCard>
-            <div className="p-4 space-y-3">
-              <Label className="flex items-center gap-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <LayoutGrid className="h-4 w-4" /> Canvas
-              </Label>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <InputField
                   id="cw"
@@ -1269,7 +1227,7 @@ export default function OGBuilderPage() {
                   }
                 />
               </div>
-            </div>
+            </CardContent>
           </GlassCard>
         </div>
 

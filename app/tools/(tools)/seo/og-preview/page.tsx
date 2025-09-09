@@ -45,7 +45,12 @@ type OgResult = {
   allMeta: Record<string, string[]>;
 };
 
-const EXAMPLES = ["https://nextjs.org", "https://tariqul.dev", "https://youtube.com"] as const;
+const EXAMPLES = [
+  "https://tariqul.dev",
+  "https://github.com",
+  "https://nextjs.org",
+  "https://youtube.com",
+] as const;
 
 function hostnameOf(u?: string) {
   try {
@@ -98,7 +103,7 @@ export default function OGPreviewPage() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [selectedImg, setSelectedImg] = React.useState(0);
-  const [showRaw, setShowRaw] = React.useState(false);
+  const [showRaw, setShowRaw] = React.useState(true);
   const [noCache, setNoCache] = React.useState(false);
   const [autoFetch, setAutoFetch] = React.useState(false);
 
@@ -411,7 +416,7 @@ export default function OGPreviewPage() {
                     getText={JSON.stringify(data, null, 2)}
                   />
 
-                  {data.url && <LinkButton size="sm" href={data.url} />}
+                  {data.url && <LinkButton target="_blank" size="sm" href={data.url} />}
                 </div>
 
                 <div className="rounded-md border p-3 text-xs">
@@ -424,7 +429,14 @@ export default function OGPreviewPage() {
                         Fetched: {new Date(data.fetchedAt).toLocaleString()}
                       </span>
                     )}
-                    {data.canonical && <LinkButton label="Canonical" href={data.canonical} />}
+                    {data.canonical && (
+                      <LinkButton
+                        size="sm"
+                        target="_blank"
+                        label="Canonical"
+                        href={data.canonical}
+                      />
+                    )}
                   </div>
                 </div>
 
