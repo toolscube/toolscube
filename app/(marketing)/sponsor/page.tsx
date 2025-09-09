@@ -10,7 +10,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import type * as React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -129,7 +129,9 @@ export default function SponsorPage() {
               Become a sponsor <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="gap-2" asChild>
-              <a href="#media-kit">Download media kit</a>
+              <Link href={"/tools"}>
+                Explore Tools <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -160,7 +162,7 @@ export default function SponsorPage() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Sponsorship tiers</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 h-full">
           {tiers.map((t) => {
             const Icon = t.icon;
             return (
@@ -305,21 +307,6 @@ export default function SponsorPage() {
         </div>
       </section>
 
-      {/* Media Kit */}
-      <section id="media-kit" className="mx-auto my-12 w-full max-w-7xl px-4">
-        <div className="rounded-2xl border bg-background/60 p-5 shadow-sm backdrop-blur">
-          <h4 className="font-semibold">Media kit</h4>
-          <p className="mt-1 text-sm text-muted-foreground">
-            One-pager with audience, placements, and specs. Add your URL here.
-          </p>
-          <div className="mt-3">
-            <Button variant="outline" className="gap-2">
-              <DownloadIcon className="h-4 w-4" /> Download PDF
-            </Button>
-          </div>
-        </div>
-      </section>
-
       <div className="h-10" />
     </div>
   );
@@ -328,23 +315,9 @@ export default function SponsorPage() {
 function PlaceholderLogo() {
   return (
     <svg viewBox="0 0 120 32" className="h-6 w-auto opacity-70">
+      <title>Placeholder Logo</title>
       <rect x="0" y="8" width="28" height="16" rx="3" className="fill-muted" />
       <rect x="36" y="8" width="82" height="16" rx="3" className="fill-muted" />
-    </svg>
-  );
-}
-
-function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-      <path
-        d="M12 3v10m0 0l3.5-3.5M12 13L8.5 9.5M5 16v3h14v-3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   );
 }
