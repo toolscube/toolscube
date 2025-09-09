@@ -13,7 +13,7 @@ import {
   Trash2,
   Umbrella,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 // Types & helpers
 type Climate = "mild" | "warm" | "cold" | "rainy";
 type Template = "basic" | "business" | "beach" | "hiking";
+type Filter = "must" | "all" | "todo";
 
 type Item = {
   id: string;
@@ -133,24 +134,15 @@ export default function PackingChecklistClient() {
   const [nights, setNights] = useState<number>(2);
 
   const [items, setItems] = useState<Item[]>([]);
-  const [filter, setFilter] = useState<"all" | "todo" | "must">("all");
+  const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
-
-  // load / persist
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) setItems(JSON.parse(raw));
-      else smartFill();
-    } catch {}
-  }, []);
 
   useEffect(() => {
     localStorage.setItem(LS_KEY, JSON.stringify(items));
   }, [items]);
 
   /* smart fill from template */
-  function smartFill() {
+  const smartFill = useCallback(() => {
     let base = [...BASE_TEMPLATE];
     if (template === "business") base = base.concat(BUSINESS_TEMPLATE);
     if (template === "beach") base = base.concat(BEACH_TEMPLATE);
@@ -159,22 +151,38 @@ export default function PackingChecklistClient() {
     base = base.concat(climateAdds(climate));
     base = scaleByNights(base, nights);
 
-    // de-dupe by label+cat keeping highest qty/must
     const map = new Map<string, Item>();
     for (const it of base) {
-      const key = `${it.cat}::${it.label.toLowerCase()}`;
-      if (!map.has(key)) map.set(key, { ...it, id: uid(), checked: false });
-      else {
-        const prev = map.get(key)!;
+      const key = `${it.cat}::${String(it.label).toLowerCase()}`;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, { ...it, id: uid(), checked: false });
+      } else {
         map.set(key, {
-          ...prev,
-          qty: Math.max(prev.qty ?? 0, it.qty ?? 0) || undefined,
-          must: prev.must || it.must,
+          ...existing,
+          qty: Math.max(existing.qty ?? 0, it.qty ?? 0) || undefined,
+          must: Boolean(existing.must || it.must),
         });
       }
     }
-    setItems([...map.values()]);
-  }
+    setItems(Array.from(map.values()));
+  }, [template, climate, nights]);
+
+  // load / persist
+  React.useEffect(() => {
+    const raw = localStorage.getItem(LS_KEY);
+    console.log(raw);
+    if (raw) {
+      try {
+        setItems(JSON.parse(raw));
+      } catch {
+        smartFill();
+      }
+    } else {
+      smartFill();
+    }
+  }, [smartFill]);
+
 
   function resetAll() {
     setItems([]);
@@ -254,7 +262,7 @@ export default function PackingChecklistClient() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-center">
           <SelectField
             label="Template"
             value={template}
@@ -267,18 +275,13 @@ export default function PackingChecklistClient() {
             ]}
           />
 
-          <div className="grid gap-2">
-            <InputField
-              label="Nights"
-              type="number"
-              min={0}
-              value={nights}
-              onChange={(e) => setNights(Math.max(0, Number(e.target.value) || 0))}
-            />
-            {/* <Badge variant="secondary" className="gap-1">
-              <CalendarRange className="h-3.5 w-3.5" /> length-aware
-            </Badge> */}
-          </div>
+          <InputField
+            label="Nights"
+            type="number"
+            min={0}
+            value={nights}
+            onChange={(e) => setNights(Math.max(0, Number(e.target.value) || 0))}
+          />
 
           <SelectField
             label="Climate"
@@ -303,13 +306,13 @@ export default function PackingChecklistClient() {
         </CardContent>
       </GlassCard>
 
-      <Separator />
+      <Separator className="my-4" />
 
       {/* Toolbar */}
       <GlassCard className="px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <SelectField
           value={filter}
-          onValueChange={(v) => setFilter(v as any)}
+          onValueChange={(v) => setFilter(v as Filter)}
           options={[
             { value: "all", label: "Show: All" },
             { value: "todo", label: "Show: To Do" },
@@ -329,7 +332,7 @@ export default function PackingChecklistClient() {
       </GlassCard>
 
       {/* Checklist */}
-      <GlassCard>
+      <GlassCard className="mt-4">
         <CardHeader>
           <CardTitle className="text-base">Your List</CardTitle>
           <CardDescription>
@@ -383,7 +386,7 @@ export default function PackingChecklistClient() {
 
                     <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 items-end">
                       <InputField
-                        label="Qty"
+                        placeholder="Qty"
                         type="number"
                         min={0}
                         value={it.qty ?? ""}
@@ -398,9 +401,7 @@ export default function PackingChecklistClient() {
                       </div>
                     </div>
 
-                    <div className="flex items-end sm:mt-4">
-                      <ActionButton icon={Trash2} size="icon" onClick={() => removeItem(it.id)} />
-                    </div>
+                    <ActionButton icon={Trash2} size="icon" onClick={() => removeItem(it.id)} />
                   </div>
                 ))}
               </div>

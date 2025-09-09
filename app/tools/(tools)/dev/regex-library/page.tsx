@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import toast from "react-hot-toast";
+import { CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,15 +28,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 
-// -----------------------------
 // Library Data
-// -----------------------------
 type Pattern = {
   id: string;
   title: string;
   description: string;
-  pattern: string; // raw source without /.../
-  flags?: string; // e.g., "gi"
+  pattern: string;
+  flags?: string;
   category: "Text" | "Web" | "Numbers" | "Security" | "System" | "Bangla";
   sample?: string;
 };
@@ -209,7 +209,6 @@ function collectMatches(text: string, re: RegExp | null): MatchRow[] {
       index: m.index ?? -1,
       groups: m.groups ?? undefined,
     });
-    // guard against zero-length infinite loop
     if (m[0]?.length === 0) {
       const nextIndex = (m.index ?? 0) + 1;
       if (nextIndex >= text.length) break;
@@ -252,10 +251,7 @@ function decodeShare(search: string) {
   };
 }
 
-// -----------------------------
-// Page Component
-// -----------------------------
-export default function RegexLibraryPage() {
+export default function RegexLibraryClient() {
   // Search & filter
   const [q, setQ] = React.useState("");
   const [cat, setCat] = React.useState<"All" | Pattern["category"]>("All");
@@ -337,7 +333,6 @@ export default function RegexLibraryPage() {
     const out = buildRegex(pattern, flagsStr);
     setRunMs(performance.now() - t0);
     return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pattern, flagsStr, testText, replace]);
 
   React.useEffect(() => {
@@ -424,7 +419,7 @@ export default function RegexLibraryPage() {
   }
 
   return (
-    <MotionGlassCard>
+    <>
       {/* Header */}
       <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
         <div className="md:w-1/2">
@@ -459,6 +454,18 @@ export default function RegexLibraryPage() {
           </Button>
         </div>
       </GlassCard>
+
+      <ToolPageHeader
+        icon={RegexIcon}
+        title="Regex Library"
+        description="Collection of useful regular expressions"
+        actions={
+          <>
+            <ResetButton onClick={resetTester} />
+            <CopyButton getText={testText} disabled={!testText} />
+          </>
+        }
+      />
 
       {/* Tester */}
       <GlassCard>
@@ -867,7 +874,7 @@ export default function RegexLibraryPage() {
           </div>
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }
 
