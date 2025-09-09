@@ -48,11 +48,11 @@ function toRad(d: number) {
   return (d * Math.PI) / 180;
 }
 function haversineKm(a: LatLon, b: LatLon) {
-  const R = 6371,
-    dLat = toRad(b.lat - a.lat),
-    dLon = toRad(b.lon - a.lon);
-  const la1 = toRad(a.lat),
-    la2 = toRad(b.lat);
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const la1 = toRad(a.lat);
+  const la2 = toRad(b.lat);
   const s = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
@@ -90,8 +90,8 @@ function degToCompass(b: number) {
 function formatHoursToHM(hours: number) {
   if (!Number.isFinite(hours) || hours < 0) return "—";
   const totalM = Math.round(hours * 60);
-  const h = Math.floor(totalM / 60),
-    m = totalM % 60;
+  const h = Math.floor(totalM / 60);
+  const m = totalM % 60;
   if (!h) return `${m}m`;
   if (!m) return `${h}h`;
   return `${h}h ${m}m`;
@@ -100,36 +100,13 @@ function kmToUnit(vKm: number, unit: Unit) {
   return unit === "km" ? vKm : vKm * KM_TO_MI;
 }
 
-/* React-Leaflet */
-const MapContainer = dynamic(async () => (await import("react-leaflet")).MapContainer, {
-  ssr: false,
-});
-const TileLayer = dynamic(async () => (await import("react-leaflet")).TileLayer, { ssr: false });
-const Marker = dynamic(async () => (await import("react-leaflet")).Marker, { ssr: false });
-const Polyline = dynamic(async () => (await import("react-leaflet")).Polyline, { ssr: false });
-
-const MapClickHandler = dynamic(
-  async () => {
-    const { useMapEvents } = await import("react-leaflet");
-    return function Handler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
-      useMapEvents({
-        click(e) {
-          onClick(e.latlng.lat, e.latlng.lng);
-        },
-      });
-      return null;
-    };
-  },
-  { ssr: false },
-);
-
+/* Leaflet icon patch (SSR-safe, fully typed, no 'any') */
 function useLeafletDefaultIcon() {
   React.useEffect(() => {
     let cancelled = false;
 
     (async () => {
       const mod = await import("leaflet");
-
       const L: typeof LeafletNS =
         (mod as unknown as { default?: typeof LeafletNS }).default ?? (mod as typeof LeafletNS);
 
@@ -137,6 +114,7 @@ function useLeafletDefaultIcon() {
 
       const proto = L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown };
       if ("_getIconUrl" in proto) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete proto._getIconUrl;
       }
 
@@ -152,6 +130,61 @@ function useLeafletDefaultIcon() {
     };
   }, []);
 }
+
+/* Single dynamic import for all React-Leaflet pieces (prevents getPane undefined) */
+const LeafletMap = dynamic(
+  async () => {
+    const RL = await import("react-leaflet");
+    const { MapContainer, TileLayer, Marker, Polyline, useMapEvents } = RL;
+
+    function ClickHandler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
+      useMapEvents({
+        click(e) {
+          onClick(e.latlng.lat, e.latlng.lng);
+        },
+      });
+      return null;
+    }
+
+    function MapBlock(props: {
+      center: [number, number];
+      activePin: Pin;
+      fromCoord: LatLon | null;
+      toCoord: LatLon | null;
+      polyline: [number, number][];
+      setFromCoord: (v: LatLon) => void;
+      setToCoord: (v: LatLon) => void;
+    }) {
+      const { center, activePin, fromCoord, toCoord, polyline, setFromCoord, setToCoord } = props;
+
+      return (
+        <MapContainer
+          center={center}
+          zoom={7}
+          className="h-[420px] md:h-[500px] w-full"
+          scrollWheelZoom
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="© OpenStreetMap contributors"
+          />
+          <ClickHandler
+            onClick={(lat, lon) => {
+              if (activePin === "from") setFromCoord({ lat, lon });
+              else setToCoord({ lat, lon });
+            }}
+          />
+          {fromCoord && <Marker position={[fromCoord.lat, fromCoord.lon]} />}
+          {toCoord && <Marker position={[toCoord.lat, toCoord.lon]} />}
+          {polyline.length === 2 && <Polyline positions={polyline} />}
+        </MapContainer>
+      );
+    }
+
+    return { default: MapBlock };
+  },
+  { ssr: false },
+);
 
 export default function DistanceETAClient() {
   useLeafletDefaultIcon();
@@ -241,7 +274,6 @@ export default function DistanceETAClient() {
       toast.error("Geolocation not supported.");
       return;
     }
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const c: [number, number] = [pos.coords.latitude, pos.coords.longitude];
@@ -312,26 +344,15 @@ export default function DistanceETAClient() {
           {/* Map */}
           <div className="lg:col-span-2">
             <div className="overflow-hidden rounded-2xl border">
-              <MapContainer
+              <LeafletMap
                 center={center}
-                zoom={7}
-                className="h-[420px] md:h-[500px] w-full"
-                scrollWheelZoom
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution="© OpenStreetMap contributors"
-                />
-                <MapClickHandler
-                  onClick={(lat, lon) => {
-                    if (activePin === "from") setFromCoord({ lat, lon });
-                    else setToCoord({ lat, lon });
-                  }}
-                />
-                {fromCoord && <Marker position={[fromCoord.lat, fromCoord.lon]} />}
-                {toCoord && <Marker position={[toCoord.lat, toCoord.lon]} />}
-                {polyline.length === 2 && <Polyline positions={polyline} />}
-              </MapContainer>
+                activePin={activePin}
+                fromCoord={fromCoord}
+                toCoord={toCoord}
+                polyline={polyline}
+                setFromCoord={setFromCoord}
+                setToCoord={setToCoord}
+              />
             </div>
 
             {/* Coords preview */}
