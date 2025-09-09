@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
+import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";

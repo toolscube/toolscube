@@ -171,7 +171,6 @@ export default function PackingChecklistClient() {
   // load / persist
   React.useEffect(() => {
     const raw = localStorage.getItem(LS_KEY);
-    console.log(raw);
     if (raw) {
       try {
         setItems(JSON.parse(raw));
