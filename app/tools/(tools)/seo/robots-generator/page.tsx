@@ -1,36 +1,32 @@
 "use client";
 
-import {
-  Bot,
-  Check,
-  Copy,
-  Download,
-  Globe,
-  Link as LinkIcon,
-  Plus,
-  RotateCcw,
-  Trash2,
-  Wand2,
-} from "lucide-react";
+import { Bot, Download, Globe, Link as LinkIcon, Plus, Trash2, Wand2 } from "lucide-react";
 import * as React from "react";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
-// ---------------- Types ----------------
+/* Types */
 type Rule = { id: string; path: string; allow: boolean };
 type Agent = {
   id: string;
-  name: string; // e.g., *, Googlebot
+  name: string;
   rules: Rule[];
   crawlDelay?: number | "";
-  cleanParams: string[]; // e.g., ['utm_source','fbclid']
+  cleanParams: string[];
 };
 
 type State = {
@@ -38,43 +34,32 @@ type State = {
   host: string;
   sitemaps: string[];
   comment: string;
-  customDirectives: string; // free-text lines
-  // Agents
+  customDirectives: string;
   agents: Agent[];
-  // UI
   pretty: boolean;
 };
 
-// ---------------- Helpers ----------------
+/* Helpers */
 const uid = () => Math.random().toString(36).slice(2, 9);
-
-function downloadTxt(filename: string, content: string) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
 
 function trimSlash(s: string) {
   const x = s.trim();
-  return x.startsWith("/") || x === "" ? x : "/" + x;
+  return x.startsWith("/") || x === "" ? x : `/${x}`;
 }
 
 function genRobots(s: State) {
   const lines: string[] = [];
 
   if (s.comment.trim()) {
-    s.comment
+    const comments = s.comment
       .split(/\r?\n/)
       .map((l) => l.trim())
       .filter(Boolean)
-      .forEach((l) => lines.push(`# ${l}`));
-    if (lines.length) lines.push("");
+      .map((l) => `# ${l}`);
+
+    if (comments.length) {
+      lines.push(...comments, "");
+    }
   }
 
   // Agents
@@ -87,33 +72,28 @@ function genRobots(s: State) {
 
     ag.rules.forEach((r) => {
       const p = trimSlash(r.path);
-      if (!p && r.allow) return; // "Allow: " with empty path is odd; skip
-      if (!p && !r.allow) {
-        // Disallow:  (empty) means allow all — not needed if other rules exist; we’ll skip
-        return;
-      }
-      if (r.allow) allowLines.push(`Allow: ${p}`);
-      else disallowLines.push(`Disallow: ${p}`);
+      if (!p && r.allow) return;
+      if (!p && !r.allow) return;
+      if (r.allow)
+        if (r.allow) allowLines.push(`Allow: ${p}`);
+        else disallowLines.push(`Disallow: ${p}`);
     });
 
-    // If no rules at all, add "Disallow:" (empty) to mean allow all
     if (allowLines.length === 0 && disallowLines.length === 0) {
       lines.push("Disallow:");
     } else {
-      lines.push(...disallowLines);
-      lines.push(...allowLines);
+      lines.push(...disallowLines, ...allowLines);
     }
 
     if (ag.crawlDelay !== "" && ag.crawlDelay != null) {
       lines.push(`Crawl-delay: ${ag.crawlDelay}`);
     }
 
-    // Clean-param (legacy but still used by some crawlers)
+    // Clean-param (legacy)
     ag.cleanParams
       .map((p) => p.trim())
       .filter(Boolean)
       .forEach((p) => {
-        // Syntax: Clean-param: param /path/
         lines.push(`Clean-param: ${p} /`);
       });
 
@@ -122,15 +102,15 @@ function genRobots(s: State) {
 
   // Global Host
   if (s.host.trim()) {
-    if (lines.length && lines[lines.length - 1] !== "") lines.push("");
+    if (lines.length && lines.at(-1) !== "") lines.push("");
     lines.push(`Host: ${s.host.trim()}`);
   }
 
   // Sitemaps
-  const sitemaps = s.sitemaps.map((u) => u.trim()).filter(Boolean);
-  if (sitemaps.length) {
-    if (lines.length && lines[lines.length - 1] !== "") lines.push("");
-    sitemaps.forEach((u) => lines.push(`Sitemap: ${u}`));
+  const sm = s.sitemaps.map((u) => u.trim()).filter(Boolean);
+  if (sm.length) {
+    if (lines.length && lines.at(-1) !== "") lines.push("");
+    lines.push(...sm.map((u) => `Sitemap: ${u}`));
   }
 
   // Custom directives
@@ -139,15 +119,15 @@ function genRobots(s: State) {
     .map((l) => l.trim())
     .filter(Boolean);
   if (custom.length) {
-    if (lines.length && lines[lines.length - 1] !== "") lines.push("");
+    if (lines.length && lines.at(-1) !== "") lines.push("");
     lines.push(...custom);
   }
 
   const out = lines.join("\n");
-  return s.pretty ? out + "\n" : out;
+  return s.pretty ? `${out}\n` : out;
 }
 
-// ---------------- Defaults & Presets ----------------
+/* Defaults & Presets */
 const DEFAULT_AGENT = (): Agent => ({
   id: uid(),
   name: "*",
@@ -168,20 +148,18 @@ const DEFAULT: State = {
 function applyPreset(
   name: "AllowAll" | "DisallowAll" | "Blog" | "Ecommerce" | "NextJS" | "WordPress",
 ): State {
-  const base = { ...DEFAULT, agents: [DEFAULT_AGENT()] } as State;
+  const base: State = { ...DEFAULT, agents: [DEFAULT_AGENT()] };
   const a = base.agents[0];
 
   switch (name) {
     case "AllowAll":
-      a.rules = []; // implicit allow (Disallow: empty)
+      a.rules = [];
       base.comment = "All bots allowed";
       break;
-
     case "DisallowAll":
       a.rules = [{ id: uid(), path: "/", allow: false }];
       base.comment = "All bots disallowed sitewide";
       break;
-
     case "Blog":
       a.rules = [
         { id: uid(), path: "/wp-admin/", allow: false },
@@ -194,7 +172,6 @@ function applyPreset(
       base.comment = "Common blog paths restricted";
       base.sitemaps = ["https://example.com/sitemap.xml", "https://example.com/post-sitemap.xml"];
       break;
-
     case "Ecommerce":
       a.rules = [
         { id: uid(), path: "/cart", allow: false },
@@ -209,10 +186,9 @@ function applyPreset(
       base.comment = "E-commerce noisy URLs blocked";
       base.sitemaps = ["https://shop.example.com/sitemap.xml"];
       break;
-
     case "NextJS":
       a.rules = [
-        { id: uid(), path: "/_next/", allow: true }, // static chunks are fine
+        { id: uid(), path: "/_next/", allow: true },
         { id: uid(), path: "/api", allow: false },
         { id: uid(), path: "/private", allow: false },
         { id: uid(), path: "/drafts", allow: false },
@@ -221,7 +197,6 @@ function applyPreset(
       base.comment = "Next.js app typical paths";
       base.sitemaps = ["https://example.com/sitemap.xml"];
       break;
-
     case "WordPress":
       a.rules = [
         { id: uid(), path: "/wp-admin/", allow: false },
@@ -236,8 +211,7 @@ function applyPreset(
   return base;
 }
 
-// ---------------- Page ----------------
-export default function RobotsGeneratorPage() {
+export default function RobotsGeneratorClient() {
   const [s, setS] = React.useState<State>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -248,139 +222,127 @@ export default function RobotsGeneratorPage() {
     return DEFAULT;
   });
 
-  const [copied, setCopied] = React.useState(false);
   const output = React.useMemo(() => genRobots(s), [s]);
 
   React.useEffect(() => {
-    // Persist (lightweight)
     localStorage.setItem("robots-gen-v1", JSON.stringify(s));
   }, [s]);
 
-  function resetAll() {
-    setS(DEFAULT);
-    setCopied(false);
-  }
+  const resetAll = React.useCallback(() => setS(DEFAULT), []);
 
-  async function copyOut() {
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  }
+  const addAgent = React.useCallback(() => {
+    setS((p) => ({ ...p, agents: [...p.agents, DEFAULT_AGENT()] }));
+  }, []);
 
-  function addAgent() {
-    setS((p) => ({
-      ...p,
-      agents: [...p.agents, DEFAULT_AGENT()],
-    }));
-  }
-  function removeAgent(id: string) {
+  const removeAgent = React.useCallback((id: string) => {
     setS((p) => ({
       ...p,
       agents: p.agents.length > 1 ? p.agents.filter((a) => a.id !== id) : p.agents,
     }));
-  }
-  function updateAgent(id: string, patch: Partial<Agent>) {
+  }, []);
+
+  const updateAgent = React.useCallback((id: string, patch: Partial<Agent>) => {
     setS((p) => ({
       ...p,
       agents: p.agents.map((a) => (a.id === id ? { ...a, ...patch } : a)),
     }));
-  }
-  function addRule(agentId: string, allow = false) {
-    updateAgent(agentId, {
-      rules: [...s.agents.find((a) => a.id === agentId)!.rules, { id: uid(), path: "", allow }],
-    });
-  }
-  function updateRule(agentId: string, ruleId: string, patch: Partial<Rule>) {
-    const ag = s.agents.find((a) => a.id === agentId)!;
-    updateAgent(agentId, {
-      rules: ag.rules.map((r) => (r.id === ruleId ? { ...r, ...patch } : r)),
-    });
-  }
-  function removeRule(agentId: string, ruleId: string) {
-    const ag = s.agents.find((a) => a.id === agentId)!;
-    updateAgent(agentId, {
-      rules: ag.rules.filter((r) => r.id !== ruleId),
-    });
-  }
-  function addSitemap() {
+  }, []);
+
+  const addRule = React.useCallback(
+    (agentId: string, allow = false) => {
+      const agent = s.agents.find((a) => a.id === agentId);
+      if (!agent) return;
+      updateAgent(agentId, {
+        rules: [...agent.rules, { id: uid(), path: "", allow }],
+      });
+    },
+    [s.agents, updateAgent],
+  );
+
+  const updateRule = React.useCallback(
+    (agentId: string, ruleId: string, patch: Partial<Rule>) => {
+      const ag = s.agents.find((a) => a.id === agentId);
+      if (!ag) return;
+      updateAgent(agentId, {
+        rules: ag.rules.map((r) => (r.id === ruleId ? { ...r, ...patch } : r)),
+      });
+    },
+    [s.agents, updateAgent],
+  );
+
+  const removeRule = React.useCallback(
+    (agentId: string, ruleId: string) => {
+      const ag = s.agents.find((a) => a.id === agentId);
+      if (!ag) return;
+      updateAgent(agentId, { rules: ag.rules.filter((r) => r.id !== ruleId) });
+    },
+    [s.agents, updateAgent],
+  );
+
+  const addSitemap = React.useCallback(() => {
     setS((p) => ({ ...p, sitemaps: [...p.sitemaps, ""] }));
-  }
-  function updateSitemap(i: number, val: string) {
+  }, []);
+
+  const updateSitemap = React.useCallback((i: number, val: string) => {
     setS((p) => {
       const sitemaps = p.sitemaps.slice();
       sitemaps[i] = val;
       return { ...p, sitemaps };
     });
-  }
-  function removeSitemap(i: number) {
-    setS((p) => ({ ...p, sitemaps: p.sitemaps.filter((_, idx) => idx !== i) }));
-  }
+  }, []);
 
-  // Quick toggles for common noisy paths
-  const commonBlocks = ["/admin", "/api", "/search", "/cart", "/checkout"];
+  const removeSitemap = React.useCallback((i: number) => {
+    setS((p) => ({ ...p, sitemaps: p.sitemaps.filter((_, idx) => idx !== i) }));
+  }, []);
+
+  const commonBlocks = React.useMemo(() => ["/admin", "/api", "/search", "/cart", "/checkout"], []);
 
   return (
-    <MotionGlassCard>
-      {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Bot className="h-6 w-6" /> robots.txt Generator
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Generate a clean robots.txt with multiple user-agents, rules, sitemaps, and helpful
-            presets.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button variant="outline" onClick={copyOut} className="gap-2">
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
-          </Button>
-          <Button onClick={() => downloadTxt("robots.txt", output)} className="gap-2">
-            <Download className="h-4 w-4" /> Download
-          </Button>
-        </div>
-      </GlassCard>
+    <>
+      <ToolPageHeader
+        icon={Bot}
+        title="robots.txt Generator"
+        description="Generate a clean robots.txt with multiple user-agents, rules, sitemaps, and helpful presets."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <CopyButton disabled={!output} getText={output} />
+            <ExportTextButton label="Download" filename="robots.txt" getText={() => output} />
+          </>
+        }
+      />
 
       {/* Presets */}
-      <GlassCard>
+      <GlassCard className="mb-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Presets</CardTitle>
           <CardDescription>Start fast, then customize below.</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          {[
-            ["Allow All", "AllowAll"],
-            ["Disallow All", "DisallowAll"],
-            ["Blog", "Blog"],
-            ["E-commerce", "Ecommerce"],
-            ["Next.js", "NextJS"],
-            ["WordPress", "WordPress"],
-          ].map(([label, key]) => (
-            <Button
+        <CardContent className="flex flex-wrap gap-2 items-center">
+          {(
+            [
+              ["Allow All", "AllowAll"],
+              ["Disallow All", "DisallowAll"],
+              ["Blog", "Blog"],
+              ["E-commerce", "Ecommerce"],
+              ["Next.js", "NextJS"],
+              ["WordPress", "WordPress"],
+            ] as const
+          ).map(([label, key]) => (
+            <ActionButton
               key={key}
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => setS(applyPreset(key as any))}
-            >
-              <Wand2 className="h-4 w-4" /> {label}
-            </Button>
-          ))}
-          <div className="ml-auto flex items-center gap-2">
-            <Label htmlFor="pretty" className="text-xs text-muted-foreground">
-              Pretty print
-            </Label>
-            <Switch
-              id="pretty"
-              checked={s.pretty}
-              onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))}
+              icon={Wand2}
+              label={label}
+              onClick={() => setS(applyPreset(key))}
             />
-          </div>
+          ))}
+
+          <SwitchRow
+            className="ml-auto"
+            label="Pretty print"
+            checked={s.pretty}
+            onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))}
+          />
         </CardContent>
       </GlassCard>
 
@@ -392,17 +354,14 @@ export default function RobotsGeneratorPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="host" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" /> Host (optional)
-              </Label>
-              <Input
-                id="host"
-                placeholder="example.com"
-                value={s.host}
-                onChange={(e) => setS((p) => ({ ...p, host: e.target.value.trim() }))}
-              />
-            </div>
+            <InputField
+              id="host"
+              icon={Globe}
+              label="Host (optional)"
+              placeholder="example.com"
+              value={s.host}
+              onChange={(e) => setS((p) => ({ ...p, host: e.target.value.trim() }))}
+            />
 
             <div className="space-y-1.5">
               <Label className="flex items-center gap-2">
@@ -410,55 +369,54 @@ export default function RobotsGeneratorPage() {
               </Label>
               <div className="space-y-2">
                 {s.sitemaps.map((u, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <Input
+                  <div key={`${u}-${i as number}`} className="flex items-center gap-2">
+                    <InputField
+                      id={`sm-${i}`}
                       placeholder="https://example.com/sitemap.xml"
                       value={u}
                       onChange={(e) => updateSitemap(i, e.target.value)}
+                      className="flex-1"
                     />
-                    <Button variant="outline" size="icon" onClick={() => removeSitemap(i)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <ActionButton
+                      size="icon"
+                      icon={Trash2}
+                      variant="destructive"
+                      onClick={() => removeSitemap(i)}
+                    />
                   </div>
                 ))}
-                <Button
-                  type="button"
+                <ActionButton
+                  icon={Plus}
+                  label="Add sitemap"
                   variant="outline"
-                  size="sm"
-                  className="gap-2"
                   onClick={addSitemap}
-                >
-                  <Plus className="h-4 w-4" /> Add sitemap
-                </Button>
+                />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="comment">Comment (appears as # lines)</Label>
-              <Textarea
-                id="comment"
-                placeholder="robots.txt generated by Tools Hub"
-                value={s.comment}
-                onChange={(e) => setS((p) => ({ ...p, comment: e.target.value }))}
-                className="min-h-[84px]"
-              />
-            </div>
+            <TextareaField
+              id="comment"
+              label="Comment (appears as # lines)"
+              placeholder="robots.txt generated by Tools Hub"
+              value={s.comment}
+              onValueChange={(v) => setS((p) => ({ ...p, comment: v }))}
+              minHeight="84px"
+            />
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="custom">Custom directives (advanced)</Label>
-              <Textarea
-                id="custom"
-                placeholder={`# Extra rules, e.g.\nNoindex: /legacy\nUser-agent: AdsBot-Google\nDisallow: /ads-preview`}
-                value={s.customDirectives}
-                onChange={(e) => setS((p) => ({ ...p, customDirectives: e.target.value }))}
-                className="min-h-[180px] font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                These lines will be appended as-is. Use carefully.
-              </p>
-            </div>
+            <TextareaField
+              id="custom"
+              label="Custom directives (advanced)"
+              placeholder={`# Extra rules, e.g.\nNoindex: /legacy\nUser-agent: AdsBot-Google\nDisallow: /ads-preview`}
+              value={s.customDirectives}
+              onValueChange={(v) => setS((p) => ({ ...p, customDirectives: v }))}
+              textareaClassName="font-mono"
+              minHeight="180px"
+            />
+            <p className="text-xs text-muted-foreground">
+              These lines will be appended as-is. Use carefully.
+            </p>
           </div>
         </CardContent>
       </GlassCard>
@@ -474,22 +432,20 @@ export default function RobotsGeneratorPage() {
         <CardContent className="space-y-6">
           {s.agents.map((ag) => (
             <div key={ag.id} className="rounded-lg border p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Label className="min-w-24">User-agent</Label>
-                  <Input
-                    value={ag.name}
-                    onChange={(e) => updateAgent(ag.id, { name: e.target.value })}
-                    placeholder="*, Googlebot, Bingbot…"
-                    className="max-w-sm"
-                  />
-                </div>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <InputField
+                  label="User-agent"
+                  id={`agent-${ag.id}`}
+                  value={ag.name}
+                  placeholder="*, Googlebot, Bingbot…"
+                  onChange={(e) => updateAgent(ag.id, { name: e.target.value })}
+                  className="max-w-sm"
+                />
 
                 <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
+                  <ActionButton
+                    label="Block common paths"
                     variant="outline"
-                    size="sm"
                     onClick={() =>
                       updateAgent(ag.id, {
                         rules: [
@@ -498,22 +454,19 @@ export default function RobotsGeneratorPage() {
                         ],
                       })
                     }
-                  >
-                    Block common paths
-                  </Button>
-                  <Button
-                    variant="outline"
+                  />
+                  <ActionButton
                     size="icon"
-                    onClick={() => removeAgent(ag.id)}
+                    icon={Trash2}
+                    variant="destructive"
                     disabled={s.agents.length === 1}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    onClick={() => removeAgent(ag.id)}
+                  />
                 </div>
               </div>
 
               {/* Rules list */}
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-hidden">
                 <div className="grid grid-cols-12 items-center gap-2 border-b px-3 py-2 text-xs text-muted-foreground">
                   <div className="col-span-3">Type</div>
                   <div className="col-span-8">Path (supports * and $)</div>
@@ -532,86 +485,70 @@ export default function RobotsGeneratorPage() {
                       className="grid grid-cols-12 items-center gap-2 px-3 py-2 border-t"
                     >
                       <div className="col-span-3">
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            type="button"
-                            variant={r.allow ? "default" : "outline"}
-                            onClick={() => updateRule(ag.id, r.id, { allow: true })}
-                          >
-                            Allow
-                          </Button>
-                          <Button
-                            size="sm"
-                            type="button"
-                            variant={!r.allow ? "default" : "outline"}
-                            onClick={() => updateRule(ag.id, r.id, { allow: false })}
-                          >
-                            Disallow
-                          </Button>
-                        </div>
+                        <SelectField
+                          options={[
+                            { label: "Allow", value: "allow" },
+                            { label: "Disallow", value: "disallow" },
+                          ]}
+                          value={r.allow ? "allow" : "disallow"}
+                          onValueChange={(v) => updateRule(ag.id, r.id, { allow: v === "allow" })}
+                        />
                       </div>
                       <div className="col-span-8">
-                        <Input
+                        <InputField
+                          id={`rule-${ag.id}-${r.id}`}
+                          placeholder="/admin, /search, /*.json$"
                           value={r.path}
                           onChange={(e) => updateRule(ag.id, r.id, { path: e.target.value })}
-                          placeholder="/admin, /search, /*.json$"
                         />
                       </div>
                       <div className="col-span-1 text-right">
-                        <Button
-                          variant="outline"
+                        <ActionButton
                           size="icon"
+                          icon={Trash2}
+                          variant="destructive"
                           onClick={() => removeRule(ag.id, r.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        />
                       </div>
                     </div>
                   ))
                 )}
 
                 <div className="flex gap-2 border-t p-3">
-                  <Button
+                  <ActionButton
+                    icon={Plus}
+                    label="Disallow"
                     variant="outline"
-                    size="sm"
-                    className="gap-2"
                     onClick={() => addRule(ag.id, false)}
-                  >
-                    <Plus className="h-4 w-4" /> Disallow
-                  </Button>
-                  <Button
+                  />
+                  <ActionButton
+                    icon={Plus}
+                    label="Allow"
                     variant="outline"
-                    size="sm"
-                    className="gap-2"
                     onClick={() => addRule(ag.id, true)}
-                  >
-                    <Plus className="h-4 w-4" /> Allow
-                  </Button>
+                  />
                 </div>
               </div>
 
               {/* Crawl delay & Clean param */}
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor={`delay-${ag.id}`}>Crawl-delay (sec)</Label>
-                  <Input
-                    id={`delay-${ag.id}`}
-                    type="number"
-                    min={0}
-                    placeholder="e.g., 5"
-                    value={ag.crawlDelay === "" ? "" : ag.crawlDelay}
-                    onChange={(e) =>
-                      updateAgent(ag.id, {
-                        crawlDelay:
-                          e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || 0),
-                      })
-                    }
-                  />
-                </div>
-                <div className="col-span-2 space-y-1.5">
-                  <Label>Clean parameters (comma-separated)</Label>
-                  <Input
+                <InputField
+                  id={`delay-${ag.id}`}
+                  type="number"
+                  label="Crawl-delay (sec)"
+                  min={0}
+                  value={ag.crawlDelay === "" ? "" : ag.crawlDelay}
+                  onChange={(e) =>
+                    updateAgent(ag.id, {
+                      crawlDelay:
+                        e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || 0),
+                    })
+                  }
+                />
+                <div className="col-span-2">
+                  <InputField
+                    id={`clean-${ag.id}`}
+                    label="Clean parameters (comma-separated)"
                     placeholder="utm_source, utm_medium, fbclid"
                     value={ag.cleanParams.join(", ")}
                     onChange={(e) =>
@@ -623,7 +560,7 @@ export default function RobotsGeneratorPage() {
                       })
                     }
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Used by some crawlers to ignore tracking params (legacy).
                   </p>
                 </div>
@@ -632,9 +569,7 @@ export default function RobotsGeneratorPage() {
           ))}
 
           <div className="flex items-center justify-between">
-            <Button type="button" variant="outline" className="gap-2" onClick={addAgent}>
-              <Plus className="h-4 w-4" /> Add user-agent
-            </Button>
+            <ActionButton label="Add user-agent" icon={Plus} variant="outline" onClick={addAgent} />
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <Badge variant="secondary" className="font-normal">
                 {s.agents.length} agent(s)
@@ -657,18 +592,24 @@ export default function RobotsGeneratorPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
-            <Textarea readOnly className="min-h-[320px] font-mono text-sm" value={output} />
+            <TextareaField
+              id="preview"
+              readOnly
+              value={output}
+              textareaClassName="min-h-[320px] font-mono text-sm"
+            />
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={copyOut}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
-              </Button>
-              <Button size="sm" className="gap-2" onClick={() => downloadTxt("robots.txt", output)}>
-                <Download className="h-4 w-4" /> Download
-              </Button>
+              <CopyButton getText={output} />
+              <ExportTextButton
+                icon={Download}
+                label="Download"
+                filename="robots.txt"
+                getText={() => output}
+              />
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Tips</Label>
@@ -680,7 +621,7 @@ export default function RobotsGeneratorPage() {
               <Badge variant="secondary">robots.txt</Badge>
             </div>
 
-            <div className="rounded-md border p-3 text-sm">
+            <div className="rounded-md border p-3">
               <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                 <li>
                   <span className="text-foreground">Disallow</span> prevents compliant bots from
@@ -703,6 +644,6 @@ export default function RobotsGeneratorPage() {
           </div>
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }
