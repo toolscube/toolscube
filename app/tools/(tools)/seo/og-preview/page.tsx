@@ -1,33 +1,35 @@
 "use client";
 
 import {
-  Check,
-  Copy,
-  ExternalLink,
   Globe,
   Image as ImageIcon,
   Link as LinkIcon,
   Loader2,
-  RefreshCcw,
-  RotateCcw,
   Sparkles,
+  TrendingUpDown,
   Twitter,
 } from "lucide-react";
 import * as React from "react";
+import {
+  ActionButton,
+  CopyButton,
+  LinkButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
 type OgResult = {
   ok: boolean;
   error?: string;
-  url?: string; // final URL after redirects
+  url?: string;
   status?: number;
   contentType?: string;
   fetchedAt?: string;
@@ -38,12 +40,12 @@ type OgResult = {
   canonical?: string;
   twitterCard?: string;
   twitterSite?: string;
-  images: string[]; // absolute URLs
-  icons: string[]; // favicons
+  images: string[];
+  icons: string[];
   allMeta: Record<string, string[]>;
 };
 
-const EXAMPLES = ["https://nextjs.org", "https://tariqul.dev", "https://youtube.com"];
+const EXAMPLES = ["https://nextjs.org", "https://tariqul.dev", "https://youtube.com"] as const;
 
 function hostnameOf(u?: string) {
   try {
@@ -97,36 +99,67 @@ export default function OGPreviewPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [selectedImg, setSelectedImg] = React.useState(0);
   const [showRaw, setShowRaw] = React.useState(false);
-  const [copied, setCopied] = React.useState<"tags" | "json" | null>(null);
   const [noCache, setNoCache] = React.useState(false);
+  const [autoFetch, setAutoFetch] = React.useState(false);
 
-  async function runFetch(u?: string) {
-    const target = (u ?? url).trim();
-    if (!target) return;
-    try {
-      setLoading(true);
-      setError(null);
-      setData(null);
-      setSelectedImg(0);
+  React.useEffect(() => {
+    if (!data) return;
+    if (selectedImg >= data.images.length) setSelectedImg(0);
+  }, [data, selectedImg]);
 
-      const q = new URLSearchParams({
-        url: target,
-        ...(noCache ? { nocache: "1" } : {}),
-      }).toString();
-      const res = await fetch(`/api/og-preview?${q}`, { method: "GET" });
-      const json = (await res.json()) as OgResult;
-      if (!json.ok) {
-        setError(json.error || "Failed to fetch metadata.");
-        setData(null);
-      } else {
-        setData(json);
+  const validHttp = /^https?:\/\//i;
+  const dataUrl = React.useMemo(() => data?.url ?? "", [data?.url]);
+
+  const runFetch = React.useCallback(
+    async (u?: string) => {
+      const target = (u ?? url).trim();
+      if (!target || !validHttp.test(target)) {
+        setError(target ? "Enter a valid absolute URL (https://…)." : null);
+        return;
       }
-    } catch (e: any) {
-      setError(e?.message ?? "Request failed.");
-    } finally {
-      setLoading(false);
-    }
-  }
+      try {
+        setLoading(true);
+        setError(null);
+        setData(null);
+        setSelectedImg(0);
+
+        const q = new URLSearchParams({
+          url: target,
+          ...(noCache ? { nocache: "1" } : {}),
+        }).toString();
+        const res = await fetch(`/api/og-preview?${q}`, { method: "GET" });
+        const json = (await res.json()) as OgResult;
+        if (!json.ok) {
+          setError(json.error || "Failed to fetch metadata.");
+          setData(null);
+        } else {
+          setData(json);
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Request failed.";
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [noCache, url],
+  );
+
+  // Auto fetch
+  React.useEffect(() => {
+    if (!autoFetch || !validHttp.test(url.trim())) return;
+
+    const t = window.setTimeout(() => {
+      const current = dataUrl;
+      const changedHost = hostnameOf(`${current}/`) !== hostnameOf(`${url}/`);
+
+      if (changedHost || !data) {
+        void runFetch(url);
+      }
+    }, 600);
+
+    return () => window.clearTimeout(t);
+  }, [autoFetch, url, runFetch, data, dataUrl]);
 
   function resetAll() {
     setUrl("");
@@ -134,61 +167,30 @@ export default function OGPreviewPage() {
     setError(null);
     setSelectedImg(0);
     setShowRaw(false);
-    setCopied(null);
-  }
-
-  async function copyTags() {
-    if (!data) return;
-    await navigator.clipboard.writeText(toMetaTags(data));
-    setCopied("tags");
-    setTimeout(() => setCopied(null), 1200);
-  }
-
-  async function copyJSON() {
-    if (!data) return;
-    await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-    setCopied("json");
-    setTimeout(() => setCopied(null), 1200);
-  }
-
-  async function pasteUrl() {
-    try {
-      const txt = await navigator.clipboard.readText();
-      if (txt) setUrl(txt.trim());
-    } catch {}
   }
 
   const domain = hostnameOf(data?.url || url);
 
   return (
-    <MotionGlassCard>
+    <>
       {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Sparkles className="h-6 w-6" /> Open Graph Preview
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Preview OG/Twitter cards for any URL. Server-side fetch avoids CORS; nothing is stored.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button variant="outline" onClick={pasteUrl} className="gap-2">
-            <LinkIcon className="h-4 w-4" /> Paste URL
-          </Button>
-          <Button onClick={() => runFetch()} className="gap-2" disabled={!url || loading}>
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCcw className="h-4 w-4" />
-            )}{" "}
-            Fetch
-          </Button>
-        </div>
-      </GlassCard>
+      <ToolPageHeader
+        icon={Sparkles}
+        title="Open Graph Preview"
+        description="Preview OG/Twitter cards for any URL. Server-side fetch avoids CORS; nothing is stored."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <ActionButton
+              icon={loading ? Loader2 : autoFetch ? Sparkles : TrendingUpDown}
+              label={loading ? "Fetching…" : autoFetch ? "Auto fetch" : "Fetch"}
+              onClick={() => runFetch()}
+              disabled={!url || loading}
+              className={loading ? "animate-pulse" : ""}
+            />
+          </>
+        }
+      />
 
       {/* Input */}
       <GlassCard>
@@ -199,37 +201,38 @@ export default function OGPreviewPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end">
             <div className="flex-1">
-              <Input
+              <InputField
+                id="target-url"
+                icon={LinkIcon}
+                label="Target URL"
+                placeholder="https://your-domain.com/page"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://your-domain.com/page"
-                onKeyDown={(e) => e.key === "Enter" && runFetch()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void runFetch();
+                }}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="nocache" className="text-xs text-muted-foreground">
-                Bypass cache
-              </Label>
-              <Switch id="nocache" checked={noCache} onCheckedChange={setNoCache} />
+
+            <div className="grid gap-2 sm:grid-cols-2 md:w-[340px]">
+              <SwitchRow label="Bypass cache" checked={noCache} onCheckedChange={setNoCache} />
+              <SwitchRow label="Auto fetch" checked={autoFetch} onCheckedChange={setAutoFetch} />
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="text-muted-foreground">Try:</span>
             {EXAMPLES.map((e) => (
-              <Button
+              <ActionButton
                 key={e}
                 size="sm"
-                variant="outline"
+                label={e.replace(/^https?:\/\//, "")}
                 onClick={() => {
                   setUrl(e);
-                  runFetch(e);
+                  if (!autoFetch) void runFetch(e);
                 }}
-              >
-                {e.replace(/^https?:\/\//, "")}
-              </Button>
+              />
             ))}
           </div>
 
@@ -244,7 +247,7 @@ export default function OGPreviewPage() {
       {/* Results */}
       {data && (
         <>
-          <Separator />
+          <Separator className="my-4" />
 
           <GlassCard>
             <CardHeader className="pb-2">
@@ -267,14 +270,16 @@ export default function OGPreviewPage() {
                 </div>
 
                 <div className="rounded-xl border bg-background overflow-hidden">
-                  {/* image */}
                   {data.images[selectedImg] ? (
                     <div className="relative aspect-[1200/630] bg-muted">
-                      <img
-                        src={data.images[selectedImg]}
-                        className="h-full w-full object-cover"
-                        alt="OG Image"
-                      />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <picture>
+                        <img
+                          src={data.images[selectedImg]}
+                          className="h-full w-full object-cover"
+                          alt="OG"
+                        />
+                      </picture>
                     </div>
                   ) : (
                     <div className="aspect-[1200/630] grid place-items-center bg-muted text-muted-foreground">
@@ -284,7 +289,6 @@ export default function OGPreviewPage() {
                     </div>
                   )}
 
-                  {/* text */}
                   <div className="p-4">
                     <div className="text-xs text-muted-foreground">{data.siteName || domain}</div>
                     <div className="mt-1 line-clamp-2 font-semibold">
@@ -301,16 +305,20 @@ export default function OGPreviewPage() {
                   {data.images.length > 0 ? (
                     data.images.map((img, i) => (
                       <button
-                        key={img + i}
+                        key={`${img}-${i as number}`}
                         className={`h-10 w-16 overflow-hidden rounded-md border ${selectedImg === i ? "ring-2 ring-primary" : ""}`}
                         onClick={() => setSelectedImg(i)}
                         title={img}
+                        type="button"
                       >
-                        <img
-                          src={img}
-                          className="h-full w-full object-cover"
-                          alt={`thumb ${i + 1}`}
-                        />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <picture>
+                          <img
+                            src={img}
+                            className="h-full w-full object-cover"
+                            alt={`thumb ${i + 1}`}
+                          />
+                        </picture>
                       </button>
                     ))
                   ) : (
@@ -334,7 +342,6 @@ export default function OGPreviewPage() {
                 </div>
 
                 <div className="rounded-xl border bg-background overflow-hidden">
-                  {/* header */}
                   <div className="flex items-center gap-2 p-3">
                     <div className="h-8 w-8 rounded-full bg-muted" />
                     <div className="min-w-0">
@@ -347,14 +354,16 @@ export default function OGPreviewPage() {
                     </div>
                   </div>
 
-                  {/* card */}
                   {data.images[selectedImg] ? (
                     <div className="aspect-video bg-muted">
-                      <img
-                        src={data.images[selectedImg]}
-                        className="h-full w-full object-cover"
-                        alt="twitter image"
-                      />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <picture>
+                        <img
+                          src={data.images[selectedImg]}
+                          className="h-full w-full object-cover"
+                          alt="twitter"
+                        />
+                      </picture>
                     </div>
                   ) : (
                     <div className="aspect-video grid place-items-center bg-muted text-muted-foreground">
@@ -378,6 +387,8 @@ export default function OGPreviewPage() {
             </CardContent>
           </GlassCard>
 
+          <Separator className="my-4" />
+
           {/* Meta & Actions */}
           <GlassCard>
             <CardHeader className="pb-2">
@@ -387,29 +398,20 @@ export default function OGPreviewPage() {
             <CardContent className="grid gap-6 lg:grid-cols-2">
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" className="gap-2" onClick={copyTags}>
-                    {copied === "tags" ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}{" "}
-                    Copy Meta Tags
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2" onClick={copyJSON}>
-                    {copied === "json" ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}{" "}
-                    Copy JSON
-                  </Button>
-                  {data.url && (
-                    <a href={data.url} target="_blank" rel="noreferrer" className="inline-flex">
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <ExternalLink className="h-4 w-4" /> Open Page
-                      </Button>
-                    </a>
-                  )}
+                  <CopyButton
+                    size="sm"
+                    label="Copy Meta Tags"
+                    disabled={!data}
+                    getText={toMetaTags(data)}
+                  />
+                  <CopyButton
+                    size="sm"
+                    label="Copy JSON"
+                    disabled={!data}
+                    getText={JSON.stringify(data, null, 2)}
+                  />
+
+                  {data.url && <LinkButton size="sm" href={data.url} />}
                 </div>
 
                 <div className="rounded-md border p-3 text-xs">
@@ -422,35 +424,23 @@ export default function OGPreviewPage() {
                         Fetched: {new Date(data.fetchedAt).toLocaleString()}
                       </span>
                     )}
-                    {data.canonical && (
-                      <a
-                        href={data.canonical}
-                        className="underline-offset-2 hover:underline"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Canonical
-                      </a>
-                    )}
+                    {data.canonical && <LinkButton label="Canonical" href={data.canonical} />}
                   </div>
                 </div>
 
                 <div className="rounded-md border p-3">
                   <div className="flex items-center justify-between">
                     <Label>Raw (JSON)</Label>
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="raw" className="text-xs text-muted-foreground">
-                        Show raw
-                      </Label>
-                      <Switch id="raw" checked={showRaw} onCheckedChange={setShowRaw} />
-                    </div>
+                    <SwitchRow label="Show raw" checked={showRaw} onCheckedChange={setShowRaw} />
                   </div>
+
                   <div className="mt-2">
                     {showRaw ? (
-                      <Textarea
+                      <TextareaField
+                        id="raw-json"
                         readOnly
-                        className="min-h-[220px] font-mono text-xs"
                         value={JSON.stringify(data, null, 2)}
+                        textareaClassName="min-h-[400px] font-mono"
                       />
                     ) : (
                       <div className="text-sm text-muted-foreground">
@@ -505,7 +495,7 @@ export default function OGPreviewPage() {
                           data.allMeta["twitter:image"]?.[0] ?? data.images[0] ?? "",
                         ],
                       ].map(([k, v]) => (
-                        <tr key={k} className="border-t">
+                        <tr key={k as string} className="border-t">
                           <td className="py-2 px-3 font-mono text-xs">{k}</td>
                           <td className="py-2 px-3 break-all">
                             {v || <span className="text-muted-foreground">—</span>}
@@ -520,7 +510,10 @@ export default function OGPreviewPage() {
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-muted-foreground">Icons:</span>
                     {data.icons.slice(0, 4).map((i, idx) => (
-                      <img key={i + idx} src={i} alt="icon" className="h-5 w-5 rounded" />
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <picture key={`${i}-${idx as number}`}>
+                        <img src={i} alt="icon" className="h-5 w-5 rounded" />
+                      </picture>
                     ))}
                   </div>
                 )}
@@ -529,6 +522,6 @@ export default function OGPreviewPage() {
           </GlassCard>
         </>
       )}
-    </MotionGlassCard>
+    </>
   );
 }
