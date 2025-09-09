@@ -1,6 +1,6 @@
 "use client";
 
-import L from "leaflet";
+import type * as LeafletNS from "leaflet";
 import {
   Bike,
   Car,
@@ -125,13 +125,31 @@ const MapClickHandler = dynamic(
 
 function useLeafletDefaultIcon() {
   React.useEffect(() => {
-    // @ts-expect-error patch private prop
-    delete L.Icon.Default.prototype._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    });
+    let cancelled = false;
+
+    (async () => {
+      const mod = await import("leaflet");
+
+      const L: typeof LeafletNS =
+        (mod as unknown as { default?: typeof LeafletNS }).default ?? (mod as typeof LeafletNS);
+
+      if (cancelled) return;
+
+      const proto = L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown };
+      if ("_getIconUrl" in proto) {
+        delete proto._getIconUrl;
+      }
+
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      } as Partial<LeafletNS.IconOptions>);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 }
 
