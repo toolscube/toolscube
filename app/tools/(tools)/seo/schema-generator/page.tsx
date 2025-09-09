@@ -3,37 +3,36 @@
 import {
   BookText,
   Building2,
-  Check,
-  Copy,
   DollarSign,
   Download,
   Globe,
   Image as ImageIcon,
   Link as LinkIcon,
   Package,
-  RotateCcw,
   Sparkles,
   Star,
   Users,
 } from "lucide-react";
 import * as React from "react";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
-// ---------------- Types ----------------
+// Types
 type SchemaType = "Article" | "Product" | "Organization";
-
-type Base = {
-  context: "https://schema.org";
-  type: SchemaType;
-};
 
 type ArticleState = {
   headline: string;
@@ -42,7 +41,7 @@ type ArticleState = {
   authorUrl: string;
   publisherName: string;
   publisherLogo: string;
-  datePublished: string; // YYYY-MM-DD or ISO
+  datePublished: string;
   dateModified: string;
   url: string;
   images: string;
@@ -63,7 +62,6 @@ type ProductState = {
   availability: "InStock" | "OutOfStock" | "PreOrder" | "Discontinued" | "";
   condition: "NewCondition" | "UsedCondition" | "RefurbishedCondition" | "";
   seller: string;
-  // ratings
   ratingValue: string;
   reviewCount: string;
 };
@@ -72,7 +70,7 @@ type OrgState = {
   name: string;
   url: string;
   logo: string;
-  sameAs: string; // newline or comma list
+  sameAs: string;
   contactType: string;
   telephone: string;
   email: string;
@@ -91,62 +89,62 @@ type State = {
   org: OrgState;
 };
 
-// ---------------- Defaults ----------------
+// Defaults
 const DEFAULT: State = {
   active: "Article",
   pretty: true,
+
   article: {
-    headline: "How to Grow Indoor Plants (Beginner Guide)",
+    headline: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
     description:
-      "A beginner-friendly guide to growing healthy indoor plants, including light, watering, and soil tips.",
-    authorName: "Alex Green",
-    authorUrl: "https://example.com/authors/alex-green",
-    publisherName: "Example Media",
-    publisherLogo: "https://example.com/logo.png",
+      "URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators — all in one place.",
+    authorName: "Tariqul Islam",
+    authorUrl: "https://tariqul.dev",
+    publisherName: "Tools Hub",
+    publisherLogo: "https://toolshub.dev/og/tools-hub-og.png",
     datePublished: "2025-02-10",
     dateModified: "2025-02-12",
-    url: "https://example.com/blog/indoor-plants",
-    images: "https://example.com/og/indoor-plants.jpg",
-    section: "Home & Garden",
+    url: "https://toolshub.dev",
+    images: "https://toolshub.dev/og/tools-hub-og.png",
+    section: "UtilitiesApplication",
     isAccessibleForFree: true,
   },
+
   product: {
-    name: "UltraComfort Ergonomic Chair",
+    name: "Tools Hub",
     description:
-      "An ergonomic office chair with lumbar support, adjustable height, and breathable mesh back.",
-    sku: "UC-CHAIR-001",
-    brand: "UltraComfort",
-    url: "https://shop.example.com/products/ergonomic-chair",
-    images:
-      "https://shop.example.com/images/chair-1.jpg\nhttps://shop.example.com/images/chair-2.jpg",
-    price: "199.99",
+      "Privacy-friendly web utilities: URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators.",
+    sku: "TH-0001",
+    brand: "Tools Hub",
+    url: "https://toolshub.dev",
+    images: "https://toolshub.dev/og/tools-hub-og.png",
+    price: "0",
     priceCurrency: "USD",
     availability: "InStock",
     condition: "NewCondition",
-    seller: "Example Store",
-    ratingValue: "4.6",
-    reviewCount: "128",
+    seller: "Tools Hub",
+    ratingValue: "0",
+    reviewCount: "0",
   },
+
   org: {
-    name: "Example Company",
-    url: "https://example.com",
-    logo: "https://example.com/logo.png",
+    name: "Tools Hub",
+    url: "https://toolshub.dev",
+    logo: "https://toolshub.dev/og/tools-hub-og.png",
     sameAs:
-      "https://twitter.com/example, https://www.linkedin.com/company/example, https://github.com/example",
+      "https://tariqul.dev, https://www.linkedin.com/in/tariqul-dev, https://github.com/tariqul420",
     contactType: "customer support",
-    telephone: "+1-202-555-0123",
-    email: "support@example.com",
-    addressStreet: "123 Market Street",
-    addressLocality: "San Francisco",
-    addressRegion: "CA",
-    postalCode: "94103",
-    addressCountry: "US",
+    telephone: "+8801743892058",
+    email: "tariqul@tariqul.dev",
+    addressStreet: "Pabna, Bangladesh",
+    addressLocality: "Pabna, Bangladesh",
+    addressRegion: "Bangladeshi",
+    postalCode: "6630",
+    addressCountry: "BD",
   },
 };
 
-// ---------------- Helpers ----------------
-const esc = (s: string) => s.replaceAll("<", "&lt;"); // minimal; we stringify JSON anyway
-
+// Helpers
 function lsSplit(s: string): string[] {
   return s
     .split(/[\n,]+/)
@@ -168,22 +166,10 @@ function toScript(json: object, pretty: boolean) {
   return `<script type="application/ld+json">\n${body}\n</script>`;
 }
 
-function downloadTxt(filename: string, content: string) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-// ---------------- JSON-LD builders ----------------
+// JSON-LD builders
 function buildArticle(s: ArticleState) {
   const images = lsSplit(s.images);
-  const obj: any = {
+  const obj = {
     "@context": "https://schema.org",
     "@type": "Article",
     mainEntityOfPage: {
@@ -222,7 +208,7 @@ function buildArticle(s: ArticleState) {
 
 function buildProduct(s: ProductState) {
   const images = lsSplit(s.images);
-  const offers: any = {
+  const offers = {
     "@type": "Offer",
     price: s.price || undefined,
     priceCurrency: s.priceCurrency || undefined,
@@ -246,7 +232,7 @@ function buildProduct(s: ProductState) {
         }
       : undefined;
 
-  const obj: any = {
+  const obj = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: s.name || undefined,
@@ -266,7 +252,7 @@ function buildOrg(s: OrgState) {
   const addressExists =
     s.addressStreet || s.addressLocality || s.addressRegion || s.postalCode || s.addressCountry;
 
-  const obj: any = {
+  const obj = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: s.name || undefined,
@@ -298,8 +284,7 @@ function buildOrg(s: OrgState) {
   return obj;
 }
 
-// ---------------- Page ----------------
-export default function SchemaGeneratorPage() {
+export default function SchemaGeneratorClient() {
   const [s, setS] = React.useState<State>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -310,15 +295,12 @@ export default function SchemaGeneratorPage() {
     return DEFAULT;
   });
 
-  const [copied, setCopied] = React.useState(false);
-
   React.useEffect(() => {
     localStorage.setItem("schema-gen-v1", JSON.stringify(s));
   }, [s]);
 
   function resetAll() {
     setS(DEFAULT);
-    setCopied(false);
   }
 
   // Build JSON-LD for active type
@@ -330,12 +312,6 @@ export default function SchemaGeneratorPage() {
 
   const output = React.useMemo(() => toScript(json, s.pretty), [json, s.pretty]);
 
-  async function copyOut() {
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  }
-
   // Soft validation counters
   const urlFields =
     s.active === "Article"
@@ -344,36 +320,31 @@ export default function SchemaGeneratorPage() {
         ? [s.product.url, ...lsSplit(s.product.images)]
         : [s.org.url, s.org.logo, ...lsSplit(s.org.sameAs)];
   const validUrls = urlFields.filter(isUrl).length;
-  const totalUrls = urlFields.filter((x) => x && x.trim()).length;
+  const totalUrls = urlFields.filter((x) => !!x?.trim()).length;
 
   return (
-    <MotionGlassCard>
+    <>
       {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Sparkles className="h-6 w-6" /> Schema Markup (JSON-LD)
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Generate valid JSON-LD for Article, Product, and Organization — copy or download in one
-            click.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button variant="outline" onClick={copyOut} className="gap-2">
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
-          </Button>
-          <Button onClick={() => downloadTxt("schema.jsonld.html", output)} className="gap-2">
-            <Download className="h-4 w-4" /> Download
-          </Button>
-        </div>
-      </GlassCard>
+      <ToolPageHeader
+        icon={Sparkles}
+        title="Schema Markup (JSON-LD)"
+        description="Generate valid JSON-LD for Article, Product, and Organization — copy or download in one click."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <CopyButton getText={output} />
+            <ExportTextButton
+              variant="default"
+              label="Download"
+              getText={() => output}
+              filename="schema-jsonld.txt"
+            />
+          </>
+        }
+      />
 
       {/* Type Switcher */}
-      <GlassCard>
+      <GlassCard className="mb-2">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Type</CardTitle>
           <CardDescription>Select a schema type and fill the fields below.</CardDescription>
@@ -381,31 +352,25 @@ export default function SchemaGeneratorPage() {
         <CardContent className="flex flex-wrap gap-2">
           {(
             [
-              ["Article", <BookText key="a" className="h-4 w-4" />],
-              ["Product", <Package key="p" className="h-4 w-4" />],
-              ["Organization", <Building2 key="o" className="h-4 w-4" />],
+              ["Article", BookText],
+              ["Product", Package],
+              ["Organization", Building2],
             ] as const
           ).map(([label, icon]) => (
-            <Button
+            <ActionButton
               key={label}
-              type="button"
+              icon={icon}
+              label={label}
               variant={s.active === label ? "default" : "outline"}
-              className="gap-2"
               onClick={() => setS((p) => ({ ...p, active: label }) as State)}
-            >
-              {icon} {label}
-            </Button>
-          ))}
-          <div className="ml-auto flex items-center gap-2">
-            <Label htmlFor="pretty" className="text-xs text-muted-foreground">
-              Pretty print
-            </Label>
-            <Switch
-              id="pretty"
-              checked={s.pretty}
-              onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))}
             />
-          </div>
+          ))}
+          <SwitchRow
+            className="ml-auto"
+            checked={s.pretty}
+            onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))}
+            label="Pretty print"
+          />
         </CardContent>
       </GlassCard>
 
@@ -414,7 +379,7 @@ export default function SchemaGeneratorPage() {
       {s.active === "Product" && <ProductForm s={s} setS={setS} />}
       {s.active === "Organization" && <OrgForm s={s} setS={setS} />}
 
-      <Separator />
+      <Separator className="my-4" />
 
       {/* Output & Tips */}
       <GlassCard>
@@ -427,18 +392,21 @@ export default function SchemaGeneratorPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
-            <Textarea readOnly className="min-h-[320px] font-mono text-sm" value={output} />
+            <TextareaField
+              readOnly
+              textareaClassName="min-h-[320px] font-mono text-sm"
+              value={output}
+            />
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={copyOut}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
-              </Button>
-              <Button
+              <CopyButton size="sm" getText={output} />
+              <ExportTextButton
+                icon={Download}
                 size="sm"
-                className="gap-2"
-                onClick={() => downloadTxt("schema.jsonld.html", output)}
-              >
-                <Download className="h-4 w-4" /> Download
-              </Button>
+                variant="default"
+                label="Download"
+                getText={() => output}
+                filename="schema-jsonld.txt"
+              />
               <Badge variant="secondary" className="font-normal">
                 URLs valid: {validUrls}/{totalUrls}
               </Badge>
@@ -475,11 +443,11 @@ export default function SchemaGeneratorPage() {
           </div>
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }
 
-// ---------------- Sub-forms ----------------
+// Sub-forms
 function ArticleForm({ s, setS }: { s: State; setS: React.Dispatch<React.SetStateAction<State>> }) {
   const a = s.article;
   const setA = (patch: Partial<ArticleState>) =>
@@ -496,127 +464,110 @@ function ArticleForm({ s, setS }: { s: State; setS: React.Dispatch<React.SetStat
       </CardHeader>
       <CardContent className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="a-title">Headline</Label>
-            <Input
-              id="a-title"
-              value={a.headline}
-              onChange={(e) => setA({ headline: e.target.value })}
-              placeholder="Compelling, descriptive headline"
-            />
-            <p className={`text-xs ${titleOk ? "text-muted-foreground" : "text-orange-600"}`}>
-              {titleOk ? "Good length" : "Aim for 20–110 characters"}
-            </p>
-          </div>
+          <InputField
+            id="a-title"
+            label="Headline"
+            placeholder="Compelling, descriptive headline"
+            value={a.headline}
+            onChange={(e) => setA({ headline: e.target.value })}
+            hint={
+              <span className={titleOk ? "text-muted-foreground" : "text-orange-600"}>
+                {titleOk ? "Good length" : "Aim for 20–110 characters"}
+              </span>
+            }
+          />
 
-          <div className="space-y-1.5">
-            <Label htmlFor="a-desc">Description</Label>
-            <Textarea
-              id="a-desc"
-              value={a.description}
-              onChange={(e) => setA({ description: e.target.value })}
-              placeholder="Concise summary of the article…"
-              className="min-h-[84px]"
+          <TextareaField
+            id="a-desc"
+            label="Description"
+            value={a.description}
+            onChange={(e) => setA({ description: e.target.value })}
+            placeholder="Concise summary of the article…"
+            textareaClassName="min-h-[84px]"
+          />
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <InputField
+              id="a-author"
+              label="Author name"
+              value={a.authorName}
+              onChange={(e) => setA({ authorName: e.target.value })}
+            />
+            <InputField
+              id="a-author-url"
+              type="url"
+              label="Author URL"
+              value={a.authorUrl}
+              onChange={(e) => setA({ authorUrl: e.target.value })}
             />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="a-author">Author name</Label>
-              <Input
-                id="a-author"
-                value={a.authorName}
-                onChange={(e) => setA({ authorName: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="a-author-url">Author URL</Label>
-              <Input
-                id="a-author-url"
-                value={a.authorUrl}
-                onChange={(e) => setA({ authorUrl: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="a-pub">Publisher</Label>
-              <Input
-                id="a-pub"
-                value={a.publisherName}
-                onChange={(e) => setA({ publisherName: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="a-logo">Publisher logo URL</Label>
-              <Input
-                id="a-logo"
-                value={a.publisherLogo}
-                onChange={(e) => setA({ publisherLogo: e.target.value })}
-              />
-            </div>
+            <InputField
+              id="a-pub"
+              label="Publisher"
+              value={a.publisherName}
+              onChange={(e) => setA({ publisherName: e.target.value })}
+            />
+            <InputField
+              id="a-logo"
+              label="Publisher logo URL"
+              value={a.publisherLogo}
+              onChange={(e) => setA({ publisherLogo: e.target.value })}
+            />
           </div>
         </div>
 
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="a-pubdate">Published</Label>
-              <Input
-                id="a-pubdate"
-                value={a.datePublished}
-                onChange={(e) => setA({ datePublished: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="a-mod">Modified</Label>
-              <Input
-                id="a-mod"
-                value={a.dateModified}
-                onChange={(e) => setA({ dateModified: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="a-url" className="flex items-center gap-2">
-              <LinkIcon className="h-4 w-4" /> Canonical URL
-            </Label>
-            <Input id="a-url" value={a.url} onChange={(e) => setA({ url: e.target.value })} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="a-img" className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" /> Images (one per line or comma)
-            </Label>
-            <Textarea
-              id="a-img"
-              value={a.images}
-              onChange={(e) => setA({ images: e.target.value })}
-              className="min-h-[84px] font-mono"
+            <InputField
+              type="date"
+              id="a-pubdate"
+              label="Published"
+              value={a.datePublished}
+              onChange={(e) => setA({ datePublished: e.target.value })}
             />
-            <p className="text-xs text-muted-foreground">
-              {imgCount} image{imgCount === 1 ? "" : "s"}
-            </p>
+            <InputField
+              type="date"
+              id="a-mod"
+              label="Modified"
+              value={a.dateModified}
+              onChange={(e) => setA({ dateModified: e.target.value })}
+            />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="a-sec">Section</Label>
-              <Input
-                id="a-sec"
-                value={a.section}
-                onChange={(e) => setA({ section: e.target.value })}
-              />
-            </div>
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <Label>Free to read</Label>
-              <Switch
-                checked={a.isAccessibleForFree}
-                onCheckedChange={(v) => setA({ isAccessibleForFree: v })}
-              />
-            </div>
+          <InputField
+            type="url"
+            id="a-url"
+            icon={LinkIcon}
+            label="Canonical URL"
+            value={a.url}
+            onChange={(e) => setA({ url: e.target.value })}
+          />
+
+          <TextareaField
+            id="a-img"
+            icon={ImageIcon}
+            label="Images (one per line or comma)"
+            description={`${imgCount} image${imgCount === 1 ? "" : "s"}`}
+            value={a.images}
+            onChange={(e) => setA({ images: e.target.value })}
+            textareaClassName="min-h-[84px] font-mono"
+          />
+
+          <div className="grid gap-3 sm:grid-cols-2 items-end">
+            <InputField
+              id="a-sec"
+              label="Section"
+              value={a.section}
+              onChange={(e) => setA({ section: e.target.value })}
+            />
+            <SwitchRow
+              className="h-fit"
+              label="Free to read"
+              checked={a.isAccessibleForFree}
+              onCheckedChange={(v) => setA({ isAccessibleForFree: v })}
+            />
           </div>
         </div>
       </CardContent>
@@ -631,161 +582,161 @@ function ProductForm({ s, setS }: { s: State; setS: React.Dispatch<React.SetStat
 
   const imgCount = lsSplit(p.images).length;
 
+  const AVAILABILITY_OPTIONS = [
+    { label: "In stock", value: "InStock" },
+    { label: "Out of stock", value: "OutOfStock" },
+    { label: "Pre-order", value: "PreOrder" },
+    { label: "Discontinued", value: "Discontinued" },
+    { label: "None", value: "none" },
+  ];
+
+  const CONDITION_OPTIONS = [
+    { label: "New", value: "NewCondition" },
+    { label: "Used", value: "UsedCondition" },
+    { label: "Refurbished", value: "RefurbishedCondition" },
+    { label: "None", value: "node" },
+  ];
+
   return (
     <GlassCard>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Product</CardTitle>
         <CardDescription>Core attributes, offers, and ratings.</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="p-name">Name</Label>
-            <Input id="p-name" value={p.name} onChange={(e) => setP({ name: e.target.value })} />
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="p-desc">Description</Label>
-            <Textarea
-              id="p-desc"
-              value={p.description}
-              onChange={(e) => setP({ description: e.target.value })}
-              className="min-h-[84px]"
-            />
-          </div>
+      <CardContent className="grid gap-6 md:grid-cols-2">
+        {/* Left column */}
+        <div className="space-y-4">
+          <InputField
+            id="p-name"
+            label="Name"
+            value={p.name}
+            onChange={(e) => setP({ name: e.target.value })}
+          />
+
+          <TextareaField
+            id="p-desc"
+            label="Description"
+            value={p.description}
+            onValueChange={(v) => setP({ description: v })}
+            rows={5}
+            minHeight="84px"
+          />
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="p-sku">SKU</Label>
-              <Input id="p-sku" value={p.sku} onChange={(e) => setP({ sku: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="p-brand">Brand</Label>
-              <Input
-                id="p-brand"
-                value={p.brand}
-                onChange={(e) => setP({ brand: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="p-url" className="flex items-center gap-2">
-                <LinkIcon className="h-4 w-4" /> URL
-              </Label>
-              <Input id="p-url" value={p.url} onChange={(e) => setP({ url: e.target.value })} />
-            </div>
+            <InputField
+              id="p-sku"
+              label="SKU"
+              value={p.sku}
+              onChange={(e) => setP({ sku: e.target.value })}
+            />
+            <InputField
+              id="p-brand"
+              label="Brand"
+              value={p.brand}
+              onChange={(e) => setP({ brand: e.target.value })}
+            />
+            <InputField
+              id="p-url"
+              icon={LinkIcon}
+              label="URL"
+              value={p.url}
+              onChange={(e) => setP({ url: e.target.value })}
+            />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="p-img" className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" /> Images (one per line or comma)
-            </Label>
-            <Textarea
-              id="p-img"
-              value={p.images}
-              onChange={(e) => setP({ images: e.target.value })}
-              className="min-h-[84px] font-mono"
-            />
-            <p className="text-xs text-muted-foreground">
-              {imgCount} image{imgCount === 1 ? "" : "s"}
-            </p>
-          </div>
+          <TextareaField
+            id="p-img"
+            icon={ImageIcon}
+            label="Images (one per line or comma)"
+            value={p.images}
+            description={`${imgCount} image${imgCount === 1 ? "" : "s"}`}
+            onValueChange={(v) => setP({ images: v })}
+            rows={5}
+            textareaClassName="font-mono"
+            minHeight="84px"
+          />
         </div>
 
+        {/* Right column */}
         <div className="space-y-4">
+          {/* Offer */}
           <div className="rounded-md border p-3 space-y-3">
             <Label className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" /> Offer
             </Label>
+
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="p-price">Price</Label>
-                <Input
-                  id="p-price"
-                  value={p.price}
-                  onChange={(e) => setP({ price: e.target.value })}
-                  placeholder="199.99"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="p-currency">Currency</Label>
-                <Input
-                  id="p-currency"
-                  value={p.priceCurrency}
-                  onChange={(e) => setP({ priceCurrency: e.target.value })}
-                  placeholder="USD"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="p-seller">Seller</Label>
-                <Input
-                  id="p-seller"
-                  value={p.seller}
-                  onChange={(e) => setP({ seller: e.target.value })}
-                />
-              </div>
+              <InputField
+                id="p-price"
+                type="number"
+                label="Price"
+                value={p.price}
+                onChange={(e) => setP({ price: e.target.value })}
+                placeholder="199.99"
+              />
+              <InputField
+                id="p-currency"
+                label="Currency"
+                value={p.priceCurrency}
+                onChange={(e) => setP({ priceCurrency: e.target.value })}
+                placeholder="USD"
+              />
+              <InputField
+                id="p-seller"
+                label="Seller"
+                value={p.seller}
+                onChange={(e) => setP({ seller: e.target.value })}
+              />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Availability</Label>
-                <div className="flex flex-wrap gap-2">
-                  {(["InStock", "OutOfStock", "PreOrder", "Discontinued", ""] as const).map((a) => (
-                    <Button
-                      key={a || "none"}
-                      type="button"
-                      size="sm"
-                      variant={p.availability === a ? "default" : "outline"}
-                      onClick={() => setP({ availability: a })}
-                    >
-                      {a || "none"}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Condition</Label>
-                <div className="flex flex-wrap gap-2">
-                  {(["NewCondition", "UsedCondition", "RefurbishedCondition", ""] as const).map(
-                    (c) => (
-                      <Button
-                        key={c || "none"}
-                        type="button"
-                        size="sm"
-                        variant={p.condition === c ? "default" : "outline"}
-                        onClick={() => setP({ condition: c })}
-                      >
-                        {c || "none"}
-                      </Button>
-                    ),
-                  )}
-                </div>
-              </div>
+              <SelectField
+                id="p-availability"
+                label="Availability"
+                placeholder="Select availability"
+                options={AVAILABILITY_OPTIONS}
+                allowClear
+                clearLabel="Clear"
+                value={p.availability}
+                onValueChange={(v) => setP({ availability: (v as typeof p.availability) ?? "" })}
+              />
+
+              <SelectField
+                id="p-condition"
+                label="Condition"
+                placeholder="Select condition"
+                options={CONDITION_OPTIONS}
+                allowClear
+                clearLabel="Clear"
+                value={p.condition}
+                onValueChange={(v) => setP({ condition: (v as typeof p.condition) ?? "" })}
+              />
             </div>
           </div>
 
+          {/* Aggregate Rating */}
           <div className="rounded-md border p-3 space-y-3">
             <Label className="flex items-center gap-2">
               <Star className="h-4 w-4" /> Aggregate Rating
             </Label>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="p-rating">Rating value</Label>
-                <Input
-                  id="p-rating"
-                  value={p.ratingValue}
-                  onChange={(e) => setP({ ratingValue: e.target.value })}
-                  placeholder="4.6"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="p-reviews">Review count</Label>
-                <Input
-                  id="p-reviews"
-                  value={p.reviewCount}
-                  onChange={(e) => setP({ reviewCount: e.target.value })}
-                  placeholder="128"
-                />
-              </div>
+              <InputField
+                id="p-rating"
+                type="number"
+                label="Rating value"
+                value={p.ratingValue}
+                onChange={(e) => setP({ ratingValue: e.target.value })}
+                placeholder="4.6"
+              />
+              <InputField
+                id="p-reviews"
+                type="number"
+                label="Review count"
+                value={p.reviewCount}
+                onChange={(e) => setP({ reviewCount: e.target.value })}
+                placeholder="128"
+              />
             </div>
             <p className="text-xs text-muted-foreground">
               Provide both rating value and review count to enable rich results.
@@ -810,116 +761,108 @@ function OrgForm({ s, setS }: { s: State; setS: React.Dispatch<React.SetStateAct
         <CardTitle className="text-base">Organization</CardTitle>
         <CardDescription>Brand identity, social profiles, contact, and address.</CardDescription>
       </CardHeader>
+
       <CardContent className="grid gap-6 md:grid-cols-2">
+        {/* Left column */}
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="o-name">Name</Label>
-            <Input id="o-name" value={o.name} onChange={(e) => setO({ name: e.target.value })} />
-          </div>
+          <InputField
+            id="o-name"
+            label="Name"
+            value={o.name}
+            onChange={(e) => setO({ name: e.target.value })}
+          />
+
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="o-url" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" /> URL
-              </Label>
-              <Input id="o-url" value={o.url} onChange={(e) => setO({ url: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="o-logo">Logo URL</Label>
-              <Input id="o-logo" value={o.logo} onChange={(e) => setO({ logo: e.target.value })} />
-            </div>
+            <InputField
+              id="o-url"
+              icon={Globe}
+              label="URL"
+              value={o.url}
+              onChange={(e) => setO({ url: e.target.value })}
+            />
+            <InputField
+              id="o-logo"
+              label="Logo URL"
+              value={o.logo}
+              onChange={(e) => setO({ logo: e.target.value })}
+            />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="o-same" className="flex items-center gap-2">
-              <Users className="h-4 w-4" /> Social profiles (one per line or comma)
-            </Label>
-            <Textarea
-              id="o-same"
-              value={o.sameAs}
-              onChange={(e) => setO({ sameAs: e.target.value })}
-              className="min-h-[84px] font-mono"
-            />
-            <p className="text-xs text-muted-foreground">
-              {sameCount} profile{sameCount === 1 ? "" : "s"}
-            </p>
-          </div>
+          <TextareaField
+            id="o-same"
+            icon={Users}
+            label="Social profiles (one per line or comma)"
+            description={`${sameCount} profile${sameCount === 1 ? "" : "s"}`}
+            value={o.sameAs}
+            onValueChange={(v) => setO({ sameAs: v })}
+            rows={9}
+            textareaClassName="font-mono"
+            minHeight="200px"
+          />
         </div>
 
+        {/* Right column */}
         <div className="space-y-4">
+          {/* Contact */}
           <div className="rounded-md border p-3 space-y-3">
             <Label>Contact</Label>
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="o-ctype">Type</Label>
-                <Input
-                  id="o-ctype"
-                  value={o.contactType}
-                  onChange={(e) => setO({ contactType: e.target.value })}
-                  placeholder="customer support"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="o-tel">Telephone</Label>
-                <Input
-                  id="o-tel"
-                  value={o.telephone}
-                  onChange={(e) => setO({ telephone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="o-email">Email</Label>
-                <Input
-                  id="o-email"
-                  value={o.email}
-                  onChange={(e) => setO({ email: e.target.value })}
-                />
-              </div>
+              <InputField
+                id="o-ctype"
+                label="Type"
+                placeholder="customer support"
+                value={o.contactType}
+                onChange={(e) => setO({ contactType: e.target.value })}
+              />
+              <InputField
+                id="o-tel"
+                label="Telephone"
+                value={o.telephone}
+                onChange={(e) => setO({ telephone: e.target.value })}
+              />
+              <InputField
+                id="o-email"
+                label="Email"
+                value={o.email}
+                onChange={(e) => setO({ email: e.target.value })}
+              />
             </div>
           </div>
 
+          {/* Address */}
           <div className="rounded-md border p-3 space-y-3">
             <Label>Address</Label>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="o-street">Street</Label>
-                <Input
-                  id="o-street"
-                  value={o.addressStreet}
-                  onChange={(e) => setO({ addressStreet: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="o-city">City</Label>
-                <Input
-                  id="o-city"
-                  value={o.addressLocality}
-                  onChange={(e) => setO({ addressLocality: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="o-region">State/Region</Label>
-                <Input
-                  id="o-region"
-                  value={o.addressRegion}
-                  onChange={(e) => setO({ addressRegion: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="o-postal">Postal code</Label>
-                <Input
-                  id="o-postal"
-                  value={o.postalCode}
-                  onChange={(e) => setO({ postalCode: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="o-country">Country</Label>
-                <Input
-                  id="o-country"
-                  value={o.addressCountry}
-                  onChange={(e) => setO({ addressCountry: e.target.value })}
-                />
-              </div>
+              <InputField
+                id="o-street"
+                label="Street"
+                value={o.addressStreet}
+                onChange={(e) => setO({ addressStreet: e.target.value })}
+              />
+              <InputField
+                id="o-city"
+                label="City"
+                value={o.addressLocality}
+                onChange={(e) => setO({ addressLocality: e.target.value })}
+              />
+              <InputField
+                id="o-region"
+                label="State/Region"
+                value={o.addressRegion}
+                onChange={(e) => setO({ addressRegion: e.target.value })}
+              />
+              <InputField
+                id="o-postal"
+                label="Postal code"
+                value={o.postalCode}
+                onChange={(e) => setO({ postalCode: e.target.value })}
+              />
+              <InputField
+                id="o-country"
+                label="Country"
+                value={o.addressCountry}
+                onChange={(e) => setO({ addressCountry: e.target.value })}
+              />
             </div>
           </div>
         </div>

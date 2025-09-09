@@ -27,7 +27,7 @@ type BaseProps = Omit<
   value?: string | number | boolean;
   defaultValue?: string | number | boolean;
   requiredMark?: boolean;
-  hint?: string;
+  hint?: React.ReactNode;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   type?: HTMLInputTypeAttribute;
   parseNumber?: boolean;
