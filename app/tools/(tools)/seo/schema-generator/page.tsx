@@ -587,14 +587,14 @@ function ProductForm({ s, setS }: { s: State; setS: React.Dispatch<React.SetStat
     { label: "Out of stock", value: "OutOfStock" },
     { label: "Pre-order", value: "PreOrder" },
     { label: "Discontinued", value: "Discontinued" },
-    { label: "None", value: "none" },
+    { label: "None", value: " " },
   ];
 
   const CONDITION_OPTIONS = [
     { label: "New", value: "NewCondition" },
     { label: "Used", value: "UsedCondition" },
     { label: "Refurbished", value: "RefurbishedCondition" },
-    { label: "None", value: "node" },
+    { label: "None", value: " " },
   ];
 
   return (

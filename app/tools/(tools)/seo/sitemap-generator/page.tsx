@@ -1,57 +1,63 @@
 "use client";
 
 import {
+  AlertTriangle,
   Calendar,
-  Check,
-  Copy,
   Download,
   FileCode,
   Files,
+  Info,
   Link as LinkIcon,
   ListChecks,
-  RotateCcw,
   Settings,
   Wand2,
 } from "lucide-react";
 import * as React from "react";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
-// ---------------- Types ----------------
+/* Types */
 type ChangeFreq = "" | "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
 
 type Row = {
   loc: string;
   lastmod?: string;
   changefreq?: ChangeFreq;
-  priority?: string; // keep as string to preserve formatting (0.0-1.0)
+  priority?: string;
 };
 
 type State = {
   // Input
   text: string;
-  baseUrl: string; // prepended to relative paths
+  baseUrl: string;
   keepTrailingSlash: boolean;
   forceHttps: boolean;
 
   // Defaults
   defaultChangefreq: ChangeFreq;
-  defaultPriority: string; // '', '0.80', etc.
-  lastmodMode: "none" | "today" | "fromCSV"; // CSV or pipe format
-  dateFormat: "iso"; // reserved for future formats
+  defaultPriority: string;
+  lastmodMode: "none" | "today" | "fromCSV";
+  dateFormat: "iso";
 
   // Output
   pretty: boolean;
-  maxUrlsPerFile: number; // split threshold (<= 50,000 recommended)
-  filename: string; // sitemap.xml base name
-  makeIndex: boolean; // create sitemap index if split
+  maxUrlsPerFile: number;
+  filename: string;
+  makeIndex: boolean;
 
   // UI
   includeSampleHeaders: boolean;
@@ -59,7 +65,9 @@ type State = {
 
 type BuiltFile = { name: string; xml: string; bytes: number };
 
-// ---------------- Defaults ----------------
+type Option = { label: React.ReactNode; value: string | number; disabled?: boolean };
+
+/* Defaults */
 const DEFAULT: State = {
   text: `https://example.com/
 https://example.com/about
@@ -84,12 +92,24 @@ https://example.com/about
   includeSampleHeaders: false,
 };
 
-// ---------------- Helpers ----------------
-const uid = () => Math.random().toString(36).slice(2, 9);
+/* Select options */
+const CHANGEFREQ_OPTIONS: Option[] = [
+  { label: "None", value: " " },
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Monthly", value: "monthly" },
+  { label: "Yearly", value: "yearly" },
+];
 
+const LASTMOD_OPTIONS: Option[] = [
+  { label: "None", value: " " },
+  { label: "Today", value: "today" },
+  { label: "From CSV", value: "fromCSV" },
+];
+
+/* Helpers */
 function todayISO() {
   const d = new Date();
-  // yyyy-mm-dd
   return d.toISOString().slice(0, 10);
 }
 
@@ -114,16 +134,14 @@ function normalizeUrl(u: string, opts: { keepSlash: boolean; forceHttps: boolean
   try {
     const url = new URL(u);
     if (opts.forceHttps) url.protocol = "https:";
-    // normalize trailing slash
     const isRoot = url.pathname === "" || url.pathname === "/";
     if (!isRoot) {
       if (opts.keepSlash) {
         if (!url.pathname.endsWith("/")) url.pathname += "/";
-      } else {
-        if (url.pathname.endsWith("/")) url.pathname = url.pathname.replace(/\/+$/, "");
+      } else if (url.pathname.endsWith("/")) {
+        url.pathname = url.pathname.replace(/\/+$/, "");
       }
     }
-    // remove default ports
     if (
       (url.protocol === "https:" && url.port === "443") ||
       (url.protocol === "http:" && url.port === "80")
@@ -136,7 +154,6 @@ function normalizeUrl(u: string, opts: { keepSlash: boolean; forceHttps: boolean
   }
 }
 
-// very small, safe escaper for XML text nodes/attrs
 function x(s: string) {
   return s
     .replaceAll("&", "&amp;")
@@ -148,13 +165,8 @@ function x(s: string) {
 
 function parseLineToRow(line: string, baseUrl: string): Row | null {
   const raw = line.trim();
-  if (!raw) return null;
-  if (raw.startsWith("#")) return null;
+  if (!raw || raw.startsWith("#")) return null;
 
-  // Accept 3 formats:
-  // 1) plain URL or path
-  // 2) pipe-separated: url | lastmod | changefreq | priority
-  // 3) csv-like: url,lastmod,changefreq,priority
   let parts: string[] = [];
   if (raw.includes("|")) parts = raw.split("|").map((s) => s.trim());
   else if (raw.includes(",")) parts = raw.split(",").map((s) => s.trim());
@@ -173,7 +185,6 @@ function parseLineToRow(line: string, baseUrl: string): Row | null {
   };
 }
 
-// Build rows from input, normalize & dedupe, discard invalid
 function buildRows(s: State): Row[] {
   const lines = s.text.split(/\r?\n/);
   const rows: Row[] = [];
@@ -188,9 +199,7 @@ function buildRows(s: State): Row[] {
       forceHttps: s.forceHttps,
     });
 
-    // validate absolute HTTP(S)
     if (!/^https?:\/\//i.test(normalized)) continue;
-
     if (seen.has(normalized)) continue;
     seen.add(normalized);
 
@@ -202,6 +211,15 @@ function buildRows(s: State): Row[] {
     });
   }
   return rows;
+}
+
+function clampPriority(p: string) {
+  const n = Number(p);
+  if (Number.isFinite(n)) {
+    const c = Math.max(0, Math.min(1, n));
+    return c.toFixed(2);
+  }
+  return "";
 }
 
 function applyDefaults(rows: Row[], s: State): Row[] {
@@ -220,9 +238,8 @@ function applyDefaults(rows: Row[], s: State): Row[] {
       } else if (!rr.lastmod) {
         // leave empty
       } else {
-        // any other format -> try Date parse
         const d = new Date(rr.lastmod);
-        if (!isNaN(d.getTime())) rr.lastmod = d.toISOString().slice(0, 10);
+        if (!Number.isNaN(d.getTime())) rr.lastmod = d.toISOString().slice(0, 10);
         else rr.lastmod = undefined;
       }
     } else {
@@ -241,15 +258,6 @@ function applyDefaults(rows: Row[], s: State): Row[] {
   return out;
 }
 
-function clampPriority(p: string) {
-  const n = Number(p);
-  if (Number.isFinite(n)) {
-    const c = Math.max(0, Math.min(1, n));
-    return c.toFixed(2);
-  }
-  return "";
-}
-
 function chunk<T>(arr: T[], size: number) {
   if (size <= 0) return [arr];
   const out: T[][] = [];
@@ -258,9 +266,9 @@ function chunk<T>(arr: T[], size: number) {
 }
 
 function buildSitemapXML(urlset: Row[], pretty: boolean) {
-  const head =
-    `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+  const head = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
   const tail = `</urlset>`;
 
   const urls = urlset.map((r) => {
@@ -276,14 +284,14 @@ function buildSitemapXML(urlset: Row[], pretty: boolean) {
   });
 
   const body = urls.join("\n");
-  const raw = head + (body ? body + "\n" : "") + tail;
-  return pretty ? raw + "\n" : raw;
+  const raw = `${head}${body ? `${body}\n` : ""}${tail}`;
+  return pretty ? `${raw}\n` : raw;
 }
 
 function buildIndexXML(parts: { loc: string; lastmod?: string }[], pretty: boolean) {
-  const head =
-    `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+  const head = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
   const tail = `</sitemapindex>`;
 
   const nodes = parts.map((p) => {
@@ -297,29 +305,69 @@ function buildIndexXML(parts: { loc: string; lastmod?: string }[], pretty: boole
   });
 
   const body = nodes.join("\n");
-  const raw = head + (body ? body + "\n" : "") + tail;
-  return pretty ? raw + "\n" : raw;
+  const raw = `${head}${body ? `${body}\n` : ""}${tail}`;
+  return pretty ? `${raw}\n` : raw;
 }
 
 function toBytes(s: string) {
-  // rough utf-8 size
   return new TextEncoder().encode(s).length;
 }
 
-function downloadTxt(name: string, content: string) {
-  const blob = new Blob([content], { type: "application/xml;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+/* Issues (live checks) */
+type Issue = { level: "error" | "warn" | "info"; message: string };
+
+function computeIssues(rows: Row[], s: State, files: BuiltFile[]): Issue[] {
+  const issues: Issue[] = [];
+
+  if (!/\.xml$/i.test(s.filename)) {
+    issues.push({ level: "warn", message: `Filename "${s.filename}" doesn’t end with .xml.` });
+  }
+
+  if (s.baseUrl.trim()) {
+    try {
+      new URL(s.baseUrl);
+    } catch {
+      issues.push({
+        level: "warn",
+        message: `Base URL "${s.baseUrl}" is not a valid absolute URL.`,
+      });
+    }
+  }
+
+  if (rows.length > 50000) {
+    issues.push({
+      level: "warn",
+      message: `Total URLs (${rows.length}) exceed 50,000; output will be split.`,
+    });
+  }
+
+  const oversized = files.filter((f) => f.bytes > 50 * 1024 * 1024).length;
+  if (oversized) {
+    issues.push({
+      level: "warn",
+      message: `${oversized} file(s) exceed 50MB uncompressed. Consider more splits.`,
+    });
+  }
+
+  if (s.defaultPriority.trim()) {
+    const n = Number(s.defaultPriority);
+    if (Number.isNaN(n) || n < 0 || n > 1) {
+      issues.push({
+        level: "warn",
+        message: `Default priority "${s.defaultPriority}" is outside 0–1; it will be clamped.`,
+      });
+    }
+  }
+
+  if (s.lastmodMode === "none") {
+    issues.push({ level: "info", message: "lastmod is disabled (mode: none)." });
+  }
+
+  return issues;
 }
 
-// ---------------- Page ----------------
-export default function SitemapGeneratorPage() {
+/* Component */
+export default function SitemapGeneratorClient() {
   const [s, setS] = React.useState<State>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -330,8 +378,6 @@ export default function SitemapGeneratorPage() {
     return DEFAULT;
   });
 
-  const [copied, setCopied] = React.useState<string | null>(null);
-
   React.useEffect(() => {
     localStorage.setItem("sitemap-gen-v1", JSON.stringify(s));
   }, [s]);
@@ -340,20 +386,19 @@ export default function SitemapGeneratorPage() {
   const rows = React.useMemo(() => applyDefaults(baseRows, s), [baseRows, s]);
 
   const parts = React.useMemo(() => {
-    const chunks = chunk(rows, Math.max(1, Math.min(50000, s.maxUrlsPerFile || 50000)));
+    const max = Math.max(1, Math.min(50000, s.maxUrlsPerFile || 50000));
+    const chunks = chunk(rows, max);
+
     const files: BuiltFile[] = chunks.map((ch, i) => {
       const xml = buildSitemapXML(ch, s.pretty);
-      const name =
-        chunks.length === 1 ? s.filename : s.filename.replace(/\.xml$/i, "") + `-${i + 1}.xml`;
+      const base = s.filename.replace(/\.xml$/i, "");
+      const name = chunks.length === 1 ? s.filename : `${base}-${i + 1}.xml`;
       return { name, xml, bytes: toBytes(xml) };
     });
 
-    // Index
     if (s.makeIndex && files.length > 1) {
-      // index file name
-      const indexName = s.filename.replace(/\.xml$/i, "") + "-index.xml";
-
-      // Determine each part's web URL if possible (heuristic: baseUrl + / + file name)
+      // Index
+      const indexName = `${s.filename.replace(/\.xml$/i, "")}-index.xml`;
       const base = s.baseUrl?.replace(/\/+$/, "");
       const indexEntries = files.map((f) => ({
         loc: base ? `${base}/${f.name}` : f.name,
@@ -367,16 +412,10 @@ export default function SitemapGeneratorPage() {
   }, [rows, s.pretty, s.maxUrlsPerFile, s.filename, s.makeIndex, s.baseUrl]);
 
   const preview = parts[0];
+  const issues = React.useMemo(() => computeIssues(rows, s, parts), [rows, s, parts]);
 
   function resetAll() {
     setS(DEFAULT);
-    setCopied(null);
-  }
-
-  async function copy(xml: string, key = "xml") {
-    await navigator.clipboard.writeText(xml);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 1200);
   }
 
   const urlCount = rows.length;
@@ -384,43 +423,26 @@ export default function SitemapGeneratorPage() {
   const totalBytes = parts.reduce((a, b) => a + b.bytes, 0);
 
   return (
-    <MotionGlassCard>
+    <>
       {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <FileCode className="h-6 w-6" /> Sitemap.xml Generator
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Build XML sitemaps from URL lists. Normalize, dedupe, set defaults, and export split
-            files + optional index.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetAll} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          {preview && (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => copy(preview.xml, "preview")}
-                className="gap-2"
-              >
-                {copied === "preview" ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}{" "}
-                Copy Preview
-              </Button>
-              <Button onClick={() => downloadTxt(preview.name, preview.xml)} className="gap-2">
-                <Download className="h-4 w-4" /> Download Preview
-              </Button>
-            </>
-          )}
-        </div>
-      </GlassCard>
+      <ToolPageHeader
+        icon={FileCode}
+        title="Sitemap.xml Generator"
+        description="Build XML sitemaps from URL lists."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <CopyButton disabled={!preview} getText={preview?.xml ?? " "} />
+            <ExportTextButton
+              variant="default"
+              disabled={!preview}
+              label="Download"
+              getText={() => preview?.xml ?? " "}
+              filename={preview?.name ?? "sitemap.xml"}
+            />
+          </>
+        }
+      />
 
       {/* Input */}
       <GlassCard>
@@ -432,12 +454,15 @@ export default function SitemapGeneratorPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <Textarea
+          <TextareaField
+            label="URLs"
             value={s.text}
-            onChange={(e) => setS((p) => ({ ...p, text: e.target.value }))}
-            className="min-h-[200px] font-mono"
+            onValueChange={(v) => setS((p) => ({ ...p, text: v }))}
+            textareaClassName="font-mono"
+            rows={10}
             placeholder={`https://example.com/\n/about | 2025-01-18 | weekly | 0.7\n/blog/post-1,2024-12-20,monthly,0.5`}
           />
+
           {s.includeSampleHeaders && (
             <div className="rounded-md border p-3 text-xs text-muted-foreground">
               Formats supported:
@@ -460,59 +485,47 @@ export default function SitemapGeneratorPage() {
             </div>
           )}
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="base" className="flex items-center gap-2">
-                <LinkIcon className="h-4 w-4" /> Base URL (for relative paths)
-              </Label>
-              <Input
-                id="base"
-                value={s.baseUrl}
-                onChange={(e) => setS((p) => ({ ...p, baseUrl: e.target.value.trim() }))}
-                placeholder="https://example.com"
+          <div className="grid gap-3 md:grid-cols-2 items-end">
+            <InputField
+              id="base"
+              icon={LinkIcon}
+              label="Base URL (for relative paths)"
+              value={s.baseUrl}
+              onChange={(e) => setS((p) => ({ ...p, baseUrl: e.target.value.trim() }))}
+              placeholder="https://example.com"
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <SwitchRow
+                className="h-fit"
+                label="Keep trailing slash"
+                checked={s.keepTrailingSlash}
+                onCheckedChange={(v) => setS((p) => ({ ...p, keepTrailingSlash: v }))}
               />
-            </div>
-            <div className="rounded-md border p-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center justify-between">
-                  <Label>Keep trailing slash</Label>
-                  <Switch
-                    checked={s.keepTrailingSlash}
-                    onCheckedChange={(v) => setS((p) => ({ ...p, keepTrailingSlash: v }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>Force HTTPS</Label>
-                  <Switch
-                    checked={s.forceHttps}
-                    onCheckedChange={(v) => setS((p) => ({ ...p, forceHttps: v }))}
-                  />
-                </div>
-              </div>
+              <SwitchRow
+                className="h-fit"
+                label="Force HTTPS"
+                checked={s.forceHttps}
+                onCheckedChange={(v) => setS((p) => ({ ...p, forceHttps: v }))}
+              />
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs">
-            <Button
-              type="button"
-              size="sm"
+            <ActionButton
+              icon={Wand2}
+              label="Tips"
               variant="outline"
-              className="gap-2"
-              onClick={() =>
-                setS((p) => ({
-                  ...p,
-                  includeSampleHeaders: !p.includeSampleHeaders,
-                }))
-              }
-            >
-              <Wand2 className="h-4 w-4" /> Tips
-            </Button>
+              onClick={() => setS((p) => ({ ...p, includeSampleHeaders: !p.includeSampleHeaders }))}
+            />
             <Badge variant="secondary" className="font-normal">
               Parsed: {baseRows.length} raw → {rows.length} valid
             </Badge>
           </div>
         </CardContent>
       </GlassCard>
+
+      <Separator className="my-4" />
 
       {/* Defaults & Settings */}
       <GlassCard>
@@ -522,120 +535,92 @@ export default function SitemapGeneratorPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
+            {/* Defaults */}
             <div className="rounded-md border p-3 space-y-3">
               <Label className="flex items-center gap-2">
                 <Settings className="h-4 w-4" /> Defaults
               </Label>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label>changefreq</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {(["", "daily", "weekly", "monthly", "yearly"] as ChangeFreq[]).map((f) => (
-                      <Button
-                        key={f || "none"}
-                        type="button"
-                        size="sm"
-                        variant={s.defaultChangefreq === f ? "default" : "outline"}
-                        onClick={() => setS((p) => ({ ...p, defaultChangefreq: f }))}
-                      >
-                        {f || "none"}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="prio">priority</Label>
-                  <Input
-                    id="prio"
-                    value={s.defaultPriority}
-                    onChange={(e) => setS((p) => ({ ...p, defaultPriority: e.target.value }))}
-                    placeholder="e.g., 0.80"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>lastmod</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {(["none", "today", "fromCSV"] as const).map((m) => (
-                      <Button
-                        key={m}
-                        type="button"
-                        size="sm"
-                        variant={s.lastmodMode === m ? "default" : "outline"}
-                        onClick={() => setS((p) => ({ ...p, lastmodMode: m }))}
-                      >
-                        {m}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+
+              <div className="grid gap-3 sm:grid-cols-3 items-end">
+                <SelectField
+                  id="def-changefreq"
+                  label="Change Frequency"
+                  placeholder="none"
+                  options={CHANGEFREQ_OPTIONS}
+                  value={s.defaultChangefreq}
+                  onValueChange={(v) =>
+                    setS((p) => ({ ...p, defaultChangefreq: (v as ChangeFreq) ?? "" }))
+                  }
+                />
+
+                <InputField
+                  id="prio"
+                  label="Priority"
+                  value={s.defaultPriority}
+                  onChange={(e) => setS((p) => ({ ...p, defaultPriority: e.target.value }))}
+                  placeholder="e.g., 0.80"
+                />
+
+                <SelectField
+                  id="def-lastmod"
+                  label="Last Modified"
+                  placeholder="none"
+                  options={LASTMOD_OPTIONS}
+                  value={s.lastmodMode}
+                  onValueChange={(v) =>
+                    setS((p) => ({ ...p, lastmodMode: (v as State["lastmodMode"]) ?? "none" }))
+                  }
+                />
               </div>
             </div>
 
+            {/* Output files */}
             <div className="rounded-md border p-3 space-y-3">
               <Label className="flex items-center gap-2">
                 <Files className="h-4 w-4" /> Output files
               </Label>
+
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="fname">Base filename</Label>
-                  <Input
-                    id="fname"
-                    value={s.filename}
-                    onChange={(e) =>
-                      setS((p) => ({ ...p, filename: e.target.value || "sitemap.xml" }))
-                    }
-                    placeholder="sitemap.xml"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="max">Max URLs per file</Label>
-                  <Input
-                    id="max"
-                    type="number"
-                    min={1}
-                    max={50000}
-                    value={s.maxUrlsPerFile}
-                    onChange={(e) =>
-                      setS((p) => ({
-                        ...p,
-                        maxUrlsPerFile: Math.max(
-                          1,
-                          Math.min(50000, Number(e.target.value) || 50000),
-                        ),
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Create index (sitemapindex)</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Adds <span className="font-mono">*-index.xml</span> linking all parts.
-                  </p>
-                </div>
-                <Switch
-                  checked={s.makeIndex}
-                  onCheckedChange={(v) => setS((p) => ({ ...p, makeIndex: v }))}
+                <InputField
+                  id="fname"
+                  label="Base filename"
+                  value={s.filename}
+                  onChange={(e) =>
+                    setS((p) => ({ ...p, filename: e.target.value || "sitemap.xml" }))
+                  }
+                  placeholder="sitemap.xml"
+                />
+                <InputField
+                  id="max"
+                  label="Max URLs per file"
+                  type="number"
+                  value={s.maxUrlsPerFile}
+                  onChange={(e) =>
+                    setS((p) => ({
+                      ...p,
+                      maxUrlsPerFile: Math.max(1, Math.min(50000, Number(e.target.value) || 50000)),
+                    }))
+                  }
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Pretty print</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Appends a newline; keeps layout readable.
-                  </p>
-                </div>
-                <Switch
-                  checked={s.pretty}
-                  onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))}
-                />
-              </div>
+              <SwitchRow
+                label="Create index (sitemapindex)"
+                hint="Adds *-index.xml linking all parts."
+                checked={s.makeIndex}
+                onCheckedChange={(v) => setS((p) => ({ ...p, makeIndex: v }))}
+              />
+
+              <SwitchRow
+                label="Pretty print"
+                hint="Appends a newline; keeps layout readable."
+                checked={s.pretty}
+                onCheckedChange={(v) => setS((p) => ({ ...p, pretty: v }))}
+              />
             </div>
           </div>
 
-          {/* Stats & Quick Actions */}
+          {/* Stats, Issues & Quick Actions */}
           <div className="space-y-4">
             <div className="rounded-md border p-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -651,20 +636,65 @@ export default function SitemapGeneratorPage() {
               </p>
             </div>
 
+            {issues.length > 0 && (
+              <div className="rounded-md border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Issues</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Live checks based on your input.
+                    </p>
+                  </div>
+                  <Badge variant="outline">{issues.length}</Badge>
+                </div>
+
+                <ul className="space-y-1">
+                  {issues.map((it, i) => (
+                    <li key={i as number} className="flex items-start gap-2 text-sm">
+                      {it.level === "error" ? (
+                        <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
+                      ) : it.level === "warn" ? (
+                        <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5" />
+                      ) : (
+                        <Info className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      )}
+                      <span
+                        className={
+                          it.level === "error"
+                            ? "text-red-700"
+                            : it.level === "warn"
+                              ? "text-orange-700"
+                              : "text-muted-foreground"
+                        }
+                      >
+                        {it.message}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {parts.length > 0 && (
               <div className="rounded-md border p-3">
                 <div className="flex items-center justify-between">
-                  <Label>Download all</Label>
+                  <div className="space-y-0.5">
+                    <Label>Download all</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Each part as a separate XML file.
+                    </p>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {parts.map((f, i) => (
-                      <Button
-                        key={f.name + i}
+                      <ExportTextButton
+                        key={f.name + (i as number)}
                         size="sm"
-                        variant="outline"
-                        onClick={() => downloadTxt(f.name, f.xml)}
-                      >
-                        <Download className="h-4 w-4 mr-1" /> {f.name}
-                      </Button>
+                        variant="default"
+                        icon={Download}
+                        label={f.name}
+                        filename={f.name}
+                        getText={() => f.xml}
+                      />
                     ))}
                   </div>
                 </div>
@@ -690,7 +720,7 @@ export default function SitemapGeneratorPage() {
         </CardContent>
       </GlassCard>
 
-      <Separator />
+      <Separator className="my-4" />
 
       {/* Preview */}
       <GlassCard>
@@ -700,36 +730,22 @@ export default function SitemapGeneratorPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
-            <Textarea
+            <TextareaField
               readOnly
-              className="min-h-[320px] font-mono text-sm"
+              rows={16}
+              textareaClassName="font-mono text-sm"
               value={preview ? preview.xml : "<urlset />"}
             />
             <div className="flex flex-wrap gap-2">
-              {preview && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => copy(preview.xml, "preview2")}
-                  >
-                    {copied === "preview2" ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}{" "}
-                    Copy
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => downloadTxt(preview.name, preview.xml)}
-                  >
-                    <Download className="h-4 w-4" /> Download
-                  </Button>
-                </>
-              )}
+              <CopyButton size="sm" disabled={!preview} getText={preview?.xml ?? ""} />
+              <ExportTextButton
+                variant="default"
+                size="sm"
+                icon={Download}
+                label="Download"
+                getText={() => preview?.xml ?? ""}
+                filename={preview?.name ?? ""}
+              />
             </div>
           </div>
 
@@ -769,6 +785,6 @@ export default function SitemapGeneratorPage() {
           </div>
         </CardContent>
       </GlassCard>
-    </MotionGlassCard>
+    </>
   );
 }
