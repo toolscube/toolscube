@@ -64,7 +64,7 @@ export default function ImageConvertPage() {
   React.useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       const item = e.clipboardData?.files?.[0];
-      if (item && item.type.startsWith("image/")) onDrop([item]);
+      if (item?.type.startsWith("image/")) onDrop([item]);
     }
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);

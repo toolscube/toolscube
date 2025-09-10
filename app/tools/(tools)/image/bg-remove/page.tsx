@@ -96,7 +96,7 @@ export default function BgRemovePage() {
   React.useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       const item = e.clipboardData?.files?.[0];
-      if (item && item.type.startsWith("image/")) onDrop([item]);
+      if (item?.type.startsWith("image/")) onDrop([item]);
     }
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
@@ -605,8 +605,8 @@ function loadImageMeta(url: string): Promise<{ width: number; height: number }> 
 // change the function signature only
 async function initCanvases(
   srcUrl: string,
-  w: number,
-  h: number,
+  _w: number,
+  _h: number,
   baseRef: React.RefObject<HTMLCanvasElement | null>,
   overlayRef: React.RefObject<HTMLCanvasElement | null>,
 ) {

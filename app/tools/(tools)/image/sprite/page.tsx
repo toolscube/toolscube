@@ -68,7 +68,7 @@ export default function SpriteSheetPage() {
   const [copied, setCopied] = React.useState(false);
 
   // Layout / sizing
-  const [layout] = React.useState<LayoutMode>("grid");
+  const [_layout] = React.useState<LayoutMode>("grid");
   const [sizeMode, setSizeMode] = React.useState<SizeMode>("uniform");
   const [columns, setColumns] = React.useState<number>(8);
   const [cellW, setCellW] = React.useState<number | "">("");
@@ -109,7 +109,7 @@ export default function SpriteSheetPage() {
   React.useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       const item = e.clipboardData?.files?.[0];
-      if (item && item.type.startsWith("image/")) onDrop([item]);
+      if (item?.type.startsWith("image/")) onDrop([item]);
     }
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
@@ -759,14 +759,14 @@ function generateCSS(opts: {
     lines.push(`}`);
   }
 
-  return lines.join("\n") + "\n";
+  return `${lines.join("\n")}\n`;
 }
 
 /* ---------------- helpers ---------------- */
 
 function numOrEmpty(v: string): number | "" {
   const n = Number(v);
-  return isNaN(n) ? "" : n;
+  return Number.isNaN(n) ? "" : n;
 }
 
 function sanitizeName(name: string) {
@@ -781,7 +781,7 @@ function cryptoRandom() {
 function fillBackground(canvas: HTMLCanvasElement, color: string) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const _img = ctx.getImageData(0, 0, canvas.width, canvas.height);
   ctx.save();
   ctx.globalCompositeOperation = "destination-over";
   ctx.fillStyle = color || "#ffffff";

@@ -99,7 +99,7 @@ export default function ImageCompressPage() {
   React.useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       const item = e.clipboardData?.files?.[0];
-      if (item && item.type.startsWith("image/")) onDrop([item]);
+      if (item?.type.startsWith("image/")) onDrop([item]);
     }
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
@@ -125,7 +125,7 @@ export default function ImageCompressPage() {
   // Scale → width/height
   React.useEffect(() => {
     if (!img) return;
-    if (scale === "" || isNaN(Number(scale))) return;
+    if (scale === "" || Number.isNaN(Number(scale))) return;
     const s = Math.max(1, Number(scale));
     setW(Math.max(1, Math.round((img.width * s) / 100)));
     setH(Math.max(1, Math.round((img.height * s) / 100)));
@@ -525,7 +525,7 @@ export default function ImageCompressPage() {
 
 function numOrEmpty(v: string): number | "" {
   const n = Number(v);
-  return isNaN(n) ? "" : n;
+  return Number.isNaN(n) ? "" : n;
 }
 
 function mimeToFmt(mime: string): Exclude<OutFormat, "keep"> {

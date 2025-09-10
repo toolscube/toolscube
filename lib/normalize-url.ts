@@ -1,6 +1,6 @@
 export function normalizeUrl(input: string) {
   let url = input.trim();
-  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
   try {
     const u = new URL(url);
     // Optional: strip hash, keep query

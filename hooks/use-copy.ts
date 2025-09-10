@@ -14,12 +14,12 @@ export function useCopy(options: CopyOptions = {}) {
     timerRef.current = null;
   };
 
-  useEffect(() => clearTimer, []);
+  useEffect(() => clearTimer, [clearTimer]);
 
   const reset = useCallback(() => {
     clearTimer();
     setCopied(false);
-  }, []);
+  }, [clearTimer]);
 
   const copy = useCallback(
     async (text: string) => {
@@ -31,7 +31,7 @@ export function useCopy(options: CopyOptions = {}) {
       }
       return ok;
     },
-    [timeoutMs],
+    [timeoutMs, clearTimer],
   );
 
   return { copied, copy, reset };
@@ -48,12 +48,12 @@ export function useCopyKeyed<K extends string | number = string>(options: CopyOp
     timerRef.current = null;
   };
 
-  useEffect(() => clearTimer, []);
+  useEffect(() => clearTimer, [clearTimer]);
 
   const reset = useCallback(() => {
     clearTimer();
     setCopiedKey(null);
-  }, []);
+  }, [clearTimer]);
 
   const copy = useCallback(
     async (text: string, key?: K) => {
@@ -66,7 +66,7 @@ export function useCopyKeyed<K extends string | number = string>(options: CopyOp
       }
       return true;
     },
-    [timeoutMs],
+    [timeoutMs, clearTimer],
   );
 
   return { copiedKey, copy, reset };

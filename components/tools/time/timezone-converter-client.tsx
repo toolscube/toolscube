@@ -192,7 +192,7 @@ function getAllTimeZones(): { value: string; label: string }[] {
     "Africa/Cairo",
   ];
 
-  const list = (zones && zones.length ? zones : curated).map((z) => ({
+  const list = (zones?.length ? zones : curated).map((z) => ({
     value: z,
     label: `${z.split("/").at(-1)?.replace("_", " ") || z} (${z})`,
   }));

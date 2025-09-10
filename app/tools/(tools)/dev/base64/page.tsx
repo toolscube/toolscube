@@ -32,7 +32,7 @@ type Mode = "encode" | "decode";
 
 const STORAGE_KEY = "toolshub.base64.v2";
 
-function clsx(...arr: Array<string | false | undefined>) {
+function _clsx(...arr: Array<string | false | undefined>) {
   return arr.filter(Boolean).join(" ");
 }
 
@@ -295,7 +295,7 @@ export default function Base64ToolPage() {
     }
   };
 
-  const decode = () => {
+  const _decode = () => {
     try {
       setError(null);
       let raw = input.trim();

@@ -111,8 +111,8 @@ const pretty = (n: number | null) => (n == null || !Number.isFinite(n) ? "—" :
 
 export default function UnitConverterClient() {
   const [category, setCategory] = useState<Category>("Length");
-  const [fromUnit, setFromUnit] = useState<string>(UNITS["Length"][0]);
-  const [toUnit, setToUnit] = useState<string>(UNITS["Length"][1]);
+  const [fromUnit, setFromUnit] = useState<string>(UNITS.Length[0]);
+  const [toUnit, setToUnit] = useState<string>(UNITS.Length[1]);
   const [amount, setAmount] = useState<string>("1");
   const [copied, setCopied] = useState(false);
   const [showTable, setShowTable] = useState(false);

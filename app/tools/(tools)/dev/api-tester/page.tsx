@@ -492,11 +492,11 @@ export default function ApiTesterClient() {
 
     if (authType === "bearer" && bearer)
       // auth
-      reqHeaders["Authorization"] = `Bearer ${bearer}`;
+      reqHeaders.Authorization = `Bearer ${bearer}`;
     if (authType === "basic") {
       const basic = `${basicUser}:${basicPass}`;
       const b64 = typeof btoa !== "undefined" ? btoa(basic) : "";
-      reqHeaders["Authorization"] = `Basic ${b64}`;
+      reqHeaders.Authorization = `Basic ${b64}`;
     }
 
     let body: BodyInit | undefined;

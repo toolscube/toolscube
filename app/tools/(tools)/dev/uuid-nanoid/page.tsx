@@ -200,7 +200,6 @@ export default function UuidNanoidClient() {
         const v7 = (uuid as unknown as { v7?: () => string }).v7;
         return formatUuid(typeof v7 === "function" ? v7() : uuid.v4());
       }
-      case "v4":
       default:
         return formatUuid(uuid.v4());
     }

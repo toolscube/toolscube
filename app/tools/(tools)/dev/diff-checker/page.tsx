@@ -159,7 +159,6 @@ function tokenize(text: string, mode: Granularity) {
       return byLines(text);
     case "word":
       return byWords(text);
-    case "char":
     default:
       return byChars(text);
   }
