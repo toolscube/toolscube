@@ -3,29 +3,27 @@
 import {
   AlarmClock,
   Check,
-  Copy,
-  Download,
-  FileText,
   ListTodo,
   Pause,
   Play,
   Plus,
-  Printer,
-  Save,
   SquarePen,
   Trash2,
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card"; 
 import { Label } from "@/components/ui/label";
 
 // Types
@@ -70,18 +68,6 @@ function fmtStamp(ts: number) {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-function download(filename: string, content: string, mime = "text/plain") {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
 const DEFAULT: Meeting = {
   title: "Weekly Sync",
   date: new Date().toISOString().slice(0, 10),
@@ -99,7 +85,6 @@ export default function MeetingNotesClient() {
   const [startTs, setStartTs] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [noteDraft, setNoteDraft] = useState("");
-  const [copied, setCopied] = useState(false);
 
   // timer
   useEffect(() => {
@@ -179,48 +164,24 @@ export default function MeetingNotesClient() {
     resetClock();
   };
 
-  const exportMarkdown = () => {
-    const md = `# ${data.title}\n\n- **Date:** ${data.date}\n- **Location:** ${data.location || "-"}\n- **Attendees:** ${data.attendees || "-"}\n\n## Agenda\n${
-      data.agenda || "_(none)_"
-    }\n\n## Notes\n${
-      data.notes
-        .slice()
-        .reverse()
-        .map((n) => `- [${fmtStamp(n.ts)}] ${n.text}`)
-        .join("\n") || "_No notes_"
-    }\n\n## Decisions\n${data.decisions || "_(none)_"}\n\n## Action Items\n${
-      data.actions
-        .slice()
-        .reverse()
-        .map(
-          (a) =>
-            `- [${a.done ? "x" : " "}] ${a.task} ${a.owner ? `(owner: ${a.owner})` : ""} ${a.due ? `(due: ${a.due})` : ""}`,
-        )
-        .join("\n") || "_None_"
-    }\n`;
-    download(`${data.title || "meeting-notes"}.md`, md, "text/markdown");
-  };
-
-  const exportJSON = () =>
-    download(
-      `${data.title || "meeting-notes"}.json`,
-      JSON.stringify(data, null, 2),
-      "application/json",
-    );
-
-  const copyMarkdown = async () => {
-    const tmp = document.createElement("textarea");
-    const md = `# ${data.title}\nDate: ${data.date}\n\n`;
-    tmp.value = md; // quick header copy (keeps UX snappy); full MD is in export
-    document.body.appendChild(tmp);
-    tmp.select();
-    document.execCommand("copy");
-    tmp.remove();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  };
-
-  const onPrint = () => window.print();
+   const md = `# ${data.title}\n\n- **Date:** ${data.date}\n- **Location:** ${data.location || "-"}\n- **Attendees:** ${data.attendees || "-"}\n\n## Agenda\n${
+    data.agenda || "_(none)_"
+  }\n\n## Notes\n${
+    data.notes
+      .slice()
+      .reverse()
+      .map((n) => `- [${fmtStamp(n.ts)}] ${n.text}`)
+      .join("\n") || "_No notes_"
+  }\n\n## Decisions\n${data.decisions || "_(none)_"}\n\n## Action Items\n${
+    data.actions
+      .slice()
+      .reverse()
+      .map(
+        (a) =>
+          `- [${a.done ? "x" : " "}] ${a.task} ${a.owner ? `(owner: ${a.owner})` : ""} ${a.due ? `(due: ${a.due})` : ""}`,
+      )
+      .join("\n") || "_None_"
+  }\n`;
 
   // derived counts
   const openCount = useMemo(() => data.actions.filter((a) => !a.done).length, [data.actions]);
@@ -234,15 +195,11 @@ export default function MeetingNotesClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <Button variant="outline" onClick={exportJSON} className="gap-2">
-              <Save className="h-4 w-4" /> JSON
-            </Button>
-            <Button variant="outline" onClick={exportMarkdown} className="gap-2">
-              <Download className="h-4 w-4" /> Markdown
-            </Button>
-            <Button onClick={onPrint} className="gap-2">
-              <Printer className="h-4 w-4" /> Print / PDF
-            </Button>{" "}
+            <ExportTextButton
+              label="Export Markdown"
+              filename={`${data.title || "meeting-notes"}.md`}
+              getText={() => md}
+            />
           </>
         }
       />
@@ -420,45 +377,43 @@ export default function MeetingNotesClient() {
               {data.actions.map((a) => (
                 <div key={a.id} className="grid gap-2 border rounded-lg p-3 md:grid-cols-12">
                   <div className="md:col-span-6">
-                    <Label className="md:hidden">Task</Label>
-                    <Input
+                    <InputField
+                      label="Task"
                       value={a.task}
                       onChange={(e) => updateAction(a.id, { task: e.target.value })}
                       placeholder="Task description"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label className="md:hidden">Owner</Label>
-                    <Input
+                    <InputField
+                      label="Owner"
                       value={a.owner || ""}
                       onChange={(e) => updateAction(a.id, { owner: e.target.value })}
                       placeholder="Owner"
                     />
                   </div>
+
                   <div className="md:col-span-2">
-                    <Label className="md:hidden">Due</Label>
-                    <Input
+                    <InputField
+                      label="Due"
                       type="date"
                       value={a.due || ""}
                       onChange={(e) => updateAction(a.id, { due: e.target.value })}
                     />
                   </div>
                   <div className="md:col-span-2 flex items-start justify-end gap-2">
-                    <Button
+                    <ActionButton
+                      icon={Check}
+                      label={a.done ? "Done" : "Mark Done"}
                       variant={a.done ? "default" : "outline"}
                       onClick={() => updateAction(a.id, { done: !a.done })}
-                      className="gap-2"
-                    >
-                      <Check className="h-4 w-4" /> {a.done ? "Done" : "Mark Done"}
-                    </Button>
-                    <Button
-                      variant="outline"
+                    />
+                    <ActionButton
+                      icon={Trash2}
                       size="icon"
                       onClick={() => removeAction(a.id)}
                       aria-label="Remove action"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    />
                   </div>
                 </div>
               ))}
@@ -542,31 +497,15 @@ export default function MeetingNotesClient() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="outline" className="gap-2" onClick={copyMarkdown}>
-              <Copy className="h-4 w-4" /> {copied ? "Copied" : "Copy Header"}
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={exportMarkdown}>
-              <FileText className="h-4 w-4" /> Export Markdown
-            </Button>
+            <CopyButton label="Copy Header" getText={`# ${data.title}\nDate: ${data.date}\n\n`} />
+            <ExportTextButton
+              label="Export Markdown"
+              filename={`${data.title || "meeting-notes"}.md`}
+              getText={() => md}
+            />
           </div>
         </CardContent>
       </GlassCard>
-
-      <style jsx global>{`
-        @media print {
-          body {
-            background: white !important;
-          }
-          header,
-          nav,
-          footer {
-            display: none !important;
-          }
-          .print\\:shadow-none {
-            box-shadow: none !important;
-          }
-        }
-      `}</style>
     </>
   );
 }

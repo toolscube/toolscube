@@ -26,7 +26,6 @@ import InputField from "@/components/shared/form-fields/input-field";
 import { QRCodeBox } from "@/components/shared/qr-code";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -418,10 +417,7 @@ export default function ShortenerClient() {
                     {/* QR popover */}
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button size="sm" variant="outline" className="gap-2">
-                          <QrCode className="h-4 w-4" />
-                          QR
-                        </Button>
+                        <ActionButton size="sm" label="QR" icon={QrCode} />
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-4">
                         <div className="flex flex-col items-center gap-2">

@@ -2,7 +2,6 @@
 
 import {
   ArrowLeftRight,
-  Copy,
   Info,
   Ruler,
   Scale,
@@ -12,12 +11,10 @@ import {
   ThermometerSun,
 } from "lucide-react";
 import { type JSX, useMemo, useState } from "react";
-import toast from "react-hot-toast";
-import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
@@ -114,7 +111,6 @@ export default function UnitConverterClient() {
   const [fromUnit, setFromUnit] = useState<string>(UNITS.Length[0]);
   const [toUnit, setToUnit] = useState<string>(UNITS.Length[1]);
   const [amount, setAmount] = useState<string>("1");
-  const [copied, setCopied] = useState(false);
   const [showTable, setShowTable] = useState(false);
 
   const sanitize = (raw: string) => {
@@ -149,22 +145,9 @@ export default function UnitConverterClient() {
     });
   };
 
-  const copyResult = async () => {
-    try {
-      if (result == null) return;
-      await navigator.clipboard.writeText(`${pretty(result)} ${toUnit}`);
-      setCopied(true);
-      toast.success("Copied successfully!");
-      setTimeout(() => setCopied(false), 1000);
-    } catch {
-      toast.error("Copy failed");
-    }
-  };
-
   const resetAll = () => {
     handleCategory("Length");
     setAmount("1");
-    setCopied(false);
     setShowTable(false);
   };
 
@@ -299,15 +282,14 @@ export default function UnitConverterClient() {
                 <div className="text-4xl font-semibold tracking-tight">
                   {pretty(result)} {toUnit}
                 </div>
-                <Button
-                  variant="ghost"
+                <CopyButton
                   size="icon"
-                  onClick={copyResult}
-                  title="Copy"
-                  className="hover:bg-primary/10"
-                >
-                  <Copy className={`h-4 w-4 ${copied ? "animate-pulse" : ""}`} />
-                </Button>
+                  variant="ghost"
+                  label=""
+                  copiedLabel=""
+                  disabled={!result}
+                  getText={`${pretty(result)} ${toUnit}`}
+                />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
                 Base units: meter (m), kilogram (kg), Celsius (°C).

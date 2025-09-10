@@ -17,7 +17,6 @@ import SelectField from "@/components/shared/form-fields/select-field";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import { QRCodeBox } from "@/components/shared/qr-code";
 import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -379,27 +378,27 @@ export default function QRClient() {
             />
 
             <div className="grid gap-2 sm:grid-cols-2">
-              <Button className="w-full" onClick={() => downloadPNG("qrcode.png", exportScale)}>
-                <ArrowDownToLine className="mr-2 h-4 w-4" />
-                Download PNG
-              </Button>
-              <Button
-                className="w-full"
-                variant="outline"
+              <ActionButton
+                icon={ArrowDownToLine}
+                label="Download PNG"
+                onClick={() => downloadPNG("qrcode.png", exportScale)}
+              />
+              <ActionButton
+                icon={ArrowDownToLine}
+                label="Download SVG"
                 onClick={() => downloadSVG("qrcode.svg")}
                 disabled={(format ?? "png") !== "svg"}
-              >
-                <ArrowDownToLine className="mr-2 h-4 w-4" />
-                Download SVG
-              </Button>
+              />
             </div>
 
             <div className="flex flex-wrap gap-2">
               <CopyButton getText={() => getPngDataUrl(exportScale)} label="Copy PNG Data URL" />
-              <Button variant="ghost" onClick={runGenerate}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Regenerate
-              </Button>
+              <ActionButton
+                icon={RefreshCw}
+                label="Regenerate"
+                variant="ghost"
+                onClick={runGenerate}
+              />
             </div>
           </CardContent>
         </GlassCard>

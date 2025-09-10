@@ -6,7 +6,6 @@ import { ActionButton, CopyButton, ResetButton } from "@/components/shared/actio
 import InputField from "@/components/shared/form-fields/input-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
@@ -280,9 +279,7 @@ function CityRow({
           <div className="flex flex-col">
             <span className="font-medium">{tz}</span>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Badge variant="outline" className="font-mono">
-                {offStr}
-              </Badge>
+              <Badge className="font-mono">{offStr}</Badge>
               <span className="flex items-center gap-1">
                 <Diff className="h-3.5 w-3.5" /> {diffPretty}
               </span>
@@ -294,15 +291,9 @@ function CityRow({
       <div className="text-sm text-muted-foreground">{text}</div>
 
       <div className="flex flex-wrap gap-2">
-        <ActionButton
-          icon={Replace}
-          label="Set as source"
-          size="sm"
-          variant="outline"
-          onClick={onSwap}
-        />
+        <ActionButton icon={Replace} label="Set as source" size="sm" onClick={onSwap} />
         <CopyButton size="sm" getText={`${text} — ${tz}`} />
-        <ActionButton icon={Trash2} label="Remove" size="sm" variant="outline" onClick={onRemove} />
+        <ActionButton icon={Trash2} label="Remove" size="sm" onClick={onRemove} />
       </div>
     </div>
   );
@@ -427,7 +418,7 @@ export default function TimezoneConverterClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ActionButton variant="outline" icon={Clock} label="Now" onClick={applyNow} />
+            <ActionButton icon={Clock} label="Now" onClick={applyNow} />
             <CopyButton variant="default" label="Copy Link" getText={link} />
           </>
         }
@@ -517,16 +508,15 @@ export default function TimezoneConverterClient() {
                 </SelectContent>
               </Select>
               <div className="flex flex-wrap gap-2">
-                <Button
+                <ActionButton
                   size="sm"
-                  variant="outline"
+                  icon={Plus}
+                  label="Add typed zone"
                   onClick={() => {
                     const v = debSearch.trim();
                     if (v && !targets.includes(v)) addTarget(v);
                   }}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add typed zone
-                </Button>
+                />
               </div>
               <p className="text-xs text-muted-foreground">
                 Tip: Try zones like <span className="font-mono">Asia/Dhaka</span>,{" "}
@@ -547,9 +537,13 @@ export default function TimezoneConverterClient() {
                 "Asia/Tokyo",
                 "Australia/Sydney",
               ].map((v) => (
-                <Button key={v} size="sm" variant="outline" onClick={() => addTarget(v)}>
-                  <Plus className="h-4 w-4 mr-1" /> {v.split("/").at(-1)}
-                </Button>
+                <ActionButton
+                  key={v}
+                  size="sm"
+                  icon={Plus}
+                  label={v.split("/").at(-1)}
+                  onClick={() => addTarget(v)}
+                />
               ))}
             </div>
           </div>
