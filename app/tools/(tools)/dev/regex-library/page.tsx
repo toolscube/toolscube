@@ -803,6 +803,7 @@ export default function RegexLibraryClient() {
                       <ActionButton
                         size="icon"
                         icon={Trash2}
+                        variant="destructive"
                         onClick={() => removeFavorite(f.id)}
                       />
                     </div>

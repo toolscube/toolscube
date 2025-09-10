@@ -196,6 +196,7 @@ export default function MeetingNotesClient() {
           <>
             <ResetButton onClick={resetAll} />
             <ExportTextButton
+              variant="default"
               label="Export Markdown"
               filename={`${data.title || "meeting-notes"}.md`}
               getText={() => md}
@@ -337,6 +338,7 @@ export default function MeetingNotesClient() {
                 <span className="text-xs text-muted-foreground">{fmtStamp(n.ts)}</span>
                 <ActionButton
                   icon={Trash2}
+                  variant="destructive"
                   size="icon"
                   onClick={() => removeNote(n.id)}
                   aria-label="Remove note"
@@ -411,6 +413,7 @@ export default function MeetingNotesClient() {
                     <ActionButton
                       icon={Trash2}
                       size="icon"
+                      variant="destructive"
                       onClick={() => removeAction(a.id)}
                       aria-label="Remove action"
                     />
@@ -499,6 +502,7 @@ export default function MeetingNotesClient() {
           <div className="mt-4 flex flex-wrap gap-2">
             <CopyButton label="Copy Header" getText={`# ${data.title}\nDate: ${data.date}\n\n`} />
             <ExportTextButton
+              variant="default"
               label="Export Markdown"
               filename={`${data.title || "meeting-notes"}.md`}
               getText={() => md}

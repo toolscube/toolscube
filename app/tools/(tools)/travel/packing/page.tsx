@@ -399,7 +399,12 @@ export default function PackingChecklistClient() {
                       </div>
                     </div>
 
-                    <ActionButton icon={Trash2} size="icon" onClick={() => removeItem(it.id)} />
+                    <ActionButton
+                      icon={Trash2}
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => removeItem(it.id)}
+                    />
                   </div>
                 ))}
               </div>

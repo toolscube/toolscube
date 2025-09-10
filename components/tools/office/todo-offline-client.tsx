@@ -133,7 +133,12 @@ export default function TodoOfflineClient() {
                     {t.text}
                   </span>
                 </div>
-                <ActionButton size="icon" icon={Trash2} onClick={() => removeTodo(t.id)} />
+                <ActionButton
+                  size="icon"
+                  icon={Trash2}
+                  variant="destructive"
+                  onClick={() => removeTodo(t.id)}
+                />
               </div>
               {t.note && <p className="text-xs text-muted-foreground">{t.note}</p>}
             </div>
