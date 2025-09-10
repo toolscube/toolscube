@@ -53,7 +53,6 @@ function removeEmojis(s: string) {
   return s.replace(/\p{Extended_Pictographic}|\p{Variation_Selector}/gu, "");
 }
 
-
 function removeUrls(s: string) {
   return s.replace(/\b(?:https?:\/\/|www\.)\S+/gi, "");
 }
@@ -73,7 +72,6 @@ function removeDiacritics(s: string) {
 function keepAsciiOnly(s: string) {
   return s.replace(/[^\u0020-\u007E]+/g, "");
 }
-
 
 function collapseSpaces(s: string) {
   return s.replace(/[ \t]+/g, " ");

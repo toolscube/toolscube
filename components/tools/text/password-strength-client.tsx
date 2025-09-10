@@ -71,7 +71,7 @@ function estimateCharset(pw: string) {
   const hasDigit = /\d/.test(pw);
   const hasSpace = /\s/.test(pw);
   const symbolMatch = pw.match(/[!@#$%^&*()\-_=+[\]{};:'",.<>/?`~\\|]/g);
-const asciiOnly = /^\p{ASCII}*$/u.test(pw);
+  const asciiOnly = /^\p{ASCII}*$/u.test(pw);
 
   if (hasLower) size += 26;
   if (hasUpper) size += 26;
@@ -144,7 +144,6 @@ function humanTime(seconds: number) {
   const label = units[idx]?.[1] ?? "sec";
   return `${n.toFixed(n >= 10 ? 0 : 1)} ${label}${n >= 2 ? "s" : ""}`;
 }
-
 
 // quick heuristic checks
 function findIssues(pw: string) {

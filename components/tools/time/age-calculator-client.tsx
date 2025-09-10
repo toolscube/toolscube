@@ -212,29 +212,29 @@ Total: ${results?.total.days} days, ${results?.total.hours} hours
 Next birthday: ${results?.until.exact} (${results?.until.days} days)`
       : "";
 
-     const stats = [
-      {
-        label: "Age",
-        value: `${results?.ymd.years}Y ${results?.ymd.months}M ${results?.ymd.days}D`,
-        hint: birth ? `Born ${shortDate(birth)}` : "Birth date not set",
-      },
-      {
-        label: "Total Days",
-        value: results?.total.days.toLocaleString(),
-        hint: `${results?.total.hours.toLocaleString()} Hours`,
-      },
-      {
-        label: "Total Minutes",
-        value: results?.total.minutes.toLocaleString(),
-        hint: `${results?.total.seconds.toLocaleString()} Seconds`,
-      },
-      {
-        label: "Next Birthday",
-        value: `${results?.until.days} Days`,
-        hint: `${results?.until.weekday}, ${results?.until.exact}`,
-        Icon: Cake,
-      },
-    ];
+  const stats = [
+    {
+      label: "Age",
+      value: `${results?.ymd.years}Y ${results?.ymd.months}M ${results?.ymd.days}D`,
+      hint: birth ? `Born ${shortDate(birth)}` : "Birth date not set",
+    },
+    {
+      label: "Total Days",
+      value: results?.total.days.toLocaleString(),
+      hint: `${results?.total.hours.toLocaleString()} Hours`,
+    },
+    {
+      label: "Total Minutes",
+      value: results?.total.minutes.toLocaleString(),
+      hint: `${results?.total.seconds.toLocaleString()} Seconds`,
+    },
+    {
+      label: "Next Birthday",
+      value: `${results?.until.days} Days`,
+      hint: `${results?.until.weekday}, ${results?.until.exact}`,
+      Icon: Cake,
+    },
+  ];
 
   return (
     <>

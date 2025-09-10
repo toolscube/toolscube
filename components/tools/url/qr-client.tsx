@@ -149,18 +149,17 @@ export default function QRClient() {
   const format = useWatch({ control: controlForm.control, name: "format" });
   const wifiAuth = useWatch({ control: controlForm.control, name: "wifiAuth" });
 
-React.useEffect(() => {
-  if (kind) {
-    setForm((s) => (s.kind === kind ? s : { ...s, kind }));
-  }
-}, [kind]);
+  React.useEffect(() => {
+    if (kind) {
+      setForm((s) => (s.kind === kind ? s : { ...s, kind }));
+    }
+  }, [kind]);
 
   React.useEffect(() => {
     if (wifiAuth) {
       setForm((s) => (s.wifiAuth === wifiAuth ? s : { ...s, wifiAuth }));
     }
   }, [wifiAuth]);
-
 
   /* Payload & export helpers */
   const payload = React.useMemo(() => buildPayload(form), [form]);

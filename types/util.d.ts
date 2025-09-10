@@ -16,4 +16,3 @@ type CleanOptions = {
 };
 
 type Separator = "newline" | "comma" | "space";
-

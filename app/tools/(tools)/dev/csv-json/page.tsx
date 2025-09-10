@@ -79,12 +79,10 @@ function parseCSV(text: string, opts: ParseOpts): string[][] {
   // push the last field and row
   row.push(trim ? field.trim() : field);
   rows.push(row);
-    rows.pop();
-
+  rows.pop();
 
   return rows;
 }
-
 
 function stringifyCSV(
   rows: string[][],
@@ -267,11 +265,11 @@ export default function CsvJsonClient() {
     setError(null);
   };
 
-const sampleCSV = `id,name,active,roles,profile
+  const sampleCSV = `id,name,active,roles,profile
 1,"Alice Smith",true,"admin;editor","{\\"email\\":\\"alice@example.com\\",\\"age\\":30}"
 2,"Bob Lee",false,"viewer;tester","{\\"email\\":\\"bob@example.com\\",\\"age\\":25}"
 3,"Charlie, Jr.",true,"contributor","{\\"email\\":\\"charlie@example.com\\",\\"age\\":28}"`;
-  
+
   const sampleJSON = `[
   {
     "id": 1,
@@ -295,7 +293,6 @@ const sampleCSV = `id,name,active,roles,profile
     "profile": { "email": "charlie@example.com", "age": 28 }
   }
 ]`;
-
 
   const exportPayload = React.useMemo(
     () => ({

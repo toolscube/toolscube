@@ -250,7 +250,7 @@ export default function Base64Client() {
     setInFile(f);
     setInInfo({ name: f.name, size: f.size, type: f.type || "application/octet-stream" });
     setOutFileInfo(null);
-    setPreviewText("");  
+    setPreviewText("");
     if (outBlobUrl) {
       URL.revokeObjectURL(outBlobUrl);
       setOutBlobUrl("");

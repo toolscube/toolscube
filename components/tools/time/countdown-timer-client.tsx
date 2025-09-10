@@ -350,7 +350,6 @@ export default function CountdownTimerClient() {
   const onDelete = (id: string) => setTimers((arr) => arr.filter((t) => t.id !== id));
   const onDeleteAll = () => setTimers([]);
 
-
   const actions = [
     {
       icon: Zap,

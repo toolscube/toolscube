@@ -18,7 +18,6 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from "@/component
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 
-
 /* Types */
 
 type ResultRow = { base: number; label: string; value: string };

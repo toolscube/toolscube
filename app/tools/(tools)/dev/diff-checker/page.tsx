@@ -153,8 +153,6 @@ function diffTokens(a: string[], b: string[]): DiffChunk[] {
   return out;
 }
 
-
-
 function tokenize(text: string, mode: Granularity) {
   switch (mode) {
     case "line":

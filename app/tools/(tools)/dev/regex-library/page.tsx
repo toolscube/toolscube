@@ -556,7 +556,8 @@ export default function RegexLibraryClient() {
                       y: false,
                     };
                     const v = e.target.value.replace(/[^gimsuy]/g, "");
-                    for (const ch of v) if (FLAG_KEYS.includes(ch as FlagKey)) next[ch as FlagKey] = true;
+                    for (const ch of v)
+                      if (FLAG_KEYS.includes(ch as FlagKey)) next[ch as FlagKey] = true;
                     setFlags(next);
                   }}
                   className="w-24 font-mono"
@@ -920,4 +921,3 @@ function highlightMatches(text: string, re: RegExp | null) {
 
   return <>{parts}</>;
 }
-

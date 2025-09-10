@@ -660,4 +660,3 @@ function jsonToTs(name: string, val: unknown): string {
   }
   return lines.join("\n\n");
 }
-

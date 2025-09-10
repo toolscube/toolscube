@@ -161,9 +161,9 @@ export default function SlugifyPage() {
     ],
   );
 
- const runSingle = React.useCallback(() => {
-  setOutput(slugify(input, opts));
-}, [input, opts]);
+  const runSingle = React.useCallback(() => {
+    setOutput(slugify(input, opts));
+  }, [input, opts]);
 
   const runBatch = React.useCallback(() => {
     const lines = (batchInput || "").split(/\r?\n/);

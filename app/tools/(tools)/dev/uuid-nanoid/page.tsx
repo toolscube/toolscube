@@ -160,7 +160,7 @@ export default function UuidNanoidClient() {
   const entropyBits = useMemo(() => {
     if (mode === "uuid") {
       if (uuidVersion === "v5") return 0;
-      return 122; 
+      return 122;
     }
     const L = Math.max(1, nanoAlphabet.length);
     const bits = nanoSize * Math.log2(L);

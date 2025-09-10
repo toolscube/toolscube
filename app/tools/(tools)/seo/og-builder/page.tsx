@@ -213,7 +213,8 @@ function wrapText(
 
   if (maxLines && lines.length === maxLines) {
     let last = lines[lines.length - 1];
-    while (ctx.measureText(`${last}…`).width > maxWidth && last.length > 0) last = last.slice(0, -1);
+    while (ctx.measureText(`${last}…`).width > maxWidth && last.length > 0)
+      last = last.slice(0, -1);
     lines[lines.length - 1] = `${last}…`;
   }
   const height = lines.length * lineHeightPx;

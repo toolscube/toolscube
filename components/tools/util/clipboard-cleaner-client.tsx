@@ -171,8 +171,6 @@ export default function ClipboardCleanerClient() {
 
   const cleaned = useMemo(() => cleanText(raw, opts), [raw, opts]);
 
-
-
   const pushHistory = (src: string, out: string) => {
     if (!out.trim()) return;
     setHistory((h) => [{ id: uid("h"), ts: Date.now(), src, out }, ...h].slice(0, 20));
