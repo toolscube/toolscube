@@ -39,6 +39,7 @@
     "marked": "^16.2.1",
     "nanoid": "^5.1.5",
     "next": "15.5.2",
+    "pino": "^9.9.4",
     "qrcode": "^1.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -50,6 +51,7 @@
     "recharts": "^3.1.2",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
+    "sugar-high": "^0.9.3",
     "tailwind-merge": "^3.3.1",
     "uuid": "^11.1.0",
     "zod": "^4.1.4"

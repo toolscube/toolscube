@@ -2,13 +2,11 @@
 
 import {
   Bold,
-  Check,
   Code,
   Copy,
   Download,
   Eye,
   FileText,
-  Fullscreen,
   Github,
   Heading1,
   Heading2,
@@ -17,29 +15,29 @@ import {
   List,
   ListChecks,
   ListOrdered,
-  Minimize2,
-  Printer,
   Redo2,
-  RotateCcw,
-  SplitSquareHorizontal,
+  Strikethrough,
   Upload,
   Wand2,
   WrapText,
 } from "lucide-react";
 import * as React from "react";
+import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
+import type { PluggableList } from "unified";
+import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useMDXComponents } from "@/mdx-components";
 
-//  Reusable primitives
+/* Utilities */
 function downloadBlob(filename: string, content: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -52,280 +50,105 @@ function downloadBlob(filename: string, content: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-const STORAGE_KEY = "toolshub.markdown-previewer.v5";
-
-type AnyFn = (...args: any[]) => any;
+function sanitizeTitle(s: string) {
+  return s.replace(/[<>:"/\\|?*]/g, "").slice(0, 120) || "Export";
+}
 
 function useLocalStorage<T>(key: string, initial: T) {
   const [value, setValue] = React.useState<T>(initial);
+
+  // load
   React.useEffect(() => {
     try {
+      if (typeof window === "undefined") return;
       const raw = localStorage.getItem(key);
-      if (raw) setValue(JSON.parse(raw));
+      if (raw) setValue(JSON.parse(raw) as T);
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [key]);
 
+  // save (debounced)
   React.useEffect(() => {
-    const t = setTimeout(() => {
+    if (typeof window === "undefined") return;
+    const t = window.setTimeout(() => {
       try {
         localStorage.setItem(key, JSON.stringify(value));
       } catch {}
     }, 200);
-    return () => clearTimeout(t);
+    return () => window.clearTimeout(t);
   }, [key, value]);
+
   return [value, setValue] as const;
 }
 
-/** Panel: consistent card with header + content areas */
+/** Panel: minimal card-like section */
 function Panel({
   title,
   subtitle,
   right,
+  left,
   children,
   className,
 }: {
   title: string;
   subtitle?: React.ReactNode;
   right?: React.ReactNode;
+
+  left?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={clsx("rounded-xl border bg-background/60 backdrop-blur", className)}>
+    <div className={cn("rounded-xl border bg-background/60 backdrop-blur", className)}>
       <div className="flex items-center justify-between border-b px-3 py-2">
         <div>
-          <div className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
-            {title}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {title}
+            </span>
+            {left ? <span className="inline-flex items-center">{left}</span> : null}
           </div>
           {subtitle ? <div className="text-[11px] text-muted-foreground">{subtitle}</div> : null}
         </div>
+
         {right ? <div className="flex items-center gap-2">{right}</div> : null}
       </div>
+
       <div className="p-3">{children}</div>
     </div>
   );
 }
 
-/** Toolbar: grouped icon buttons with tooltips */
-function Toolbar({
-  groups,
-}: {
-  groups: Array<Array<{ title: string; icon: React.ReactNode; onClick: () => void }>>;
-}) {
-  return (
-    <div className="inline-flex w-full flex-wrap items-center gap-2">
-      {groups.map((g, gi) => (
-        <div key={gi} className="inline-flex items-center gap-1 rounded-md border bg-muted/30 px-1">
-          {g.map((b, bi) => (
-            <TooltipProvider key={bi}>
-              <Tooltip delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
-                    title={b.title}
-                    onClick={b.onClick}
-                  >
-                    {b.icon}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{b.title}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** SplitPane: vertical with draggable handle */
-function SplitPane({
-  left,
-  right,
-  min = 25,
-  max = 75,
-  value,
-  onChange,
-}: {
-  left: React.ReactNode;
-  right: React.ReactNode;
-  min?: number;
-  max?: number;
-  value: number; // % width for left pane
-  onChange: (v: number) => void;
-}) {
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const [drag, setDrag] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!drag) return;
-    const onMove = (e: MouseEvent) => {
-      const el = ref.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const x = Math.max(
-        r.width * (min / 100),
-        Math.min(e.clientX - r.left, r.width * (max / 100)),
-      );
-      onChange(Math.round((x / r.width) * 100));
-    };
-    const onUp = () => setDrag(false);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp, { once: true });
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [drag, min, max, onChange]);
-
-  return (
-    <div
-      ref={ref}
-      className="hidden gap-4 sm:grid"
-      style={{ gridTemplateColumns: `minmax(260px, ${value}%) 12px 1fr` }}
-    >
-      <div>{left}</div>
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        title="Drag to resize"
-        className={cn(
-          "relative cursor-col-resize select-none",
-          drag ? "bg-primary/30" : "bg-transparent",
-        )}
-        onMouseDown={() => setDrag(true)}
-      >
-        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 rounded-full bg-primary/30" />
-      </div>
-      <div>{right}</div>
-    </div>
-  );
-}
-
-/** DropZone overlay for drag & drop files */
-function DropZone({ active, text }: { active: boolean; text: string }) {
-  if (!active) return null;
-  return (
-    <div className="absolute inset-0 z-40 grid place-items-center bg-primary/10 backdrop-blur-sm border-2 border-dashed border-primary rounded-2xl">
-      <div className="rounded-xl bg-background/80 px-4 py-2 text-sm">{text}</div>
-    </div>
-  );
-}
-
-/** Status bar chip */
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <span className="rounded-md border bg-muted/40 px-2 py-1 text-xs">
-      {label}: <b className="ml-1">{value}</b>
-    </span>
-  );
-}
-
-/** Outline list */
-function OutlineList({ items }: { items: { level: number; text: string; id: string }[] }) {
-  return (
-    <div className="max-h-[420px] overflow-auto p-2 text-sm">
-      {items.length === 0 ? (
-        <p className="text-muted-foreground text-xs px-1">No headings yet.</p>
-      ) : (
-        <ul className="space-y-1">
-          {items.map((h, i) => (
-            <li key={i} style={{ paddingLeft: (h.level - 1) * 12 }}>
-              <a
-                className="text-foreground/80 hover:underline"
-                href={`#${h.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  const el = document.getElementById(h.id);
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-              >
-                {h.text}
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-/* -----------------------------------------------------------------------------
-   Page
------------------------------------------------------------------------------ */
+const STORAGE_KEY = "toolshub.markdown-previewer.v7";
 
 const SAMPLE_MD = `# ✨ Markdown Previewer
 
-Write Markdown on the left — see **live preview** on the right.
+Write Markdown in **Write** tab — see live **Preview** on the other tab.
 
-- Live GFM preview
+- GitHub-style tabs (all screens)
+- GFM support (tables, task lists, strikethrough)
 - Copy MD / Copy HTML
-- Drag handle to resize
 - Paste images directly
 `;
 
-function sanitizeTitle(s: string) {
-  return s.replace(/[<>:"/\\|?*]/g, "").slice(0, 120) || "Export";
-}
-
-export default function MarkdownPreviewerPage() {
-  // state
+export default function MarkdownPreviewerClient() {
   const [state, setState] = useLocalStorage(STORAGE_KEY, {
     md: SAMPLE_MD,
     filename: "document.md",
     useGfm: true,
     softWrap: true,
-    split: 56,
   });
 
   const md = state.md as string;
   const filename = state.filename as string;
   const useGfm = state.useGfm as boolean;
   const softWrap = state.softWrap as boolean;
-  const split = state.split as number;
 
-  const set = (patch: Partial<typeof state>) => setState({ ...(state as any), ...patch });
+  const set = (patch: Partial<typeof state>) => setState((prev) => ({ ...prev, ...patch }));
 
-  const [remarkGfm, setRemarkGfm] = React.useState<AnyFn | null>(null);
-  const [rehypeHighlight, setRehypeHighlight] = React.useState<AnyFn | null>(null);
+  // Plugins loaded dynamically
+  const [gfmList, setGfmList] = React.useState<PluggableList>([]);
+  const [highlightList, setHighlightList] = React.useState<PluggableList>([]);
 
-  const [copiedMd, setCopiedMd] = React.useState(false);
-  const [copiedHtml, setCopiedHtml] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<"editor" | "preview">("editor");
-  const [fullscreen, setFullscreen] = React.useState(false);
-  const [dragOver, setDragOver] = React.useState(false);
-
-  const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
-  const [cursorRowCol, setCursorRowCol] = React.useState({ row: 1, col: 1 });
-
-  // outline
-  const outline = React.useMemo(() => {
-    const lines = md.split("\n");
-    const items: { level: number; text: string; id: string }[] = [];
-    for (const l of lines) {
-      const m = /^(#{1,6})\s+(.+)$/.exec(l.trim());
-      if (m) {
-        const level = m[1].length;
-        const text = m[2].replace(/[#`*_[\]]/g, "").trim();
-        const id = text
-          .toLowerCase()
-          .replace(/[^\w\s-]/g, "")
-          .replace(/\s+/g, "-");
-        items.push({ level, text, id });
-      }
-    }
-    return items;
-  }, [md]);
-
-  const counts = React.useMemo(() => {
-    const words = (md.match(/\b\S+\b/g) || []).length;
-    return { words, chars: md.length, lines: md.split("\n").length };
-  }, [md]);
-
-  // plugins
   React.useEffect(() => {
     let mounted = true;
     (async () => {
@@ -334,8 +157,8 @@ export default function MarkdownPreviewerPage() {
         import("rehype-highlight"),
       ]);
       if (mounted) {
-        setRemarkGfm(() => gfm as AnyFn);
-        setRehypeHighlight(() => highlight as AnyFn);
+        setGfmList([gfm]);
+        setHighlightList([highlight]);
       }
     })();
     return () => {
@@ -343,25 +166,47 @@ export default function MarkdownPreviewerPage() {
     };
   }, []);
 
-  // actions
+  const remarkPlugins = React.useMemo<PluggableList>(
+    () => (useGfm ? gfmList : []),
+    [useGfm, gfmList],
+  );
+  const rehypePlugins = React.useMemo<PluggableList>(() => highlightList, [highlightList]);
+
+  // Copy state (for check icons)
+  const [copiedMd, setCopiedMd] = React.useState(false);
+  const [copiedHtml, setCopiedHtml] = React.useState(false);
+
+  // UI state
+  const [activeTab, setActiveTab] = React.useState<"write" | "preview">("write");
+
+  // Cursor position readout
+  const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const [cursorRowCol, setCursorRowCol] = React.useState({ row: 1, col: 1 });
+
+  // Stats
+  const counts = React.useMemo(() => {
+    const words = (md.match(/\b\S+\b/g) || []).length;
+    return { words, chars: md.length, lines: md.split("\n").length };
+  }, [md]);
+
+  // Actions
   const resetAll = () =>
     set({
       md: SAMPLE_MD,
       filename: "document.md",
       useGfm: true,
       softWrap: true,
-      split: 56,
     });
+
+  const generateHTML = React.useCallback(async () => {
+    const { marked } = await import("marked");
+    return String(marked.parse(md));
+  }, [md]);
 
   const copyMarkdown = async () => {
     await navigator.clipboard.writeText(md);
     setCopiedMd(true);
     setTimeout(() => setCopiedMd(false), 1200);
-  };
-
-  const generateHTML = async () => {
-    const { marked } = await import("marked");
-    return String(marked.parse(md));
   };
 
   const copyHTML = async () => {
@@ -398,26 +243,17 @@ export default function MarkdownPreviewerPage() {
 ${html}
 </body>
 </html>`;
-    downloadBlob(filename.replace(/\.md$/i, "") + ".html", doc, "text/html;charset=utf-8");
+    downloadBlob(`${filename.replace(/\.md$/i, "")}.html`, doc, "text/html;charset=utf-8");
   };
 
+  const importRef = React.useRef<HTMLInputElement | null>(null);
   const handleImport = async (file?: File) => {
     if (!file) return;
     const text = await file.text();
     set({ md: text, filename: file.name.endsWith(".md") ? file.name : `${file.name}.md` });
   };
 
-  const onDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(true);
-  };
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f) void handleImport(f);
-  };
-
+  // Editor change
   const onEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     set({ md: e.target.value });
     const pos = e.target.selectionStart ?? 0;
@@ -425,7 +261,25 @@ ${html}
     setCursorRowCol({ row: rows.length, col: rows[rows.length - 1].length + 1 });
   };
 
-  // editor helpers
+  // Keyboard shortcuts
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handlers intentionally stable
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === "b") {
+        e.preventDefault();
+        wrapSelection("**");
+      } else if (k === "i") {
+        e.preventDefault();
+        wrapSelection("_");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  /* selection helpers */
   function insertAtCursor(snippet: string) {
     const el = editorRef.current;
     if (!el) return set({ md: md + snippet });
@@ -472,319 +326,131 @@ ${html}
     set({ md: next });
   }
 
-  // keyboard shortcuts basic
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey)) return;
-      const k = e.key.toLowerCase();
-      if (k === "b") {
-        e.preventDefault();
-        wrapSelection("**");
-      } else if (k === "i") {
-        e.preventDefault();
-        wrapSelection("_");
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  // plugins arrays
-  const remarkPlugins = React.useMemo(() => {
-    const arr: any[] = [];
-    if (useGfm && remarkGfm) arr.push(remarkGfm);
-    return arr;
-  }, [useGfm, remarkGfm]);
-  const rehypePlugins = React.useMemo(() => {
-    const arr: any[] = [];
-    if (rehypeHighlight) arr.push(rehypeHighlight);
-    return arr;
-  }, [rehypeHighlight]);
-
-  /* -------------------------------- Render -------------------------------- */
+  // use MDX component styles for preview
+  const mdx = useMDXComponents();
+  const components = React.useMemo(() => buildMarkdownComponents(mdx), [mdx]);
 
   return (
-    <MotionGlassCard>
-      {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <FileText className="h-6 w-6" /> Markdown Previewer
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Clean, flexible editor with live preview, GFM, and handy export tools.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Input
-            value={filename}
-            onChange={(e) => set({ filename: e.target.value })}
-            className="w-44 sm:w-56"
-            placeholder="document.md"
-            aria-label="Filename"
-          />
-          <Button variant="outline" onClick={resetAll} className="gap-2" title="Reset to sample">
-            <RotateCcw className="h-4 w-4" /> Reset
-          </Button>
-          <Button variant="outline" className="gap-2" onClick={() => set({ md: SAMPLE_MD })}>
-            <Wand2 className="h-4 w-4" /> Sample
-          </Button>
-          <label className="inline-flex">
+    <>
+      <ToolPageHeader
+        title="Markdown Previewer"
+        description="GitHub-style Write/Preview tabs with GFM & export tools."
+        icon={FileText}
+        actions={
+          <>
+            <ActionButton icon={Wand2} label="Sample" onClick={() => set({ md: SAMPLE_MD })} />
+            <ActionButton icon={Upload} label="Import" onClick={() => importRef.current?.click()} />
             <input
+              ref={importRef}
               type="file"
               accept=".md,.markdown,.txt"
               className="hidden"
-              onChange={(e) => void handleImport(e.target.files?.[0])}
+              onChange={(e) => void handleImport(e.target.files?.[0] ?? undefined)}
             />
-            <Button variant="outline" className="gap-2" asChild>
-              <span>
-                <Upload className="h-4 w-4" /> Import
-              </span>
-            </Button>
-          </label>
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={handleExportMd}
-            title="Export Markdown"
-          >
-            <Download className="h-4 w-4" /> .md
-          </Button>
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={handleExportHtml}
-            title="Export HTML"
-          >
-            <Download className="h-4 w-4" /> .html
-          </Button>
-          <Button
-            className="gap-2"
-            onClick={() => setFullscreen((v) => !v)}
-            aria-pressed={fullscreen}
-            aria-label="Toggle fullscreen"
-          >
-            {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Fullscreen className="h-4 w-4" />}
-            {fullscreen ? "Exit" : "Fullscreen"}
-          </Button>
-        </div>
-      </GlassCard>
+            <CopyButton icon={Copy} label="Copy MD" getText={() => md} />
+            <CopyButton icon={Copy} label="Copy HTML" getText={async () => await generateHTML()} />
+            <ActionButton icon={Download} label="Export .md" onClick={handleExportMd} />
+            <ActionButton icon={Download} label="Export .html" onClick={handleExportHtml} />
+            <ResetButton onClick={resetAll} />
+          </>
+        }
+      />
 
       {/* Settings */}
       <GlassCard>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Settings</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-4">
-          <Panel
-            title="GitHub Flavored Markdown"
-            right={<Switch checked={useGfm} onCheckedChange={(v) => set({ useGfm: v })} />}
-          >
-            <p className="text-xs text-muted-foreground">Tables, task lists, strikethrough.</p>
-          </Panel>
-
-          <Panel
-            title="Soft Wrap (Editor)"
-            right={<Switch checked={softWrap} onCheckedChange={(v) => set({ softWrap: v })} />}
-          >
-            <p className="text-xs text-muted-foreground">Wrap long lines in the editor.</p>
-          </Panel>
-
-          <Panel
-            title="Split (Desktop)"
-            subtitle="Adjust editor width. Preview gets the rest."
-            right={
-              <div className="inline-flex items-center gap-2">
-                <SplitSquareHorizontal className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{split}%</span>
-              </div>
-            }
-            className="sm:col-span-2"
-          >
-            <Input
-              type="range"
-              min={25}
-              max={75}
-              value={split}
-              onChange={(e) => set({ split: Number(e.target.value) })}
-              aria-label="Split percentage"
-            />
-            <div className="mt-2">
-              <Button size="sm" variant="outline" className="gap-2" onClick={() => window.print()}>
-                <Printer className="h-4 w-4" /> Print
-              </Button>
-            </div>
-          </Panel>
+        <CardContent className="grid gap-4 sm:grid-cols-3">
+          <SwitchRow
+            label="GitHub Flavored Markdown"
+            hint="Tables, task lists, strikethrough."
+            checked={useGfm}
+            onCheckedChange={(v) => set({ useGfm: v })}
+          />
+          <SwitchRow
+            label="Soft Wrap (Editor)"
+            hint="Wrap long lines in the editor."
+            checked={softWrap}
+            onCheckedChange={(v) => set({ softWrap: v })}
+          />
         </CardContent>
       </GlassCard>
 
-      <Separator />
+      <Separator className="my-4" />
 
       {/* Workspace */}
-      <div className={cn(fullscreen ? "fixed inset-2 z-50" : "relative", "rounded-2xl")}>
-        <GlassCard
-          className={cn(
-            "shadow-sm h-full relative overflow-hidden",
-            fullscreen && "ring-1 ring-primary/30",
-          )}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
-          onDragLeave={() => setDragOver(false)}
-        >
-          <DropZone active={dragOver} text="Drop your .md file to import" />
+      <GlassCard>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "write" | "preview")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="write" className="gap-2">
+                <FileText className="h-4 w-4" /> Write
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="gap-2">
+                <Eye className="h-4 w-4" /> Preview
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Mobile */}
-          <div className="sm:hidden p-3">
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="editor" className="gap-2">
-                  <FileText className="h-4 w-4" /> Editor
-                </TabsTrigger>
-                <TabsTrigger value="preview" className="gap-2">
-                  <Eye className="h-4 w-4" /> Preview
-                </TabsTrigger>
-              </TabsList>
+            <TabsContent value="write" className="mt-4">
+              <EditorPanel
+                ref={editorRef}
+                value={md}
+                onChange={onEditorChange}
+                softWrap={softWrap}
+                copiedMd={copiedMd}
+                copiedHtml={copiedHtml}
+                copyMd={copyMarkdown}
+                copyHtml={copyHTML}
+                onCmd={{
+                  bold: () => wrapSelection("**"),
+                  italic: () => wrapSelection("_"),
+                  strike: () => wrapSelection("~~"),
+                  codeInline: () => wrapSelection("`"),
+                  codeBlock: () => {
+                    const el = editorRef.current;
+                    const sel = el ? md.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0) : "";
+                    insertAtCursor(`\`\`\`\n${sel || "code"}\n\`\`\`\n`);
+                  },
+                  h1: () => insertAtCursor("# "),
+                  h2: () => insertAtCursor("## "),
+                  link: () => wrapSelection("[", "](https://)", "link text"),
+                  list: () => prefixLines("- "),
+                  olist: () => prefixLines("1. "),
+                  clist: () => prefixLines("- [ ] "),
+                }}
+              />
+            </TabsContent>
 
-              <TabsContent value="editor" className="mt-4">
-                <EditorPanel
-                  ref={editorRef}
-                  value={md}
-                  onChange={onEditorChange}
-                  softWrap={softWrap}
-                  copyMd={copyMarkdown}
-                  copyHtml={copyHTML}
-                  copiedMd={copiedMd}
-                  copiedHtml={copiedHtml}
-                  onCmd={{
-                    bold: () => wrapSelection("**"),
-                    italic: () => wrapSelection("_"),
-                    strike: () => wrapSelection("~~"),
-                    codeInline: () => wrapSelection("`"),
-                    codeBlock: () => {
-                      const el = editorRef.current;
-                      const sel = el ? md.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0) : "";
-                      insertAtCursor(`\`\`\`\n${sel || "code"}\n\`\`\`\n`);
-                    },
-                    h1: () => insertAtCursor(`# `),
-                    h2: () => insertAtCursor(`## `),
-                    link: () => wrapSelection("[", "](https://)", "link text"),
-                    list: () => prefixLines("- "),
-                    olist: () => prefixLines("1. "),
-                    clist: () => prefixLines("- [ ] "),
-                  }}
-                />
-              </TabsContent>
+            <TabsContent value="preview" className="mt-4">
+              <PreviewPanel
+                md={md}
+                remarkPlugins={remarkPlugins}
+                rehypePlugins={rehypePlugins}
+                gfmOn={useGfm}
+                components={components}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
 
-              <TabsContent value="preview" className="mt-4">
-                <PreviewPanel
-                  md={md}
-                  useGfm={useGfm}
-                  remarkPlugins={remarkPlugins}
-                  rehypePlugins={rehypePlugins}
-                />
-                <div className="mt-4">
-                  <Panel title="Outline">
-                    <OutlineList items={outline} />
-                  </Panel>
-                </div>
-              </TabsContent>
-            </Tabs>
+        {/* Status bar */}
+        <div className="m-3 mt-0 flex flex-wrap items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">
+              Ln {cursorRowCol.row}, Col {cursorRowCol.col}
+            </span>
+
+            <CopyButton size="sm" label="MD" getText={() => md} />
+            <CopyButton size="sm" label="HTML" getText={() => generateHTML()} />
           </div>
-
-          {/* Desktop split */}
-          <div className="hidden sm:block p-3">
-            <SplitPane
-              value={split}
-              onChange={(v) => set({ split: v })}
-              left={
-                <EditorPanel
-                  ref={editorRef}
-                  value={md}
-                  onChange={onEditorChange}
-                  softWrap={softWrap}
-                  copyMd={copyMarkdown}
-                  copyHtml={copyHTML}
-                  copiedMd={copiedMd}
-                  copiedHtml={copiedHtml}
-                  onCmd={{
-                    bold: () => wrapSelection("**"),
-                    italic: () => wrapSelection("_"),
-                    strike: () => wrapSelection("~~"),
-                    codeInline: () => wrapSelection("`"),
-                    codeBlock: () => {
-                      const el = editorRef.current;
-                      const sel = el ? md.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0) : "";
-                      insertAtCursor(`\`\`\`\n${sel || "code"}\n\`\`\`\n`);
-                    },
-                    h1: () => insertAtCursor(`# `),
-                    h2: () => insertAtCursor(`## `),
-                    link: () => wrapSelection("[", "](https://)", "link text"),
-                    list: () => prefixLines("- "),
-                    olist: () => prefixLines("1. "),
-                    clist: () => prefixLines("- [ ] "),
-                  }}
-                />
-              }
-              right={
-                <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
-                  <PreviewPanel
-                    md={md}
-                    useGfm={useGfm}
-                    remarkPlugins={remarkPlugins}
-                    rehypePlugins={rehypePlugins}
-                  />
-                  <Panel title="Outline">
-                    <OutlineList items={outline} />
-                  </Panel>
-                </div>
-              }
-            />
-          </div>
-
-          {/* Status bar */}
-          <div className="m-3 mt-0 flex flex-wrap items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs">
-            <div className="flex gap-2">
-              <Stat label="Words" value={counts.words} />
-              <Stat label="Chars" value={counts.chars} />
-              <Stat label="Lines" value={counts.lines} />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">
-                Ln {cursorRowCol.row}, Col {cursorRowCol.col}
-              </span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-2" onClick={copyMarkdown}>
-                      {copiedMd ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} MD
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy raw Markdown</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-2" onClick={copyHTML}>
-                      {copiedHtml ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{" "}
-                      HTML
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy rendered HTML</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-        </GlassCard>
-      </div>
-    </MotionGlassCard>
+        </div>
+      </GlassCard>
+    </>
   );
 }
 
-/* -----------------------------------------------------------------------------
-   Reusable Editor & Preview panels
------------------------------------------------------------------------------ */
-
+// Editor & Preview panels
 const EditorPanel = React.forwardRef<
   HTMLTextAreaElement,
   {
@@ -809,21 +475,21 @@ const EditorPanel = React.forwardRef<
       clist: () => void;
     };
   }
->(function EditorPanel(
-  { value, onChange, softWrap, copyMd, copyHtml, copiedMd, copiedHtml, onCmd },
-  ref,
-) {
+>(function EditorPanel({ value, onChange, softWrap, onCmd }, ref) {
   return (
     <Panel
       title="Editor"
       right={
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className="gap-2" onClick={copyMd}>
-            {copiedMd ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} MD
-          </Button>
-          <Button size="sm" variant="outline" className="gap-2" onClick={copyHtml}>
-            {copiedHtml ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} HTML
-          </Button>
+          <CopyButton size="sm" label="Copy MD" getText={() => value} />
+          <CopyButton
+            size="sm"
+            label="HTML"
+            getText={async () => {
+              const { marked } = await import("marked");
+              return String(marked.parse(value));
+            }}
+          />
         </div>
       }
     >
@@ -843,7 +509,7 @@ const EditorPanel = React.forwardRef<
               },
               {
                 title: "Strikethrough",
-                icon: <Code className="h-4 w-4 rotate-45" />,
+                icon: <Strikethrough className="h-4 w-4" />,
                 onClick: onCmd.strike,
               },
               {
@@ -883,15 +549,14 @@ const EditorPanel = React.forwardRef<
         </div>
       </div>
 
-      <Textarea
+      <TextareaField
         ref={ref}
         value={value}
         onChange={onChange}
-        className={cn(
+        textareaClassName={cn(
           "min-h-[360px] resize-none rounded-md border bg-background/70 font-mono text-sm",
           softWrap ? "whitespace-pre-wrap" : "whitespace-pre",
         )}
-        spellCheck={false}
         placeholder="Start typing your Markdown here… (paste images directly)"
         aria-label="Markdown editor"
       />
@@ -902,31 +567,33 @@ EditorPanel.displayName = "EditorPanel";
 
 function PreviewPanel({
   md,
-  useGfm,
   remarkPlugins,
   rehypePlugins,
+  gfmOn,
+  components,
 }: {
   md: string;
-  useGfm: boolean;
-  remarkPlugins: any[];
-  rehypePlugins: any[];
+  remarkPlugins: PluggableList;
+  rehypePlugins: PluggableList;
+  gfmOn: boolean;
+  components: Components;
 }) {
   return (
     <Panel
       title="Preview"
-      subtitle={useGfm ? "GFM ON" : "GFM OFF"}
+      subtitle={gfmOn ? "GFM ON" : "GFM OFF"}
       right={
-        <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <WrapText className="h-3.5 w-3.5" />
           <span>Rendered</span>
         </div>
       }
     >
-      <div className="prose prose-sm dark:prose-invert max-w-none">
+      <div className="prose prose-sm max-w-none dark:prose-invert">
         <ReactMarkdown
+          components={components}
           remarkPlugins={remarkPlugins}
           rehypePlugins={rehypePlugins}
-          components={markdownComponents}
         >
           {md || "_Nothing to preview yet…_"}
         </ReactMarkdown>
@@ -935,70 +602,213 @@ function PreviewPanel({
   );
 }
 
-/* -----------------------------------------------------------------------------
-   Markdown render components
------------------------------------------------------------------------------ */
+// ReactMarkdown x MDX bridge
+// ReactMarkdown x MDX bridge (fixed types, no JSX namespace dependency)
+function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
+  type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
-const markdownComponents = {
-  code(props: any) {
-    const { children, className, ...rest } = props as React.HTMLAttributes<HTMLElement>;
-    const isInline = !String(className || "").includes("language-");
-    return isInline ? (
-      <code {...rest} className="rounded bg-muted px-1 py-0.5">
-        {children}
-      </code>
-    ) : (
-      <pre className="rounded-lg bg-muted/60 p-3 overflow-auto">
-        <code className="font-mono text-xs">{children}</code>
-      </pre>
-    );
-  },
-  table(props: any) {
-    return (
-      <div className="not-prose overflow-x-auto">
-        <table {...props} className="w-full border-collapse" />
-      </div>
-    );
-  },
-  th(props: any) {
-    return <th {...props} className="border px-2 py-1 text-left" />;
-  },
-  td(props: any) {
-    return <td {...props} className="border px-2 py-1" />;
-  },
-  blockquote(props: any) {
-    return (
-      <blockquote
-        {...props}
-        className="border-l-4 border-primary/30 pl-4 italic text-muted-foreground"
-      />
-    );
-  },
-  h1: withAnchor("h1"),
-  h2: withAnchor("h2"),
-  h3: withAnchor("h3"),
-  h4: withAnchor("h4"),
-  h5: withAnchor("h5"),
-  h6: withAnchor("h6"),
-} as const;
+  // Narrow the MDX map so optional checks are meaningful to TS
+  const m: Partial<MDXProvidedComponents> = mdx;
 
-type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-function withAnchor(tag: HeadingTag) {
-  return (props: React.HTMLAttributes<HTMLHeadingElement>) => {
+  const withAnchor = (Tag: HeadingTag) => (props: React.HTMLAttributes<HTMLHeadingElement>) => {
     const text = String(React.Children.toArray(props.children).join(" "));
     const generated = text
       .toLowerCase()
       .replace(/[^\w\s-]/g, "")
       .replace(/\s+/g, "-");
-    const existingId = (props as any).id as string | undefined;
-    const finalId = existingId || generated;
-    const Comp: any = tag;
+    const id = (props as { id?: string }).id ?? generated;
+    const Comp = Tag as unknown as React.ElementType;
     return (
-      <Comp id={finalId} {...props}>
-        <a href={`#${finalId}`} className="no-underline hover:underline">
+      <Comp id={id} {...props} className={cn("group scroll-mt-20", props.className)}>
+        <a href={`#${id}`} className="no-underline hover:underline">
           {props.children}
         </a>
       </Comp>
     );
   };
+
+  type CodeProps = React.ComponentProps<"code"> & {
+    inline?: boolean;
+    className?: string;
+    children?: React.ReactNode;
+  };
+
+  const DefaultCodeBlock = ({ children }: { children?: React.ReactNode }) => (
+    <pre className="overflow-auto rounded-lg bg-muted/60 p-3">
+      <code className="font-mono text-xs">{children}</code>
+    </pre>
+  );
+
+  return {
+    // code blocks & inline
+    code({ inline, className, children, ...rest }: CodeProps) {
+      const isInline = inline ?? !String(className ?? "").includes("language-");
+      if (isInline) {
+        return (
+          <code {...rest} className="rounded bg-muted px-1 py-0.5">
+            {children}
+          </code>
+        );
+      }
+      // Use your CodeBlock if present, otherwise fallback (no always-true condition)
+      const CodeBlock = m.code ?? DefaultCodeBlock;
+      return (
+        <CodeBlock className={className} {...rest}>
+          {children}
+        </CodeBlock>
+      );
+    },
+
+    // Headings using your typography + anchors
+    h1: (props) =>
+      withAnchor("h1")({
+        ...props,
+        className: cn(props.className, "text-3xl font-semibold tracking-tight pt-10 pb-4"),
+      }),
+    h2: (props) =>
+      withAnchor("h2")({
+        ...props,
+        className: cn(
+          props.className,
+          "text-2xl font-semibold tracking-tight pt-8 pb-3 text-gray-900 dark:text-zinc-100",
+        ),
+      }),
+    h3: (props) =>
+      withAnchor("h3")({
+        ...props,
+        className: cn(
+          props.className,
+          "text-xl font-medium pt-6 pb-2 text-gray-900 dark:text-zinc-100",
+        ),
+      }),
+    h4: (props) =>
+      withAnchor("h4")({
+        ...props,
+        className: cn(props.className, "text-lg font-medium pt-5 pb-1"),
+      }),
+
+    // Text & lists (prefer your MDX styles when available)
+    p: (props) =>
+      m.p ? (
+        m.p(props)
+      ) : (
+        <p className="mb-4 leading-relaxed text-gray-800 dark:text-zinc-300" {...props} />
+      ),
+    ol: (props) =>
+      m.ol ? (
+        m.ol(props)
+      ) : (
+        <ol className="list-decimal space-y-2 pl-5 text-gray-800 dark:text-zinc-300" {...props} />
+      ),
+    ul: (props) =>
+      m.ul ? (
+        m.ul(props)
+      ) : (
+        <ul className="list-disc space-y-1 pl-5 text-gray-800 dark:text-zinc-300" {...props} />
+      ),
+    li: (props) => (m.li ? m.li(props) : <li className="pl-1" {...props} />),
+
+    em: (props) => (m.em ? m.em(props) : <em className="italic" {...props} />),
+    strong: (props) =>
+      m.strong ? m.strong(props) : <strong className="font-semibold" {...props} />,
+
+    a: ({ href, children, ...props }) => {
+      if (m.a) return m.a({ href, children, ...props });
+      const cls = "text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300";
+      if (href?.startsWith("/"))
+        return (
+          <a href={href} className={cls} {...props}>
+            {children}
+          </a>
+        );
+      if (href?.startsWith("#"))
+        return (
+          <a href={href} className={cls} {...props}>
+            {children}
+          </a>
+        );
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" className={cls} {...props}>
+          {children}
+        </a>
+      );
+    },
+
+    blockquote: (props) =>
+      m.blockquote ? (
+        m.blockquote(props)
+      ) : (
+        <blockquote
+          className="ml-2 border-l-4 border-gray-400 pl-4 italic text-gray-700 dark:border-zinc-500 dark:text-zinc-300"
+          {...props}
+        />
+      ),
+
+    table: (props) =>
+      m.table ? (
+        m.table(props)
+      ) : (
+        <table
+          className="my-4 w-full table-auto border-collapse border border-zinc-300 dark:border-zinc-700"
+          {...props}
+        />
+      ),
+    thead: (props) =>
+      m.thead ? m.thead(props) : <thead className="bg-zinc-200 dark:bg-zinc-800" {...props} />,
+    tbody: (props) => (m.tbody ? m.tbody(props) : <tbody {...props} />),
+    tr: (props) =>
+      m.tr ? (
+        m.tr(props)
+      ) : (
+        <tr className="border-t border-zinc-300 dark:border-zinc-700" {...props} />
+      ),
+    th: (props) =>
+      m.th ? (
+        m.th(props)
+      ) : (
+        <th
+          className="p-2 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-200"
+          {...props}
+        />
+      ),
+    td: (props) =>
+      m.td ? (
+        m.td(props)
+      ) : (
+        <td className="p-2 text-sm text-zinc-600 dark:text-zinc-300" {...props} />
+      ),
+  };
+}
+
+/* ----------------------------- Small UI pieces ---------------------------- */
+
+function Toolbar({
+  groups,
+}: {
+  groups: Array<Array<{ title: string; icon: React.ReactNode; onClick: () => void }>>;
+}) {
+  return (
+    <div className="inline-flex w-full flex-wrap items-center gap-2">
+      {groups.map((g, gi) => (
+        <div
+          key={`grp-${gi as number}`}
+          className="inline-flex items-center gap-1 rounded-md border bg-muted/30 px-1"
+        >
+          {g.map((b, bi) => (
+            <Button
+              key={`btn-${gi}-${bi as number}`}
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              title={b.title}
+              onClick={b.onClick}
+              aria-label={b.title}
+            >
+              {b.icon}
+            </Button>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 }
