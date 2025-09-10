@@ -32,21 +32,14 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
-/* -----------------------------------------------------------------------------
-   Reusable primitives
------------------------------------------------------------------------------ */
-
-function clsx(...xs: Array<string | false | undefined | null>) {
-  return xs.filter(Boolean).join(" ");
-}
-
+//  Reusable primitives
 function downloadBlob(filename: string, content: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -72,6 +65,7 @@ function useLocalStorage<T>(key: string, initial: T) {
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   React.useEffect(() => {
     const t = setTimeout(() => {
       try {
@@ -198,7 +192,7 @@ function SplitPane({
         role="separator"
         aria-orientation="vertical"
         title="Drag to resize"
-        className={clsx(
+        className={cn(
           "relative cursor-col-resize select-none",
           drag ? "bg-primary/30" : "bg-transparent",
         )}
@@ -627,9 +621,9 @@ ${html}
       <Separator />
 
       {/* Workspace */}
-      <div className={clsx(fullscreen ? "fixed inset-2 z-50" : "relative", "rounded-2xl")}>
+      <div className={cn(fullscreen ? "fixed inset-2 z-50" : "relative", "rounded-2xl")}>
         <GlassCard
-          className={clsx(
+          className={cn(
             "shadow-sm h-full relative overflow-hidden",
             fullscreen && "ring-1 ring-primary/30",
           )}
@@ -893,7 +887,7 @@ const EditorPanel = React.forwardRef<
         ref={ref}
         value={value}
         onChange={onChange}
-        className={clsx(
+        className={cn(
           "min-h-[360px] resize-none rounded-md border bg-background/70 font-mono text-sm",
           softWrap ? "whitespace-pre-wrap" : "whitespace-pre",
         )}

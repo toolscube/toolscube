@@ -1,43 +1,44 @@
 "use client";
 
 import {
-  Check,
-  ClipboardPaste,
-  Copy,
-  Download,
-  Link as LinkIcon,
+  LayoutGrid,
+  Link2,
   Plus,
   Regex as RegexIcon,
-  RotateCcw,
   Save,
-  Search,
   Sparkles,
   Trash2,
   Wand2,
 } from "lucide-react";
 import * as React from "react";
-import toast from "react-hot-toast";
-import { CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 
-// Library Data
+// Types & data
 type Pattern = {
   id: string;
   title: string;
   description: string;
   pattern: string;
   flags?: string;
-  category: "Text" | "Web" | "Numbers" | "Security" | "System" | "Bangla";
+  category: (typeof CATEGORIES)[number];
   sample?: string;
 };
+
+const CATEGORIES = ["All", "Web", "Numbers", "Security", "System", "Text", "Bangla"] as const;
 
 const LIBRARY: Pattern[] = [
   // Web
@@ -66,7 +67,25 @@ const LIBRARY: Pattern[] = [
     pattern: String.raw`^[a-z0-9]+(?:-[a-z0-9]+)*$`,
     flags: "",
     category: "Web",
-    sample: "projects",
+    sample: "projects, my-project-01",
+  },
+  {
+    id: "html-tag",
+    title: "HTML tag",
+    description: "Find HTML tags with attributes.",
+    pattern: String.raw`<("[^"]*"|'[^']*'|[^'">])*>`,
+    flags: "g",
+    category: "Web",
+    sample: "<div class='box'>Hello</div>",
+  },
+  {
+    id: "youtube-id",
+    title: "YouTube Video ID",
+    description: "Extract 11-char YouTube video ID from URL.",
+    pattern: String.raw`(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([A-Za-z0-9_-]{11})`,
+    flags: "i",
+    category: "Web",
+    sample: "https://youtu.be/abc123XYZ09",
   },
 
   // Numbers
@@ -97,6 +116,24 @@ const LIBRARY: Pattern[] = [
     category: "Numbers",
     sample: "1,200,500.00",
   },
+  {
+    id: "roman-numeral",
+    title: "Roman numeral",
+    description: "Match Roman numerals up to 3999.",
+    pattern: `^(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$`,
+    flags: "i",
+    category: "Numbers",
+    sample: "XIV, MMXXV",
+  },
+  {
+    id: "percentage",
+    title: "Percentage (0-100%)",
+    description: "Number between 0–100 with % sign.",
+    pattern: String.raw`^(100(\.0+)?|[0-9]?\d(\.\d+)?)%$`,
+    flags: "",
+    category: "Numbers",
+    sample: "25%, 99.5%, 100%",
+  },
 
   // Security
   {
@@ -116,6 +153,15 @@ const LIBRARY: Pattern[] = [
     flags: "",
     category: "Security",
     sample: "#0fa, #0F0F0F",
+  },
+  {
+    id: "jwt-token",
+    title: "JWT token",
+    description: "Three base64url encoded parts separated by dots.",
+    pattern: String.raw`^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$`,
+    flags: "",
+    category: "Security",
+    sample: "eyJhbGciOi...abc.def.ghi",
   },
 
   // System
@@ -137,6 +183,24 @@ const LIBRARY: Pattern[] = [
     category: "System",
     sample: "192.168.0.1",
   },
+  {
+    id: "ipv6",
+    title: "IPv6 address",
+    description: "Matches most IPv6 formats.",
+    pattern: String.raw`^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(::1)|::)$`,
+    flags: "i",
+    category: "System",
+    sample: "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+  },
+  {
+    id: "mac-address",
+    title: "MAC address",
+    description: "6 pairs of hex digits separated by : or -.",
+    pattern: String.raw`^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`,
+    flags: "",
+    category: "System",
+    sample: "00:1A:2B:3C:4D:5E",
+  },
 
   // Text
   {
@@ -157,6 +221,24 @@ const LIBRARY: Pattern[] = [
     category: "Text",
     sample: "This is a test.",
   },
+  {
+    id: "hashtags",
+    title: "Hashtags",
+    description: "Find #hashtags in text.",
+    pattern: String.raw`#\w+`,
+    flags: "g",
+    category: "Text",
+    sample: "Loving #ToolsHub and #regex",
+  },
+  {
+    id: "mentions",
+    title: "Mentions (@username)",
+    description: "Find Twitter/Instagram style mentions.",
+    pattern: String.raw`@\w+`,
+    flags: "g",
+    category: "Text",
+    sample: "Thanks @tariqul_dev",
+  },
 
   // Bangla
   {
@@ -175,61 +257,69 @@ const LIBRARY: Pattern[] = [
     pattern: String.raw`[\u0980-\u09FF]+`,
     flags: "g",
     category: "Bangla",
-    sample: "প্রাকৃতিক চিকিৎসা",
+    sample: "আমার সোনার বাংলা",
+  },
+  {
+    id: "bangla-number",
+    title: "Bangla numbers",
+    description: "০–৯ বাংলা সংখ্যা match করে।",
+    pattern: String.raw`[০-৯]+`,
+    flags: "g",
+    category: "Bangla",
+    sample: "১২৩৪৫৬৭৮৯০",
   },
 ];
 
-// -----------------------------
-// Helpers
-// -----------------------------
+// ---------- Helpers ----------
+const FLAG_KEYS = ["g", "i", "m", "s", "u", "y"] as const;
+type FlagKey = (typeof FLAG_KEYS)[number];
+type Flags = Record<FlagKey, boolean>;
+
+const INITIAL_FLAGS: Flags = { g: true, i: true, m: false, s: false, u: false, y: false };
+
 function escapeForDisplay(src: string) {
   return src.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
-function safeWindow() {
+function safeWindow(): (Window & typeof globalThis) | undefined {
   return typeof window !== "undefined" ? window : undefined;
 }
 
 function buildRegex(src: string, flags: string) {
   try {
     return { re: new RegExp(src, flags), error: null as string | null };
-  } catch (e: any) {
-    return { re: null as RegExp | null, error: e?.message ?? "Invalid regex" };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Invalid regex";
+    return { re: null as RegExp | null, error: msg };
   }
 }
 
 type MatchRow = { match: string; index: number; groups?: Record<string, string | undefined> };
 
+// Robust matcher that handles zero-length matches
 function collectMatches(text: string, re: RegExp | null): MatchRow[] {
   if (!re || !text) return [];
-  const g = re.global ? re : new RegExp(re.source, re.flags + "g");
+
+  const g: RegExp = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
   const rows: MatchRow[] = [];
-  for (const m of text.matchAll(g)) {
+
+  for (;;) {
+    const m = g.exec(text);
+    if (m === null) break;
+
     rows.push({
       match: m[0] ?? "",
       index: m.index ?? -1,
       groups: m.groups ?? undefined,
     });
-    if (m[0]?.length === 0) {
-      const nextIndex = (m.index ?? 0) + 1;
-      if (nextIndex >= text.length) break;
-      g.lastIndex = nextIndex;
+
+    if (m[0] === "") {
+      const next = (m.index ?? 0) + 1;
+      g.lastIndex = next;
+      if (next >= text.length) break;
     }
   }
-  return rows;
-}
 
-function downloadJson(data: unknown, filename: string) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: "application/json;charset=utf-8",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  return rows;
 }
 
 function encodeShare(p: { pattern: string; flags: string; text: string; replace: string }) {
@@ -258,18 +348,10 @@ export default function RegexLibraryClient() {
 
   // Tester state
   const [pattern, setPattern] = React.useState<string>(LIBRARY[0].pattern);
-  const [flags, setFlags] = React.useState<Record<"g" | "i" | "m" | "s" | "u" | "y", boolean>>({
-    g: true,
-    i: true,
-    m: false,
-    s: false,
-    u: false,
-    y: false,
-  });
+  const [flags, setFlags] = React.useState<Flags>(INITIAL_FLAGS);
   const [testText, setTestText] = React.useState<string>(LIBRARY[0].sample ?? "");
   const [replace, setReplace] = React.useState<string>("");
   const [error, setError] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState<string | null>(null);
   const [runMs, setRunMs] = React.useState<number | null>(null);
 
   // Favorites
@@ -285,8 +367,8 @@ export default function RegexLibraryClient() {
       { label: "Start ^", value: "^" },
       { label: "End $", value: "$" },
       { label: "Word boundary \\b", value: String.raw`\b` },
-      { label: "Group ()", value: "($1)" }, // placeholder for cursor idea
-      { label: "Named (?<name>)", value: String.raw`(?<name>...)` },
+      { label: "Group ()", value: "($1)" },
+      { label: "Named (?<name>)", value: `(?<name>...)` },
     ],
     [],
   );
@@ -298,9 +380,13 @@ export default function RegexLibraryClient() {
     const { pattern: ps, flags: fs, text: ts, replace: rs } = decodeShare(w.location.search);
     if (ps || fs || ts || rs) {
       setPattern(ps || LIBRARY[0].pattern);
-      const next: any = { g: false, i: false, m: false, s: false, u: false, y: false };
-      for (const ch of fs || "") if (ch in next) next[ch] = true;
+
+      const next: Flags = { g: false, i: false, m: false, s: false, u: false, y: false };
+      for (const ch of fs || "") {
+        if (FLAG_KEYS.includes(ch as FlagKey)) next[ch as FlagKey] = true;
+      }
       setFlags(next);
+
       setTestText(ts || "");
       setReplace(rs || "");
     }
@@ -312,7 +398,7 @@ export default function RegexLibraryClient() {
     if (!w) return;
     try {
       const saved = w.localStorage.getItem("regex-favs");
-      if (saved) setFavs(JSON.parse(saved));
+      if (saved) setFavs(JSON.parse(saved) as Fav[]);
     } catch {}
   }, []);
   const saveFavs = React.useCallback((list: Fav[]) => {
@@ -324,37 +410,30 @@ export default function RegexLibraryClient() {
     } catch {}
   }, []);
 
-  const flagsStr = React.useMemo(
-    () => (["g", "i", "m", "s", "u", "y"] as const).filter((f) => flags[f]).join(""),
-    [flags],
-  );
+  const flagsStr = React.useMemo(() => FLAG_KEYS.filter((f) => flags[f]).join(""), [flags]);
+
+  // Build regex & measure compile time
   const { re, error: buildErr } = React.useMemo(() => {
     const t0 = performance.now();
     const out = buildRegex(pattern, flagsStr);
     setRunMs(performance.now() - t0);
     return out;
-  }, [pattern, flagsStr, testText, replace]);
+  }, [pattern, flagsStr]);
 
   React.useEffect(() => {
     setError(buildErr);
   }, [buildErr]);
 
-  function useInTester(item: Pattern) {
+  // Not a hook — regular handler
+  function applyInTester(item: Pattern) {
     setPattern(item.pattern);
-    const next: typeof flags = { g: false, i: false, m: false, s: false, u: false, y: false };
-    (item.flags ?? "").split("").forEach((f) => {
-      if (f in next) (next as any)[f] = true;
-    });
+    const next: Flags = { g: false, i: false, m: false, s: false, u: false, y: false };
+    for (const f of item.flags ?? "") {
+      if (FLAG_KEYS.includes(f as FlagKey)) next[f as FlagKey] = true;
+    }
     setFlags(next);
     setTestText(item.sample ?? "");
     safeWindow()?.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  async function copy(text: string) {
-    await navigator.clipboard.writeText(text);
-    setCopied(text);
-    toast.success("Copied Successfully!");
-    setTimeout(() => setCopied(null), 900);
   }
 
   function resetTester() {
@@ -383,22 +462,12 @@ export default function RegexLibraryClient() {
   const replaced = React.useMemo(() => {
     if (!re || !testText) return "";
     try {
-      const gg = re.global ? re : new RegExp(re.source, re.flags + "g");
+      const gg = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
       return testText.replace(gg, replace);
     } catch {
       return "";
     }
   }, [re, testText, replace]);
-
-  function shareLink() {
-    const w = safeWindow();
-    if (!w) return;
-    const url =
-      w.location.origin +
-      w.location.pathname +
-      encodeShare({ pattern, flags: flagsStr, text: testText, replace });
-    copy(url);
-  }
 
   function addFavorite() {
     const title = prompt("Save as (title)?", pattern.slice(0, 32) || "Untitled");
@@ -409,8 +478,10 @@ export default function RegexLibraryClient() {
   }
   function applyFavorite(f: Fav) {
     setPattern(f.pattern);
-    const next: any = { g: false, i: false, m: false, s: false, u: false, y: false };
-    for (const ch of f.flags) if (ch in next) next[ch] = true;
+    const next: Flags = { g: false, i: false, m: false, s: false, u: false, y: false };
+    for (const ch of f.flags) {
+      if (FLAG_KEYS.includes(ch as FlagKey)) next[ch as FlagKey] = true;
+    }
     setFlags(next);
   }
   function removeFavorite(id: string) {
@@ -421,40 +492,6 @@ export default function RegexLibraryClient() {
   return (
     <>
       {/* Header */}
-      <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-        <div className="md:w-1/2">
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <RegexIcon className="h-6 w-6" /> Regex Library
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Curated expressions with a built-in tester. Copy, tweak flags, replace, and validate
-            against your text.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={resetTester} className="gap-2">
-            <RotateCcw className="h-4 w-4" /> Reset Tester
-          </Button>
-          <Button
-            onClick={() =>
-              navigator.clipboard
-                .readText()
-                .then((t) => t && setTestText(t))
-                .catch(() => {})
-            }
-            className="gap-2"
-          >
-            <ClipboardPaste className="h-4 w-4" /> Paste Text
-          </Button>
-          <Button variant="outline" onClick={shareLink} className="gap-2">
-            <LinkIcon className="h-4 w-4" /> Share
-          </Button>
-          <Button variant="outline" onClick={addFavorite} className="gap-2">
-            <Save className="h-4 w-4" /> Save Fav
-          </Button>
-        </div>
-      </GlassCard>
-
       <ToolPageHeader
         icon={RegexIcon}
         title="Regex Library"
@@ -462,7 +499,20 @@ export default function RegexLibraryClient() {
         actions={
           <>
             <ResetButton onClick={resetTester} />
-            <CopyButton getText={testText} disabled={!testText} />
+            <CopyButton
+              icon={Link2}
+              label="Share"
+              getText={() => {
+                const w = safeWindow();
+                if (!w) return;
+                return (
+                  w.location.origin +
+                  w.location.pathname +
+                  encodeShare({ pattern, flags: flagsStr, text: testText, replace })
+                );
+              }}
+            />
+            <ActionButton icon={Save} label="Save Favorite" onClick={addFavorite} />
           </>
         }
       />
@@ -483,7 +533,7 @@ export default function RegexLibraryClient() {
                 <span className="rounded-md border bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
                   /
                 </span>
-                <Input
+                <InputField
                   id="pattern"
                   placeholder="your-regex-here"
                   value={pattern}
@@ -493,11 +543,11 @@ export default function RegexLibraryClient() {
                 <span className="rounded-md border bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
                   /
                 </span>
-                <Input
+                <InputField
                   aria-label="flags"
                   value={flagsStr}
                   onChange={(e) => {
-                    const next: any = {
+                    const next: Flags = {
                       g: false,
                       i: false,
                       m: false,
@@ -506,7 +556,7 @@ export default function RegexLibraryClient() {
                       y: false,
                     };
                     const v = e.target.value.replace(/[^gimsuy]/g, "");
-                    for (const ch of v) if (ch in next) next[ch] = true;
+                    for (const ch of v) if (FLAG_KEYS.includes(ch as FlagKey)) next[ch as FlagKey] = true;
                     setFlags(next);
                   }}
                   className="w-24 font-mono"
@@ -516,16 +566,14 @@ export default function RegexLibraryClient() {
                 </span>
               </div>
               <div className="mt-1 grid grid-cols-6 gap-2 sm:grid-cols-6">
-                {(["g", "i", "m", "s", "u", "y"] as const).map((k) => (
-                  <button
+                {FLAG_KEYS.map((k) => (
+                  <ActionButton
                     key={k}
-                    type="button"
+                    size="sm"
+                    label={k}
                     onClick={() => setFlags((f) => ({ ...f, [k]: !f[k] }))}
-                    className={`h-8 rounded-md border text-xs font-medium ${flags[k] ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"}`}
-                    title={`Toggle ${k}`}
-                  >
-                    {k}
-                  </button>
+                    variant={flags[k] ? "default" : "outline"}
+                  />
                 ))}
               </div>
               {error ? (
@@ -539,71 +587,53 @@ export default function RegexLibraryClient() {
               <Label>Quick inserts</Label>
               <div className="flex flex-wrap gap-2">
                 {QUICK.map((qk) => (
-                  <Button
+                  <ActionButton
                     key={qk.label}
+                    label={qk.label}
                     size="sm"
-                    variant="outline"
                     onClick={() => setPattern((p) => p + qk.value)}
-                  >
-                    {qk.label}
-                  </Button>
+                  />
                 ))}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="test">Test Text</Label>
-              <Textarea
-                id="test"
-                value={testText}
-                onChange={(e) => setTestText(e.target.value)}
-                className="min-h-[140px] font-mono"
-                placeholder="Paste or type text to test…"
-              />
-            </div>
+            <TextareaField
+              id="test"
+              label="Test Text"
+              value={testText}
+              onChange={(e) => setTestText(e.target.value)}
+              className="min-h-[140px] font-mono"
+              placeholder="Paste or type text to test…"
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="replace">Replace</Label>
-              <Input
-                id="replace"
-                value={replace}
-                onChange={(e) => setReplace(e.target.value)}
-                placeholder="Use $1, $<name> etc."
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                Supports capture groups and named groups. Example:{" "}
-                <code className="font-mono">Hello, $1</code> or{" "}
-                <code className="font-mono">$&</code>.
-              </p>
-            </div>
+            <InputField
+              id="replace"
+              label="Replace"
+              value={replace}
+              onChange={(e) => setReplace(e.target.value)}
+              placeholder="Use $1, $<name> etc."
+              className="font-mono"
+              hint={
+                <p className="text-xs text-muted-foreground">
+                  Supports capture groups and named groups. Example:{" "}
+                  <code className="font-mono">Hello, $1</code> or{" "}
+                  <code className="font-mono">$&</code>.
+                </p>
+              }
+            />
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Preview (matches highlighted)</Label>
               <div className="flex gap-2">
-                <Button
+                <CopyButton size="sm" label="Copy Regex" getText={`/${pattern}/${flagsStr}`} />
+                <ExportTextButton
                   size="sm"
-                  variant="outline"
-                  onClick={() => copy(`/${pattern}/${flagsStr}`)}
-                  className="gap-2"
-                >
-                  {copied === `/${pattern}/${flagsStr}` ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                  Copy Regex
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => downloadJson(matches, "regex-matches.json")}
-                  className="gap-2"
-                >
-                  <Download className="h-4 w-4" /> Matches JSON
-                </Button>
+                  label="Matches JSON"
+                  filename="regex-matches.json"
+                  getText={() => JSON.stringify(matches, null, 2)}
+                />
               </div>
             </div>
             <div className="min-h-[140px] rounded-md border p-3 text-sm leading-6">
@@ -614,23 +644,21 @@ export default function RegexLibraryClient() {
 
             {!error && re && (
               <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <Badge variant="outline">
+                <Badge>
                   source: <span className="font-mono ml-1">/{escapeForDisplay(re.source)}/</span>
                 </Badge>
-                <Badge variant="outline">flags: {re.flags || "—"}</Badge>
-                <Badge variant="outline">matches: {matches.length}</Badge>
+                <Badge>flags: {re.flags || "—"}</Badge>
+                <Badge>matches: {matches.length}</Badge>
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label>Replace Result</Label>
-              <Textarea
-                readOnly
-                value={replaced}
-                className="min-h-[120px] font-mono"
-                placeholder="Replaced text will appear here…"
-              />
-            </div>
+            <TextareaField
+              label="Replace Result"
+              readOnly
+              value={replaced}
+              className="min-h-[120px] font-mono"
+              placeholder="Replaced text will appear here…"
+            />
 
             {/* Matches table-ish */}
             <div className="space-y-2">
@@ -641,7 +669,10 @@ export default function RegexLibraryClient() {
                 ) : (
                   <div className="divide-y">
                     {matches.map((m, i) => (
-                      <div key={i} className="grid grid-cols-1 gap-1 p-3 sm:grid-cols-12 sm:gap-3">
+                      <div
+                        key={i as number}
+                        className="grid grid-cols-1 gap-1 p-3 sm:grid-cols-12 sm:gap-3"
+                      >
                         <div className="sm:col-span-3">
                           <div className="text-[11px] text-muted-foreground">Match #{i + 1}</div>
                           <div className="font-mono text-sm break-words">{m.match}</div>
@@ -674,7 +705,7 @@ export default function RegexLibraryClient() {
         </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       {/* Library controls */}
       <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
@@ -682,35 +713,29 @@ export default function RegexLibraryClient() {
           <Sparkles className="h-5 w-5" />
           <div className="text-sm text-muted-foreground">Hand-picked patterns, ready to copy.</div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search patterns…"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs">Category</Label>
-            <select
-              value={cat}
-              onChange={(e) => setCat(e.target.value as any)}
-              className="h-9 rounded-md border bg-background px-2 text-sm"
-            >
-              {["All", "Web", "Numbers", "Security", "System", "Text", "Bangla"].map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <InputField
+            placeholder="Search patterns…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="pl-8"
+          />
+
+          <SelectField
+            id="category"
+            icon={LayoutGrid}
+            label="Category"
+            placeholder="All"
+            className="w-44"
+            value={cat}
+            options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+            onValueChange={(v) => setCat((v as (typeof CATEGORIES)[number]) ?? "All")}
+          />
         </div>
       </GlassCard>
 
       {/* Library grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 mt-4">
         {filtered.map((item) => (
           <GlassCard key={item.id}>
             <CardHeader className="pb-2">
@@ -733,29 +758,21 @@ export default function RegexLibraryClient() {
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
-                <Button
+                <CopyButton size="sm" getText={`/${item.pattern}/${item.flags ?? ""}`} />
+                <ActionButton
                   size="sm"
-                  variant="outline"
+                  icon={Wand2}
+                  label="Use in Tester"
                   className="gap-2"
-                  onClick={() => copy(`/${item.pattern}/${item.flags ?? ""}`)}
-                >
-                  {copied === `/${item.pattern}/${item.flags ?? ""}` ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                  Copy
-                </Button>
-                <Button size="sm" className="gap-2" onClick={() => useInTester(item)}>
-                  <Wand2 className="h-4 w-4" /> Use in Tester
-                </Button>
+                  onClick={() => applyInTester(item)}
+                />
               </div>
             </CardContent>
           </GlassCard>
         ))}
       </div>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       {/* Favorites */}
       <GlassCard>
@@ -766,7 +783,7 @@ export default function RegexLibraryClient() {
         <CardContent>
           {favs.length === 0 ? (
             <div className="rounded-md border p-3 text-sm text-muted-foreground">
-              No favorites yet. Click <em>Save Fav</em> above to store the current pattern.
+              No favorites yet. Click <em>Save Favorite</em> above to store the current pattern.
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -775,34 +792,18 @@ export default function RegexLibraryClient() {
                   <div className="mb-2 flex items-center justify-between">
                     <div className="font-medium">{f.title}</div>
                     <div className="flex gap-1">
-                      <Button
+                      <ActionButton size="icon" icon={Plus} onClick={() => applyFavorite(f)} />
+                      <CopyButton
                         size="icon"
-                        variant="outline"
-                        onClick={() => applyFavorite(f)}
-                        title="Apply"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button
+                        label=""
+                        copiedLabel=""
+                        getText={`/${f.pattern}/${f.flags}`}
+                      />
+                      <ActionButton
                         size="icon"
-                        variant="outline"
-                        onClick={() => copy(`/${f.pattern}/${f.flags}`)}
-                        title="Copy"
-                      >
-                        {copied === `/${f.pattern}/${f.flags}` ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="outline"
+                        icon={Trash2}
                         onClick={() => removeFavorite(f.id)}
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      />
                     </div>
                   </div>
                   <div className="rounded-md border bg-muted/50 p-2 text-sm font-mono">
@@ -815,7 +816,7 @@ export default function RegexLibraryClient() {
         </CardContent>
       </GlassCard>
 
-      <Separator className="my-6" />
+      <Separator className="my-4" />
 
       {/* Cheatsheet */}
       <GlassCard>
@@ -878,16 +879,18 @@ export default function RegexLibraryClient() {
   );
 }
 
+// ---------- View helper ----------
 function highlightMatches(text: string, re: RegExp | null) {
   if (!re || !text) return <>{text}</>;
 
-  // Ensure global for iterative matching
-  const g = re.global ? re : new RegExp(re.source, re.flags + "g");
-
+  const g: RegExp = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
   const parts: React.ReactNode[] = [];
   let last = 0;
 
-  for (const m of text.matchAll(g)) {
+  for (;;) {
+    const m = g.exec(text);
+    if (m === null) break;
+
     const start = m.index ?? 0;
     const end = start + (m[0]?.length ?? 0);
 
@@ -903,9 +906,11 @@ function highlightMatches(text: string, re: RegExp | null) {
 
     last = end;
 
-    if (m[0].length === 0) {
-      // Avoid infinite loops on zero-width matches
-      last += 1;
+    if (m[0] === "") {
+      const next = start + 1;
+      g.lastIndex = next;
+      last = next;
+      if (next >= text.length) break;
     }
   }
 
@@ -915,3 +920,4 @@ function highlightMatches(text: string, re: RegExp | null) {
 
   return <>{parts}</>;
 }
+
