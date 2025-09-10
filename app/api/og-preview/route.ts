@@ -1,4 +1,3 @@
-// app/api/og-preview/route.ts
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -17,7 +16,7 @@ type Extracted = {
 
 function normalizeUrl(u: string) {
   try {
-    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
     return new URL(u).toString();
   } catch {
     return null;
@@ -36,12 +35,13 @@ function abs(base: string, maybe: string | undefined) {
 function parseAttrs(tag: string) {
   const attrs: Record<string, string> = {};
   const r = /([^\s=]+)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g;
-  let m: RegExpExecArray | null;
-  while ((m = r.exec(tag))) {
+
+  for (let m = r.exec(tag); m; m = r.exec(tag)) {
     const key = m[1].toLowerCase();
     const val = m[3] ?? m[4] ?? m[5] ?? "";
     attrs[key] = val;
   }
+
   return attrs;
 }
 
@@ -49,15 +49,18 @@ function extractMeta(html: string, baseUrl: string): Extracted {
   const meta: Record<string, string[]> = {};
   const push = (k: string, v: string) => {
     const kk = k.toLowerCase();
-    (meta[kk] ||= []).push(v);
+    if (!meta[kk]) {
+      meta[kk] = [];
+    }
+    meta[kk].push(v);
   };
 
   // <meta ...>
   const metaTags = html.match(/<meta\s+[^>]*>/gi) ?? [];
   for (const t of metaTags) {
     const a = parseAttrs(t);
-    const key = (a["property"] ?? a["name"])?.toLowerCase();
-    const val = a["content"] ?? "";
+    const key = (a.property ?? a.name)?.toLowerCase();
+    const val = a.content ?? "";
     if (key && val) push(key, val);
   }
 
@@ -68,10 +71,7 @@ function extractMeta(html: string, baseUrl: string): Extracted {
 
   // description fallback
   const description =
-    meta["og:description"]?.[0] ??
-    meta["twitter:description"]?.[0] ??
-    meta["description"]?.[0] ??
-    "";
+    meta["og:description"]?.[0] ?? meta["twitter:description"]?.[0] ?? meta.description?.[0] ?? "";
 
   // site name
   const siteName = meta["og:site_name"]?.[0];
@@ -82,10 +82,10 @@ function extractMeta(html: string, baseUrl: string): Extracted {
   const icons: string[] = [];
   for (const t of linkTags) {
     const a = parseAttrs(t);
-    const rel = (a["rel"] ?? "").toLowerCase();
-    if (rel.includes("canonical") && a["href"]) canonical = abs(baseUrl, a["href"]) || canonical;
-    if (rel.includes("icon") && a["href"]) {
-      const u = abs(baseUrl, a["href"]);
+    const rel = (a.rel ?? "").toLowerCase();
+    if (rel.includes("canonical") && a.href) canonical = abs(baseUrl, a.href) || canonical;
+    if (rel.includes("icon") && a.href) {
+      const u = abs(baseUrl, a.href);
       if (u) icons.push(u);
     }
   }
@@ -195,8 +195,11 @@ export async function GET(req: Request) {
       },
       { headers: { "Cache-Control": "no-store" } },
     );
-  } catch (e: any) {
-    const msg = e?.name === "AbortError" ? "Request timed out" : (e?.message ?? "Unexpected error");
+  } catch (e: unknown) {
+    const err = e as { name?: string; message?: string };
+    const msg =
+      err?.name === "AbortError" ? "Request timed out" : (err?.message ?? "Unexpected error");
+
     return Response.json(
       { ok: false, error: msg },
       { status: 500, headers: { "Cache-Control": "no-store" } },
