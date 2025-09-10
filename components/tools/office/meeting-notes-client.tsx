@@ -23,7 +23,7 @@ import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card"; 
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 
 // Types
@@ -164,7 +164,7 @@ export default function MeetingNotesClient() {
     resetClock();
   };
 
-   const md = `# ${data.title}\n\n- **Date:** ${data.date}\n- **Location:** ${data.location || "-"}\n- **Attendees:** ${data.attendees || "-"}\n\n## Agenda\n${
+  const md = `# ${data.title}\n\n- **Date:** ${data.date}\n- **Location:** ${data.location || "-"}\n- **Attendees:** ${data.attendees || "-"}\n\n## Agenda\n${
     data.agenda || "_(none)_"
   }\n\n## Notes\n${
     data.notes
@@ -365,6 +365,7 @@ export default function MeetingNotesClient() {
               onChange={(e) => setData({ ...data, decisions: e.target.value })}
               placeholder="\u2022 Approve Q4 roadmap\n\u2022 Switch provider"
               textareaClassName="min-h-[140px]"
+              autoResize
             />
           </div>
           <div className="lg:col-span-2 space-y-3">
@@ -403,10 +404,11 @@ export default function MeetingNotesClient() {
                       onChange={(e) => updateAction(a.id, { due: e.target.value })}
                     />
                   </div>
-                  <div className="md:col-span-2 flex items-start justify-end gap-2">
+                  <div className="md:col-span-2 flex items-end justify-end gap-2">
                     <ActionButton
+                      size="icon"
                       icon={Check}
-                      label={a.done ? "Done" : "Mark Done"}
+                      // label={a.done ? "Done" : "Mark Done"}
                       variant={a.done ? "default" : "outline"}
                       onClick={() => updateAction(a.id, { done: !a.done })}
                     />

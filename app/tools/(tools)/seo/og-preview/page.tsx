@@ -187,6 +187,7 @@ export default function OGPreviewPage() {
           <>
             <ResetButton onClick={resetAll} />
             <ActionButton
+              variant="default"
               icon={loading ? Loader2 : autoFetch ? Sparkles : TrendingUpDown}
               label={loading ? "Fetching…" : autoFetch ? "Auto fetch" : "Fetch"}
               onClick={() => runFetch()}
