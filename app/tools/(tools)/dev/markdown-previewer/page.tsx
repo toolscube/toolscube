@@ -3,21 +3,23 @@
 import {
   Bold,
   Code,
-  Copy,
   Download,
   Eye,
   FileText,
   Github,
   Heading1,
   Heading2,
+  Heading3,
+  Image as ImageIcon,
   Italic,
   Link as LinkIcon,
   List,
   ListChecks,
   ListOrdered,
+  Minus,
+  Quote,
   Redo2,
   Strikethrough,
-  Upload,
   Wand2,
   WrapText,
 } from "lucide-react";
@@ -25,7 +27,14 @@ import * as React from "react";
 import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import type { PluggableList } from "unified";
-import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  ExportFileButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
@@ -37,19 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useMDXComponents } from "@/mdx-components";
 
-/* Utilities */
-function downloadBlob(filename: string, content: string, type: string) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
+/* utils */
 function sanitizeTitle(s: string) {
   return s.replace(/[<>:"/\\|?*]/g, "").slice(0, 120) || "Export";
 }
@@ -57,7 +54,7 @@ function sanitizeTitle(s: string) {
 function useLocalStorage<T>(key: string, initial: T) {
   const [value, setValue] = React.useState<T>(initial);
 
-  // load
+  // load once
   React.useEffect(() => {
     try {
       if (typeof window === "undefined") return;
@@ -80,7 +77,8 @@ function useLocalStorage<T>(key: string, initial: T) {
   return [value, setValue] as const;
 }
 
-/** Panel: minimal card-like section */
+/* UI shell */
+
 function Panel({
   title,
   subtitle,
@@ -92,7 +90,6 @@ function Panel({
   title: string;
   subtitle?: React.ReactNode;
   right?: React.ReactNode;
-
   left?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -109,28 +106,26 @@ function Panel({
           </div>
           {subtitle ? <div className="text-[11px] text-muted-foreground">{subtitle}</div> : null}
         </div>
-
         {right ? <div className="flex items-center gap-2">{right}</div> : null}
       </div>
-
       <div className="p-3">{children}</div>
     </div>
   );
 }
 
-const STORAGE_KEY = "toolshub.markdown-previewer.v7";
-
+const STORAGE_KEY = "toolshub.markdown-previewer.v9";
 const SAMPLE_MD = `# ✨ Markdown Previewer
 
-Write Markdown in **Write** tab — see live **Preview** on the other tab.
+Write in **Write** tab — see live **Preview**.
 
-- GitHub-style tabs (all screens)
-- GFM support (tables, task lists, strikethrough)
+- GFM: tables, task lists, strikethrough
 - Copy MD / Copy HTML
-- Paste images directly
+- Export .md / .html
 `;
 
-export default function MarkdownPreviewerClient() {
+/* page */
+
+export default function MarkdownPreviewerPage() {
   const [state, setState] = useLocalStorage(STORAGE_KEY, {
     md: SAMPLE_MD,
     filename: "document.md",
@@ -138,17 +133,19 @@ export default function MarkdownPreviewerClient() {
     softWrap: true,
   });
 
+  const setPatch = React.useCallback(
+    (patch: Partial<typeof state>) => setState((prev) => ({ ...prev, ...patch })),
+    [setState],
+  );
+
   const md = state.md as string;
   const filename = state.filename as string;
   const useGfm = state.useGfm as boolean;
   const softWrap = state.softWrap as boolean;
 
-  const set = (patch: Partial<typeof state>) => setState((prev) => ({ ...prev, ...patch }));
-
-  // Plugins loaded dynamically
+  // plugins (lazy)
   const [gfmList, setGfmList] = React.useState<PluggableList>([]);
   const [highlightList, setHighlightList] = React.useState<PluggableList>([]);
-
   React.useEffect(() => {
     let mounted = true;
     (async () => {
@@ -165,33 +162,23 @@ export default function MarkdownPreviewerClient() {
       mounted = false;
     };
   }, []);
-
   const remarkPlugins = React.useMemo<PluggableList>(
     () => (useGfm ? gfmList : []),
     [useGfm, gfmList],
   );
   const rehypePlugins = React.useMemo<PluggableList>(() => highlightList, [highlightList]);
 
-  // Copy state (for check icons)
-  const [copiedMd, setCopiedMd] = React.useState(false);
-  const [copiedHtml, setCopiedHtml] = React.useState(false);
-
-  // UI state
   const [activeTab, setActiveTab] = React.useState<"write" | "preview">("write");
-
-  // Cursor position readout
   const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [cursorRowCol, setCursorRowCol] = React.useState({ row: 1, col: 1 });
 
-  // Stats
   const counts = React.useMemo(() => {
     const words = (md.match(/\b\S+\b/g) || []).length;
     return { words, chars: md.length, lines: md.split("\n").length };
   }, [md]);
 
-  // Actions
   const resetAll = () =>
-    set({
+    setPatch({
       md: SAMPLE_MD,
       filename: "document.md",
       useGfm: true,
@@ -203,66 +190,65 @@ export default function MarkdownPreviewerClient() {
     return String(marked.parse(md));
   }, [md]);
 
-  const copyMarkdown = async () => {
-    await navigator.clipboard.writeText(md);
-    setCopiedMd(true);
-    setTimeout(() => setCopiedMd(false), 1200);
-  };
+  /* selection helpers (stable) */
+  const insertAtCursor = React.useCallback(
+    (snippet: string) => {
+      const el = editorRef.current;
+      if (!el) return setPatch({ md: md + snippet });
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? 0;
+      const next = `${md.slice(0, start)}${snippet}${md.slice(end)}`;
+      setPatch({ md: next });
+      requestAnimationFrame(() => {
+        if (!editorRef.current) return;
+        const pos = start + snippet.length;
+        editorRef.current.selectionStart = editorRef.current.selectionEnd = pos;
+        editorRef.current.focus();
+      });
+    },
+    [md, setPatch],
+  );
 
-  const copyHTML = async () => {
-    const html = await generateHTML();
-    await navigator.clipboard.writeText(html);
-    setCopiedHtml(true);
-    setTimeout(() => setCopiedHtml(false), 1200);
-  };
+  const wrapSelection = React.useCallback(
+    (prefix: string, suffix: string = prefix, placeholder = "text") => {
+      const el = editorRef.current;
+      if (!el) return insertAtCursor(`${prefix}${placeholder}${suffix}`);
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? 0;
+      const sel = md.slice(start, end) || placeholder;
+      const next = `${md.slice(0, start)}${prefix}${sel}${suffix}${md.slice(end)}`;
+      setPatch({ md: next });
+      requestAnimationFrame(() => {
+        if (!editorRef.current) return;
+        const newStart = start + prefix.length;
+        const newEnd = newStart + sel.length;
+        editorRef.current.selectionStart = newStart;
+        editorRef.current.selectionEnd = newEnd;
+        editorRef.current.focus();
+      });
+    },
+    [insertAtCursor, md, setPatch],
+  );
 
-  const handleExportMd = () =>
-    downloadBlob(filename || "document.md", md, "text/markdown;charset=utf-8");
+  const prefixLines = React.useCallback(
+    (prefix: string) => {
+      const el = editorRef.current;
+      if (!el) return;
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? 0;
+      const block = md.slice(start, end);
+      const nextBlock =
+        (block || "")
+          .split("\n")
+          .map((l) => (l.trim() ? `${prefix}${l.replace(/^\s*/, "")}` : l))
+          .join("\n") || `${prefix}`;
+      const next = `${md.slice(0, start)}${nextBlock}${md.slice(end)}`;
+      setPatch({ md: next });
+    },
+    [md, setPatch],
+  );
 
-  const handleExportHtml = async () => {
-    const html = await generateHTML();
-    const doc = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<title>${sanitizeTitle(filename.replace(/\.md$/i, "") || "Export")}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-<style>
-  :root { color-scheme: light dark; }
-  body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial; margin: 2rem; line-height: 1.65; }
-  pre { background: rgba(0,0,0,0.06); padding: 1rem; overflow:auto; border-radius: 10px; }
-  table { border-collapse: collapse; }
-  th, td { border: 1px solid rgba(0,0,0,0.15); padding: 6px 10px; }
-  blockquote { border-left: 3px solid rgba(0,0,0,0.2); margin: 0; padding: .5rem 1rem; }
-  h1,h2,h3,h4,h5 { line-height: 1.25; }
-  @media print { a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; } }
-</style>
-</head>
-<body>
-${html}
-</body>
-</html>`;
-    downloadBlob(`${filename.replace(/\.md$/i, "")}.html`, doc, "text/html;charset=utf-8");
-  };
-
-  const importRef = React.useRef<HTMLInputElement | null>(null);
-  const handleImport = async (file?: File) => {
-    if (!file) return;
-    const text = await file.text();
-    set({ md: text, filename: file.name.endsWith(".md") ? file.name : `${file.name}.md` });
-  };
-
-  // Editor change
-  const onEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    set({ md: e.target.value });
-    const pos = e.target.selectionStart ?? 0;
-    const rows = e.target.value.slice(0, pos).split("\n");
-    setCursorRowCol({ row: rows.length, col: rows[rows.length - 1].length + 1 });
-  };
-
-  // Keyboard shortcuts
-  // biome-ignore lint/correctness/useExhaustiveDependencies: handlers intentionally stable
+  // keyboard shortcuts
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
@@ -277,58 +263,23 @@ ${html}
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [wrapSelection]);
 
-  /* selection helpers */
-  function insertAtCursor(snippet: string) {
-    const el = editorRef.current;
-    if (!el) return set({ md: md + snippet });
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    const next = `${md.slice(0, start)}${snippet}${md.slice(end)}`;
-    set({ md: next });
-    requestAnimationFrame(() => {
-      if (!editorRef.current) return;
-      const pos = start + snippet.length;
-      editorRef.current.selectionStart = editorRef.current.selectionEnd = pos;
-      editorRef.current.focus();
-    });
-  }
-  function wrapSelection(prefix: string, suffix: string = prefix, placeholder = "text") {
-    const el = editorRef.current;
-    if (!el) return insertAtCursor(`${prefix}${placeholder}${suffix}`);
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    const sel = md.slice(start, end) || placeholder;
-    const next = `${md.slice(0, start)}${prefix}${sel}${suffix}${md.slice(end)}`;
-    set({ md: next });
-    requestAnimationFrame(() => {
-      if (!editorRef.current) return;
-      const newStart = start + prefix.length;
-      const newEnd = newStart + sel.length;
-      editorRef.current.selectionStart = newStart;
-      editorRef.current.selectionEnd = newEnd;
-      editorRef.current.focus();
-    });
-  }
-  function prefixLines(prefix: string) {
-    const el = editorRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    const block = md.slice(start, end);
-    const nextBlock =
-      (block || "")
-        .split("\n")
-        .map((l) => (l.trim() ? `${prefix}${l.replace(/^\s*/, "")}` : l))
-        .join("\n") || `${prefix}`;
-    const next = `${md.slice(0, start)}${nextBlock}${md.slice(end)}`;
-    set({ md: next });
-  }
+  // editor change
+  const onEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPatch({ md: e.target.value });
+    const pos = e.target.selectionStart ?? 0;
+    const rows = e.target.value.slice(0, pos).split("\n");
+    setCursorRowCol({ row: rows.length, col: rows[rows.length - 1].length + 1 });
+  };
 
-  // use MDX component styles for preview
-  const mdx = useMDXComponents();
-  const components = React.useMemo(() => buildMarkdownComponents(mdx), [mdx]);
+  // MDX bridge
+  type MDXProvidedComponents = {
+    code?: React.ComponentType<{ code: string; language?: string }>;
+    [key: string]: any;
+  };
+  const mdx = useMDXComponents() as MDXProvidedComponents;
+  const components = React.useMemo<Components>(() => buildMarkdownComponents(mdx), [mdx]);
 
   return (
     <>
@@ -338,20 +289,23 @@ ${html}
         icon={FileText}
         actions={
           <>
-            <ActionButton icon={Wand2} label="Sample" onClick={() => set({ md: SAMPLE_MD })} />
-            <ActionButton icon={Upload} label="Import" onClick={() => importRef.current?.click()} />
-            <input
-              ref={importRef}
+            <ResetButton onClick={resetAll} />
+            <ActionButton icon={Wand2} label="Sample" onClick={() => setPatch({ md: SAMPLE_MD })} />
+            <InputField
+              fileButtonVariant="default"
               type="file"
               accept=".md,.markdown,.txt"
-              className="hidden"
-              onChange={(e) => void handleImport(e.target.files?.[0] ?? undefined)}
+              multiple={false}
+              onFilesChange={async (files) => {
+                const f = files?.[0];
+                if (!f) return;
+                const text = await f.text();
+                setPatch({
+                  md: text,
+                  filename: f.name.endsWith(".md") ? f.name : `${f.name}.md`,
+                });
+              }}
             />
-            <CopyButton icon={Copy} label="Copy MD" getText={() => md} />
-            <CopyButton icon={Copy} label="Copy HTML" getText={async () => await generateHTML()} />
-            <ActionButton icon={Download} label="Export .md" onClick={handleExportMd} />
-            <ActionButton icon={Download} label="Export .html" onClick={handleExportHtml} />
-            <ResetButton onClick={resetAll} />
           </>
         }
       />
@@ -361,19 +315,59 @@ ${html}
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Settings</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
+        <CardContent className="grid gap-4 sm:grid-cols-3 items-end">
           <SwitchRow
             label="GitHub Flavored Markdown"
             hint="Tables, task lists, strikethrough."
             checked={useGfm}
-            onCheckedChange={(v) => set({ useGfm: v })}
+            onCheckedChange={(v) => setPatch({ useGfm: v })}
           />
           <SwitchRow
             label="Soft Wrap (Editor)"
             hint="Wrap long lines in the editor."
             checked={softWrap}
-            onCheckedChange={(v) => set({ softWrap: v })}
+            onCheckedChange={(v) => setPatch({ softWrap: v })}
           />
+
+          <div className="flex items-center gap-2 ml-auto">
+            <ExportTextButton
+              label="Export .md"
+              filename={filename || "document.md"}
+              mime="text/markdown;charset=utf-8"
+              getText={() => md}
+            />
+            <ExportFileButton
+              icon={Download}
+              label="Export .html"
+              filename={`${filename.replace(/\.md$/i, "")}.html`}
+              mime="text/html;charset=utf-8"
+              getContent={async () => {
+                const html = await generateHTML();
+                return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>${sanitizeTitle(filename.replace(/\.md$/i, "") || "Export")}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<style>
+:root { color-scheme: light dark; }
+body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial; margin: 2rem; line-height: 1.65; }
+pre { background: rgba(0,0,0,0.06); padding: 1rem; overflow:auto; border-radius: 10px; }
+table { border-collapse: collapse; }
+th, td { border: 1px solid rgba(0,0,0,0.15); padding: 6px 10px; }
+blockquote { border-left: 3px solid rgba(0,0,0,0.2); margin: 0; padding: .5rem 1rem; }
+h1,h2,h3,h4,h5 { line-height: 1.25; }
+@media print { a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; } }
+</style>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+              }}
+            />
+          </div>
         </CardContent>
       </GlassCard>
 
@@ -385,7 +379,7 @@ ${html}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "write" | "preview")}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="write" className="gap-2">
-                <FileText className="h-4 w-4" /> Write
+                Write
               </TabsTrigger>
               <TabsTrigger value="preview" className="gap-2">
                 <Eye className="h-4 w-4" /> Preview
@@ -398,10 +392,6 @@ ${html}
                 value={md}
                 onChange={onEditorChange}
                 softWrap={softWrap}
-                copiedMd={copiedMd}
-                copiedHtml={copiedHtml}
-                copyMd={copyMarkdown}
-                copyHtml={copyHTML}
                 onCmd={{
                   bold: () => wrapSelection("**"),
                   italic: () => wrapSelection("_"),
@@ -410,11 +400,19 @@ ${html}
                   codeBlock: () => {
                     const el = editorRef.current;
                     const sel = el ? md.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0) : "";
-                    insertAtCursor(`\`\`\`\n${sel || "code"}\n\`\`\`\n`);
+                    insertAtCursor(`\n\`\`\`\n${sel || "code"}\n\`\`\`\n`);
                   },
                   h1: () => insertAtCursor("# "),
                   h2: () => insertAtCursor("## "),
+                  h3: () => insertAtCursor("### "),
                   link: () => wrapSelection("[", "](https://)", "link text"),
+                  quote: () => prefixLines("> "),
+                  hr: () => insertAtCursor("\n---\n"),
+                  table: () =>
+                    insertAtCursor(
+                      `\n| Column 1 | Column 2 |\n| -------- | -------- |\n| Value    | Value    |\n`,
+                    ),
+                  image: () => insertAtCursor(`![alt text](https://)\n`),
                   list: () => prefixLines("- "),
                   olist: () => prefixLines("1. "),
                   clist: () => prefixLines("- [ ] "),
@@ -432,35 +430,40 @@ ${html}
               />
             </TabsContent>
           </Tabs>
-        </CardContent>
 
-        {/* Status bar */}
-        <div className="m-3 mt-0 flex flex-wrap items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">
-              Ln {cursorRowCol.row}, Col {cursorRowCol.col}
-            </span>
-
-            <CopyButton size="sm" label="MD" getText={() => md} />
-            <CopyButton size="sm" label="HTML" getText={() => generateHTML()} />
+          {/* Status bar */}
+          <div className="mt-3 flex flex-wrap items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs">
+            <div className="flex gap-2">
+              <span className="rounded-md border bg-muted/40 px-2 py-1">
+                Words: <b className="ml-1">{counts.words}</b>
+              </span>
+              <span className="rounded-md border bg-muted/40 px-2 py-1">
+                Chars: <b className="ml-1">{counts.chars}</b>
+              </span>
+              <span className="rounded-md border bg-muted/40 px-2 py-1">
+                Lines: <b className="ml-1">{counts.lines}</b>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">
+                Ln {cursorRowCol.row}, Col {cursorRowCol.col}
+              </span>
+            </div>
           </div>
-        </div>
+        </CardContent>
       </GlassCard>
     </>
   );
 }
 
-// Editor & Preview panels
+/* panels */
+
 const EditorPanel = React.forwardRef<
   HTMLTextAreaElement,
   {
     value: string;
     onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
     softWrap: boolean;
-    copyMd: () => void;
-    copyHtml: () => void;
-    copiedMd: boolean;
-    copiedHtml: boolean;
     onCmd: {
       bold: () => void;
       italic: () => void;
@@ -469,7 +472,12 @@ const EditorPanel = React.forwardRef<
       codeBlock: () => void;
       h1: () => void;
       h2: () => void;
+      h3: () => void;
       link: () => void;
+      quote: () => void;
+      hr: () => void;
+      table: () => void;
+      image: () => void;
       list: () => void;
       olist: () => void;
       clist: () => void;
@@ -484,7 +492,7 @@ const EditorPanel = React.forwardRef<
           <CopyButton size="sm" label="Copy MD" getText={() => value} />
           <CopyButton
             size="sm"
-            label="HTML"
+            label="Copy HTML"
             getText={async () => {
               const { marked } = await import("marked");
               return String(marked.parse(value));
@@ -526,7 +534,14 @@ const EditorPanel = React.forwardRef<
             [
               { title: "Heading 1", icon: <Heading1 className="h-4 w-4" />, onClick: onCmd.h1 },
               { title: "Heading 2", icon: <Heading2 className="h-4 w-4" />, onClick: onCmd.h2 },
+              { title: "Heading 3", icon: <Heading3 className="h-4 w-4" />, onClick: onCmd.h3 },
               { title: "Link", icon: <LinkIcon className="h-4 w-4" />, onClick: onCmd.link },
+            ],
+            [
+              { title: "Quote", icon: <Quote className="h-4 w-4" />, onClick: onCmd.quote },
+              { title: "Horizontal rule", icon: <Minus className="h-4 w-4" />, onClick: onCmd.hr },
+              { title: "Table", icon: <List className="h-4 w-4" />, onClick: onCmd.table },
+              { title: "Image", icon: <ImageIcon className="h-4 w-4" />, onClick: onCmd.image },
             ],
             [
               { title: "Bullet list", icon: <List className="h-4 w-4" />, onClick: onCmd.list },
@@ -602,13 +617,16 @@ function PreviewPanel({
   );
 }
 
-// ReactMarkdown x MDX bridge
-// ReactMarkdown x MDX bridge (fixed types, no JSX namespace dependency)
-function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
-  type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+/* ReactMarkdown x MDX bridge (typed) */
 
-  // Narrow the MDX map so optional checks are meaningful to TS
-  const m: Partial<MDXProvidedComponents> = mdx;
+type MDXProvided = {
+  code?: React.ComponentType<{ code: string; language?: string }>;
+  [key: string]: any;
+};
+
+function buildMarkdownComponents(mdx: MDXProvided): Components {
+  type HeadingTag = "h1" | "h2" | "h3" | "h4";
+  const m: MDXProvided = mdx || {};
 
   const withAnchor = (Tag: HeadingTag) => (props: React.HTMLAttributes<HTMLHeadingElement>) => {
     const text = String(React.Children.toArray(props.children).join(" "));
@@ -627,7 +645,7 @@ function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
     );
   };
 
-  type CodeProps = React.ComponentProps<"code"> & {
+  type CodeRendererProps = React.HTMLAttributes<HTMLElement> & {
     inline?: boolean;
     className?: string;
     children?: React.ReactNode;
@@ -640,8 +658,7 @@ function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
   );
 
   return {
-    // code blocks & inline
-    code({ inline, className, children, ...rest }: CodeProps) {
+    code({ inline, className, children, ...rest }: CodeRendererProps) {
       const isInline = inline ?? !String(className ?? "").includes("language-");
       if (isInline) {
         return (
@@ -650,16 +667,18 @@ function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
           </code>
         );
       }
-      // Use your CodeBlock if present, otherwise fallback (no always-true condition)
-      const CodeBlock = m.code ?? DefaultCodeBlock;
-      return (
-        <CodeBlock className={className} {...rest}>
-          {children}
-        </CodeBlock>
-      );
+
+      const language = /language-([\w-]+)/.exec(className ?? "")?.[1] ?? undefined;
+      const codeText =
+        typeof children === "string" ? children : String(React.Children.toArray(children).join(""));
+
+      if (m.code) {
+        const MDXCodeBlock = m.code as React.ComponentType<{ code: string; language?: string }>;
+        return <MDXCodeBlock code={codeText} language={language} />;
+      }
+      return <DefaultCodeBlock>{codeText}</DefaultCodeBlock>;
     },
 
-    // Headings using your typography + anchors
     h1: (props) =>
       withAnchor("h1")({
         ...props,
@@ -668,18 +687,12 @@ function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
     h2: (props) =>
       withAnchor("h2")({
         ...props,
-        className: cn(
-          props.className,
-          "text-2xl font-semibold tracking-tight pt-8 pb-3 text-gray-900 dark:text-zinc-100",
-        ),
+        className: cn(props.className, "text-2xl font-semibold tracking-tight pt-8 pb-3"),
       }),
     h3: (props) =>
       withAnchor("h3")({
         ...props,
-        className: cn(
-          props.className,
-          "text-xl font-medium pt-6 pb-2 text-gray-900 dark:text-zinc-100",
-        ),
+        className: cn(props.className, "text-xl font-medium pt-6 pb-2"),
       }),
     h4: (props) =>
       withAnchor("h4")({
@@ -687,25 +700,9 @@ function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
         className: cn(props.className, "text-lg font-medium pt-5 pb-1"),
       }),
 
-    // Text & lists (prefer your MDX styles when available)
-    p: (props) =>
-      m.p ? (
-        m.p(props)
-      ) : (
-        <p className="mb-4 leading-relaxed text-gray-800 dark:text-zinc-300" {...props} />
-      ),
-    ol: (props) =>
-      m.ol ? (
-        m.ol(props)
-      ) : (
-        <ol className="list-decimal space-y-2 pl-5 text-gray-800 dark:text-zinc-300" {...props} />
-      ),
-    ul: (props) =>
-      m.ul ? (
-        m.ul(props)
-      ) : (
-        <ul className="list-disc space-y-1 pl-5 text-gray-800 dark:text-zinc-300" {...props} />
-      ),
+    p: (props) => (m.p ? m.p(props) : <p className="mb-4 leading-relaxed" {...props} />),
+    ol: (props) => (m.ol ? m.ol(props) : <ol className="list-decimal space-y-2 pl-5" {...props} />),
+    ul: (props) => (m.ul ? m.ul(props) : <ul className="list-disc space-y-1 pl-5" {...props} />),
     li: (props) => (m.li ? m.li(props) : <li className="pl-1" {...props} />),
 
     em: (props) => (m.em ? m.em(props) : <em className="italic" {...props} />),
@@ -713,8 +710,8 @@ function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
       m.strong ? m.strong(props) : <strong className="font-semibold" {...props} />,
 
     a: ({ href, children, ...props }) => {
-      if (m.a) return m.a({ href, children, ...props });
       const cls = "text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300";
+      if (m.a) return m.a({ href, children, ...props });
       if (href?.startsWith("/"))
         return (
           <a href={href} className={cls} {...props}>
@@ -738,49 +735,21 @@ function buildMarkdownComponents(mdx: MDXProvidedComponents): Components {
       m.blockquote ? (
         m.blockquote(props)
       ) : (
-        <blockquote
-          className="ml-2 border-l-4 border-gray-400 pl-4 italic text-gray-700 dark:border-zinc-500 dark:text-zinc-300"
-          {...props}
-        />
+        <blockquote className="ml-2 border-l-4 pl-4 italic opacity-80" {...props} />
       ),
 
     table: (props) =>
-      m.table ? (
-        m.table(props)
-      ) : (
-        <table
-          className="my-4 w-full table-auto border-collapse border border-zinc-300 dark:border-zinc-700"
-          {...props}
-        />
-      ),
-    thead: (props) =>
-      m.thead ? m.thead(props) : <thead className="bg-zinc-200 dark:bg-zinc-800" {...props} />,
+      m.table ? m.table(props) : <table className="my-4 w-full table-auto" {...props} />,
+    thead: (props) => (m.thead ? m.thead(props) : <thead className="bg-muted/40" {...props} />),
     tbody: (props) => (m.tbody ? m.tbody(props) : <tbody {...props} />),
-    tr: (props) =>
-      m.tr ? (
-        m.tr(props)
-      ) : (
-        <tr className="border-t border-zinc-300 dark:border-zinc-700" {...props} />
-      ),
+    tr: (props) => (m.tr ? m.tr(props) : <tr className="border-t" {...props} />),
     th: (props) =>
-      m.th ? (
-        m.th(props)
-      ) : (
-        <th
-          className="p-2 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-200"
-          {...props}
-        />
-      ),
-    td: (props) =>
-      m.td ? (
-        m.td(props)
-      ) : (
-        <td className="p-2 text-sm text-zinc-600 dark:text-zinc-300" {...props} />
-      ),
+      m.th ? m.th(props) : <th className="p-2 text-left text-sm font-semibold" {...props} />,
+    td: (props) => (m.td ? m.td(props) : <td className="p-2 text-sm" {...props} />),
   };
 }
 
-/* ----------------------------- Small UI pieces ---------------------------- */
+/* small UI */
 
 function Toolbar({
   groups,

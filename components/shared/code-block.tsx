@@ -16,7 +16,7 @@ export function CodeBlock({ code, language = "text", ...props }: CodeBlockProps)
   const highlightedCode = highlight(code);
 
   return (
-    <div className="relative my-4 rounded-md bg-zinc-100 p-4 dark:bg-zinc-900">
+    <div className="relative">
       <CopyButton code={code} />
       <pre className="overflow-x-auto text-sm leading-relaxed">
         <code
