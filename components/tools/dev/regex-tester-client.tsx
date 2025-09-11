@@ -221,7 +221,12 @@ for (const m of matches) {
     autoRun,
   };
   const hash = btoa(encodeURIComponent(JSON.stringify(payload)));
-  const copyURL = `${window.location.href}/tools/dev/regex-tester#${hash}`;
+  const shareLink = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    const url = new URL(window.location.href);
+    url.hash = hash;
+    return url.toString();
+  }, [hash]);
 
   return (
     <>
@@ -232,7 +237,7 @@ for (const m of matches) {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <CopyButton getText={() => copyURL} />
+            <CopyButton getText={() => shareLink} />
             <ExportTextButton
               label="Export JSON"
               filename="regex-matches.json"

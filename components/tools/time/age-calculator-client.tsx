@@ -73,20 +73,7 @@ export default function AgeCalculatorClient() {
     return { ymd, total, nb, until, milestones };
   }, [birth, now]);
 
-  const applyToday = () => {
-    const d = new Date();
-    setDobDate(formatDateInput(d));
-    setDobTime(formatTimeInput(d));
-  };
-
-  const resetAll = () => {
-    setHasTime(false);
-    setDobDate("");
-    setDobTime("00:00");
-  };
-
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
     const date = p.get("date");
     const time = p.get("time");
@@ -97,10 +84,15 @@ export default function AgeCalculatorClient() {
     }
   }, []);
 
-  const params = new URLSearchParams();
-  if (dobDate) params.set("date", dobDate);
-  if (hasTime) params.set("time", dobTime);
-  const link = `${window.location.href}?${params.toString()}`;
+  const shareLink = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    const url = new URL(window.location.href);
+    if (dobDate) url.searchParams.set("date", dobDate);
+    else url.searchParams.delete("date");
+    if (hasTime) url.searchParams.set("time", dobTime);
+    else url.searchParams.delete("time");
+    return url.toString();
+  }, [dobDate, dobTime, hasTime]);
 
   const summary =
     birth && results
@@ -134,6 +126,18 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
     },
   ];
 
+    const applyToday = () => {
+    const d = new Date();
+    setDobDate(formatDateInput(d));
+    setDobTime(formatTimeInput(d));
+  };
+
+  const resetAll = () => {
+    setHasTime(false);
+    setDobDate("");
+    setDobTime("00:00");
+  };
+
   return (
     <>
       {/* HEADER */}
@@ -150,12 +154,7 @@ Next birthday: ${results?.until.exact} (${results?.until.days} days)`
               label="Use today"
               onClick={applyToday}
             />
-            <CopyButton
-              variant="default"
-              getText={() => link || ""}
-              label="Copy link"
-              disabled={!params || !link || !summary}
-            />
+            <CopyButton variant="default" getText={() => shareLink || ""} label="Copy link" />
           </>
         }
       />

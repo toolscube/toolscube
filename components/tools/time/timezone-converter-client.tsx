@@ -286,13 +286,11 @@ export default function TimezoneConverterClient() {
   const [search, setSearch] = useState("");
   const debSearch = useDebounced(search, 200);
 
-  // Source
   const [sourceTz, setSourceTz] = useState<string>(localTz);
   const [dateStr, setDateStr] = useState<string>(() => formatDateInput(new Date()));
   const [timeStr, setTimeStr] = useState<string>(() => formatTimeInput(new Date()));
   const [is12h, setIs12h] = useState(false);
 
-  // Targets
   const [targets, setTargets] = useState<string[]>(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -301,6 +299,7 @@ export default function TimezoneConverterClient() {
       const saved = localStorage.getItem("tzc:targets");
       if (saved) return JSON.parse(saved);
     }
+
     const defaults = [
       "Asia/Dhaka",
       "Europe/London",
@@ -318,46 +317,16 @@ export default function TimezoneConverterClient() {
     }
   }, [targets]);
 
-  // Compute UTC from source wall time
   const utcTs = useMemo(() => {
     const [yy, mm, dd] = dateStr.split("-").map((n) => Number(n));
     const [hh, min] = timeStr.split(":").map((n) => Number(n));
     return wallTimeToUTC(yy, mm, dd, hh, min, sourceTz);
   }, [dateStr, timeStr, sourceTz]);
 
-  // Share link copy
-  const params = new URLSearchParams();
-  params.set("src", sourceTz);
-  params.set("date", dateStr);
-  params.set("time", timeStr);
-  params.set("zones", targets.join(","));
-  const link = `${window.location.href}?${params.toString()}`;
-
-  const applyNow = () => {
-    const now = new Date();
-    setDateStr(formatDateInput(now));
-    setTimeStr(formatTimeInput(now));
-    setSourceTz(getLocalTimeZone());
-  };
-
-  const resetAll = () => {
-    setDateStr(formatDateInput(new Date()));
-    setTimeStr(formatTimeInput(new Date()));
-    setSourceTz(localTz);
-    setTargets([
-      "Asia/Dhaka",
-      "Europe/London",
-      "America/New_York",
-      "America/Los_Angeles",
-      "Asia/Tokyo",
-    ]);
-  };
-
   const addTarget = (tz: string) => setTargets((arr) => (arr.includes(tz) ? arr : [...arr, tz]));
   const removeTarget = (tz: string) => setTargets((arr) => arr.filter((z) => z !== tz));
   const swapWithSource = (tz: string) => setSourceTz(tz);
 
-  // Parse ?src= & ?date= & ?time= on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -389,6 +358,36 @@ export default function TimezoneConverterClient() {
     return `UTC ${tzPart?.replace("UTC", "").trim() || ""}`;
   }, [utcTs]);
 
+  const shareLink = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    const url = new URL(window.location.href);
+    url.searchParams.set("src", sourceTz);
+    url.searchParams.set("date", dateStr);
+    url.searchParams.set("time", timeStr);
+    url.searchParams.set("zones", targets.join(","));
+    return url.toString();
+  }, [sourceTz, dateStr, timeStr, targets]);
+
+  const applyNow = () => {
+    const now = new Date();
+    setDateStr(formatDateInput(now));
+    setTimeStr(formatTimeInput(now));
+    setSourceTz(getLocalTimeZone());
+  };
+
+  const resetAll = () => {
+    setDateStr(formatDateInput(new Date()));
+    setTimeStr(formatTimeInput(new Date()));
+    setSourceTz(localTz);
+    setTargets([
+      "Asia/Dhaka",
+      "Europe/London",
+      "America/New_York",
+      "America/Los_Angeles",
+      "Asia/Tokyo",
+    ]);
+  };
+
   return (
     <>
       {/* HEADER */}
@@ -400,7 +399,7 @@ export default function TimezoneConverterClient() {
           <>
             <ResetButton onClick={resetAll} />
             <ActionButton icon={Clock} label="Now" onClick={applyNow} />
-            <CopyButton variant="default" label="Copy Link" getText={link} />
+            <CopyButton variant="default" label="Copy Link" getText={shareLink} />
           </>
         }
       />
