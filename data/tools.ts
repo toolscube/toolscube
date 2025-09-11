@@ -194,12 +194,6 @@ export const ToolsData = [
         description: "Erase background (client-side)",
         popular: false,
       },
-      {
-        title: "Image to Text (OCR)",
-        url: "/tools/image/ocr",
-        description: "Extract text from images (offline-capable)",
-        popular: true,
-      },
     ],
   },
   {
