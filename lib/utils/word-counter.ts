@@ -4,11 +4,6 @@ export function normalizeText(t: string) {
   return t.replace(/\r\n?/g, "\n");
 }
 
-export function countWords(t: string) {
-  const m = t.match(/[\p{L}\p{N}]+(?:'[^\s]|[’][^\s])?/gu);
-  return m ? m.length : 0;
-}
-
 export function countCharacters(t: string) {
   return t.length;
 }

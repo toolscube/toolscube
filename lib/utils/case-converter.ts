@@ -1,4 +1,5 @@
 import { SMALL_WORDS } from "@/data/data";
+import { collapseSpaces, removeDiacritics, removePunctuation, toSentenceCase } from "../utils";
 
 export function normalizeLF(s: string) {
   return s.replace(/\r\n?/g, "\n");
@@ -8,23 +9,8 @@ export function trimAll(s: string) {
   return s.trim();
 }
 
-export function collapseSpaces(s: string) {
-  return s
-    .replace(/[ \t]+/g, " ")
-    .replace(/ *\n */g, "\n")
-    .replace(/\n{3,}/g, "\n\n");
-}
-
-export function removePunctuation(s: string) {
-  return s.replace(/[^\p{L}\p{N}\s]/gu, "");
-}
-
 export function normalizeQuotes(s: string) {
   return s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/—|–/g, "-");
-}
-
-export function removeDiacritics(s: string) {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 export function wordsFrom(s: string) {
@@ -76,11 +62,6 @@ export function toInvert(s: string) {
   return s.replace(/\p{L}/gu, (ch) =>
     ch === ch.toLowerCase() ? ch.toUpperCase() : ch.toLowerCase(),
   );
-}
-
-export function toSentenceCase(s: string) {
-  const text = s.toLowerCase();
-  return text.replace(/(^\s*\p{L})|([.!?]\s+\p{L})/gmu, (m) => m.toUpperCase());
 }
 
 export function toTitleCase(s: string) {

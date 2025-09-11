@@ -18,7 +18,7 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from "@/component
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, countWords } from "@/lib/utils";
 import { toTitleCase } from "@/lib/utils/case-converter";
 import {
   computeDensity,
@@ -27,7 +27,6 @@ import {
   countLines,
   countParagraphs,
   countSentences,
-  countWords,
   formatTimeFromWPM,
   normalizeText,
   slugify,
