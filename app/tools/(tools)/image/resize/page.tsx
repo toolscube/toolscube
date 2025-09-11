@@ -1,12 +1,9 @@
 "use client";
 
 import {
-  ActivitySquare,
   CloudDownload,
-  Crop,
   Eye,
   EyeOff,
-  Focus,
   Image as ImageIcon,
   Link2,
   Loader2,
@@ -18,28 +15,19 @@ import * as React from "react";
 import { ImageDropzone } from "@/components/image/image-dropzone";
 import { ImagePreview, InfoPill } from "@/components/image/image-preview-meta";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
 import { OutputPreview } from "@/components/shared/output-preview";
 import { ProcessLog } from "@/components/shared/process-log";
 import ToolPageHeader from "@/components/shared/tool-page-header";
-
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import { useAutoPreview } from "@/hooks/use-auto-preview";
 import { useImageInput } from "@/hooks/use-image-input";
-
 import {
   canvasEncode,
   type FitMode,
@@ -75,7 +63,8 @@ export default function ImageResizePage() {
 
   const [checker, setChecker] = React.useState(true);
   const [noUpscale, setNoUpscale] = React.useState(true);
-  const [smoothQ, setSmoothQ] = React.useState<CanvasImageSmoothingQuality>("high");
+  const [smoothQ, setSmoothQ] = React.useState<ImageSmoothingQuality>("high");
+
   const [hasAlpha, setHasAlpha] = React.useState<boolean | null>(null);
 
   const [running, setRunning] = React.useState(false);
@@ -136,7 +125,7 @@ export default function ImageResizePage() {
     return Number.isNaN(n) ? "" : n;
   };
 
-  // ---------- Auto Preview (debounced) ----------
+  // Auto Preview
   const { previewUrl, previewSize, previewBusy } = useAutoPreview(
     [img?.url, fit, anchor, fmt, quality, bg, w, h, noUpscale, smoothQ],
     async () => {
@@ -183,8 +172,12 @@ export default function ImageResizePage() {
       const filename = suggestName(img.file.name, "resized", fmt);
       triggerDownload(blob, filename);
       setLog(`Done → ${filename} (${formatBytes(blob.size)})`);
-    } catch (e: any) {
-      setLog(`Error: ${e?.message || String(e)}`);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setLog(`Error: ${e.message}`);
+      } else {
+        setLog(`Error: ${String(e)}`);
+      }
     } finally {
       setRunning(false);
     }
@@ -201,7 +194,7 @@ export default function ImageResizePage() {
             <ResetButton onClick={resetAll} />
             <ActionButton
               variant="default"
-              label={running ? "Processing…" : "Resize & Download"}
+              label={running ? "Processing…" : "Download"}
               icon={running ? Loader2 : CloudDownload}
               onClick={run}
               disabled={!img || running || previewBusy}
@@ -246,39 +239,6 @@ export default function ImageResizePage() {
               <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
               <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
             </div>
-
-            {/* Quick scales */}
-            <div className="flex flex-wrap gap-2">
-              {[50, 75, 200].map((p) => (
-                <button
-                  key={p}
-                  className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
-                  onClick={() => setScale(p)}
-                >
-                  {p}%
-                </button>
-              ))}
-              <button
-                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
-                onClick={() => {
-                  setW(img?.width ?? "");
-                  setH(img?.height ?? "");
-                  setScale("");
-                }}
-              >
-                Reset size
-              </button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setChecker((v) => !v)}
-                className="gap-2 ml-auto"
-              >
-                {checker ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                {checker ? "Hide" : "Show"} checkerboard
-              </Button>
-            </div>
           </div>
         </CardContent>
       </GlassCard>
@@ -295,59 +255,75 @@ export default function ImageResizePage() {
           {/* Size / Ratio / Scale */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="width">Width (px)</Label>
-                <Input
-                  id="width"
-                  type="number"
-                  min={1}
-                  value={w}
-                  onChange={(e) => setW(numOrEmpty(e.target.value))}
-                  disabled={!img}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="height">Height (px)</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  min={1}
-                  value={h}
-                  onChange={(e) => setH(numOrEmpty(e.target.value))}
-                  disabled={!img}
-                />
-              </div>
+              <InputField
+                id="width"
+                label="Width (px)"
+                type="number"
+                min={1}
+                value={w}
+                onChange={(e) => setW(numOrEmpty(e.target.value))}
+                disabled={!img}
+              />
+              <InputField
+                id="height"
+                label="Height (px)"
+                type="number"
+                min={1}
+                value={h}
+                onChange={(e) => setH(numOrEmpty(e.target.value))}
+                disabled={!img}
+              />
             </div>
 
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Switch checked={locked} onCheckedChange={setLocked} id="lock" />
-                <Label htmlFor="lock" className="flex items-center gap-1">
-                  <Link2 className="h-4 w-4" /> Lock aspect ratio
-                </Label>
-              </div>
+            <div className="flex flex-wrap items-end gap-4">
+              <SwitchRow
+                icon={Link2}
+                label="Lock aspect ratio"
+                checked={locked}
+                onCheckedChange={setLocked}
+              />
+              <SwitchRow checked={noUpscale} onCheckedChange={setNoUpscale} label="No upscale" />
 
-              <div className="flex items-center gap-2">
-                <Label htmlFor="scale" className="text-sm text-muted-foreground">
-                  Scale (%)
-                </Label>
-                <Input
-                  id="scale"
-                  type="number"
-                  min={1}
-                  placeholder="e.g. 50 for half"
-                  className="w-36"
-                  value={scale}
-                  onChange={(e) => setScale(numOrEmpty(e.target.value))}
-                  disabled={!img}
+              <InputField
+                className="w-full"
+                id="scale"
+                label="Scale (%)"
+                type="number"
+                min={1}
+                placeholder="e.g. 50 for half"
+                value={scale}
+                onChange={(e) => setScale(numOrEmpty(e.target.value))}
+                disabled={!img}
+              />
+
+              {/* Quick scales */}
+              <div className="flex flex-wrap gap-2">
+                {[50, 75, 200].map((p) => (
+                  <ActionButton
+                    key={p}
+                    size="sm"
+                    label={`${p}%`}
+                    className="rounded text-xs"
+                    onClick={() => setScale(p)}
+                  />
+                ))}
+                <ActionButton
+                  label="Reset size"
+                  size="sm"
+                  className="rounded text-xs"
+                  onClick={() => {
+                    setW(img?.width ?? "");
+                    setH(img?.height ?? "");
+                    setScale("");
+                  }}
                 />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Switch checked={noUpscale} onCheckedChange={setNoUpscale} id="no-upscale" />
-                <Label htmlFor="no-upscale" className="text-sm">
-                  No upscale
-                </Label>
+                <ActionButton
+                  size="sm"
+                  icon={checker ? Eye : EyeOff}
+                  label={`${checker ? "Hide" : "Show"} checkerboard`}
+                  onClick={() => setChecker((v) => !v)}
+                  className=" ml-auto"
+                />
               </div>
             </div>
           </div>
@@ -355,67 +331,63 @@ export default function ImageResizePage() {
           {/* Fit / Anchor / Format / Quality */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Fit</Label>
-                <Select value={fit} onValueChange={(v: FitMode) => setFit(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select fit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="contain">Contain</SelectItem>
-                    <SelectItem value="cover">Cover</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Contain সব কন্টেন্ট রাখে; Cover ফ্রেম ভরে (ক্রপ হতে পারে)।
-                </p>
-              </div>
+              <SelectField
+                label="Fit"
+                value={fit}
+                onValueChange={(v) => setFit(v as FitMode)}
+                placeholder="Select fit"
+                description="Contain keeps all content; Cover fills the frame (may be cropped)."
+                options={[
+                  { value: "contain", label: "Contain" },
+                  { value: "cover", label: "Cover" },
+                ]}
+              />
 
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1">
-                  <Focus className="h-4 w-4" /> Focus (cover)
-                </Label>
-                <Select
-                  value={anchor}
-                  onValueChange={(v: Anchor) => setAnchor(v)}
-                  disabled={fit !== "cover"}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Center" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="top-left">Top left</SelectItem>
-                    <SelectItem value="top">Top</SelectItem>
-                    <SelectItem value="top-right">Top right</SelectItem>
-                    <SelectItem value="left">Left</SelectItem>
-                    <SelectItem value="center">Center</SelectItem>
-                    <SelectItem value="right">Right</SelectItem>
-                    <SelectItem value="bottom-left">Bottom left</SelectItem>
-                    <SelectItem value="bottom">Bottom</SelectItem>
-                    <SelectItem value="bottom-right">Bottom right</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">ফ্রেম ভরার সময় ক্রপের দিক নির্ধারণ।</p>
-              </div>
+              <SelectField
+                label="Focus (cover)"
+                value={anchor}
+                onValueChange={(v) => setAnchor(v as Anchor)}
+                disabled={fit !== "cover"}
+                placeholder="Center"
+                description="Determine the crop direction when filling the frame."
+                options={[
+                  { value: "top-left", label: "Top left" },
+                  { value: "top", label: "Top" },
+                  { value: "top-right", label: "Top right" },
+                  { value: "left", label: "Left" },
+                  { value: "center", label: "Center" },
+                  { value: "right", label: "Right" },
+                  { value: "bottom-left", label: "Bottom left" },
+                  { value: "bottom", label: "Bottom" },
+                  { value: "bottom-right", label: "Bottom right" },
+                ]}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Format</Label>
-                <Select value={fmt} onValueChange={(v: OutFormat) => setFmt(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select format" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="webp">WEBP (recommended)</SelectItem>
-                    <SelectItem value="jpeg">JPEG</SelectItem>
-                    <SelectItem value="png">PNG</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  WEBP সাধারণত ছোট; PNG UI/graphics জন্য তীক্ষ্ণ।
-                </p>
-              </div>
+              <SelectField
+                label="Format"
+                value={fmt}
+                onValueChange={(v) => setFmt(v as OutFormat)}
+                placeholder="Select format"
+                description="WEBP is generally smaller; PNG is sharper for UI/graphics."
+                options={[
+                  { value: "webp", label: "WEBP (recommended)" },
+                  { value: "jpeg", label: "JPEG" },
+                  { value: "png", label: "PNG" },
+                ]}
+              />
+              <SelectField
+                label="Smoothing quality"
+                value={smoothQ}
+                onValueChange={(v) => setSmoothQ(v as ImageSmoothingQuality)}
+                placeholder="high"
+                options={[
+                  { value: "low", label: "Low" },
+                  { value: "medium", label: "Medium" },
+                  { value: "high", label: "High" },
+                ]}
+              />
 
               {fmt !== "png" && (
                 <div className="space-y-2">
@@ -440,7 +412,7 @@ export default function ImageResizePage() {
                 <Label htmlFor="bg" className="flex items-center gap-2">
                   <Palette className="h-4 w-4" /> Background (for transparency)
                 </Label>
-                <Input
+                <InputField
                   id="bg"
                   type="color"
                   className="h-9 w-16 p-1"
@@ -449,23 +421,6 @@ export default function ImageResizePage() {
                 />
               </div>
             )}
-
-            <div className="space-y-2">
-              <Label>Smoothing quality</Label>
-              <Select
-                value={smoothQ}
-                onValueChange={(v: CanvasImageSmoothingQuality) => setSmoothQ(v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="high" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">low</SelectItem>
-                  <SelectItem value="medium">medium</SelectItem>
-                  <SelectItem value="high">high</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardContent>
       </GlassCard>
@@ -494,7 +449,7 @@ export default function ImageResizePage() {
   );
 }
 
-/* ---------------- Helpers ---------------- */
+/* Helpers */
 
 function createImageElement(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -517,10 +472,20 @@ async function detectHasAlpha(url: string): Promise<boolean> {
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
-  const ctx = c.getContext("2d")!;
+  const ctx = c.getContext("2d");
+  if (!ctx) {
+    throw new Error("2D canvas context is not supported in this environment.");
+  }
   ctx.drawImage(img, 0, 0, w, h);
-  const data = ctx.getImageData(0, 0, w, h).data;
-  for (let i = 3; i < data.length; i += 4) if (data[i] !== 255) return true;
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, w, h).data;
+  } catch {
+    return false;
+  }
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] !== 255) return true;
+  }
   return false;
 }
 
@@ -534,7 +499,7 @@ async function drawWithAnchor(opts: {
   fit: FitMode;
   anchor: Anchor;
   background?: string;
-  smoothing: CanvasImageSmoothingQuality;
+  smoothing: ImageSmoothingQuality;
 }): Promise<HTMLCanvasElement> {
   const { srcUrl, srcW, srcH, outW, outH, fit, anchor, background, smoothing } = opts;
 
@@ -591,9 +556,12 @@ async function drawWithAnchor(opts: {
   const canvas = document.createElement("canvas");
   canvas.width = targetW;
   canvas.height = targetH;
-  const ctx = canvas.getContext("2d")!;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D canvas context is not supported in this environment.");
+
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = smoothing;
+  ctx.imageSmoothingQuality = smoothing as ImageSmoothingQuality;
 
   if (background) {
     ctx.fillStyle = background;

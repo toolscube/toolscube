@@ -1,6 +1,7 @@
 "use client";
 import {
   ActivitySquare,
+  CloudDownload,
   Crop,
   Eye,
   EyeOff,
@@ -191,7 +192,7 @@ export default function ImageConvertPage() {
             <ActionButton
               variant="default"
               label={running ? "Processing…" : "Download"}
-              icon={running ? Loader2 : undefined}
+              icon={running ? Loader2 : CloudDownload}
               onClick={run}
               disabled={!img || running || previewBusy}
             />
