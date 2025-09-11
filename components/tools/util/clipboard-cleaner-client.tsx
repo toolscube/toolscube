@@ -19,7 +19,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { toSentenceCase } from "@/lib/utils";
+import { toSentenceCase, toTitleCase } from "@/lib/utils";
 
 // Types
 type HistoryItem = { id: string; ts: number; src: string; out: string };
@@ -27,13 +27,6 @@ type HistoryItem = { id: string; ts: number; src: string; out: string };
 // Helpers
 function uid(prefix = "id") {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function toTitleCase(s: string) {
-  return s.replace(
-    /[\w\p{L}][^\s-]*/gu,
-    (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
-  );
 }
 
 function stripUrls(s: string) {

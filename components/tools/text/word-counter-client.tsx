@@ -18,7 +18,7 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from "@/component
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { cn, countWords } from "@/lib/utils";
+import { countWords } from "@/lib/utils";
 import { toTitleCase } from "@/lib/utils/case-converter";
 import {
   computeDensity,
@@ -32,6 +32,7 @@ import {
   slugify,
   squeezeSpaces,
 } from "@/lib/utils/word-counter";
+import StatItem from "./stat-item";
 
 /* Quick Actions */
 type Action = {
@@ -41,42 +42,6 @@ type Action = {
   hotkey?: string;
   span2?: boolean;
 };
-
-function QuickTransforms({
-  toUpper,
-  toLower,
-  toTitle,
-  toSlug,
-  cleanSpaces,
-}: {
-  toUpper: () => void;
-  toLower: () => void;
-  toTitle: () => void;
-  toSlug: () => void;
-  cleanSpaces: () => void;
-}) {
-  const actions: Action[] = [
-    { key: "upper", label: "UPPERCASE", run: toUpper },
-    { key: "lower", label: "lowercase", run: toLower },
-    { key: "title", label: "Title Case", run: toTitle },
-    { key: "slug", label: "slugify", run: toSlug },
-    { key: "clean", label: "Remove extra spaces & blank lines", run: cleanSpaces, span2: true },
-  ];
-
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {actions.map((a) => (
-        <ActionButton
-          key={a.key}
-          icon={AlignLeft}
-          label={a.label}
-          className={cn("justify-start", a.span2 && "sm:col-span-2")}
-          onClick={a.run}
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function WordCounterClient() {
   const [text, setText] = React.useState<string>("");
@@ -120,6 +85,14 @@ export default function WordCounterClient() {
   const toTitle = () => setText(toTitleCase(displayText));
   const toSlug = () => setText(slugify(displayText));
   const cleanSpaces = () => setText(squeezeSpaces(displayText));
+
+  const actions: Action[] = [
+    { key: "upper", label: "UPPERCASE", run: toUpper },
+    { key: "lower", label: "lowercase", run: toLower },
+    { key: "title", label: "Title Case", run: toTitle },
+    { key: "slug", label: "slugify", run: toSlug },
+    { key: "clean", label: "Remove extra spaces & blank lines", run: cleanSpaces },
+  ];
 
   return (
     <>
@@ -205,14 +178,11 @@ export default function WordCounterClient() {
             textareaClassName="min-h-[260px]"
           />
 
-          {/* Quick transforms (grid with hotkeys) */}
-          <QuickTransforms
-            toUpper={toUpper}
-            toLower={toLower}
-            toTitle={toTitle}
-            toSlug={toSlug}
-            cleanSpaces={cleanSpaces}
-          />
+          <div className="flex items-center gap-2 flex-wrap">
+            {actions.map((a) => (
+              <ActionButton key={a.key} icon={AlignLeft} label={a.label} onClick={a.run} />
+            ))}
+          </div>
         </GlassCard>
 
         {/* Stats */}
@@ -226,46 +196,22 @@ export default function WordCounterClient() {
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <StatItem icon={FileText} label="Words" value={stats.words.toLocaleString()} />
+            <StatItem icon={TypeIcon} label="Characters" value={stats.chars.toLocaleString()} />
             <StatItem
-              icon={<FileText className="h-4 w-4" />}
-              label="Words"
-              value={stats.words.toLocaleString()}
-            />
-            <StatItem
-              icon={<TypeIcon className="h-4 w-4" />}
-              label="Characters"
-              value={stats.chars.toLocaleString()}
-            />
-            <StatItem
-              icon={<TypeIcon className="h-4 w-4" />}
+              icon={TypeIcon}
               label="Chars (no spaces)"
               value={stats.charsNoSpaces.toLocaleString()}
             />
+            <StatItem icon={AlignLeft} label="Lines" value={stats.lines.toLocaleString()} />
+            <StatItem icon={AlignLeft} label="Sentences" value={stats.sentences.toLocaleString()} />
             <StatItem
-              icon={<AlignLeft className="h-4 w-4" />}
-              label="Lines"
-              value={stats.lines.toLocaleString()}
-            />
-            <StatItem
-              icon={<AlignLeft className="h-4 w-4" />}
-              label="Sentences"
-              value={stats.sentences.toLocaleString()}
-            />
-            <StatItem
-              icon={<AlignLeft className="h-4 w-4" />}
+              icon={AlignLeft}
               label="Paragraphs"
               value={stats.paragraphs.toLocaleString()}
             />
-            <StatItem
-              icon={<Clock4 className="h-4 w-4" />}
-              label="Read time (200 wpm)"
-              value={stats.readTime}
-            />
-            <StatItem
-              icon={<Mic className="h-4 w-4" />}
-              label="Speak time (130 wpm)"
-              value={stats.speakTime}
-            />
+            <StatItem icon={Clock4} label="Read time (200 wpm)" value={stats.readTime} />
+            <StatItem icon={Mic} label="Speak time (130 wpm)" value={stats.speakTime} />
           </div>
         </GlassCard>
       </section>
@@ -306,26 +252,5 @@ export default function WordCounterClient() {
         </GlassCard>
       </section>
     </>
-  );
-}
-
-/* Subparts */
-function StatItem({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        {icon}
-        <span>{label}</span>
-      </div>
-      <div className="mt-1 text-lg font-semibold">{value}</div>
-    </div>
   );
 }

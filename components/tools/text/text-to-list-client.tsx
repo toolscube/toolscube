@@ -18,15 +18,12 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from "@/component
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-
-const titleCase = (s: string) =>
-  s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+import { toTitleCase } from "@/lib/utils";
 
 type CaseMode = "none" | "lower" | "upper" | "title";
 type SortMode = "none" | "asc" | "desc";
 
 export default function TextToListClient() {
-  /* State */
   const [source, setSource] = React.useState("");
   const [trimItems, setTrimItems] = React.useState(true);
   const [collapseSpaces, setCollapseSpaces] = React.useState(true);
@@ -42,7 +39,6 @@ export default function TextToListClient() {
   const [numSep, setNumSep] = React.useState(". ");
   const [copiedKind, setCopiedKind] = React.useState<"list" | "joined" | null>(null);
 
-  /* Processing */
   const processed = React.useMemo(() => {
     const parts = source
       .split(/[\n,;|\t]+/g)
@@ -51,18 +47,16 @@ export default function TextToListClient() {
 
     let items = removeEmpty ? parts.filter((s) => s.length > 0) : parts.slice();
 
-    // Case transform first (predictable dedupe/sort)
     if (caseMode !== "none") {
       items = items.map((s) =>
         caseMode === "upper"
           ? s.toUpperCase()
           : caseMode === "lower"
             ? s.toLowerCase()
-            : titleCase(s),
+            : toTitleCase(s),
       );
     }
 
-    // Dedupe
     if (dedupe) {
       const seen = new Set<string>();
       const out: string[] = [];
@@ -75,18 +69,15 @@ export default function TextToListClient() {
       items = out;
     }
 
-    // Sort
     if (sortMode !== "none") {
       items = [...items].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
       if (sortMode === "desc") items.reverse();
     }
 
-    // Prefix / Suffix
     if (prefix || suffix) {
       items = items.map((s) => `${prefix}${s}${suffix}`);
     }
 
-    // Numbering
     if (numbering) {
       items = items.map((s, i) => {
         const n = (numStart + i).toString();
@@ -126,7 +117,7 @@ export default function TextToListClient() {
               ? s.toUpperCase()
               : caseMode === "lower"
                 ? s.toLowerCase()
-                : titleCase(s),
+                : toTitleCase(s),
           );
 
     return {
@@ -137,7 +128,6 @@ export default function TextToListClient() {
     };
   }, [source, collapseSpaces, trimItems, removeEmpty, caseMode, processed]);
 
-  /* Actions */
   function resetAll() {
     setSource("");
     setTrimItems(true);
