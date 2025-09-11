@@ -43,7 +43,6 @@ export function mimeFromFormat(fmt: OutFormat) {
 }
 
 export async function browserSupportsMime(mime: string) {
-  // create small canvas and try toBlob
   const c = document.createElement("canvas");
   c.width = c.height = 2;
   const ok = await new Promise<boolean>((resolve) => {
@@ -198,4 +197,30 @@ export async function resizeImage(opts: {
   });
   const blob = await canvasEncode(c, opts.format, opts.quality);
   return { blob };
+}
+
+export async function detectHasAlpha(url: string): Promise<boolean> {
+  const img = await createImage(url);
+  const maxDim = 256;
+  const ratio = Math.max(img.naturalWidth, img.naturalHeight) / maxDim;
+  const w = ratio > 1 ? Math.round(img.naturalWidth / ratio) : img.naturalWidth;
+  const h = ratio > 1 ? Math.round(img.naturalHeight / ratio) : img.naturalHeight;
+
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d");
+  if (!ctx) throw new Error("2D canvas context is not supported in this environment.");
+  ctx.drawImage(img, 0, 0, w, h);
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, w, h).data;
+  } catch {
+    return false;
+  }
+
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] !== 255) return true;
+  }
+  return false;
 }
