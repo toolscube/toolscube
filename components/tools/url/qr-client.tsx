@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { qrCodeData } from "@/data/data";
 import { useQrExport } from "@/hooks/use-qr-export";
 import { buildPayload } from "@/lib/utils/qr-code";
 
@@ -38,35 +39,7 @@ export default function QRClient() {
   const [logoDataUrl, setLogoDataUrl] = React.useState<string | null>(null);
   const [logoSizePct, setLogoSizePct] = React.useState<number>(20);
   const [genTick, setGenTick] = React.useState<number>(0);
-  const [form, setForm] = React.useState<FormState>({
-    kind: "url",
-    url: "https://tariqul.dev",
-
-    text: "Scan me",
-
-    wifiSsid: "",
-    wifiPassword: "",
-    wifiAuth: "WPA",
-    wifiHidden: false,
-
-    vcFirst: "Tariqul",
-    vcLast: "Islam",
-    vcOrg: "Tools Hub",
-    vcTitle: "",
-    vcPhone: "+8801XXXXXXXXX",
-    vcEmail: "tariqul@tariqul.dev",
-    vcUrl: "https://tariqul.dev",
-
-    emailTo: "hello@example.com",
-    emailSubject: "Hello!",
-    emailBody: "This came from a QR code.",
-
-    smsTo: "+8801XXXXXXXXX",
-    smsBody: "Hi!",
-
-    waTo: "8801XXXXXXXXX",
-    waText: "Hello there 👋",
-  });
+  const [form, setForm] = React.useState<FormState>(qrCodeData as FormState);
 
   const controlForm = useForm<ControlValues>({
     defaultValues: { kind: "url", ecl: "M", format: "png", wifiAuth: "WPA" },

@@ -19,164 +19,20 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-
-const EN_STOPWORDS = new Set([
-  "a",
-  "an",
-  "and",
-  "the",
-  "for",
-  "to",
-  "in",
-  "on",
-  "at",
-  "of",
-  "is",
-  "are",
-  "am",
-  "be",
-  "was",
-  "were",
-  "it",
-  "its",
-  "that",
-  "this",
-  "with",
-  "as",
-  "by",
-  "from",
-  "or",
-  "if",
-  "then",
-  "than",
-  "so",
-  "but",
-  "not",
-  "no",
-  "we",
-  "you",
-  "i",
-  "your",
-  "our",
-  "they",
-  "he",
-  "she",
-  "them",
-  "his",
-  "her",
-  "their",
-  "my",
-  "me",
-  "us",
-  "been",
-  "have",
-  "has",
-  "had",
-  "do",
-  "does",
-  "did",
-  "can",
-  "could",
-  "should",
-  "would",
-  "will",
-  "just",
-  "about",
-  "into",
-  "over",
-  "under",
-  "out",
-  "up",
-  "down",
-  "again",
-  "more",
-  "most",
-  "some",
-  "such",
-  "only",
-  "own",
-  "same",
-  "other",
-  "any",
-  "each",
-  "few",
-]);
-
-/* Utilities */
-function normalizeText(t: string) {
-  return t.replace(/\r\n?/g, "\n");
-}
-function countWords(t: string) {
-  const m = t.match(/[\p{L}\p{N}]+(?:'[^\s]|[’][^\s])?/gu);
-  return m ? m.length : 0;
-}
-function countCharacters(t: string) {
-  return t.length;
-}
-function countCharactersNoSpaces(t: string) {
-  return t.replace(/\s+/g, "").length;
-}
-function countLines(t: string) {
-  if (!t) return 0;
-  return t.split("\n").length;
-}
-function countParagraphs(t: string) {
-  const blocks = normalizeText(t)
-    .split(/\n{2,}/g)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return blocks.length;
-}
-function countSentences(t: string) {
-  const s = t.replace(/\s+/g, " ").trim();
-  if (!s) return 0;
-  const m = s.match(/[^.!?]+[.!?]+(\s|$)/g);
-  return m ? m.length : 1;
-}
-function formatTimeFromWPM(words: number, wpm: number) {
-  if (words === 0) return "0:00";
-  const minutes = words / wpm;
-  const totalSec = Math.max(1, Math.round(minutes * 60));
-  const mm = Math.floor(totalSec / 60);
-  const ss = totalSec % 60;
-  return `${mm}:${ss.toString().padStart(2, "0")}`;
-}
-function toTitleCase(t: string) {
-  return t.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-}
-function slugify(t: string) {
-  return t
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
-    .toLowerCase();
-}
-function squeezeSpaces(t: string) {
-  return t
-    .replace(/[ \t]+/g, " ")
-    .replace(/ *\n */g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-function computeDensity(
-  t: string,
-  { excludeStopwords }: { excludeStopwords: boolean },
-): DensityRow[] {
-  const words = (t.toLowerCase().match(/[\p{L}\p{N}]+/gu) || []).filter((w) =>
-    excludeStopwords ? !EN_STOPWORDS.has(w) : true,
-  );
-  const total = words.length || 1;
-  const map = new Map<string, number>();
-  for (const w of words) map.set(w, (map.get(w) || 0) + 1);
-  const rows: DensityRow[] = [...map.entries()].map(([word, count]) => ({
-    word,
-    count,
-    percent: (count / total) * 100,
-  }));
-  rows.sort((a, b) => b.count - a.count || a.word.localeCompare(b.word));
-  return rows.slice(0, 20);
-}
+import { toTitleCase } from "@/lib/utils/case-converter";
+import {
+  computeDensity,
+  countCharacters,
+  countCharactersNoSpaces,
+  countLines,
+  countParagraphs,
+  countSentences,
+  countWords,
+  formatTimeFromWPM,
+  normalizeText,
+  slugify,
+  squeezeSpaces,
+} from "@/lib/utils/word-counter";
 
 /* Quick Actions */
 type Action = {
@@ -226,17 +82,14 @@ function QuickTransforms({
 export default function WordCounterClient() {
   const [text, setText] = React.useState<string>("");
 
-  // Settings
   const [liveClean, setLiveClean] = React.useState<boolean>(false);
   const [excludeStopwords, setExcludeStopwords] = React.useState<boolean>(true);
 
-  // Derived text (optional live cleaning)
   const displayText = React.useMemo(
     () => (liveClean ? squeezeSpaces(normalizeText(text)) : normalizeText(text)),
     [text, liveClean],
   );
 
-  // Stats
   const stats = React.useMemo(() => {
     const t = displayText;
     const words = countWords(t);
@@ -257,14 +110,12 @@ export default function WordCounterClient() {
     [displayText, excludeStopwords],
   );
 
-  /* Actions */
   const resetAll = () => {
     setText("");
     setLiveClean(false);
     setExcludeStopwords(true);
   };
 
-  // Transforms
   const toUpper = () => setText(displayText.toUpperCase());
   const toLower = () => setText(displayText.toLowerCase());
   const toTitle = () => setText(toTitleCase(displayText));
