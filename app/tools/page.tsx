@@ -8,7 +8,13 @@ import { Separator } from "@/components/ui/separator";
 import { ToolsData } from "@/data/tools";
 
 const categories = ToolsData.map((cat) => ({
-  key: cat.url,
+  key: cat.title
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/&/g, "")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, ""),
   label: cat.title,
   icon: cat.icon,
   items: cat.items,
@@ -17,7 +23,6 @@ const categories = ToolsData.map((cat) => ({
 export default function ToolsIndexPage() {
   return (
     <main className="py-10">
-      {/* Decorative background */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(60%_40%_at_20%_10%,hsl(var(--primary)/.15),transparent_60%),radial-gradient(40%_30%_at_80%_0%,hsl(var(--muted-foreground)/.12),transparent_60%),radial-gradient(30%_30%_at_50%_80%,hsl(var(--primary)/.12),transparent_60%)]" />
         <div className="absolute inset-0 [mask-image:radial-gradient(60%_50%_at_50%_30%,#000_40%,transparent_70%)]">
@@ -26,7 +31,7 @@ export default function ToolsIndexPage() {
       </div>
 
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border bg-background/60 p-6 md:p-10">
+      <section className="relative overflow-hidden rounded-3xl border bg-background/60 p-6 md:p-10 mb-8">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
@@ -51,8 +56,6 @@ export default function ToolsIndexPage() {
           </div>
         </div>
       </section>
-
-      <Separator className="my-8" />
 
       {/* Category tiles */}
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -135,10 +138,10 @@ export default function ToolsIndexPage() {
         ))}
       </section>
 
-      <Separator className="my-12" />
+      <Separator className="my-8" />
 
       {/* Footer CTA */}
-      <footer className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm text-muted-foreground">
+      <footer className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <div>Didn’t find a tool? Request a new one.</div>
         <Button asChild variant="outline">
           <a href="mailto:tariqul@tariqul.dev">Request a tool</a>

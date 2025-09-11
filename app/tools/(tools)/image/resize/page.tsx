@@ -1,21 +1,22 @@
 "use client";
-
 import {
   ActivitySquare,
-  Check,
   CloudDownload,
-  Copy,
   Crop,
+  Eye,
+  EyeOff,
+  Focus,
   Image as ImageIcon,
   Link2,
   Loader2,
   Maximize2,
-  Upload,
+  Palette,
 } from "lucide-react";
-import Image from "next/image";
 import * as React from "react";
-import { useDropzone } from "react-dropzone";
+import { ImageDropzone } from "@/components/image/image-dropzone";
+import { ImagePreview, InfoPill } from "@/components/image/image-preview-meta";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import { ProcessLog } from "@/components/shared/process-log";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,23 +33,30 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { useImageInput } from "@/hooks/use-image-input";
+import {
+  type FitMode,
+  formatBytes,
+  type OutFormat,
+  suggestName,
+  triggerDownload,
+} from "@/lib/canvas";
 
-type FitMode = "contain" | "cover";
-type OutFormat = "png" | "jpeg" | "webp";
-
-interface LoadedImage {
-  file: File;
-  url: string;
-  width: number;
-  height: number;
-}
+type Anchor =
+  | "center"
+  | "top-left"
+  | "top"
+  | "top-right"
+  | "left"
+  | "right"
+  | "bottom-left"
+  | "bottom"
+  | "bottom-right";
 
 export default function ImageResizePage() {
-  const [img, setImg] = React.useState<LoadedImage | null>(null);
   const [locked, setLocked] = React.useState(true);
   const [fit, setFit] = React.useState<FitMode>("contain");
+  const [anchor, setAnchor] = React.useState<Anchor>("center"); // NEW
   const [fmt, setFmt] = React.useState<OutFormat>("webp");
   const [bg, setBg] = React.useState("#ffffff");
   const [quality, setQuality] = React.useState(90);
@@ -56,70 +64,55 @@ export default function ImageResizePage() {
   const [w, setW] = React.useState<number | "">("");
   const [h, setH] = React.useState<number | "">("");
   const [running, setRunning] = React.useState(false);
-  const [log, setLog] = React.useState<string>("");
-  const [copied, setCopied] = React.useState(false);
+  const [log, setLog] = React.useState("");
 
-  const ratio = React.useMemo(() => {
-    if (!img) return 1;
-    return img.width / img.height;
-  }, [img]);
+  // NEW: preview + alpha + checker + smoothing + noUpscale
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [previewSize, setPreviewSize] = React.useState<number | null>(null);
+  const [hasAlpha, setHasAlpha] = React.useState<boolean | null>(null);
+  const [checker, setChecker] = React.useState(true);
+  const [noUpscale, setNoUpscale] = React.useState(true);
+  const [smoothQ, setSmoothQ] = React.useState<CanvasImageSmoothingQuality>("high");
 
-  // drop / paste handlers
-  const onDrop = React.useCallback(async (files: File[]) => {
-    const file = files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    const meta = await loadImageMeta(url);
-    setImg({ file, url, width: meta.width, height: meta.height });
-    // reset size inputs
-    setW(meta.width);
-    setH(meta.height);
-    setScale("");
-    setLog("");
-  }, []);
-
-  React.useEffect(() => {
-    function onPaste(e: ClipboardEvent) {
-      const item = e.clipboardData?.files?.[0];
-      if (item?.type.startsWith("image/")) {
-        onDrop([item]);
-      }
-    }
-    window.addEventListener("paste", onPaste);
-    return () => window.removeEventListener("paste", onPaste);
-  }, [onDrop]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { "image/*": [] },
-    multiple: false,
-    onDrop,
+  const { img, getRootProps, getInputProps, isDragActive, setImg } = useImageInput({
+    onImage: async (im) => {
+      setW(im.width);
+      setH(im.height);
+      setScale("");
+      setLog("");
+      setHasAlpha(await detectHasAlpha(im.url));
+      setFmt(
+        im.file.type.includes("png") ? "png" : im.file.type.includes("webp") ? "webp" : "webp",
+      );
+      clearPreview();
+    },
   });
 
-  // aspect lock behavior
+  const ratio = React.useMemo(() => (!img ? 1 : img.width / img.height), [img]);
+
   React.useEffect(() => {
     if (!img) return;
-    if (locked && typeof w === "number" && document.activeElement?.id === "width") {
+    if (locked && typeof w === "number" && document.activeElement?.id === "width")
       setH(Math.max(1, Math.round(w / ratio)));
-    }
-    if (locked && typeof h === "number" && document.activeElement?.id === "height") {
+    if (locked && typeof h === "number" && document.activeElement?.id === "height")
       setW(Math.max(1, Math.round(h * ratio)));
-    }
   }, [w, h, ratio, locked, img]);
 
-  // scale → width/height
   React.useEffect(() => {
     if (!img) return;
     if (scale === "" || Number.isNaN(Number(scale))) return;
     const s = Math.max(1, Number(scale));
-    setW(Math.max(1, Math.round((img.width * s) / 100)));
-    setH(Math.max(1, Math.round((img.height * s) / 100)));
-  }, [scale, img]);
+    const targetW = Math.max(1, Math.round((img.width * s) / 100));
+    const targetH = Math.max(1, Math.round((img.height * s) / 100));
+    setW(noUpscale ? Math.min(targetW, img.width) : targetW);
+    setH(noUpscale ? Math.min(targetH, img.height) : targetH);
+  }, [scale, img, noUpscale]);
 
   function resetAll() {
-    if (img?.url) URL.revokeObjectURL(img.url);
     setImg(null);
     setLocked(true);
     setFit("contain");
+    setAnchor("center");
     setFmt("webp");
     setBg("#ffffff");
     setQuality(90);
@@ -128,30 +121,147 @@ export default function ImageResizePage() {
     setH("");
     setRunning(false);
     setLog("");
+    clearPreview();
+    setHasAlpha(null);
+    setChecker(true);
+    setNoUpscale(true);
+    setSmoothQ("high");
   }
 
-  async function run() {
+  function clearPreview() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPreviewSize(null);
+  }
+
+  const numOrEmpty = (v: string): number | "" => {
+    const n = Number(v);
+    return Number.isNaN(n) ? "" : n;
+  };
+
+  // ---- Core draw with anchor (cover) + contain + background + smoothing ----
+  async function drawAndEncode(opts: {
+    srcUrl: string;
+    srcW: number;
+    srcH: number;
+    outW: number;
+    outH: number;
+    fit: FitMode;
+    anchor: Anchor;
+    format: OutFormat;
+    quality: number;
+    background?: string;
+    smoothing: CanvasImageSmoothingQuality;
+  }): Promise<{ blob: Blob }> {
+    const { srcUrl, srcW, srcH, outW, outH, fit, anchor, format, quality, background, smoothing } =
+      opts;
+    const imgEl = await createImageElement(srcUrl);
+
+    const targetW = Math.max(1, Math.round(outW));
+    const targetH = Math.max(1, Math.round(outH));
+    const srcAspect = srcW / srcH;
+    const dstAspect = targetW / targetH;
+
+    // Compute draw rects
+    let sx = 0,
+      sy = 0,
+      sw = srcW,
+      sh = srcH;
+    let dx = 0,
+      dy = 0,
+      dw = targetW,
+      dh = targetH;
+
+    if (fit === "contain") {
+      if (srcAspect > dstAspect) {
+        dw = targetW;
+        dh = Math.round(targetW / srcAspect);
+        dx = Math.round((targetW - dw) / 2);
+        dy = Math.round((targetH - dh) / 2);
+      } else {
+        dh = targetH;
+        dw = Math.round(targetH * srcAspect);
+        dx = Math.round((targetW - dw) / 2);
+        dy = Math.round((targetH - dh) / 2);
+      }
+    } else {
+      // cover with anchor crop
+      const scale = Math.max(targetW / srcW, targetH / srcH);
+      const needW = Math.round(targetW / scale);
+      const needH = Math.round(targetH / scale);
+
+      // anchor offsets
+      const ax = anchor.includes("left") ? 0 : anchor.includes("right") ? 1 : 0.5;
+      const ay = anchor.includes("top") ? 0 : anchor.includes("bottom") ? 1 : 0.5;
+
+      sx = Math.round((srcW - needW) * ax);
+      sy = Math.round((srcH - needH) * ay);
+
+      // clamp inside
+      sx = Math.max(0, Math.min(sx, srcW - needW));
+      sy = Math.max(0, Math.min(sy, srcH - needH));
+
+      sw = needW;
+      sh = needH;
+      // dest covers fully
+      dx = 0;
+      dy = 0;
+      dw = targetW;
+      dh = targetH;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext("2d")!;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = smoothing;
+
+    if (format === "jpeg" && background) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, targetW, targetH);
+    } else {
+      ctx.clearRect(0, 0, targetW, targetH);
+    }
+
+    ctx.drawImage(imgEl, sx, sy, sw, sh, dx, dy, dw, dh);
+
+    const mime = format === "png" ? "image/png" : format === "jpeg" ? "image/jpeg" : "image/webp";
+    const q = Math.min(1, Math.max(0.01, quality / 100));
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode image"))), mime, q);
+    });
+    return { blob };
+  }
+
+  async function preview() {
     if (!img) return;
     try {
       setRunning(true);
-      setLog("Processing…");
+      setLog("Generating preview…");
+      const outW = typeof w === "number" ? w : img.width;
+      const outH = typeof h === "number" ? h : img.height;
+      const cappedW = noUpscale ? Math.min(outW, img.width) : outW;
+      const cappedH = noUpscale ? Math.min(outH, img.height) : outH;
 
-      const result = await resizeImage({
+      const res = await drawAndEncode({
         srcUrl: img.url,
         srcW: img.width,
         srcH: img.height,
-        outW: typeof w === "number" ? w : img.width,
-        outH: typeof h === "number" ? h : img.height,
+        outW: cappedW,
+        outH: cappedH,
         fit,
+        anchor,
         format: fmt,
         quality,
-        background: bg,
+        background: fmt === "jpeg" && hasAlpha ? bg : undefined,
+        smoothing: smoothQ,
       });
-
-      // trigger download
-      const filename = suggestName(img.file.name, fmt);
-      triggerDownload(result.blob, filename);
-      setLog(`Done → ${filename} (${formatBytes(result.blob.size)})`);
+      clearPreview();
+      const url = URL.createObjectURL(res.blob);
+      setPreviewUrl(url);
+      setPreviewSize(res.blob.size);
+      setLog((s) => (s ? `${s}\n` : "") + "Preview ready.");
     } catch (e: any) {
       setLog(`Error: ${e?.message || String(e)}`);
     } finally {
@@ -159,23 +269,62 @@ export default function ImageResizePage() {
     }
   }
 
-  function copyLog() {
-    navigator.clipboard.writeText(log || "").then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    });
+  async function run() {
+    if (!img) return;
+    try {
+      setRunning(true);
+      setLog("Processing…");
+      const outW = typeof w === "number" ? w : img.width;
+      const outH = typeof h === "number" ? h : img.height;
+      const cappedW = noUpscale ? Math.min(outW, img.width) : outW;
+      const cappedH = noUpscale ? Math.min(outH, img.height) : outH;
+
+      const result = await drawAndEncode({
+        srcUrl: img.url,
+        srcW: img.width,
+        srcH: img.height,
+        outW: cappedW,
+        outH: cappedH,
+        fit,
+        anchor,
+        format: fmt,
+        quality,
+        background: fmt === "jpeg" && hasAlpha ? bg : undefined,
+        smoothing: smoothQ,
+      });
+
+      const filename = suggestName(img.file.name, "resized", fmt);
+      triggerDownload(result.blob, filename);
+      setLog(`Done → ${filename} (${formatBytes(result.blob.size)})`);
+
+      // keep preview in panel
+      clearPreview();
+      const url = URL.createObjectURL(result.blob);
+      setPreviewUrl(url);
+      setPreviewSize(result.blob.size);
+    } catch (e: any) {
+      setLog(`Error: ${e?.message || String(e)}`);
+    } finally {
+      setRunning(false);
+    }
   }
 
   return (
     <>
-      {/* Header */}
       <ToolPageHeader
         icon={Maximize2}
         title="Image Resizer"
-        description="Resize, convert, and optimize images. Drag & drop, paste (Ctrl/Cmd+V), or use the upload
-            button."
+        description="Resize, convert, and optimize images. Drag & drop, paste (Ctrl/Cmd+V), or upload."
         actions={
           <>
+            <Button
+              className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+              onClick={preview}
+              disabled={!img || running}
+            >
+              {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+              {running ? "Processing…" : "Preview"}
+            </Button>
             <ResetButton onClick={resetAll} />
             <ActionButton
               variant="default"
@@ -188,58 +337,72 @@ export default function ImageResizePage() {
         }
       />
 
-      {/* Uploader / Preview */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Image</CardTitle>
           <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 lg:grid-cols-2">
-          {/* Dropzone */}
-          <div
-            {...getRootProps()}
-            className={cn(
-              "group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition",
-              isDragActive ? "border-primary bg-primary/5" : "hover:bg-muted/40",
-            )}
-          >
-            <input {...getInputProps()} />
-            <div className="pointer-events-none flex flex-col items-center gap-2 text-center">
-              <div className="rounded-full bg-primary/10 p-3">
-                <Upload className="h-6 w-6 text-primary" />
-              </div>
-              <p className="text-sm font-medium">Drop image here, or click to browse</p>
-              <p className="text-xs text-muted-foreground">
-                PNG, JPEG, WEBP, GIF, SVG (rasterized)
-              </p>
-            </div>
-          </div>
-
-          {/* Preview + Meta */}
+          <ImageDropzone
+            getRootProps={getRootProps}
+            getInputProps={getInputProps}
+            isDragActive={isDragActive}
+            subtitle="PNG, JPEG, WEBP, GIF, SVG (rasterized)"
+          />
           <div className="grid gap-4">
-            <div className="relative h-56 w-full overflow-hidden rounded-lg border bg-muted/40">
-              {!img ? (
-                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  <ImageIcon className="mr-2 h-4 w-4" />
-                  No image selected
-                </div>
-              ) : (
-                <Image
-                  src={img.url}
-                  alt="preview"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-contain"
-                  priority
-                />
-              )}
+            <div
+              className={
+                checker
+                  ? "rounded-lg border p-2 bg-[linear-gradient(45deg,#00000011_25%,transparent_25%),linear-gradient(-45deg,#00000011_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#00000011_75%),linear-gradient(-45deg,transparent_75%,#00000011_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px]"
+                  : "rounded-lg border p-2"
+              }
+            >
+              <ImagePreview
+                url={img?.url}
+                emptyNode={
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    <ImageIcon className="mr-2 h-4 w-4" /> No image selected
+                  </div>
+                }
+              />
             </div>
-
             <div className="grid grid-cols-2 gap-3 text-xs">
               <InfoPill label="Source Size" value={img ? formatBytes(img.file.size) : "—"} />
               <InfoPill label="Source Type" value={img ? img.file.type || "—" : "—"} />
               <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
               <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
+            </div>
+
+            {/* Quick scale presets */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                onClick={() => setScale(50)}
+              >
+                50%
+              </button>
+              <button
+                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                onClick={() => setScale(75)}
+              >
+                75%
+              </button>
+              <button
+                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                onClick={() => setScale(200)}
+              >
+                200%
+              </button>
+              <button
+                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                onClick={() => {
+                  setW(img?.width ?? "");
+                  setH(img?.height ?? "");
+                  setScale("");
+                }}
+              >
+                Reset size
+              </button>
             </div>
           </div>
         </CardContent>
@@ -247,14 +410,12 @@ export default function ImageResizePage() {
 
       <Separator className="my-4" />
 
-      {/* Settings */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
-          <CardDescription>Customize size, fit mode, format, and quality.</CardDescription>
+          <CardDescription>Customize size, fit, focus, format, quality.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
-          {/* Dimensions */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -304,10 +465,29 @@ export default function ImageResizePage() {
                   disabled={!img}
                 />
               </div>
+
+              <div className="flex items-center gap-2">
+                <Switch checked={noUpscale} onCheckedChange={setNoUpscale} id="no-upscale" />
+                <Label htmlFor="no-upscale" className="text-sm">
+                  No upscale
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setChecker((v) => !v)}
+                  className="gap-2"
+                >
+                  {checker ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  {checker ? "Hide" : "Show"} checkerboard
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Format / Fit / Quality */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -326,6 +506,36 @@ export default function ImageResizePage() {
                 </p>
               </div>
 
+              {/* Focus anchor (cover only) */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1">
+                  <Focus className="h-4 w-4" /> Focus (cover)
+                </Label>
+                <Select
+                  value={anchor}
+                  onValueChange={(v: Anchor) => setAnchor(v)}
+                  disabled={fit !== "cover"}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Center" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top-left">Top left</SelectItem>
+                    <SelectItem value="top">Top</SelectItem>
+                    <SelectItem value="top-right">Top right</SelectItem>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                    <SelectItem value="bottom-left">Bottom left</SelectItem>
+                    <SelectItem value="bottom">Bottom</SelectItem>
+                    <SelectItem value="bottom-right">Bottom right</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Crop bias when filling frame.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Format</Label>
                 <Select value={fmt} onValueChange={(v: OutFormat) => setFmt(v)}>
@@ -340,30 +550,31 @@ export default function ImageResizePage() {
                 </Select>
                 <p className="text-xs text-muted-foreground">WEBP balances size and quality.</p>
               </div>
+
+              {fmt !== "png" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="quality">Quality</Label>
+                    <span className="text-xs text-muted-foreground">{quality}</span>
+                  </div>
+                  <Slider
+                    id="quality"
+                    min={1}
+                    max={100}
+                    step={1}
+                    value={[quality]}
+                    onValueChange={([q]) => setQuality(q)}
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Quality for lossy */}
-            {fmt !== "png" && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="quality">Quality</Label>
-                  <span className="text-xs text-muted-foreground">{quality}</span>
-                </div>
-                <Slider
-                  id="quality"
-                  min={1}
-                  max={100}
-                  step={1}
-                  value={[quality]}
-                  onValueChange={([q]) => setQuality(q)}
-                />
-              </div>
-            )}
-
-            {/* Background color for JPEG transparency */}
-            {fmt === "jpeg" && (
+            {/* JPEG bg only if transparency detected */}
+            {fmt === "jpeg" && hasAlpha && (
               <div className="flex items-center gap-3">
-                <Label htmlFor="bg">Background (for transparency)</Label>
+                <Label htmlFor="bg" className="flex items-center gap-2">
+                  <Palette className="h-4 w-4" /> Background (for transparency)
+                </Label>
                 <Input
                   id="bg"
                   type="color"
@@ -373,206 +584,93 @@ export default function ImageResizePage() {
                 />
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label>Smoothing quality</Label>
+              <Select
+                value={smoothQ}
+                onValueChange={(v: CanvasImageSmoothingQuality) => setSmoothQ(v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="high" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">low</SelectItem>
+                  <SelectItem value="medium">medium</SelectItem>
+                  <SelectItem value="high">high</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </GlassCard>
 
       <Separator className="my-4" />
 
-      {/* Output Preview & Logs */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Output Preview & Log</CardTitle>
-          <CardDescription>
-            Estimated output size depends on content & quality settings.
-          </CardDescription>
+          <CardDescription>Estimated output depends on content &amp; quality.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
-          {/* Estimated box */}
           <div className="space-y-3">
             <div className="rounded-lg border p-3">
               <div className="mb-2 flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2">
-                  <Crop className="h-4 w-4" />
-                  Target Dimensions
+                  <Crop className="h-4 w-4" /> Target Dimensions
                 </span>
                 <span className="font-medium">
-                  {typeof w === "number" && typeof h === "number" ? `${w} × ${h}px` : "—"}
+                  {typeof w === "number" && typeof h === "number"
+                    ? `${noUpscale && img ? Math.min(w, img.width) : w} × ${noUpscale && img ? Math.min(h, img.height) : h}px`
+                    : "—"}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <ActivitySquare className="h-3.5 w-3.5" />
-                  Fit: <span className="ml-1 font-medium text-foreground">{fit}</span>
+                  <ActivitySquare className="h-3.5 w-3.5" /> Fit:
+                  <span className="ml-1 font-medium text-foreground">{fit}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  Format:{" "}
+                  <ImageIcon className="h-3.5 w-3.5" /> Format:
                   <span className="ml-1 font-medium text-foreground">{fmt.toUpperCase()}</span>
                 </div>
               </div>
-            </div>
 
-            {/* Tips */}
-            <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-              <li>Paste directly from your clipboard (Ctrl/Cmd+V).</li>
-              <li>
-                Use <span className="font-medium">Contain</span> to keep the full image without
-                cropping.
-              </li>
-              <li>WEBP is usually the smallest; PNG is best for sharp UI/graphics.</li>
-            </ul>
-          </div>
+              <div className="mt-3">
+                <div className="mb-1 text-xs text-muted-foreground">Preview (after resize)</div>
+                {!previewUrl ? (
+                  <div className="text-xs text-muted-foreground">
+                    Click <b>Preview</b> to see output without downloading.
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative h-44 w-full overflow-hidden rounded bg-muted/40">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={previewUrl} alt="after" className="h-full w-full object-contain" />
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
+                      <InfoPill label="Output Size" value={formatBytes(previewSize ?? 0)} />
+                      <InfoPill label="Format" value={fmt.toUpperCase()} />
+                    </div>
+                  </>
+                )}
+              </div>
 
-          {/* Log */}
-          <div className="space-y-2">
-            <Label className="text-sm">Process Log</Label>
-            <Textarea readOnly value={log} className="min-h-[120px] font-mono" />
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={copyLog}
-                disabled={!log}
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                Copy
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog("")}>
-                Clear
-              </Button>
+              <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                <li>Canvas export removes EXIF/metadata.</li>
+                <li>GIFs flatten to a single frame; SVG rasterized.</li>
+              </ul>
             </div>
           </div>
+
+          <ProcessLog value={log} onClear={() => setLog("")} />
         </CardContent>
       </GlassCard>
     </>
   );
 }
 
-/* helpers */
-function numOrEmpty(v: string): number | "" {
-  const n = Number(v);
-  return Number.isNaN(n) ? "" : n;
-}
-
-function suggestName(name: string, fmt: OutFormat) {
-  const base = name.replace(/\.[^.]+$/, "");
-  return `${base}-resized.${fmt === "jpeg" ? "jpg" : fmt}`;
-}
-
-function triggerDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function formatBytes(bytes: number) {
-  const units = ["B", "KB", "MB", "GB"];
-  let i = 0;
-  let n = bytes;
-  while (n >= 1024 && i < units.length - 1) {
-    n /= 1024;
-    i++;
-  }
-  return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
-}
-
-function loadImageMeta(url: string): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-async function resizeImage(opts: {
-  srcUrl: string;
-  srcW: number;
-  srcH: number;
-  outW: number;
-  outH: number;
-  fit: FitMode;
-  format: OutFormat;
-  quality: number;
-  background: string;
-}): Promise<{ blob: Blob }> {
-  const { srcUrl, srcW, srcH, outW, outH, fit, format, quality, background } = opts;
-
-  // compute target draw rect based on fit
-  const targetW = Math.max(1, Math.round(outW));
-  const targetH = Math.max(1, Math.round(outH));
-
-  const srcAspect = srcW / srcH;
-  const dstAspect = targetW / targetH;
-
-  let drawW = targetW;
-  let drawH = targetH;
-
-  if (fit === "contain") {
-    if (srcAspect > dstAspect) {
-      drawW = targetW;
-      drawH = Math.round(targetW / srcAspect);
-    } else {
-      drawH = targetH;
-      drawW = Math.round(targetH * srcAspect);
-    }
-  } else {
-    // cover
-    if (srcAspect > dstAspect) {
-      // crop width
-      drawH = targetH;
-      drawW = Math.round(targetH * srcAspect);
-    } else {
-      // crop height
-      drawW = targetW;
-      drawH = Math.round(targetW / srcAspect);
-    }
-  }
-
-  // prepare canvas
-  const canvas = document.createElement("canvas");
-  canvas.width = targetW;
-  canvas.height = targetH;
-  const ctx = canvas.getContext("2d")!;
-
-  // background for JPEG (to avoid black where transparent)
-  if (format === "jpeg") {
-    ctx.fillStyle = background || "#ffffff";
-    ctx.fillRect(0, 0, targetW, targetH);
-  } else {
-    ctx.clearRect(0, 0, targetW, targetH);
-  }
-
-  const imgEl = await createImageElement(srcUrl);
-
-  if (fit === "contain") {
-    const dx = Math.round((targetW - drawW) / 2);
-    const dy = Math.round((targetH - drawH) / 2);
-    ctx.drawImage(imgEl, 0, 0, srcW, srcH, dx, dy, drawW, drawH);
-  } else {
-    const scale = Math.max(targetW / srcW, targetH / srcH);
-    const sw = Math.round(targetW / scale);
-    const sh = Math.round(targetH / scale);
-    const sx = Math.round((srcW - sw) / 2);
-    const sy = Math.round((srcH - sh) / 2);
-    ctx.drawImage(imgEl, sx, sy, sw, sh, 0, 0, targetW, targetH);
-  }
-
-  const mime = format === "png" ? "image/png" : format === "jpeg" ? "image/jpeg" : "image/webp";
-  const q = Math.min(1, Math.max(0.01, quality / 100));
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode image"))), mime, q);
-  });
-
-  return { blob };
-}
+/* ---------------- Helpers ---------------- */
 
 function createImageElement(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -584,12 +682,22 @@ function createImageElement(url: string): Promise<HTMLImageElement> {
   });
 }
 
-/* tiny UI sub component */
-function InfoPill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border bg-background/60 p-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-xs font-medium">{value}</div>
-    </div>
-  );
+/** Fast alpha check: downscale & scan alpha channel */
+async function detectHasAlpha(url: string): Promise<boolean> {
+  const img = await createImageElement(url);
+  const maxDim = 256;
+  const ratio = Math.max(img.naturalWidth, img.naturalHeight) / maxDim;
+  const w = ratio > 1 ? Math.round(img.naturalWidth / ratio) : img.naturalWidth;
+  const h = ratio > 1 ? Math.round(img.naturalHeight / ratio) : img.naturalHeight;
+
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, w, h);
+  const data = ctx.getImageData(0, 0, w, h).data;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] !== 255) return true;
+  }
+  return false;
 }

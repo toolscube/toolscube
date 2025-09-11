@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ToolsLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <main className="scroll-smooth">{children}</main>;
 }

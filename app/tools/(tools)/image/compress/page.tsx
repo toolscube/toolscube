@@ -3,23 +3,28 @@
 import {
   ActivitySquare,
   Check,
+  CloudDownload,
   Copy,
   Crop,
-  Download,
   ImageDown,
   Image as ImageIcon,
   Link2,
   Loader2,
+  Palette,
   RotateCcw,
   Upload,
 } from "lucide-react";
-import NextImage from "next/image";
 import * as React from "react";
 import { useDropzone } from "react-dropzone";
 
+import { ImageDropzone } from "@/components/image/image-dropzone";
+import { ImagePreview, InfoPill } from "@/components/image/image-preview-meta";
+import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import { ProcessLog } from "@/components/shared/process-log";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -35,6 +40,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
+/* ------------------- types ------------------- */
 type FitMode = "contain" | "cover";
 type OutFormat = "keep" | "jpeg" | "png" | "webp";
 
@@ -47,6 +53,7 @@ interface LoadedImage {
   size: number;
 }
 
+/* ------------------- page ------------------- */
 export default function ImageCompressPage() {
   const [img, setImg] = React.useState<LoadedImage | null>(null);
 
@@ -63,7 +70,7 @@ export default function ImageCompressPage() {
   const [bg, setBg] = React.useState("#ffffff"); // for JPEG transparency / contain letterbox
 
   // Target size (optional)
-  const [targetSize, setTargetSize] = React.useState<number | "">(""); // in KB
+  const [targetSize, setTargetSize] = React.useState<number | "">(""); // in KB/MB
   const [sizeUnit, setSizeUnit] = React.useState<"KB" | "MB">("KB");
 
   // UI
@@ -179,7 +186,9 @@ export default function ImageCompressPage() {
       const filename = suggestName(img.file.name, actualFmt);
       triggerDownload(blob, filename);
       setLog(
-        `Done → ${filename} (${formatBytes(blob.size)}).${tgtBytes ? ` Target was ≤ ${formatBytes(tgtBytes)}.` : ""}`,
+        `Done → ${filename} (${formatBytes(blob.size)}).${
+          tgtBytes ? ` Target was ≤ ${formatBytes(tgtBytes)}.` : ""
+        }`,
       );
     } catch (e: any) {
       setLog(`Error: ${e?.message || String(e)}`);
@@ -198,326 +207,302 @@ export default function ImageCompressPage() {
   const lossy = fmt === "keep" && img ? !img.type.includes("png") : fmt !== "png";
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-10">
-      <MotionGlassCard>
-        {/* Header */}
-        <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-              <ImageDown className="h-6 w-6" /> Image Compress
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Shrink images for web & social. Drag & drop, paste (Ctrl/Cmd+V), or click to upload.
-            </p>
+    <>
+      {/* ✅ Header now uses the shared ToolPageHeader */}
+      <ToolPageHeader
+        icon={ImageDown}
+        title="Image Compress"
+        description="Shrink images for web & social. Drag & drop, paste (Ctrl/Cmd+V), or upload."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <ActionButton
+              variant="default"
+              label={running ? "Processing…" : "Compress & Download"}
+              icon={running ? Loader2 : CloudDownload}
+              onClick={run}
+              disabled={!img || running}
+            />
+          </>
+        }
+      />
+
+      {/* Uploader / Preview */}
+      <GlassCard>
+        <CardHeader>
+          <CardTitle className="text-base">Image</CardTitle>
+          <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 lg:grid-cols-2">
+          <ImageDropzone
+            getRootProps={getRootProps}
+            getInputProps={getInputProps}
+            isDragActive={isDragActive}
+            subtitle="PNG, JPEG, WEBP, GIF, SVG (GIF/SVG will be rasterized)"
+          />
+          <div className="grid gap-4">
+            <ImagePreview
+              url={img?.url}
+              emptyNode={
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  No image selected
+                </div>
+              }
+            />
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <InfoPill label="Source Size" value={img ? formatBytes(img.size) : "—"} />
+              <InfoPill label="Source Type" value={img ? img.type || "—" : "—"} />
+              <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
+              <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={resetAll} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
-            <Button onClick={run} className="gap-2" disabled={!img || running}>
-              {running ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              {running ? "Processing…" : "Compress & Download"}
-            </Button>
-          </div>
-        </GlassCard>
+        </CardContent>
+      </GlassCard>
 
-        {/* Uploader / Preview */}
-        <GlassCard>
-          <CardHeader>
-            <CardTitle className="text-base">Image</CardTitle>
-            <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 lg:grid-cols-2">
-            {/* Dropzone */}
-            <div
-              {...getRootProps()}
-              className={cn(
-                "group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition",
-                isDragActive ? "border-primary bg-primary/5" : "hover:bg-muted/40",
-              )}
-            >
-              <input {...getInputProps()} />
-              <div className="pointer-events-none flex flex-col items-center gap-2 text-center">
-                <div className="rounded-full bg-primary/10 p-3">
-                  <Upload className="h-6 w-6 text-primary" />
-                </div>
-                <p className="text-sm font-medium">Drop image here, or click to browse</p>
-                <p className="text-xs text-muted-foreground">
-                  PNG, JPEG, WEBP, GIF, SVG (GIF/SVG will be rasterized)
-                </p>
-              </div>
-            </div>
+      <Separator className="my-4" />
 
-            {/* Preview + Meta */}
-            <div className="grid gap-4">
-              <div className="relative h-56 w-full overflow-hidden rounded-lg border bg-muted/40">
-                {!img ? (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    No image selected
-                  </div>
-                ) : (
-                  <NextImage
-                    src={img.url}
-                    alt="preview"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-contain"
-                    priority
-                  />
-                )}
-              </div>
+      {/* Settings */}
+      <GlassCard>
+        <CardHeader>
+          <CardTitle className="text-base">Settings</CardTitle>
+          <CardDescription>
+            Downscale (optional), pick output, and control size/quality.
+          </CardDescription>
+        </CardHeader>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <InfoPill label="Source Size" value={img ? formatBytes(img.size) : "—"} />
-                <InfoPill label="Source Type" value={img ? img.type || "—" : "—"} />
-                <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
-                <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
-              </div>
-            </div>
-          </CardContent>
-        </GlassCard>
-
-        {/* Settings */}
-        <GlassCard>
-          <CardHeader>
-            <CardTitle className="text-base">Settings</CardTitle>
-            <CardDescription>
-              Downscale (optional), pick output, and control size/quality.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="grid gap-6 md:grid-cols-2">
-            {/* Dimensions */}
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="width">Width (px)</Label>
-                  <Input
-                    id="width"
-                    type="number"
-                    min={1}
-                    value={w}
-                    onChange={(e) => setW(numOrEmpty(e.target.value))}
-                    disabled={!img}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="height">Height (px)</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    min={1}
-                    value={h}
-                    onChange={(e) => setH(numOrEmpty(e.target.value))}
-                    disabled={!img}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Switch checked={locked} onCheckedChange={setLocked} id="lock" />
-                  <Label htmlFor="lock" className="flex items-center gap-1">
-                    <Link2 className="h-4 w-4" /> Lock aspect ratio
-                  </Label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="scale" className="text-sm text-muted-foreground">
-                    Scale (%)
-                  </Label>
-                  <Input
-                    id="scale"
-                    type="number"
-                    min={1}
-                    placeholder="e.g. 50 for half"
-                    className="w-36"
-                    value={scale}
-                    onChange={(e) => setScale(numOrEmpty(e.target.value))}
-                    disabled={!img}
-                  />
-                </div>
-              </div>
-
+        <CardContent className="grid gap-6 md:grid-cols-2">
+          {/* Dimensions */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Fit</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <Select value={fit} onValueChange={(v: FitMode) => setFit(v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select fit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="contain">Contain (no crop)</SelectItem>
-                      <SelectItem value="cover">Cover (fills, may crop)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="rounded-md border p-2 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Crop className="h-3.5 w-3.5" />
-                      <span>
-                        <span className="font-medium">Contain</span> centers with padding;{" "}
-                        <span className="font-medium">Cover</span> fills box (smart crop).
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Format & Size */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Output Format</Label>
-                <Select value={fmt} onValueChange={(v: OutFormat) => setFmt(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Keep original" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="keep">Keep original</SelectItem>
-                    <SelectItem value="webp">WEBP (recommended)</SelectItem>
-                    <SelectItem value="jpeg">JPEG</SelectItem>
-                    <SelectItem value="png">PNG</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  WEBP is typically the smallest; PNG is best for sharp UI/graphics.
-                </p>
-              </div>
-
-              {/* Quality (lossy only) */}
-              <div className="space-y-2 opacity-100">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="quality" className={cn(!lossy && "text-muted-foreground")}>
-                    Quality {lossy ? "" : "(lossless)"}
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{quality}</span>
-                </div>
-                <Slider
-                  id="quality"
+                <Label htmlFor="width">Width (px)</Label>
+                <Input
+                  id="width"
+                  type="number"
                   min={1}
-                  max={100}
-                  step={1}
-                  value={[quality]}
-                  onValueChange={([q]) => setQuality(q)}
-                  disabled={!lossy}
+                  value={w}
+                  onChange={(e) => setW(numOrEmpty(e.target.value))}
+                  disabled={!img}
                 />
-                {!lossy && (
-                  <p className="text-xs text-muted-foreground">
-                    PNG ignores quality; consider WEBP/JPEG to reduce size.
-                  </p>
-                )}
               </div>
-
-              {/* Background color (used if JPEG + contain padding) */}
-              {(fmt === "jpeg" || (fmt === "keep" && img && img.type.includes("jpeg"))) && (
-                <div className="space-y-2">
-                  <Label htmlFor="bg" className="text-sm">
-                    Background (for transparency / contain padding)
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="bg"
-                      type="color"
-                      className="h-9 w-16 p-1"
-                      value={bg}
-                      onChange={(e) => setBg(e.target.value)}
-                    />
-                    <Input
-                      aria-label="Background hex"
-                      value={bg}
-                      onChange={(e) => setBg(e.target.value)}
-                      className="w-36"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Target size */}
               <div className="space-y-2">
-                <Label htmlFor="target">Target Size (optional)</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="target"
-                    type="number"
-                    min={1}
-                    placeholder="e.g. 180"
-                    className="w-36"
-                    value={targetSize}
-                    onChange={(e) => setTargetSize(numOrEmpty(e.target.value))}
-                  />
-                  <Select value={sizeUnit} onValueChange={(v: "KB" | "MB") => setSizeUnit(v)}>
-                    <SelectTrigger className="w-28">
-                      <SelectValue placeholder="KB" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="KB">KB</SelectItem>
-                      <SelectItem value="MB">MB</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Tries to meet the target by adjusting quality (lossy formats). PNG cannot target
-                  size precisely.
-                </p>
+                <Label htmlFor="height">Height (px)</Label>
+                <Input
+                  id="height"
+                  type="number"
+                  min={1}
+                  value={h}
+                  onChange={(e) => setH(numOrEmpty(e.target.value))}
+                  disabled={!img}
+                />
               </div>
             </div>
-          </CardContent>
-        </GlassCard>
 
-        <Separator />
-
-        {/* Output & Log */}
-        <GlassCard>
-          <CardHeader>
-            <CardTitle className="text-base">Output & Log</CardTitle>
-            <CardDescription>Click Compress & Download to save the result.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-lg border p-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <ActivitySquare className="h-4 w-4" />
-                  Target Dimensions
-                </span>
-                <span className="font-medium">
-                  {typeof w === "number" && typeof h === "number" ? `${w} × ${h}px` : "—"}
-                </span>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Switch checked={locked} onCheckedChange={setLocked} id="lock" />
+                <Label htmlFor="lock" className="flex items-center gap-1">
+                  <Link2 className="h-4 w-4" /> Lock aspect ratio
+                </Label>
               </div>
-              <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-                <li>Canvas re-encoding strips EXIF/metadata by default.</li>
-                <li>Animated GIFs will be flattened to a single frame.</li>
-                <li>For the smallest size, try **WEBP** and reduce dimensions.</li>
-              </ul>
+
+              <div className="flex items-center gap-2">
+                <Label htmlFor="scale" className="text-sm text-muted-foreground">
+                  Scale (%)
+                </Label>
+                <Input
+                  id="scale"
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 50 for half"
+                  className="w-36"
+                  value={scale}
+                  onChange={(e) => setScale(numOrEmpty(e.target.value))}
+                  disabled={!img}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm">Process Log</Label>
-              <Textarea readOnly value={log} className="min-h-[120px] font-mono" />
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={copyLog}
-                  disabled={!log}
-                >
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  Copy
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog("")}>
-                  Clear
-                </Button>
+              <Label>Fit</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Select value={fit} onValueChange={(v: FitMode) => setFit(v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select fit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contain">Contain (no crop)</SelectItem>
+                    <SelectItem value="cover">Cover (fills, may crop)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="rounded-md border p-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Crop className="h-3.5 w-3.5" />
+                    <span>
+                      <span className="font-medium">Contain</span> centers with padding;{" "}
+                      <span className="font-medium">Cover</span> fills box (smart crop).
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </GlassCard>
-      </MotionGlassCard>
-    </div>
+          </div>
+
+          {/* Format & Size */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Output Format</Label>
+              <Select value={fmt} onValueChange={(v: OutFormat) => setFmt(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Keep original" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="keep">Keep original</SelectItem>
+                  <SelectItem value="webp">WEBP (recommended)</SelectItem>
+                  <SelectItem value="jpeg">JPEG</SelectItem>
+                  <SelectItem value="png">PNG</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                WEBP is typically the smallest; PNG is best for sharp UI/graphics.
+              </p>
+            </div>
+
+            {/* Quality (lossy only) */}
+            <div className="space-y-2 opacity-100">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="quality" className={cn(!lossy && "text-muted-foreground")}>
+                  Quality {lossy ? "" : "(lossless)"}
+                </Label>
+                <span className="text-xs text-muted-foreground">{quality}</span>
+              </div>
+              <Slider
+                id="quality"
+                min={1}
+                max={100}
+                step={1}
+                value={[quality]}
+                onValueChange={([q]) => setQuality(q)}
+                disabled={!lossy}
+              />
+              {!lossy && (
+                <p className="text-xs text-muted-foreground">
+                  PNG ignores quality; consider WEBP/JPEG to reduce size.
+                </p>
+              )}
+            </div>
+
+            {/* Background color (used if JPEG or when padding for contain) */}
+            {(fmt === "jpeg" || (fmt === "keep" && img && img.type.includes("jpeg"))) && (
+              <div className="space-y-2">
+                <Label htmlFor="bg" className="text-sm flex items-center gap-2">
+                  <Palette className="h-4 w-4" /> Background (for transparency / contain padding)
+                </Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="bg"
+                    type="color"
+                    className="h-9 w-16 p-1"
+                    value={bg}
+                    onChange={(e) => setBg(e.target.value)}
+                  />
+                  <Input
+                    aria-label="Background hex"
+                    value={bg}
+                    onChange={(e) => setBg(e.target.value)}
+                    className="w-36"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Target size */}
+            <div className="space-y-2">
+              <Label htmlFor="target">Target Size (optional)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="target"
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 180"
+                  className="w-36"
+                  value={targetSize}
+                  onChange={(e) => setTargetSize(numOrEmpty(e.target.value))}
+                />
+                <Select value={sizeUnit} onValueChange={(v: "KB" | "MB") => setSizeUnit(v)}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue placeholder="KB" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="KB">KB</SelectItem>
+                    <SelectItem value="MB">MB</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Tries to meet the target by adjusting quality (lossy formats). PNG cannot target
+                size precisely.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </GlassCard>
+
+      <Separator className="my-4" />
+
+      {/* Output & Log */}
+      <GlassCard>
+        <CardHeader>
+          <CardTitle className="text-base">Output & Log</CardTitle>
+          <CardDescription>Click Compress & Download to save the result.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-lg border p-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2">
+                <ActivitySquare className="h-4 w-4" />
+                Target Dimensions
+              </span>
+              <span className="font-medium">
+                {typeof w === "number" && typeof h === "number" ? `${w} × ${h}px` : "—"}
+              </span>
+            </div>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+              <li>Canvas re-encoding strips EXIF/metadata by default.</li>
+              <li>Animated GIFs will be flattened to a single frame.</li>
+              <li>
+                For the smallest size, try <b>WEBP</b> and reduce dimensions.
+              </li>
+            </ul>
+          </div>
+
+          <ProcessLog
+            value={log}
+            onClear={() => setLog("")}
+            // Optional copy button (kept your behavior)
+            rightAddon={
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  if (!log) return;
+                  navigator.clipboard.writeText(log).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1100);
+                  });
+                }}
+                disabled={!log}
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                Copy
+              </Button>
+            }
+          />
+        </CardContent>
+      </GlassCard>
+    </>
   );
 }
 
@@ -712,7 +697,7 @@ async function toTargetSize(
   for (let i = 0; i < 8; i++) {
     const blob = await canvasToBlob(canvas, mime, q);
     if (blob.size <= targetBytes) {
-      best = blob; // good — try higher quality but stay under target
+      best = blob; // hit target — try higher quality under the cap
       lo = q;
       q = (q + hi) / 2;
     } else {
@@ -723,16 +708,6 @@ async function toTargetSize(
 
   if (best) return best;
 
-  // If we never went under target, return the smallest (hi bound)
+  // If never under target, return smallest bound
   return canvasToBlob(canvas, mime, lo);
-}
-
-/* ------------------- tiny UI subcomp ------------------- */
-function InfoPill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border bg-background/60 p-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-xs font-medium">{value}</div>
-    </div>
-  );
 }

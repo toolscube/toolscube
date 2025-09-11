@@ -194,13 +194,6 @@ export const ToolsData = [
         description: "Erase background (client-side)",
         popular: false,
       },
-      // Low-frequency;
-      // {
-      //   title: 'Sprite Sheet Maker',
-      //   url: '/tools/image/sprite',
-      //   description: 'Combine icons into a sprite sheet',
-      //   popular: false,
-      // },
       {
         title: "Image to Text (OCR)",
         url: "/tools/image/ocr",
@@ -251,12 +244,6 @@ export const ToolsData = [
         description: "Generate secure random passwords",
         popular: true,
       },
-      // {
-      //   title: 'Base64 Encode/Decode',
-      //   url: '/tools/dev/base64',
-      //   description: 'Encode and decode Base64 strings easily',
-      //   popular: false,
-      // },
       {
         title: "UUID / NanoID Generator",
         url: "/tools/dev/uuid-nanoid",

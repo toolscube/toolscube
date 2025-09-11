@@ -100,7 +100,7 @@ export default function RootLayout({
       className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrains.variable}`}
     >
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <main className="mx-auto px-4">{children}</main>
+        <main className="max-w-7xl mx-auto px-4">{children}</main>
         <Toaster position="top-right" />
       </body>
     </html>
