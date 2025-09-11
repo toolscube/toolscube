@@ -1,5 +1,6 @@
 import JsonLd from "@/components/seo/json-ld";
 import ImageResizeClient from "@/components/tools/image/image-resize-client";
+import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
@@ -12,6 +13,7 @@ export const metadata = buildMetadata({
     "resize image online",
     "crop image online",
     "scale image online",
+    "resize photos",
     "JPG resizer",
     "PNG resizer",
     "WebP resizer",
@@ -22,27 +24,35 @@ export const metadata = buildMetadata({
     "Facebook cover resize",
     "Twitter banner resize",
     "LinkedIn image resize",
+    "YouTube thumbnail size",
     "batch image resize",
     "custom image dimensions",
+    "maintain aspect ratio",
     "resize without losing quality",
     "compress and resize",
-    "aspect ratio image resize",
+    "HD Full HD 4K resize",
+    "no watermark image resize",
     "fast image resize tool",
     "secure online image tool",
-    "no watermark image resize",
-    "Bangladesh",
     "Tools Hub",
+    "online tools",
+    "privacy friendly tools",
+    "Bangladesh",
   ],
 });
 
 export default function Page() {
-  const jsonLd = {
+  const toolUrl = `${siteURL}/tools/image/resize`;
+
+  const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "Image Resize — Tools Hub",
-    url: `${process.env.NEXT_PUBLIC_SITE_URL}/tools/image/resize`,
+    url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",
+    isAccessibleForFree: true,
+    inLanguage: ["en", "bn"],
     description:
       "Free online image resizer to resize, crop, and scale images. Works with JPG, PNG, WebP, and AVIF. Maintain quality and export instantly.",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -68,11 +78,60 @@ export default function Page() {
       name: "Tariqul Islam",
       url: "https://tariqul.dev",
     },
+    potentialAction: {
+      "@type": "CreateAction",
+      target: toolUrl,
+      name: "Resize an image",
+    },
+  };
+
+  const crumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
+      { "@type": "ListItem", position: 2, name: "Image", item: `${siteURL}/tools/image` },
+      { "@type": "ListItem", position: 3, name: "Image Resize", item: toolUrl },
+    ],
+  };
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Which image formats are supported?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "JPG, PNG, WebP, and AVIF are supported for input and output. Browser support may enable additional inputs.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I keep the original aspect ratio?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. You can lock aspect ratio to avoid distortion or unlock it for free scaling and cropping.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Are images uploaded to a server?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No. Resizing runs locally in your browser, so your images aren’t uploaded or stored on a server.",
+        },
+      },
+    ],
   };
 
   return (
     <div className="space-y-4">
-      <JsonLd data={jsonLd} />
+      <JsonLd data={appLd} />
+      <JsonLd data={crumbsLd} />
+      <JsonLd data={faqLd} />
+
       <ImageResizeClient />
     </div>
   );
