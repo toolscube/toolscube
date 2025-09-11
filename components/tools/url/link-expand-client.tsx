@@ -19,43 +19,9 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { formatUrl, isLikelyShortener } from "@/lib/utils/link-expand";
 
 const DEFAULT_MAX_HOPS = 10;
-
-/* Utils */
-function formatUrl(s: string) {
-  try {
-    const u = new URL(s.trim().replace(/\s+/g, ""));
-    return u.toString();
-  } catch {
-    try {
-      return new URL(`https://${s}`).toString();
-    } catch {
-      return s;
-    }
-  }
-}
-
-function isLikelyShortener(host: string) {
-  const list = [
-    "bit.ly",
-    "t.co",
-    "goo.gl",
-    "tinyurl.com",
-    "ow.ly",
-    "is.gd",
-    "buff.ly",
-    "rebrand.ly",
-    "cutt.ly",
-    "shorte.st",
-    "rb.gy",
-    "lnkd.in",
-    "fb.me",
-    "bl.ink",
-    "t.ly",
-  ];
-  return list.some((d) => host.endsWith(d));
-}
 
 export default function LinkExpandClient() {
   const [url, setUrl] = useState("");

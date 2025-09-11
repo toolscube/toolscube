@@ -38,6 +38,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { buildSingle, cleanBaseUrl, genShortId, isValidUrl, rid } from "@/lib/utils/utm-builder";
 
 /* Constants */
 const DEFAULT_UTM: UTMState = {
@@ -62,31 +63,7 @@ const PRESET_LS_KEY = "toolshub:utm-builder-presets-v1";
 const HISTORY_LS_KEY = "toolshub:utm-builder-history-v1";
 
 /* Helpers */
-function rid(prefix = "row") {
-  return `${prefix}-${crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 10)}`;
-}
-
-function encodeVal(v: string, should: boolean) {
-  return should ? encodeURIComponent(v) : v;
-}
-
-function cleanBaseUrl(url: string) {
-  const trimmed = url.trim();
-  if (!trimmed) return "";
-  try {
-    const u = new URL(trimmed);
-    return `${u.origin}${u.pathname}${u.hash ?? ""}`;
-  } catch {
-    try {
-      const u = new URL(`https://${trimmed}`);
-      return `${u.origin}${u.pathname}${u.hash ?? ""}`;
-    } catch {
-      return trimmed;
-    }
-  }
-}
-
-function parseExisting(url: string) {
+export function parseExisting(url: string) {
   try {
     const u = new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`);
     const p = u.searchParams;
@@ -111,63 +88,6 @@ function parseExisting(url: string) {
   } catch {
     return null;
   }
-}
-
-function genShortId() {
-  if (crypto?.getRandomValues) {
-    const bytes = new Uint8Array(6);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-  }
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function isValidUrl(s: string) {
-  try {
-    new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function buildSingle(baseUrl: string, utm: UTMState, opts: OptionsState) {
-  if (!baseUrl || !baseUrl.trim()) return "";
-
-  let base = baseUrl.trim();
-  if (!/^https?:\/\//i.test(base)) base = `https://${base}`;
-
-  let u: URL;
-  try {
-    u = new URL(base);
-    if (!u.hostname) return "";
-  } catch {
-    return "";
-  }
-
-  const params = new URLSearchParams(opts.keepExisting ? u.search : "");
-
-  const key = (k: string) => (opts.lowercaseKeys ? k.toLowerCase() : k);
-  const set = (k: string, v: string) => {
-    if (!v) return;
-    params.set(key(k), encodeVal(v, opts.encodeParams));
-  };
-
-  set("utm_source", utm.source);
-  set("utm_medium", utm.medium);
-  set("utm_campaign", utm.campaign);
-  set("utm_term", utm.term);
-  set("utm_content", utm.content);
-  set("utm_id", utm.id);
-
-  for (const c of utm.custom) {
-    if (!c.enabled || !c.key) continue;
-    const k = opts.prefixCustomWithUTM ? `utm_${c.key.replace(/^utm_/i, "")}` : c.key;
-    set(k, c.value);
-  }
-
-  u.search = params.toString();
-  return u.toString();
 }
 
 export default function UTMBuilderClient() {
