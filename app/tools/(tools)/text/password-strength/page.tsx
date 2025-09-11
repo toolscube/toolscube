@@ -79,7 +79,7 @@ export default function Page() {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
-      { "@type": "ListItem", position: 2, name: "Text", item: `${siteURL}/tools/text` },
+      { "@type": "ListItem", position: 2, name: "URL", item: `${siteURL}/tools#cat-text` },
       { "@type": "ListItem", position: 3, name: "Password Strength", item: toolUrl },
     ],
   };

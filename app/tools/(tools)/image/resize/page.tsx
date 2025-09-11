@@ -90,7 +90,7 @@ export default function Page() {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
-      { "@type": "ListItem", position: 2, name: "Image", item: `${siteURL}/tools/image` },
+      { "@type": "ListItem", position: 2, name: "Image", item: `${siteURL}/tools#cat-image` },
       { "@type": "ListItem", position: 3, name: "Image Resize", item: toolUrl },
     ],
   };
