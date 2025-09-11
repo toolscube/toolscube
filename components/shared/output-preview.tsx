@@ -1,4 +1,3 @@
-// components/shared/output-preview.tsx
 "use client";
 
 import { Image as ImageIcon } from "lucide-react";
@@ -47,8 +46,9 @@ export function OutputPreview(props: {
               No preview yet
             </div>
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={previewUrl} alt="preview" className="h-full w-full object-contain" />
+            <picture>
+              <img src={previewUrl} alt="preview" className="h-full w-full object-contain" />
+            </picture>
           )}
         </div>
 

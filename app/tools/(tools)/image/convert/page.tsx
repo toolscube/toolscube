@@ -4,8 +4,8 @@ import {
   Crop,
   Eye,
   EyeOff,
-  FileType2,
   Image as ImageIcon,
+  Images,
   Link2,
   Loader2,
   Palette,
@@ -15,21 +15,15 @@ import * as React from "react";
 import { ImageDropzone } from "@/components/image/image-dropzone";
 import { ImagePreview, InfoPill } from "@/components/image/image-preview-meta";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
 import { OutputPreview } from "@/components/shared/output-preview";
 import { ProcessLog } from "@/components/shared/process-log";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useAutoPreview } from "@/hooks/use-auto-preview";
@@ -51,24 +45,20 @@ export default function ImageConvertPage() {
   const [running, setRunning] = React.useState(false);
   const [log, setLog] = React.useState("");
 
-  // transparency checker + auto detect
   const [checker, setChecker] = React.useState(true);
   const [hasAlpha, setHasAlpha] = React.useState<boolean | null>(null);
 
-  // optional resize controls
   const [enableResize, setEnableResize] = React.useState(false);
   const [locked, setLocked] = React.useState(true);
   const [fit, setFit] = React.useState<FitMode>("contain");
   const [w, setW] = React.useState<number | "">("");
   const [h, setH] = React.useState<number | "">("");
 
-  // filters
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [bright, setBright] = React.useState(100);
   const [contrast, setContrast] = React.useState(100);
   const [saturate, setSaturate] = React.useState(100);
 
-  // avif support
   const [avifOk, setAvifOk] = React.useState<boolean | null>(null);
 
   const { img, getRootProps, getInputProps, isDragActive, setImg } = useImageInput({
@@ -127,7 +117,7 @@ export default function ImageConvertPage() {
     setSaturate(100);
   }
 
-  // ---------- Auto Preview (debounced) ----------
+  // Auto Preview
   const { previewUrl, previewSize, previewBusy } = useAutoPreview(
     [img?.url, fmt, quality, bg, enableResize, w, h, fit, filtersOpen, bright, contrast, saturate],
     async () => {
@@ -176,8 +166,12 @@ export default function ImageConvertPage() {
       const filename = suggestName(img.file.name, enableResize ? "resized" : "converted", fmt);
       triggerDownload(blob, filename);
       setLog(`Done → ${filename} (${formatBytes(blob.size)})`);
-    } catch (e: any) {
-      setLog(`Error: ${e?.message || String(e)}`);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setLog(`Error: ${e.message}`);
+      } else {
+        setLog(`Error: ${String(e)}`);
+      }
     } finally {
       setRunning(false);
     }
@@ -188,7 +182,7 @@ export default function ImageConvertPage() {
   return (
     <>
       <ToolPageHeader
-        icon={FileType2}
+        icon={Images}
         title="Image Converter"
         description="Convert between PNG, JPEG, WEBP, AVIF (auto-preview)."
         actions={
@@ -196,7 +190,7 @@ export default function ImageConvertPage() {
             <ResetButton onClick={resetAll} />
             <ActionButton
               variant="default"
-              label={running ? "Processing…" : "Convert & Download"}
+              label={running ? "Processing…" : "Download"}
               icon={running ? Loader2 : undefined}
               onClick={run}
               disabled={!img || running || previewBusy}
@@ -246,52 +240,6 @@ export default function ImageConvertPage() {
               <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
               <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
             </div>
-
-            {/* quick presets */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setFmt("webp");
-                  setQuality(70);
-                }}
-              >
-                Small web (WEBP 70)
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setFmt("webp");
-                  setQuality(85);
-                }}
-              >
-                Balanced (WEBP 85)
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setFmt("jpeg");
-                  setQuality(92);
-                }}
-              >
-                High quality (JPEG 92)
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setFmt("avif");
-                  setQuality(60);
-                }}
-                disabled={avifOk === false}
-                title={avifOk === false ? "AVIF not supported in this browser" : ""}
-              >
-                {avifOk === false ? "AVIF (unsupported)" : "Ultra small (AVIF 60)"}
-              </Button>
-            </div>
           </div>
         </CardContent>
       </GlassCard>
@@ -308,27 +256,20 @@ export default function ImageConvertPage() {
         </CardHeader>
 
         <CardContent className="grid gap-6 md:grid-cols-2">
-          {/* Format + Quality + Transparency */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Format</Label>
-              <Select value={fmt} onValueChange={(v: OutFormat) => setFmt(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select format" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="webp">WEBP (recommended)</SelectItem>
-                  <SelectItem value="jpeg">JPEG</SelectItem>
-                  <SelectItem value="png">PNG</SelectItem>
-                  <SelectItem value="avif" disabled={avifOk === false}>
-                    AVIF
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                AVIF/WEBP সাধারণত সবচেয়ে ছোট; PNG UI/graphics-এর জন্য ভালো।
-              </p>
-            </div>
+            <SelectField
+              className="w-fit"
+              label="Format"
+              description="AVIF/WEBP is usually the smallest; PNG is good for UI/graphics."
+              value={fmt}
+              onValueChange={(v) => setFmt(v as OutFormat)}
+              options={[
+                { value: "webp", label: "WEBP (recommended)" },
+                { value: "jpeg", label: "JPEG" },
+                { value: "png", label: "PNG" },
+                { value: "avif", label: "AVIF" },
+              ]}
+            />
 
             {lossy && (
               <div className="space-y-2">
@@ -344,7 +285,7 @@ export default function ImageConvertPage() {
                   value={[quality]}
                   onValueChange={([q]) => setQuality(q)}
                 />
-                <p className="text-xs text-muted-foreground">উচ্চ কুয়ালিটি = বড় ফাইল।</p>
+                <p className="text-xs text-muted-foreground">High quality = large file.</p>
               </div>
             )}
 
@@ -354,14 +295,14 @@ export default function ImageConvertPage() {
                   <Palette className="h-4 w-4" /> Background (fill transparency)
                 </Label>
                 <div className="flex items-center gap-3">
-                  <Input
+                  <InputField
                     id="bg"
                     type="color"
                     className="h-9 w-16 p-1"
                     value={bg}
                     onChange={(e) => setBg(e.target.value)}
                   />
-                  <Input
+                  <InputField
                     aria-label="Background hex"
                     value={bg}
                     onChange={(e) => setBg(e.target.value)}
@@ -372,16 +313,43 @@ export default function ImageConvertPage() {
               </div>
             )}
 
+            {/* quick presets */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Small web", fmt: "webp", quality: 70 },
+                { label: "Balanced", fmt: "webp", quality: 85 },
+                { label: "High quality", fmt: "jpeg", quality: 92 },
+                {
+                  label: avifOk === false ? "AVIF" : "Ultra small",
+                  fmt: "avif",
+                  quality: 60,
+                  disabled: avifOk === false,
+                  title: avifOk === false ? "AVIF not supported in this browser" : "",
+                },
+              ].map(({ label, fmt, quality, disabled, title }) => (
+                <Button
+                  key={label}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setFmt(fmt as OutFormat);
+                    setQuality(quality);
+                  }}
+                  disabled={disabled}
+                  title={title}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+
             <div className="flex items-center gap-2 text-sm">
-              <Button
+              <ActionButton
                 size="sm"
-                variant="outline"
                 onClick={() => setChecker((v) => !v)}
-                className="gap-2"
-              >
-                {checker ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                {checker ? "Hide" : "Show"} checkerboard
-              </Button>
+                icon={checker ? Eye : EyeOff}
+                label={`${checker ? "Hide" : "Show"} checkerboard`}
+              />
             </div>
           </div>
 
@@ -392,66 +360,55 @@ export default function ImageConvertPage() {
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Crop className="h-4 w-4" /> Resize while converting
                 </div>
-                <Button
+                <ActionButton
                   size="sm"
                   variant={enableResize ? "default" : "outline"}
                   onClick={() => setEnableResize((v) => !v)}
-                >
-                  {enableResize ? "Enabled" : "Disabled"}
-                </Button>
+                  label={enableResize ? "Enabled" : "Disabled"}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="width">Width (px)</Label>
-                  <Input
-                    id="width"
-                    type="number"
-                    min={1}
-                    value={w}
-                    onChange={(e) => setW(numOrEmpty(e.target.value))}
-                    disabled={!img || !enableResize}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="height">Height (px)</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    min={1}
-                    value={h}
-                    onChange={(e) => setH(numOrEmpty(e.target.value))}
-                    disabled={!img || !enableResize}
-                  />
-                </div>
+                <InputField
+                  id="width"
+                  type="number"
+                  label="Width (px)"
+                  min={1}
+                  value={w}
+                  onChange={(e) => setW(numOrEmpty(e.target.value))}
+                  disabled={!img || !enableResize}
+                />
+                <InputField
+                  id="height"
+                  type="number"
+                  label="Height (px)"
+                  min={1}
+                  value={h}
+                  onChange={(e) => setH(numOrEmpty(e.target.value))}
+                  disabled={!img || !enableResize}
+                />
               </div>
 
-              <div className="flex flex-wrap items-center gap-4">
-                <Button
+              <div className="flex flex-wrap items-end gap-4">
+                <ActionButton
                   size="sm"
+                  icon={Link2}
+                  label={locked ? "Locked" : "Unlocked"}
                   variant={locked ? "default" : "outline"}
                   onClick={() => setLocked((v) => !v)}
-                  className="gap-2"
-                >
-                  <Link2 className="h-4 w-4" /> {locked ? "Locked" : "Unlocked"}
-                </Button>
+                />
 
-                <div className="w-44">
-                  <Label className="text-sm">Fit</Label>
-                  <Select
-                    value={fit}
-                    onValueChange={(v: FitMode) => setFit(v)}
-                    disabled={!enableResize}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select fit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="contain">Contain (no crop)</SelectItem>
-                      <SelectItem value="cover">Cover (may crop)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Fit"
+                  value={fit}
+                  onValueChange={(v) => setFit(v as FitMode)}
+                  disabled={!enableResize}
+                  placeholder="Select fit"
+                  options={[
+                    { value: "contain", label: "Contain (no crop)" },
+                    { value: "cover", label: "Cover (may crop)" },
+                  ]}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
@@ -471,13 +428,12 @@ export default function ImageConvertPage() {
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <SlidersHorizontal className="h-4 w-4" /> Filters (optional)
                 </div>
-                <Button
+                <ActionButton
                   size="sm"
+                  label={filtersOpen ? "On" : "Off"}
                   variant={filtersOpen ? "default" : "outline"}
                   onClick={() => setFiltersOpen((v) => !v)}
-                >
-                  {filtersOpen ? "On" : "Off"}
-                </Button>
+                />
               </div>
 
               {filtersOpen && (
@@ -562,9 +518,19 @@ async function detectHasAlpha(url: string): Promise<boolean> {
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
-  const ctx = c.getContext("2d")!;
+  const ctx = c.getContext("2d");
+  if (!ctx) throw new Error("2D canvas context is not supported in this environment.");
   ctx.drawImage(img, 0, 0, w, h);
-  const data = ctx.getImageData(0, 0, w, h).data;
-  for (let i = 3; i < data.length; i += 4) if (data[i] !== 255) return true;
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, w, h).data;
+  } catch {
+    return false;
+  }
+
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] !== 255) return true;
+  }
   return false;
+
 }

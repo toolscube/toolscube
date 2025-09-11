@@ -1,15 +1,21 @@
-// hooks/use-auto-preview.ts
 import * as React from "react";
 
-export function useAutoPreview<T extends any[]>(
-  deps: T,
+type UseAutoPreviewResult = {
+  previewUrl: string | null;
+  previewSize: number | null;
+  previewBusy: boolean;
+  clearPreview: () => void;
+};
+
+export function useAutoPreview(
+  deps: React.DependencyList,
   generate: () => Promise<Blob | null>,
   debounceMs = 350,
-) {
+): UseAutoPreviewResult {
   const [url, setUrl] = React.useState<string | null>(null);
   const [size, setSize] = React.useState<number | null>(null);
   const [busy, setBusy] = React.useState(false);
-  const timerRef = React.useRef<any>(null);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clear = React.useCallback(() => {
     if (url) URL.revokeObjectURL(url);
@@ -37,10 +43,11 @@ export function useAutoPreview<T extends any[]>(
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <>
   }, deps);
 
-  React.useEffect(() => clear, []); // revoke on unmount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <>
+  React.useEffect(() => clear, []);
 
   return { previewUrl: url, previewSize: size, previewBusy: busy, clearPreview: clear };
 }

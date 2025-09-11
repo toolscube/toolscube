@@ -56,7 +56,6 @@ export async function browserSupportsMime(mime: string) {
   return ok;
 }
 
-/** Core draw with fit + optional background (for JPEG) */
 export async function drawToCanvas(opts: {
   srcUrl: string;
   srcW: number;
@@ -64,8 +63,8 @@ export async function drawToCanvas(opts: {
   outW: number;
   outH: number;
   fit: FitMode;
-  background?: string; // used for JPEG or when you want padded bg
-  filterCss?: string; // canvas ctx.filter
+  background?: string;
+  filterCss?: string;
 }): Promise<HTMLCanvasElement> {
   const { srcUrl, srcW, srcH, outW, outH, fit, background, filterCss } = opts;
   const targetW = Math.max(1, Math.round(outW));
@@ -97,9 +96,15 @@ export async function drawToCanvas(opts: {
   const c = document.createElement("canvas");
   c.width = targetW;
   c.height = targetH;
-  const ctx = c.getContext("2d")!;
+
+  const ctx = c.getContext("2d");
+  if (!ctx) {
+    throw new Error("2D canvas context is not supported in this environment.");
+  }
+
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
+
   if (filterCss) {
     ctx.filter = filterCss;
   }
@@ -128,7 +133,7 @@ export async function canvasEncode(canvas: HTMLCanvasElement, fmt: OutFormat, qu
   const mime = mimeFromFormat(fmt);
   const q = Math.min(1, Math.max(0.01, quality / 100));
   const supported = await browserSupportsMime(mime);
-  const finalMime = supported ? mime : "image/webp"; // fallback
+  const finalMime = supported ? mime : "image/webp";
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (b) => (b ? resolve(b) : reject(new Error("Failed to encode image"))),
@@ -148,7 +153,6 @@ export function createImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Legacy helpers (still exported for existing pages) */
 export async function convertImage(opts: {
   srcUrl: string;
   outW: number;

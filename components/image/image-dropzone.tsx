@@ -1,17 +1,20 @@
 "use client";
+
 import { Upload } from "lucide-react";
 import type * as React from "react";
+import type { DropzoneInputProps, DropzoneRootProps } from "react-dropzone";
 import { cn } from "@/lib/utils";
 
 export function ImageDropzone(
   props: React.HTMLAttributes<HTMLDivElement> & {
-    getRootProps: () => any;
-    getInputProps: () => any;
+    getRootProps: () => DropzoneRootProps;
+    getInputProps: () => DropzoneInputProps;
     isDragActive: boolean;
     subtitle?: React.ReactNode;
   },
 ) {
   const { getRootProps, getInputProps, isDragActive, subtitle, className, ...rest } = props;
+
   return (
     <div
       {...getRootProps()}

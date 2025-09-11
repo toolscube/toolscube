@@ -45,7 +45,6 @@ async function overlayLogo(canvas: HTMLCanvasElement, logo: LogoOpt) {
   const r = Math.round(size * ((logo.roundedPct ?? 20) / 100));
 
   ctx.save();
-  // white rounded pad under logo for contrast
   ctx.beginPath();
   const rx = x - pad,
     ry = y - pad,
