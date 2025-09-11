@@ -37,7 +37,7 @@ import { timeAgo } from "@/lib/utils/time-ago";
 
 /* Types & LS helpers */
 type RecentItem = { slug: string; url: string; createdAt: number };
-const RECENT_KEY = "shortener:recent:v1";
+const RECENT_KEY = "toolshub:shortener-v1";
 
 function loadRecent(): RecentItem[] {
   if (typeof window === "undefined") return [];

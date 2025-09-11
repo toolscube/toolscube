@@ -11,7 +11,7 @@ This document provides guidelines for contributing to the Tools Hub project.
 2. **Clone** your fork locally:
 
    ```bash
-   git clone https://github.com/your-username/tools-hub.git
+   git clone https://github.com/tariqul420/tools-hub.git
    cd tools-hub
    ```
 

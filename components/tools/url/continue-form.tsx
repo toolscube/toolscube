@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/shared/action-buttons";
+import { Checkbox } from "@/components/ui/checkbox";
 import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
 
 export default function ContinueForm({
   action,
@@ -32,19 +34,11 @@ export default function ContinueForm({
         </div>
 
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-          <label className="inline-flex items-center gap-2 text-xs">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-primary"
-              checked={agree}
-              onChange={(e) => setAgree(e.target.checked)}
-            />
-            I trust this site
-          </label>
-
-          <Button type="submit" disabled={!canSubmit} className="gap-2">
-            Continue {left > 0 && `(${left})`}
-          </Button>
+          <Label className="inline-flex items-center gap-2 text-xs" htmlFor="agree">
+            <Checkbox id="agree" checked={agree} onCheckedChange={() => setAgree(!agree)} />
+            <span>I trust this site</span>
+          </Label>
+          <ActionButton variant="default" type="submit" disabled={!canSubmit} label="Continue" />
         </div>
       </form>
     </GlassCard>

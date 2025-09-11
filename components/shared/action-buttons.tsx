@@ -650,6 +650,7 @@ export function LinkButton({
 }
 
 export function ActionButton({
+  type = "button",
   onClick,
   label,
   variant = "outline",
@@ -660,6 +661,7 @@ export function ActionButton({
 }: {
   onClick?: () => void | Promise<void>;
   label?: string;
+  type: "button" | "submit" | "reset";
   variant?: Variant;
   size?: Size;
   className?: string;
@@ -668,6 +670,7 @@ export function ActionButton({
 }) {
   return (
     <Button
+      type={type}
       onClick={onClick}
       disabled={disabled}
       variant={variant}
