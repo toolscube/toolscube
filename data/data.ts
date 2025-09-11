@@ -206,3 +206,36 @@ export const LITTLE_WORDS = new Set([
   "vs",
   "via",
 ]);
+
+export const COMMON_PASSWORDS = new Set([
+  "password",
+  "123456",
+  "123456789",
+  "12345678",
+  "12345",
+  "qwerty",
+  "abc123",
+  "111111",
+  "admin",
+  "123123",
+  "iloveyou",
+  "welcome",
+  "monkey",
+  "dragon",
+  "letmein",
+  "football",
+  "login",
+  "princess",
+  "solo",
+  "passw0rd",
+  "1q2w3e4r",
+  "zaq12wsx",
+  "qwertyuiop",
+  "qazwsx",
+  "sunshine",
+  "master",
+  "hello",
+  "freedom",
+]);
+
+export const COMMON_WORDS = ["password", "admin", "user", "love", "god", "bangla", "bangladesh"];
