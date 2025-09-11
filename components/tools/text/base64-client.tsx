@@ -26,93 +26,30 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  base64ToU8,
+  fileToU8,
+  fromUrlSafe,
+  inferPreviewKind,
+  toUrlSafe,
+  u8ToBase64,
+  u8ToBlob,
+  wrapLines,
+} from "@/lib/utils/base64";
 
-/** Base64 Utilities */
-// Convert Uint8Array to base64 (standard)
-function u8ToBase64(u8: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < u8.length; i += chunk) {
-    binary += String.fromCharCode.apply(
-      null,
-      Array.from(u8.subarray(i, i + chunk)) as unknown as number[],
-    );
-  }
-  return btoa(binary);
-}
-
-// Convert base64 (standard) to Uint8Array
-function base64ToU8(b64: string): Uint8Array {
-  const binary = atob(b64);
-  const len = binary.length;
-  const u8 = new Uint8Array(len);
-  for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
-  return u8;
-}
-
-// URL-safe transform
-function toUrlSafe(b64: string, noPadding: boolean): string {
-  let s = b64.replace(/\+/g, "-").replace(/\//g, "_");
-  if (noPadding) s = s.replace(/=+$/g, "");
-  return s;
-}
-function fromUrlSafe(b64: string): string {
-  let s = b64.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = s.length % 4;
-  if (pad) s += "=".repeat(4 - pad);
-  return s;
-}
-
-// Wrap lines at column width
-function wrapLines(text: string, col: number): string {
-  if (!col || col <= 0) return text;
-  const chunks: string[] = [];
-  for (let i = 0; i < text.length; i += col) chunks.push(text.slice(i, i + col));
-  return chunks.join("\n");
-}
-
-function fileToU8(file: File): Promise<Uint8Array> {
-  return new Promise((res, rej) => {
-    const fr = new FileReader();
-    fr.onload = () => res(new Uint8Array(fr.result as ArrayBuffer));
-    fr.onerror = () => rej(fr.error);
-    fr.readAsArrayBuffer(file);
-  });
-}
-
-function inferPreviewKind(type: string) {
-  if (type.startsWith("image/")) return "image";
-  if (type.startsWith("text/") || type === "application/json") return "text";
-  return "binary";
-}
-// Put this near your other utils
-function u8ToBlob(u8: Uint8Array, type = "application/octet-stream"): Blob {
-  const copy = new Uint8Array(u8.byteLength);
-  copy.set(u8);
-  return new Blob([copy], { type });
-}
-
-/** Component  */
 export default function Base64Client() {
   const [tab, setTab] = React.useState<TabKey>("text");
   const [mode, setMode] = React.useState<Mode>("encode");
-
-  // options
   const [urlSafe, setUrlSafe] = React.useState<boolean>(false);
   const [noPadding, setNoPadding] = React.useState<boolean>(false);
-  const [wrapCol, setWrapCol] = React.useState<number>(0); // 0 = no wrap
-
-  // text
+  const [wrapCol, setWrapCol] = React.useState<number>(0);
   const [inputText, setInputText] = React.useState<string>("");
   const [outputText, setOutputText] = React.useState<string>("");
-
-  // files
   const [inFile, setInFile] = React.useState<File | null>(null);
   const [inInfo, setInInfo] = React.useState<FileInfo | null>(null);
   const [outFileInfo, setOutFileInfo] = React.useState<FileInfo | null>(null);
   const [outBlobUrl, setOutBlobUrl] = React.useState<string>("");
   const [previewText, setPreviewText] = React.useState<string>("");
-
   const dropRef = React.useRef<HTMLLabelElement | null>(null);
   const previewRef = React.useRef<HTMLTextAreaElement | null>(null);
 
@@ -162,8 +99,6 @@ export default function Base64Client() {
     }
   };
 
-  /** Actions */
-  // File encode: file -> base64.txt
   const encodeFile = async () => {
     if (!inFile) return;
     const data = await fileToU8(inFile);
@@ -189,7 +124,6 @@ export default function Base64Client() {
     }
   };
 
-  // File decode: base64.txt
   const decodeFile = async () => {
     if (!inFile) return;
     const text = await inFile.text();
