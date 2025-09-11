@@ -185,3 +185,24 @@ export const SMALL_WORDS = new Set([
   "each",
   "few",
 ]);
+
+export const LITTLE_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "as",
+  "at",
+  "but",
+  "by",
+  "for",
+  "in",
+  "nor",
+  "of",
+  "on",
+  "or",
+  "per",
+  "the",
+  "to",
+  "vs",
+  "via",
+]);

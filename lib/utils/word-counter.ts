@@ -41,10 +41,6 @@ export function formatTimeFromWPM(words: number, wpm: number) {
   return `${mm}:${ss.toString().padStart(2, "0")}`;
 }
 
-export function toTitleCase(t: string) {
-  return t.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-}
-
 export function slugify(t: string) {
   return t
     .normalize("NFKD")

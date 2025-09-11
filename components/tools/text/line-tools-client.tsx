@@ -28,50 +28,40 @@ import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
+import { normalizeEOL } from "@/lib/utils";
 
 /* Utilities */
-const LS_KEY = "line-tools-content-v1";
+const LS_KEY = "toolshub:line-tools-v1";
 
-function normalizeEOL(s: string) {
-  return s.replace(/\r\n?/g, "\n");
-}
 function splitLines(s: string) {
   if (!s) return [] as string[];
   return normalizeEOL(s).split("\n");
 }
+
 function joinLines(lines: string[]) {
   return lines.join("\n");
 }
 
-/* Page */
 export default function LineToolsClient() {
   const [text, setText] = useState("");
   const [resultLines, setResultLines] = useState<string[]>([]);
-
   const [keepOrder, setKeepOrder] = useState(true);
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [removeEmpty, setRemoveEmpty] = useState(true);
   const [trimEach, setTrimEach] = useState(true);
-
-  // Find & Replace
   const [find, setFind] = useState("");
   const [replace, setReplace] = useState("");
   const [useRegex, setUseRegex] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
-
-  // Filter
   const [filterQuery, setFilterQuery] = useState("");
   const [filterRegex, setFilterRegex] = useState(false);
   const [filterMode, setFilterMode] = useState<"keep" | "remove">("keep");
-
-  // Prefix/Suffix/Numbering (LIVE)
   const [prefix, setPrefix] = useState("");
   const [suffix, setSuffix] = useState("");
   const [numbering, setNumbering] = useState(false);
   const [startNum, setStartNum] = useState(1);
   const [numSep, setNumSep] = useState(". ");
 
-  /* Persistence */
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY);

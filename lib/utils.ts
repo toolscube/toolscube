@@ -20,19 +20,19 @@ export function removeDiacritics(s: string) {
   return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-export function toSentenceCase(s: string) {
-  const lower = s.toLowerCase();
-  const parts = lower.split(/([.!?]+\s+)/);
-  for (let i = 0; i < parts.length; i += 2) {
-    const seg = parts[i];
-    if (seg?.trim()) {
-      parts[i] = seg.replace(/^[\s]*([a-zA-Z\p{L}])/u, (m) => m.toUpperCase());
-    }
-  }
-  return parts.join("");
-}
-
 export function countWords(t: string) {
   const m = t.match(/[\p{L}\p{N}]+(?:'[^\s]|[’][^\s])?/gu);
   return m ? m.length : 0;
+}
+
+export function normalizeEOL(s: string) {
+  return s.replace(/\r\n?/g, "\n");
+}
+
+export function toSentenceCase(s: string) {
+  return s.toLowerCase().replace(/(^\s*[a-z\p{Ll}]|[.!?]\s*[a-z\p{Ll}])/gu, (m) => m.toUpperCase());
+}
+
+export function toTitleCase(t: string) {
+  return t.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }

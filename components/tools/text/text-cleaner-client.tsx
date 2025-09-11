@@ -12,132 +12,29 @@ import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
+import {
+  collapseSpaces,
+  countWords,
+  normalizeEOL,
+  removeDiacritics,
+  removePunctuation,
+  toSentenceCase,
+} from "@/lib/utils";
+import { toTitleCase } from "@/lib/utils/case-converter";
+import {
+  collapseNewlines,
+  decodeHtmlEntities,
+  keepAsciiOnly,
+  removeEmails,
+  removeEmojis,
+  removeEmptyLines,
+  removeUrls,
+  smartQuotesToStraight,
+  stripHtmlTags,
+  trimEachLine,
+} from "@/lib/utils/text-cleaner";
 
-/* Helpers */
-const LS_KEY = "text-cleaner-input-v1";
-
-function normalizeEOL(s: string) {
-  return s.replace(/\r\n?/g, "\n");
-}
-
-function countWords(s: string) {
-  const t = s.trim();
-  if (!t) return 0;
-  return t.split(/\s+/).length;
-}
-
-function stripHtmlTags(s: string) {
-  return s
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]+>/g, "");
-}
-
-function decodeHtmlEntities(html: string) {
-  if (!html) return html;
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  return div.textContent || div.innerText || "";
-}
-
-function smartQuotesToStraight(s: string) {
-  return s
-    .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
-    .replace(/[\u201C\u201D\u201E\u2033]/g, '"')
-    .replace(/[\u2026]/g, "...")
-    .replace(/[\u2013\u2014]/g, "-")
-    .replace(/[\u2022]/g, "-");
-}
-
-function removeEmojis(s: string) {
-  return s.replace(/\p{Extended_Pictographic}|\p{Variation_Selector}/gu, "");
-}
-
-function removeUrls(s: string) {
-  return s.replace(/\b(?:https?:\/\/|www\.)\S+/gi, "");
-}
-
-function removeEmails(s: string) {
-  return s.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "");
-}
-
-function removePunctuation(s: string) {
-  return s.replace(/[^\p{L}\p{N}\s]/gu, "");
-}
-
-function removeDiacritics(s: string) {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-function keepAsciiOnly(s: string) {
-  return s.replace(/[^\u0020-\u007E]+/g, "");
-}
-
-function collapseSpaces(s: string) {
-  return s.replace(/[ \t]+/g, " ");
-}
-
-function collapseNewlines(s: string) {
-  return s.replace(/\n{2,}/g, "\n");
-}
-
-function trimEachLine(s: string) {
-  return normalizeEOL(s)
-    .split("\n")
-    .map((l) => l.trim())
-    .join("\n");
-}
-
-function removeEmptyLines(s: string) {
-  return normalizeEOL(s)
-    .split("\n")
-    .filter((l) => l.trim().length > 0)
-    .join("\n");
-}
-
-function toSentenceCase(s: string) {
-  const lower = s.toLowerCase();
-  const parts = lower.split(/([.!?]+\s+)/);
-  for (let i = 0; i < parts.length; i += 2) {
-    const seg = parts[i];
-    if (seg?.trim()) {
-      parts[i] = seg.replace(/^[\s]*([a-zA-Z\p{L}])/u, (m) => m.toUpperCase());
-    }
-  }
-  return parts.join("");
-}
-
-const LITTLE_WORDS = new Set([
-  "a",
-  "an",
-  "and",
-  "as",
-  "at",
-  "but",
-  "by",
-  "for",
-  "in",
-  "nor",
-  "of",
-  "on",
-  "or",
-  "per",
-  "the",
-  "to",
-  "vs",
-  "via",
-]);
-
-function toTitleCase(s: string) {
-  const words = s.toLowerCase().split(/(\s+)/);
-  return words
-    .map((w, i) => {
-      if (/^\s+$/.test(w)) return w;
-      if (i === 0 || i === words.length - 1) return w.charAt(0).toUpperCase() + w.slice(1);
-      return LITTLE_WORDS.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1);
-    })
-    .join("");
-}
+const LS_KEY = "toolshub:text-cleaner-v1";
 
 type CaseMode = "none" | "lower" | "upper" | "sentence" | "title";
 

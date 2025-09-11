@@ -19,6 +19,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { toSentenceCase } from "@/lib/utils";
 
 // Types
 type HistoryItem = { id: string; ts: number; src: string; out: string };
@@ -33,10 +34,6 @@ function toTitleCase(s: string) {
     /[\w\p{L}][^\s-]*/gu,
     (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
   );
-}
-
-function toSentenceCase(s: string) {
-  return s.toLowerCase().replace(/(^\s*[a-z\p{Ll}]|[.!?]\s*[a-z\p{Ll}])/gu, (m) => m.toUpperCase());
 }
 
 function stripUrls(s: string) {
