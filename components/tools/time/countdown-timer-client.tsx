@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, formatDateInput, formatTimeInput, pad } from "@/lib/utils";
 
 /* Types */
 type Mode = "countdown" | "pomodoro" | "event";
@@ -55,8 +55,6 @@ const ms = {
   hr: 60 * 60 * 1000,
 };
 
-const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
-
 function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -74,14 +72,6 @@ function progressRatio(remaining: number, duration: number) {
   if (duration <= 0) return 0;
   const r = 1 - Math.min(Math.max(remaining / duration, 0), 1);
   return r;
-}
-
-function formatDateInput(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-function formatTimeInput(d: Date): string {
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function parseDateTimeLocal(dateStr?: string, timeStr?: string): Date | null {

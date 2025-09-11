@@ -36,3 +36,26 @@ export function toSentenceCase(s: string) {
 export function toTitleCase(t: string) {
   return t.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
+
+export const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
+
+export function formatDateInput(d: Date): string {
+  const y = d.getFullYear();
+  const m = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  return `${y}-${m}-${day}`;
+}
+
+export function formatTimeInput(d: Date): string {
+  const h = pad(d.getHours());
+  const m = pad(d.getMinutes());
+  return `${h}:${m}`;
+}
+
+export function getLocalTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}

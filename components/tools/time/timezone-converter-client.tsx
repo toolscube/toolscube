@@ -18,22 +18,9 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { formatDateInput, formatTimeInput, getLocalTimeZone, pad } from "@/lib/utils";
 
 // Utils
-const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
-
-function formatDateInput(d: Date): string {
-  const y = d.getFullYear();
-  const m = pad(d.getMonth() + 1);
-  const day = pad(d.getDate());
-  return `${y}-${m}-${day}`;
-}
-
-function formatTimeInput(d: Date): string {
-  const h = pad(d.getHours());
-  const m = pad(d.getMinutes());
-  return `${h}:${m}`;
-}
 
 function wallTimeToUTC(
   y: number,
@@ -141,13 +128,7 @@ function fmtOffset(mins: number) {
   return `GMT${sign}${pad(hh)}:${pad(mm)}`;
 }
 
-function getLocalTimeZone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  } catch {
-    return "UTC";
-  }
-}
+
 
 function getAllTimeZones(): { value: string; label: string }[] {
   let zones: string[] | undefined;

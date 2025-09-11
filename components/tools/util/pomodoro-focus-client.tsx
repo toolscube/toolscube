@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, pad } from "@/lib/utils";
 
 /* Types */
 type Mode = "work" | "short" | "long";
@@ -44,7 +44,6 @@ type HistoryItem = {
 };
 
 /* Helpers */
-const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 function msToClock(ms: number) {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(totalSec / 60);

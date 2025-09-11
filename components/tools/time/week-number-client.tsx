@@ -21,11 +21,10 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from "@/component
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, pad } from "@/lib/utils";
 
 /* Helpers */
 const msDay = 24 * 60 * 60 * 1000;
-const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
 
 function fmtDateInput(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;

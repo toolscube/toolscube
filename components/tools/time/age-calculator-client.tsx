@@ -12,127 +12,28 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
-
-// Helpers
-const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
-const msIn = {
-  second: 1000,
-  minute: 60 * 1000,
-  hour: 60 * 60 * 1000,
-  day: 24 * 60 * 60 * 1000,
-};
-
-function formatDateInput(d: Date): string {
-  const y = d.getFullYear();
-  const m = pad(d.getMonth() + 1);
-  const day = pad(d.getDate());
-  return `${y}-${m}-${day}`;
-}
-
-function formatTimeInput(d: Date): string {
-  const h = pad(d.getHours());
-  const m = pad(d.getMinutes());
-  return `${h}:${m}`;
-}
-
-function clampDateString(s: string) {
-  const m = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(s);
-  if (!m) return s;
-  const y = Math.max(1, Math.min(275760, Number(m[1])));
-  const mm = Math.max(1, Math.min(12, Number(m[2])));
-  const daysInMonth = new Date(y, mm, 0).getDate();
-  const dd = Math.max(1, Math.min(daysInMonth, Number(m[3])));
-  return `${pad(y, 4)}-${pad(mm)}-${pad(dd)}`;
-}
-
-function getLocalTimeZone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  } catch {
-    return "UTC";
-  }
-}
-
-function diffYMD(from: Date, to: Date) {
-  if (to < from) return { years: 0, months: 0, days: 0 };
-  const a = new Date(from.getTime());
-  let years = 0,
-    months = 0,
-    days = 0;
-
-  // years
-  while (true) {
-    const next = new Date(a);
-    next.setFullYear(next.getFullYear() + 1);
-    if (next <= to) {
-      a.setFullYear(a.getFullYear() + 1);
-      years++;
-    } else break;
-  }
-  // months
-  while (true) {
-    const next = new Date(a);
-    next.setMonth(next.getMonth() + 1);
-    if (next <= to) {
-      a.setMonth(a.getMonth() + 1);
-      months++;
-    } else break;
-  }
-  // days
-  while (true) {
-    const next = new Date(a.getTime() + msIn.day);
-    if (next <= to) {
-      a.setDate(a.getDate() + 1);
-      days++;
-    } else break;
-  }
-  return { years, months, days };
-}
-
-function nextBirthday(fromDob: Date, now: Date) {
-  const y = now.getFullYear();
-  const candidate = new Date(
-    y,
-    fromDob.getMonth(),
-    fromDob.getDate(),
-    fromDob.getHours(),
-    fromDob.getMinutes(),
-    0,
-    0,
-  );
-  if (candidate < now) {
-    candidate.setFullYear(y + 1);
-  }
-  return candidate;
-}
-
-function shortDate(d: Date, timeZone?: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone,
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    weekday: "short",
-  }).format(d);
-}
+import { cn, formatDateInput, formatTimeInput, getLocalTimeZone } from "@/lib/utils";
+import {
+  clampDateString,
+  diffYMD,
+  msIn,
+  nextBirthday,
+  shortDate,
+} from "@/lib/utils/time/age-calculator";
 
 export default function AgeCalculatorClient() {
   const deviceTz = useMemo(() => getLocalTimeZone(), []);
 
-  // Inputs
   const [hasTime, setHasTime] = useState(false);
   const [dobDate, setDobDate] = useState<string>("");
   const [dobTime, setDobTime] = useState<string>("00:00");
 
-  // Live clock
   const [now, setNow] = useState<Date>(new Date());
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(t);
   }, []);
 
-  // Parse DOB
   const birth: Date | null = useMemo(() => {
     if (!dobDate) return null;
     const safe = clampDateString(dobDate);
@@ -142,7 +43,6 @@ export default function AgeCalculatorClient() {
     return Number.isNaN(dt.getTime()) ? null : dt;
   }, [dobDate, dobTime, hasTime]);
 
-  // Calculations
   const results = useMemo(() => {
     if (!birth) return null;
     const to = now;
@@ -164,7 +64,6 @@ export default function AgeCalculatorClient() {
       weekday: new Intl.DateTimeFormat("en-GB", { weekday: "long" }).format(nb),
     };
 
-    // Milestones
     const milestones = [
       { label: "10,000th day", at: new Date(birth.getTime() + 10000 * msIn.day) },
       { label: "20,000th day", at: new Date(birth.getTime() + 20000 * msIn.day) },
@@ -186,7 +85,6 @@ export default function AgeCalculatorClient() {
     setDobTime("00:00");
   };
 
-  // Hydrate from URL
   useEffect(() => {
     if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
