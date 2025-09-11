@@ -19,7 +19,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { formatUrl, isLikelyShortener } from "@/lib/utils/link-expand";
+import { formatUrl, isLikelyShortener } from "@/lib/utils/url/link-expand";
 
 const DEFAULT_MAX_HOPS = 10;
 

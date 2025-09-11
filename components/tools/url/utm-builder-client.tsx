@@ -38,7 +38,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { buildSingle, cleanBaseUrl, genShortId, isValidUrl, rid } from "@/lib/utils/utm-builder";
+import {
+  buildSingle,
+  cleanBaseUrl,
+  genShortId,
+  isValidUrl,
+  rid,
+} from "@/lib/utils/url/utm-builder";
 
 /* Constants */
 const DEFAULT_UTM: UTMState = {

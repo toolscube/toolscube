@@ -20,7 +20,7 @@ import {
   removePunctuation,
   toSentenceCase,
 } from "@/lib/utils";
-import { toTitleCase } from "@/lib/utils/case-converter";
+import { toTitleCase } from "@/lib/utils/text/case-converter";
 import {
   collapseNewlines,
   decodeHtmlEntities,
@@ -32,7 +32,7 @@ import {
   smartQuotesToStraight,
   stripHtmlTags,
   trimEachLine,
-} from "@/lib/utils/text-cleaner";
+} from "@/lib/utils/text/text-cleaner";
 
 const LS_KEY = "toolshub:text-cleaner-v1";
 

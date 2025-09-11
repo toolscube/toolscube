@@ -26,7 +26,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { qrCodeData } from "@/data/data";
 import { useQrExport } from "@/hooks/use-qr-export";
-import { buildPayload } from "@/lib/utils/qr-code";
+import { buildPayload } from "@/lib/utils/url/qr-code";
 
 export default function QRClient() {
   const [size, setSize] = React.useState<number>(320);

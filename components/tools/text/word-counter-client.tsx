@@ -19,7 +19,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { countWords } from "@/lib/utils";
-import { toTitleCase } from "@/lib/utils/case-converter";
+import { toTitleCase } from "@/lib/utils/text/case-converter";
 import {
   computeDensity,
   countCharacters,
@@ -31,7 +31,7 @@ import {
   normalizeText,
   slugify,
   squeezeSpaces,
-} from "@/lib/utils/word-counter";
+} from "@/lib/utils/text/word-counter";
 import StatItem from "./stat-item";
 
 /* Quick Actions */

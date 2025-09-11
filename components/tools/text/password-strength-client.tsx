@@ -18,7 +18,7 @@ import {
   calcEntropyBits,
   crackTimes,
   findIssues,
-} from "@/lib/utils/password-strength";
+} from "@/lib/utils/text/password-strength";
 
 export default function PasswordStrengthClient() {
   const [pw, setPw] = React.useState("");

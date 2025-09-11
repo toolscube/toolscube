@@ -35,7 +35,7 @@ import {
   u8ToBase64,
   u8ToBlob,
   wrapLines,
-} from "@/lib/utils/base64";
+} from "@/lib/utils/text/base64";
 
 export default function Base64Client() {
   const [tab, setTab] = React.useState<TabKey>("text");

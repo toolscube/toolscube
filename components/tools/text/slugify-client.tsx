@@ -14,7 +14,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { delimiterFromKey, slugify } from "@/lib/utils/slugify";
+import { delimiterFromKey, slugify } from "@/lib/utils/text/slugify";
 
 type Mode = "single" | "batch";
 type PresetKey = "seo" | "github" | "id" | "raw";

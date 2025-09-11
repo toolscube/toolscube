@@ -1,5 +1,5 @@
 import { LITTLE_WORDS } from "@/data/data";
-import { normalizeEOL } from "../utils";
+import { normalizeEOL } from "../../utils";
 
 export function stripHtmlTags(s: string) {
   return s

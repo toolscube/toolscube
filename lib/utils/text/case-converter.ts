@@ -1,5 +1,5 @@
 import { SMALL_WORDS } from "@/data/data";
-import { collapseSpaces, removeDiacritics, removePunctuation, toSentenceCase } from "../utils";
+import { collapseSpaces, removeDiacritics, removePunctuation, toSentenceCase } from "../../utils";
 
 export function normalizeLF(s: string) {
   return s.replace(/\r\n?/g, "\n");
