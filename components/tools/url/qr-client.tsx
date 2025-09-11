@@ -25,75 +25,9 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useQrExport } from "@/hooks/use-qr-export";
-
-/* Utility: content */
-function buildPayload(f: FormState): string {
-  switch (f.kind) {
-    case "url": {
-      const v = f.url.trim();
-      return v || "https://example.com";
-    }
-    case "text": {
-      const v = f.text.trim();
-      return v || "Scan me";
-    }
-    case "wifi": {
-      const T = f.wifiAuth;
-      const S = escapeSemicolons(f.wifiSsid);
-      const isNoPass = f.wifiAuth === "nopass";
-      const P = isNoPass ? "" : `P:${escapeSemicolons(f.wifiPassword)};`;
-      const H = `H:${f.wifiHidden ? "true" : "false"};`;
-      return `WIFI:T:${T === "nopass" ? "nopass" : T};S:${S};${P}${H}`;
-    }
-    case "vcard": {
-      const parts = [
-        "BEGIN:VCARD",
-        "VERSION:3.0",
-        `N:${safe(f.vcLast)};${safe(f.vcFirst)};;;`,
-        `FN:${[f.vcFirst, f.vcLast].filter(Boolean).join(" ").trim()}`,
-        f.vcOrg ? `ORG:${safe(f.vcOrg)}` : "",
-        f.vcTitle ? `TITLE:${safe(f.vcTitle)}` : "",
-        f.vcPhone ? `TEL:${safe(f.vcPhone)}` : "",
-        f.vcEmail ? `EMAIL:${safe(f.vcEmail)}` : "",
-        f.vcUrl ? `URL:${safe(f.vcUrl)}` : "",
-        "END:VCARD",
-      ].filter(Boolean);
-      return parts.join("\n");
-    }
-    case "email": {
-      const to = encodeURIComponent(f.emailTo.trim() || "hello@example.com");
-      const subject = encodeURIComponent(f.emailSubject || "");
-      const body = encodeURIComponent(f.emailBody || "");
-      const qs = new URLSearchParams();
-      if (subject) qs.set("subject", subject);
-      if (body) qs.set("body", body);
-      return `mailto:${to}${qs.toString() ? `?${qs.toString()}` : ""}`;
-    }
-    case "sms": {
-      const to = (f.smsTo || "").trim();
-      const body = encodeURIComponent(f.smsBody || "");
-      return `sms:${to}${body ? `?body=${body}` : ""}`;
-    }
-    case "whatsapp": {
-      const to = (f.waTo || "").replace(/[^\d]/g, "");
-      const text = encodeURIComponent(f.waText || "");
-      const base = `https://wa.me/${to || "000"}`;
-      return text ? `${base}?text=${text}` : base;
-    }
-    default:
-      return "Scan me";
-  }
-}
-
-function escapeSemicolons(v: string) {
-  return v.replace(/;/g, "\\;");
-}
-function safe(v: string) {
-  return v.replace(/\n/g, " ").trim();
-}
+import { buildPayload } from "@/lib/utils/qr-code";
 
 export default function QRClient() {
-  /* Controls */
   const [size, setSize] = React.useState<number>(320);
   const [margin, setMargin] = React.useState<number>(2);
   const [fg, setFg] = React.useState<string>("#0f172a");
@@ -103,10 +37,7 @@ export default function QRClient() {
   const [logoEnabled, setLogoEnabled] = React.useState<boolean>(false);
   const [logoDataUrl, setLogoDataUrl] = React.useState<string | null>(null);
   const [logoSizePct, setLogoSizePct] = React.useState<number>(20);
-
   const [genTick, setGenTick] = React.useState<number>(0);
-
-  /* Dynamic form (content & switches) */
   const [form, setForm] = React.useState<FormState>({
     kind: "url",
     url: "https://tariqul.dev",
@@ -120,10 +51,10 @@ export default function QRClient() {
 
     vcFirst: "Tariqul",
     vcLast: "Islam",
-    vcOrg: "Natural Sefa",
+    vcOrg: "Tools Hub",
     vcTitle: "",
     vcPhone: "+8801XXXXXXXXX",
-    vcEmail: "hello@tariqul.dev",
+    vcEmail: "tariqul@tariqul.dev",
     vcUrl: "https://tariqul.dev",
 
     emailTo: "hello@example.com",
@@ -137,12 +68,10 @@ export default function QRClient() {
     waText: "Hello there 👋",
   });
 
-  /* Selects bridge */
   const controlForm = useForm<ControlValues>({
     defaultValues: { kind: "url", ecl: "M", format: "png", wifiAuth: "WPA" },
   });
 
-  // Watch selects and sync to local state
   const kind = useWatch({ control: controlForm.control, name: "kind" });
   const ecl = useWatch({ control: controlForm.control, name: "ecl" });
   const format = useWatch({ control: controlForm.control, name: "format" });
@@ -160,7 +89,6 @@ export default function QRClient() {
     }
   }, [wifiAuth]);
 
-  /* Payload & export helpers */
   const payload = React.useMemo(() => buildPayload(form), [form]);
 
   const { downloadPNG, downloadSVG, getPngDataUrl } = useQrExport({
@@ -174,7 +102,6 @@ export default function QRClient() {
     logo: logoEnabled && logoDataUrl ? { src: logoDataUrl, sizePct: logoSizePct } : null,
   });
 
-  /* Actions */
   const resetAll = () => {
     setForm((s) => ({
       ...s,
@@ -201,7 +128,6 @@ export default function QRClient() {
 
   return (
     <>
-      {/* Header */}
       <ToolPageHeader
         title="QR Code Generator"
         description="Flowing design with dynamic content types (URL, Wi-Fi, vCard, Email, SMS, WhatsApp)."
@@ -213,7 +139,7 @@ export default function QRClient() {
         }
       />
 
-      {/* Content + Selects (using reusable SelectField) */}
+      {/* Content + Selects */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Content</CardTitle>
