@@ -1,10 +1,9 @@
-// app/tools/(tools)/image/bg-remove/page.tsx
 "use client";
 
 import {
   Check,
+  CloudDownload,
   Copy,
-  Download,
   Eraser,
   Highlighter,
   ImageOff,
@@ -13,16 +12,16 @@ import {
   Loader2,
   Palette,
   Pipette,
-  RotateCcw,
   Upload,
   Wand,
 } from "lucide-react";
 import * as React from "react";
 import { useDropzone } from "react-dropzone";
-
+import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -38,7 +37,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-/* ---------------- types ---------------- */
+/* types */
 type Mode = "auto" | "chroma" | "manual";
 
 interface LoadedImage {
@@ -55,9 +54,9 @@ export default function BgRemovePage() {
 
   // Mode & params
   const [mode, setMode] = React.useState<Mode>("auto");
-  const [tolerance, setTolerance] = React.useState(28); // 0..255 color distance
-  const [feather, setFeather] = React.useState(2); // px blur on alpha edge
-  const [cleanup, setCleanup] = React.useState(1); // 0..3 (morphology rounds)
+  const [tolerance, setTolerance] = React.useState(28);
+  const [feather, setFeather] = React.useState(2);
+  const [cleanup, setCleanup] = React.useState(1);
   const [invert, setInvert] = React.useState(false);
 
   // Chroma
@@ -75,7 +74,7 @@ export default function BgRemovePage() {
 
   // canvases
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
-  const overlayRef = React.useRef<HTMLCanvasElement | null>(null); // for brush mask
+  const overlayRef = React.useRef<HTMLCanvasElement | null>(null);
 
   // drop / paste
   const onDrop = React.useCallback(async (files: File[]) => {
@@ -87,7 +86,6 @@ export default function BgRemovePage() {
     setImg({ file, url, width: meta.width, height: meta.height, type: file.type, size: file.size });
     setLog(`Loaded ${file.name} (${formatBytes(file.size)})`);
 
-    // initialize base + overlay canvases next tick
     requestAnimationFrame(() => {
       initCanvases(url, meta.width, meta.height, canvasRef, overlayRef);
     });
@@ -132,10 +130,8 @@ export default function BgRemovePage() {
       setRunning(true);
       setLog("Removing background…");
 
-      // Ensure base is drawn
       const base = await ensureBaseDrawn(img.url, canvasRef.current);
 
-      // Build mask (0 keep, 255 remove)
       let mask: Uint8ClampedArray = new Uint8ClampedArray(base.width * base.height);
 
       if (mode === "auto") {
@@ -144,7 +140,6 @@ export default function BgRemovePage() {
         const key = hexToRgb(keyHex);
         mask = chromaMask(base, key, tolerance);
       } else {
-        // manual uses overlay alpha as mask
         const ov = overlayRef.current;
         if (ov) {
           mask = overlayEraseMask(ov);
@@ -200,7 +195,7 @@ export default function BgRemovePage() {
 
   // simple brush painting on overlay (manual mode)
   React.useEffect(() => {
-    const ov = overlayRef.current; // narrow into a local
+    const ov = overlayRef.current;
     if (!ov) return;
 
     let drawing = false;
@@ -263,324 +258,316 @@ export default function BgRemovePage() {
   }, [mode, brushErase, brushSize]);
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-10">
-      <MotionGlassCard>
-        {/* Header */}
-        <GlassCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-              <Wand className="h-6 w-6" /> Background Remover
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Erase backgrounds in the browser. Drag & drop, paste (Ctrl/Cmd+V), or click to upload.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={resetAll} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
-            <Button onClick={run} className="gap-2" disabled={!img || running}>
-              {running ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              {running ? "Processing…" : "Remove & Download"}
-            </Button>
-          </div>
-        </GlassCard>
+    <>
+      {/* Header */}
+      <ToolPageHeader
+        icon={Wand}
+        title="Background Remover"
+        description="Erase backgrounds in the browser. Drag & drop, paste (Ctrl/Cmd+V), or click to upload."
+        actions={
+          <>
+            <ResetButton onClick={resetAll} />
+            <ActionButton
+              variant="default"
+              label={running ? "Processing…" : "Download"}
+              icon={running ? Loader2 : CloudDownload}
+              onClick={run}
+              disabled={!img || running}
+            />
+          </>
+        }
+      />
 
-        {/* Uploader / Preview */}
-        <GlassCard>
-          <CardHeader>
-            <CardTitle className="text-base">Image</CardTitle>
-            <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 lg:grid-cols-2">
-            {/* Dropzone */}
-            <div
-              {...getRootProps()}
-              className={cn(
-                "group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition",
-                isDragActive ? "border-primary bg-primary/5" : "hover:bg-muted/40",
-              )}
-            >
-              <input {...getInputProps()} />
-              <div className="pointer-events-none flex flex-col items-center gap-2 text-center">
-                <div className="rounded-full bg-primary/10 p-3">
-                  <Upload className="h-6 w-6 text-primary" />
+      {/* Uploader / Preview */}
+      <GlassCard>
+        <CardHeader>
+          <CardTitle className="text-base">Image</CardTitle>
+          <CardDescription>Upload, drag & drop, or paste from clipboard.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 lg:grid-cols-2">
+          {/* Dropzone */}
+          <div
+            {...getRootProps()}
+            className={cn(
+              "group relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition",
+              isDragActive ? "border-primary bg-primary/5" : "hover:bg-muted/40",
+            )}
+          >
+            <input {...getInputProps()} />
+            <div className="pointer-events-none flex flex-col items-center gap-2 text-center">
+              <div className="rounded-full bg-primary/10 p-3">
+                <Upload className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-sm font-medium">Drop image here, or click to browse</p>
+              <p className="text-xs text-muted-foreground">
+                PNG, JPEG, WEBP, GIF, SVG (GIF/SVG will be rasterized)
+              </p>
+            </div>
+          </div>
+
+          {/* Preview + Meta */}
+          <div className="grid gap-4">
+            <div className="relative h-72 w-full overflow-hidden rounded-lg border">
+              {/* checkerboard */}
+              <div className="absolute inset-0 bg-[linear-gradient(45deg,#0000_25%,#00000011_25%_50%,#0000_50%_75%,#00000011_75%_100%)] [background-size:16px_16px]" />
+              {!img ? (
+                <div className="relative z-10 flex h-full items-center justify-center text-sm text-muted-foreground">
+                  <ImageOff className="mr-2 h-4 w-4" />
+                  No image selected
                 </div>
-                <p className="text-sm font-medium">Drop image here, or click to browse</p>
-                <p className="text-xs text-muted-foreground">
-                  PNG, JPEG, WEBP, GIF, SVG (GIF/SVG will be rasterized)
-                </p>
-              </div>
+              ) : (
+                <div className="relative z-10 h-full w-full">
+                  <canvas
+                    ref={canvasRef}
+                    onClick={handleCanvasClick}
+                    className={cn(
+                      "absolute inset-0 h-full w-full",
+                      pickerActive && "cursor-crosshair",
+                    )}
+                  />
+                  {/* brush overlay */}
+                  <canvas
+                    ref={overlayRef}
+                    className={cn(
+                      "absolute inset-0 h-full w-full",
+                      mode === "manual" ? "cursor-crosshair" : "pointer-events-none",
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Preview + Meta */}
-            <div className="grid gap-4">
-              <div className="relative h-72 w-full overflow-hidden rounded-lg border">
-                {/* checkerboard */}
-                <div className="absolute inset-0 bg-[linear-gradient(45deg,#0000_25%,#00000011_25%_50%,#0000_50%_75%,#00000011_75%_100%)] [background-size:16px_16px]" />
-                {!img ? (
-                  <div className="relative z-10 flex h-full items-center justify-center text-sm text-muted-foreground">
-                    <ImageOff className="mr-2 h-4 w-4" />
-                    No image selected
-                  </div>
-                ) : (
-                  <div className="relative z-10 h-full w-full">
-                    <canvas
-                      ref={canvasRef}
-                      onClick={handleCanvasClick}
-                      className={cn(
-                        "absolute inset-0 h-full w-full",
-                        pickerActive && "cursor-crosshair",
-                      )}
-                    />
-                    {/* brush overlay */}
-                    <canvas
-                      ref={overlayRef}
-                      className={cn(
-                        "absolute inset-0 h-full w-full",
-                        mode === "manual" ? "cursor-crosshair" : "pointer-events-none",
-                      )}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <InfoPill label="Source Size" value={img ? formatBytes(img.size) : "—"} />
-                <InfoPill label="Source Type" value={img ? img.type || "—" : "—"} />
-                <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
-                <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
-              </div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <InfoPill label="Source Size" value={img ? formatBytes(img.size) : "—"} />
+              <InfoPill label="Source Type" value={img ? img.type || "—" : "—"} />
+              <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
+              <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
             </div>
-          </CardContent>
-        </GlassCard>
+          </div>
+        </CardContent>
+      </GlassCard>
 
-        {/* Settings */}
-        <GlassCard>
-          <CardHeader>
-            <CardTitle className="text-base">Settings</CardTitle>
-            <CardDescription>Choose a method and refine the edges.</CardDescription>
-          </CardHeader>
+      <Separator className="my-4" />
 
-          <CardContent className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
+      {/* Settings */}
+      <GlassCard>
+        <CardHeader>
+          <CardTitle className="text-base">Settings</CardTitle>
+          <CardDescription>Choose a method and refine the edges.</CardDescription>
+        </CardHeader>
+
+        <CardContent className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Mode</Label>
+              <Select value={mode} onValueChange={(v: Mode) => setMode(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (Smart Flood)</SelectItem>
+                  <SelectItem value="chroma">Chroma Key (Pick Color)</SelectItem>
+                  <SelectItem value="manual">Manual Brush</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Auto works best for solid/simple backgrounds. Use Chroma if you know the background
+                color. Manual for fine control.
+              </p>
+            </div>
+
+            {mode !== "manual" && (
               <div className="space-y-2">
-                <Label>Mode</Label>
-                <Select value={mode} onValueChange={(v: Mode) => setMode(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="auto">Auto (Smart Flood)</SelectItem>
-                    <SelectItem value="chroma">Chroma Key (Pick Color)</SelectItem>
-                    <SelectItem value="manual">Manual Brush</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="tol">Tolerance</Label>
+                  <span className="text-xs text-muted-foreground">{tolerance}</span>
+                </div>
+                <Slider
+                  id="tol"
+                  min={0}
+                  max={128}
+                  step={1}
+                  value={[tolerance]}
+                  onValueChange={([v]) => setTolerance(v)}
+                />
+                <p className="text-xs text-muted-foreground">Higher removes a wider color range.</p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="feather">Feather</Label>
+                <span className="text-xs text-muted-foreground">{feather}px</span>
+              </div>
+              <Slider
+                id="feather"
+                min={0}
+                max={8}
+                step={1}
+                value={[feather]}
+                onValueChange={([v]) => setFeather(v)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Softens the edge for a smoother cutout.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="clean">Edge Cleanup</Label>
+                <span className="text-xs text-muted-foreground">{cleanup}</span>
+              </div>
+              <Slider
+                id="clean"
+                min={0}
+                max={3}
+                step={1}
+                value={[cleanup]}
+                onValueChange={([v]) => setCleanup(v)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Removes speckles/holes (morphological refine).
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Switch id="inv" checked={invert} onCheckedChange={setInvert} />
+              <Label htmlFor="inv" className="flex items-center gap-2">
+                <Layers className="h-4 w-4" /> Invert selection (keep background instead)
+              </Label>
+            </div>
+          </div>
+
+          {/* Chroma / Manual controls */}
+          <div className="space-y-4">
+            {mode === "chroma" && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Palette className="h-4 w-4" /> Chroma Key Color
+                </Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="color"
+                    className="h-9 w-16 p-1"
+                    value={keyHex}
+                    onChange={(e) => setKeyHex(e.target.value)}
+                  />
+                  <Input
+                    value={keyHex}
+                    onChange={(e) => setKeyHex(e.target.value)}
+                    className="w-36"
+                    placeholder="#ffffff"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={cn("gap-2", pickerActive && "ring-2 ring-primary")}
+                    onClick={() => setPickerActive((s) => !s)}
+                  >
+                    <Pipette className="h-4 w-4" />{" "}
+                    {pickerActive ? "Pick (active)" : "Pick from image"}
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Auto works best for solid/simple backgrounds. Use Chroma if you know the
-                  background color. Manual for fine control.
+                  Tip: click anywhere on the preview to sample the color.
                 </p>
               </div>
+            )}
 
-              {mode !== "manual" && (
+            {mode === "manual" && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant={brushErase ? "default" : "outline"}
+                    className="gap-2"
+                    onClick={() => setBrushErase(true)}
+                  >
+                    <Eraser className="h-4 w-4" /> Erase
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={!brushErase ? "default" : "outline"}
+                    className="gap-2"
+                    onClick={() => setBrushErase(false)}
+                  >
+                    <Highlighter className="h-4 w-4" /> Restore
+                  </Button>
+                </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="tol">Tolerance</Label>
-                    <span className="text-xs text-muted-foreground">{tolerance}</span>
+                    <Label htmlFor="bsize">Brush Size</Label>
+                    <span className="text-xs text-muted-foreground">{brushSize}px</span>
                   </div>
                   <Slider
-                    id="tol"
-                    min={0}
-                    max={128}
-                    step={1}
-                    value={[tolerance]}
-                    onValueChange={([v]) => setTolerance(v)}
+                    id="bsize"
+                    min={6}
+                    max={120}
+                    step={2}
+                    value={[brushSize]}
+                    onValueChange={([v]) => setBrushSize(v)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Higher removes a wider color range.
-                  </p>
                 </div>
-              )}
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="feather">Feather</Label>
-                  <span className="text-xs text-muted-foreground">{feather}px</span>
-                </div>
-                <Slider
-                  id="feather"
-                  min={0}
-                  max={8}
-                  step={1}
-                  value={[feather]}
-                  onValueChange={([v]) => setFeather(v)}
-                />
                 <p className="text-xs text-muted-foreground">
-                  Softens the edge for a smoother cutout.
+                  Paint on the image: <span className="font-medium">Erase</span> marks background,{" "}
+                  <span className="font-medium">Restore</span> protects foreground.
                 </p>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="clean">Edge Cleanup</Label>
-                  <span className="text-xs text-muted-foreground">{cleanup}</span>
-                </div>
-                <Slider
-                  id="clean"
-                  min={0}
-                  max={3}
-                  step={1}
-                  value={[cleanup]}
-                  onValueChange={([v]) => setCleanup(v)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Removes speckles/holes (morphological refine).
-                </p>
+            <div className="rounded-md border p-3 text-xs text-muted-foreground">
+              <div className="mb-1 flex items-center gap-2">
+                <Info className="h-3.5 w-3.5" />
+                <span className="text-foreground font-medium">Tips</span>
               </div>
-
-              <div className="flex items-center gap-3">
-                <Switch id="inv" checked={invert} onCheckedChange={setInvert} />
-                <Label htmlFor="inv" className="flex items-center gap-2">
-                  <Layers className="h-4 w-4" /> Invert selection (keep background instead)
-                </Label>
-              </div>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Auto works best with solid or lightly textured backdrops.</li>
+                <li>Use Chroma mode for green/blue screens or white backgrounds.</li>
+                <li>After auto/chroma, switch to Manual to fix leftover edges.</li>
+              </ul>
             </div>
+          </div>
+        </CardContent>
+      </GlassCard>
 
-            {/* Chroma / Manual controls */}
-            <div className="space-y-4">
-              {mode === "chroma" && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Palette className="h-4 w-4" /> Chroma Key Color
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="color"
-                      className="h-9 w-16 p-1"
-                      value={keyHex}
-                      onChange={(e) => setKeyHex(e.target.value)}
-                    />
-                    <Input
-                      value={keyHex}
-                      onChange={(e) => setKeyHex(e.target.value)}
-                      className="w-36"
-                      placeholder="#ffffff"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className={cn("gap-2", pickerActive && "ring-2 ring-primary")}
-                      onClick={() => setPickerActive((s) => !s)}
-                    >
-                      <Pipette className="h-4 w-4" />{" "}
-                      {pickerActive ? "Pick (active)" : "Pick from image"}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Tip: click anywhere on the preview to sample the color.
-                  </p>
-                </div>
-              )}
+      <Separator className="my-4" />
 
-              {mode === "manual" && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      variant={brushErase ? "default" : "outline"}
-                      className="gap-2"
-                      onClick={() => setBrushErase(true)}
-                    >
-                      <Eraser className="h-4 w-4" /> Erase
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={!brushErase ? "default" : "outline"}
-                      className="gap-2"
-                      onClick={() => setBrushErase(false)}
-                    >
-                      <Highlighter className="h-4 w-4" /> Restore
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="bsize">Brush Size</Label>
-                      <span className="text-xs text-muted-foreground">{brushSize}px</span>
-                    </div>
-                    <Slider
-                      id="bsize"
-                      min={6}
-                      max={120}
-                      step={2}
-                      value={[brushSize]}
-                      onValueChange={([v]) => setBrushSize(v)}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Paint on the image: <span className="font-medium">Erase</span> marks background,{" "}
-                    <span className="font-medium">Restore</span> protects foreground.
-                  </p>
-                </div>
-              )}
-
-              <div className="rounded-md border p-3 text-xs text-muted-foreground">
-                <div className="mb-1 flex items-center gap-2">
-                  <Info className="h-3.5 w-3.5" />
-                  <span className="text-foreground font-medium">Tips</span>
-                </div>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Auto works best with solid or lightly textured backdrops.</li>
-                  <li>Use Chroma mode for green/blue screens or white backgrounds.</li>
-                  <li>After auto/chroma, switch to Manual to fix leftover edges.</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </GlassCard>
-
-        <Separator />
-
-        {/* Log */}
-        <GlassCard>
-          <CardHeader>
-            <CardTitle className="text-base">Process Log</CardTitle>
-            <CardDescription>Export is PNG with transparency.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Textarea readOnly value={log} className="min-h-[120px] font-mono" />
-            <div className="mt-2 flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() =>
-                  navigator.clipboard.writeText(log || "").then(() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 1100);
-                  })
-                }
-                disabled={!log}
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                Copy
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog("")}>
-                Clear
-              </Button>
-            </div>
-          </CardContent>
-        </GlassCard>
-      </MotionGlassCard>
-    </div>
+      {/* Log */}
+      <GlassCard>
+        <CardHeader>
+          <CardTitle className="text-base">Process Log</CardTitle>
+          <CardDescription>Export is PNG with transparency.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Textarea readOnly value={log} className="min-h-[120px] font-mono" />
+          <div className="mt-2 flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                navigator.clipboard.writeText(log || "").then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1100);
+                })
+              }
+              disabled={!log}
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              Copy
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setLog("")}>
+              Clear
+            </Button>
+          </div>
+        </CardContent>
+      </GlassCard>
+    </>
   );
 }
 
-/* ---------------- helpers & image ops ---------------- */
+/* helpers & image ops */
 
 function formatBytes(bytes: number) {
   const units = ["B", "KB", "MB", "GB"];

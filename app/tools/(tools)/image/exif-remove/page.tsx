@@ -1,4 +1,3 @@
-// app/tools/(tools)/image/exif-remove/page.tsx
 "use client";
 
 import {
@@ -7,12 +6,10 @@ import {
   Eye,
   EyeOff,
   FileType2,
-  Image as ImageIcon,
   Info,
   Loader2,
   MapPin,
   Palette,
-  RotateCcw,
   Shield,
 } from "lucide-react";
 import * as React from "react";
@@ -23,9 +20,8 @@ import { OutputPreview } from "@/components/shared/output-preview";
 import { ProcessLog } from "@/components/shared/process-log";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 
-import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -50,7 +46,7 @@ import {
 } from "@/lib/canvas";
 import { cn } from "@/lib/utils";
 
-/* ----------------------------- Types ----------------------------- */
+/* Types */
 
 type ExifData = {
   make?: string;
@@ -68,9 +64,7 @@ type ExifData = {
 
 type Risk = "gps" | "date" | "camera";
 
-/* ----------------------------- Page ----------------------------- */
-
-export default function ExifRemovePage() {
+export default function ExifRemoveClient() {
   const [fmt, setFmt] = React.useState<OutFormat>("jpeg");
   const [quality, setQuality] = React.useState(90);
   const [fixOrientation, setFixOrientation] = React.useState(true);
@@ -127,7 +121,7 @@ export default function ExifRemovePage() {
     setLog("");
   }
 
-  // ----------------- Auto Preview (debounced) -----------------
+  // Auto Preview (debounced)
   const { previewUrl, previewSize, previewBusy } = useAutoPreview(
     [img?.url, fmt, quality, fixOrientation, hasAlpha, bg],
     async () => {
@@ -180,7 +174,7 @@ export default function ExifRemovePage() {
             <ResetButton onClick={resetAll} />
             <ActionButton
               variant="default"
-              label={running ? "Processing…" : "Remove & Download"}
+              label={running ? "Processing…" : "Download"}
               icon={running ? Loader2 : Shield}
               onClick={run}
               disabled={!img || running || previewBusy}
@@ -205,15 +199,7 @@ export default function ExifRemovePage() {
 
           <div className="grid gap-4">
             <div className={cn("rounded-lg border p-2", previewCheckerBg(checkerboard))}>
-              <ImagePreview
-                url={(img as any)?.url}
-                emptyNode={
-                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    No image selected
-                  </div>
-                }
-              />
+              <ImagePreview url={img?.url} />
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
