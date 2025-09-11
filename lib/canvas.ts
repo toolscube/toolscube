@@ -1,5 +1,15 @@
 export type FitMode = "contain" | "cover";
 export type OutFormat = "webp" | "jpeg" | "png" | "avif";
+type Anchor =
+  | "center"
+  | "top-left"
+  | "top"
+  | "top-right"
+  | "left"
+  | "right"
+  | "bottom-left"
+  | "bottom"
+  | "bottom-right";
 
 export function formatBytes(bytes: number) {
   const units = ["B", "KB", "MB", "GB"];
@@ -223,4 +233,87 @@ export async function detectHasAlpha(url: string): Promise<boolean> {
     if (data[i] !== 255) return true;
   }
   return false;
+}
+
+export async function drawWithAnchor(opts: {
+  srcUrl: string;
+  srcW: number;
+  srcH: number;
+  outW: number;
+  outH: number;
+  fit: FitMode;
+  anchor: Anchor;
+  background?: string;
+  smoothing: ImageSmoothingQuality;
+}): Promise<HTMLCanvasElement> {
+  const { srcUrl, srcW, srcH, outW, outH, fit, anchor, background, smoothing } = opts;
+
+  const imgEl = await createImage(srcUrl);
+
+  const targetW = Math.max(1, Math.round(outW));
+  const targetH = Math.max(1, Math.round(outH));
+  const srcAspect = srcW / srcH;
+  const dstAspect = targetW / targetH;
+
+  let sx = 0,
+    sy = 0,
+    sw = srcW,
+    sh = srcH;
+  let dx = 0,
+    dy = 0,
+    dw = targetW,
+    dh = targetH;
+
+  if (fit === "contain") {
+    if (srcAspect > dstAspect) {
+      dw = targetW;
+      dh = Math.round(targetW / srcAspect);
+      dx = Math.round((targetW - dw) / 2);
+      dy = Math.round((targetH - dh) / 2);
+    } else {
+      dh = targetH;
+      dw = Math.round(targetH * srcAspect);
+      dx = Math.round((targetW - dw) / 2);
+      dy = Math.round((targetH - dh) / 2);
+    }
+  } else {
+    const scale = Math.max(targetW / srcW, targetH / srcH);
+    const needW = Math.round(targetW / scale);
+    const needH = Math.round(targetH / scale);
+
+    const ax = anchor.includes("left") ? 0 : anchor.includes("right") ? 1 : 0.5;
+    const ay = anchor.includes("top") ? 0 : anchor.includes("bottom") ? 1 : 0.5;
+
+    sx = Math.round((srcW - needW) * ax);
+    sy = Math.round((srcH - needH) * ay);
+    sx = Math.max(0, Math.min(sx, srcW - needW));
+    sy = Math.max(0, Math.min(sy, srcH - needH));
+
+    sw = needW;
+    sh = needH;
+    dx = 0;
+    dy = 0;
+    dw = targetW;
+    dh = targetH;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetW;
+  canvas.height = targetH;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D canvas context is not supported in this environment.");
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = smoothing as ImageSmoothingQuality;
+
+  if (background) {
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, targetW, targetH);
+  } else {
+    ctx.clearRect(0, 0, targetW, targetH);
+  }
+
+  ctx.drawImage(imgEl, sx, sy, sw, sh, dx, dy, dw, dh);
+  return canvas;
 }
