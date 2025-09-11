@@ -1,9 +1,6 @@
 "use client";
 import {
   ActivitySquare,
-  Check,
-  CloudDownload,
-  Copy,
   Crop,
   Eye,
   EyeOff,
@@ -18,6 +15,7 @@ import * as React from "react";
 import { ImageDropzone } from "@/components/image/image-dropzone";
 import { ImagePreview, InfoPill } from "@/components/image/image-preview-meta";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import { OutputPreview } from "@/components/shared/output-preview";
 import { ProcessLog } from "@/components/shared/process-log";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Button } from "@/components/ui/button";
@@ -34,13 +32,14 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { useAutoPreview } from "@/hooks/use-auto-preview";
 import { useImageInput } from "@/hooks/use-image-input";
 import {
-  convertImage,
-  type FitMode, // ✅ NEW
+  browserSupportsMime,
+  type FitMode,
   formatBytes,
   type OutFormat,
-  resizeImage, // ✅ NEW
+  resizeImage,
   suggestName,
   triggerDownload,
 } from "@/lib/canvas";
@@ -52,65 +51,64 @@ export default function ImageConvertPage() {
   const [running, setRunning] = React.useState(false);
   const [log, setLog] = React.useState("");
 
-  // ✅ NEW: preview state
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-  const [previewSize, setPreviewSize] = React.useState<number | null>(null);
-
-  // ✅ NEW: transparency checkerboard + auto detect
+  // transparency checker + auto detect
   const [checker, setChecker] = React.useState(true);
   const [hasAlpha, setHasAlpha] = React.useState<boolean | null>(null);
 
-  // ✅ NEW: optional resize controls
+  // optional resize controls
   const [enableResize, setEnableResize] = React.useState(false);
   const [locked, setLocked] = React.useState(true);
   const [fit, setFit] = React.useState<FitMode>("contain");
   const [w, setW] = React.useState<number | "">("");
   const [h, setH] = React.useState<number | "">("");
 
-  // ✅ NEW: optional simple filters
+  // filters
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [bright, setBright] = React.useState(100);
   const [contrast, setContrast] = React.useState(100);
   const [saturate, setSaturate] = React.useState(100);
 
+  // avif support
+  const [avifOk, setAvifOk] = React.useState<boolean | null>(null);
+
   const { img, getRootProps, getInputProps, isDragActive, setImg } = useImageInput({
     onImage: async (im) => {
-      // reset states
-      clearPreview();
       setHasAlpha(await detectHasAlpha(im.url));
-      // default format suggestion: if PNG/WebP keep, else WEBP
-      const defFmt: OutFormat = im.file.type.includes("png")
-        ? "png"
-        : im.file.type.includes("webp")
-          ? "webp"
-          : "webp";
-      setFmt(defFmt);
+      setFmt(im.file.type.includes("png") ? "png" : "webp");
       setW(im.width);
       setH(im.height);
       setEnableResize(false);
+      setLog(`Loaded ${im.file.name} (${formatBytes(im.size ?? im.file.size)})`);
     },
   });
 
   React.useEffect(() => {
+    (async () => setAvifOk(await browserSupportsMime("image/avif")))();
+  }, []);
+
+  React.useEffect(() => {
     if (!img) return;
     if (locked && typeof w === "number" && document.activeElement?.id === "width") {
-      const r = img.width / img.height;
-      setH(Math.max(1, Math.round(w / r)));
+      setH(Math.max(1, Math.round((w * img.height) / img.width)));
     }
     if (locked && typeof h === "number" && document.activeElement?.id === "height") {
-      const r = img.width / img.height;
-      setW(Math.max(1, Math.round(h * r)));
+      setW(Math.max(1, Math.round((h * img.width) / img.height)));
     }
   }, [w, h, locked, img]);
 
-  function numOrEmpty(v: string): number | "" {
+  const filterCss = React.useMemo(
+    () =>
+      filtersOpen ? `brightness(${bright}%) contrast(${contrast}%) saturate(${saturate}%)` : "",
+    [filtersOpen, bright, contrast, saturate],
+  );
+
+  const numOrEmpty = (v: string): number | "" => {
     const n = Number(v);
     return Number.isNaN(n) ? "" : n;
-  }
+  };
 
   function resetAll() {
     setImg(null);
-    clearPreview();
     setFmt("webp");
     setQuality(90);
     setBg("#ffffff");
@@ -129,118 +127,85 @@ export default function ImageConvertPage() {
     setSaturate(100);
   }
 
-  function clearPreview() {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(null);
-    setPreviewSize(null);
-  }
-
-  // ✅ NEW: build-time filter string
-  const filterCss = React.useMemo(
-    () => `brightness(${bright}%) contrast(${contrast}%) saturate(${saturate}%)`,
-    [bright, contrast, saturate],
+  // ---------- Auto Preview (debounced) ----------
+  const { previewUrl, previewSize, previewBusy } = useAutoPreview(
+    [img?.url, fmt, quality, bg, enableResize, w, h, fit, filtersOpen, bright, contrast, saturate],
+    async () => {
+      if (!img) return null;
+      const outW = enableResize && typeof w === "number" ? w : img.width;
+      const outH = enableResize && typeof h === "number" ? h : img.height;
+      const blob = (
+        await resizeImage({
+          srcUrl: img.url,
+          srcW: img.width,
+          srcH: img.height,
+          outW,
+          outH,
+          fit,
+          format: fmt,
+          quality,
+          background: fmt === "jpeg" && hasAlpha ? bg : undefined,
+          filterCss,
+        })
+      ).blob;
+      return blob;
+    },
+    350,
   );
-
-  async function runCommon(generateOnly = false) {
-    if (!img) return null;
-
-    setLog(generateOnly ? "Generating preview…" : "Converting…");
-
-    // If resize enabled, use resizeImage with fit; otherwise convertImage (1:1)
-    const baseOpts = {
-      format: fmt,
-      quality,
-      background: fmt === "jpeg" && hasAlpha ? bg : undefined,
-    } as const;
-
-    // We support filters via 2-pass draw: draw to canvas with ctx.filter, then encode.
-    // For both convert/resize, we funnel through a helper that respects filters.
-    const out = await encodeWithFilters({
-      srcUrl: img.url,
-      srcW: img.width,
-      srcH: img.height,
-      outW: enableResize && typeof w === "number" ? w : img.width,
-      outH: enableResize && typeof h === "number" ? h : img.height,
-      fit: enableResize ? fit : "contain",
-      ...baseOpts,
-      filterCss,
-      useResize: enableResize,
-    });
-
-    if (generateOnly) return out;
-
-    const filename = suggestName(img.file.name, enableResize ? "resized" : "converted", fmt);
-    triggerDownload(out.blob, filename);
-    setLog(`Done → ${filename} (${formatBytes(out.blob.size)})`);
-    return out;
-  }
-
-  async function preview() {
-    if (!img) return;
-    try {
-      setRunning(true);
-      const res = await runCommon(true);
-      if (!res) return;
-      clearPreview();
-      const url = URL.createObjectURL(res.blob);
-      setPreviewUrl(url);
-      setPreviewSize(res.blob.size);
-      setLog((s) => (s ? `${s}\n` : "") + "Preview generated.");
-    } catch (e: any) {
-      setLog(`Error: ${e?.message || String(e)}`);
-    } finally {
-      setRunning(false);
-    }
-  }
 
   async function run() {
     if (!img) return;
     try {
       setRunning(true);
-      const res = await runCommon(false);
-      if (res) {
-        clearPreview();
-        const url = URL.createObjectURL(res.blob);
-        setPreviewUrl(url);
-        setPreviewSize(res.blob.size);
-      }
+      const outW = enableResize && typeof w === "number" ? w : img.width;
+      const outH = enableResize && typeof h === "number" ? h : img.height;
+
+      const { blob } = await resizeImage({
+        srcUrl: img.url,
+        srcW: img.width,
+        srcH: img.height,
+        outW,
+        outH,
+        fit,
+        format: fmt,
+        quality,
+        background: fmt === "jpeg" && hasAlpha ? bg : undefined,
+        filterCss,
+      });
+
+      const filename = suggestName(img.file.name, enableResize ? "resized" : "converted", fmt);
+      triggerDownload(blob, filename);
+      setLog(`Done → ${filename} (${formatBytes(blob.size)})`);
     } catch (e: any) {
       setLog(`Error: ${e?.message || String(e)}`);
     } finally {
       setRunning(false);
     }
   }
+
+  const lossy = fmt !== "png";
 
   return (
     <>
       <ToolPageHeader
         icon={FileType2}
         title="Image Converter"
-        description="Convert images between PNG, JPEG, WEBP."
+        description="Convert between PNG, JPEG, WEBP, AVIF (auto-preview)."
         actions={
           <>
-            <Button
-              variant="outline"
-              onClick={preview}
-              disabled={!img || running}
-              className="gap-2"
-            >
-              {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-              {running ? "Processing…" : "Preview"}
-            </Button>
             <ResetButton onClick={resetAll} />
             <ActionButton
               variant="default"
               label={running ? "Processing…" : "Convert & Download"}
-              icon={running ? Loader2 : CloudDownload}
+              icon={running ? Loader2 : undefined}
               onClick={run}
-              disabled={!img || running}
+              disabled={!img || running || previewBusy}
             />
           </>
         }
       />
 
-      {/* Uploader / Preview */}
+      {/* Input */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Image</CardTitle>
@@ -251,7 +216,7 @@ export default function ImageConvertPage() {
             getRootProps={getRootProps}
             getInputProps={getInputProps}
             isDragActive={isDragActive}
-            subtitle="PNG, JPEG, WEBP, GIF, SVG (SVG/GIF rasterized)"
+            subtitle="PNG, JPEG, WEBP, GIF, SVG (GIF/SVG rasterized)"
           />
 
           <div className="grid gap-4">
@@ -282,10 +247,9 @@ export default function ImageConvertPage() {
               <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
             </div>
 
-            {/* ✅ NEW: quick presets */}
+            {/* quick presets */}
             <div className="flex flex-wrap gap-2">
               <Button
-                type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => {
@@ -296,7 +260,6 @@ export default function ImageConvertPage() {
                 Small web (WEBP 70)
               </Button>
               <Button
-                type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => {
@@ -307,7 +270,6 @@ export default function ImageConvertPage() {
                 Balanced (WEBP 85)
               </Button>
               <Button
-                type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => {
@@ -316,6 +278,18 @@ export default function ImageConvertPage() {
                 }}
               >
                 High quality (JPEG 92)
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setFmt("avif");
+                  setQuality(60);
+                }}
+                disabled={avifOk === false}
+                title={avifOk === false ? "AVIF not supported in this browser" : ""}
+              >
+                {avifOk === false ? "AVIF (unsupported)" : "Ultra small (AVIF 60)"}
               </Button>
             </div>
           </div>
@@ -329,9 +303,10 @@ export default function ImageConvertPage() {
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
           <CardDescription>
-            Choose output format, quality, and optional resize/filters.
+            Format, quality, optional resize & filters (live preview).
           </CardDescription>
         </CardHeader>
+
         <CardContent className="grid gap-6 md:grid-cols-2">
           {/* Format + Quality + Transparency */}
           <div className="space-y-4">
@@ -345,14 +320,17 @@ export default function ImageConvertPage() {
                   <SelectItem value="webp">WEBP (recommended)</SelectItem>
                   <SelectItem value="jpeg">JPEG</SelectItem>
                   <SelectItem value="png">PNG</SelectItem>
+                  <SelectItem value="avif" disabled={avifOk === false}>
+                    AVIF
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                WEBP is usually the smallest. PNG is best for UI/graphics.
+                AVIF/WEBP সাধারণত সবচেয়ে ছোট; PNG UI/graphics-এর জন্য ভালো।
               </p>
             </div>
 
-            {fmt !== "png" && (
+            {lossy && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="quality">Quality</Label>
@@ -366,15 +344,14 @@ export default function ImageConvertPage() {
                   value={[quality]}
                   onValueChange={([q]) => setQuality(q)}
                 />
-                <p className="text-xs text-muted-foreground">Higher = larger file size.</p>
+                <p className="text-xs text-muted-foreground">উচ্চ কুয়ালিটি = বড় ফাইল।</p>
               </div>
             )}
 
-            {/* JPEG background only if transparency present */}
             {fmt === "jpeg" && hasAlpha && (
               <div className="space-y-2">
                 <Label htmlFor="bg" className="flex items-center gap-2">
-                  <Palette className="h-4 w-4" /> Background (transparency will be filled)
+                  <Palette className="h-4 w-4" /> Background (fill transparency)
                 </Label>
                 <div className="flex items-center gap-3">
                   <Input
@@ -395,10 +372,8 @@ export default function ImageConvertPage() {
               </div>
             )}
 
-            {/* Checkerboard toggle */}
             <div className="flex items-center gap-2 text-sm">
               <Button
-                type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => setChecker((v) => !v)}
@@ -410,7 +385,7 @@ export default function ImageConvertPage() {
             </div>
           </div>
 
-          {/* ✅ NEW: Resize + Filters */}
+          {/* Resize + Filters */}
           <div className="space-y-4">
             <div className="rounded-lg border p-3 space-y-3">
               <div className="flex items-center justify-between">
@@ -418,7 +393,6 @@ export default function ImageConvertPage() {
                   <Crop className="h-4 w-4" /> Resize while converting
                 </div>
                 <Button
-                  type="button"
                   size="sm"
                   variant={enableResize ? "default" : "outline"}
                   onClick={() => setEnableResize((v) => !v)}
@@ -453,18 +427,14 @@ export default function ImageConvertPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={locked ? "default" : "outline"}
-                    onClick={() => setLocked((v) => !v)}
-                    className="gap-2"
-                  >
-                    <Link2 className="h-4 w-4" />
-                    {locked ? "Locked" : "Unlocked"}
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant={locked ? "default" : "outline"}
+                  onClick={() => setLocked((v) => !v)}
+                  className="gap-2"
+                >
+                  <Link2 className="h-4 w-4" /> {locked ? "Locked" : "Unlocked"}
+                </Button>
 
                 <div className="w-44">
                   <Label className="text-sm">Fit</Label>
@@ -486,25 +456,22 @@ export default function ImageConvertPage() {
 
               <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <ActivitySquare className="h-3.5 w-3.5" />
-                  Fit: <span className="ml-1 font-medium text-foreground">{fit}</span>
+                  <ActivitySquare className="h-3.5 w-3.5" /> Fit:{" "}
+                  <span className="ml-1 font-medium text-foreground">{fit}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  Format:{" "}
+                  <ImageIcon className="h-3.5 w-3.5" /> Format:{" "}
                   <span className="ml-1 font-medium text-foreground">{fmt.toUpperCase()}</span>
                 </div>
               </div>
             </div>
 
-            {/* Filters */}
             <div className="rounded-lg border p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <SlidersHorizontal className="h-4 w-4" /> Filters (optional)
                 </div>
                 <Button
-                  type="button"
                   size="sm"
                   variant={filtersOpen ? "default" : "outline"}
                   onClick={() => setFiltersOpen((v) => !v)}
@@ -515,45 +482,9 @@ export default function ImageConvertPage() {
 
               {filtersOpen && (
                 <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <Label>Brightness</Label>
-                      <span className="text-xs text-muted-foreground">{bright}%</span>
-                    </div>
-                    <Slider
-                      min={50}
-                      max={150}
-                      step={1}
-                      value={[bright]}
-                      onValueChange={([v]) => setBright(v)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <Label>Contrast</Label>
-                      <span className="text-xs text-muted-foreground">{contrast}%</span>
-                    </div>
-                    <Slider
-                      min={50}
-                      max={150}
-                      step={1}
-                      value={[contrast]}
-                      onValueChange={([v]) => setContrast(v)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <Label>Saturation</Label>
-                      <span className="text-xs text-muted-foreground">{saturate}%</span>
-                    </div>
-                    <Slider
-                      min={50}
-                      max={150}
-                      step={1}
-                      value={[saturate]}
-                      onValueChange={([v]) => setSaturate(v)}
-                    />
-                  </div>
+                  <Range label="Brightness" value={bright} onChange={setBright} />
+                  <Range label="Contrast" value={contrast} onChange={setContrast} />
+                  <Range label="Saturation" value={saturate} onChange={setSaturate} />
                 </div>
               )}
             </div>
@@ -563,142 +494,57 @@ export default function ImageConvertPage() {
 
       <Separator className="my-4" />
 
-      {/* Output & Log */}
-      <GlassCard>
-        <CardHeader>
-          <CardTitle className="text-base">Output & Log</CardTitle>
-          <CardDescription>Preview ও Convert দুটোই এখান থেকে কন্ট্রোল করো।</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-lg border p-3">
-            <div className="mb-2 text-sm font-medium">Preview (after conversion)</div>
-            {!previewUrl ? (
-              <div className="text-xs text-muted-foreground">
-                Click <b>Preview</b> to see the processed output without downloading.
-              </div>
-            ) : (
-              <>
-                <div className="relative h-44 w-full overflow-hidden rounded bg-muted/40">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="after" className="h-full w-full object-contain" />
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
-                  <InfoPill label="Output Size" value={formatBytes(previewSize ?? 0)} />
-                  <InfoPill label="Format" value={fmt.toUpperCase()} />
-                </div>
-              </>
-            )}
-
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-              <li>Canvas conversion strips EXIF/metadata by default.</li>
+      {/* Live Output Preview + Log */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <OutputPreview
+          title="Output Preview"
+          description={previewBusy ? "Rendering preview…" : "Live preview of the converted image."}
+          previewUrl={previewUrl}
+          size={previewSize}
+          formatLabel={fmt.toUpperCase()}
+          checker={checker}
+          tips={
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Canvas re-encoding strips EXIF/metadata by default.</li>
               <li>Animated GIFs flatten to a single frame.</li>
-              <li>SVGs render to bitmap before converting.</li>
+              <li>
+                Smallest sizes: try <b>AVIF/WEBP</b> and reduce dimensions.
+              </li>
             </ul>
-          </div>
+          }
+        />
 
-          <ProcessLog value={log} onClear={() => setLog("")} />
-        </CardContent>
-      </GlassCard>
+        <ProcessLog value={log} onClear={() => setLog("")} />
+      </div>
     </>
   );
 }
 
-/* ---------------- Helpers ---------------- */
+/* --- local helpers --- */
 
-async function encodeWithFilters(opts: {
-  srcUrl: string;
-  srcW: number;
-  srcH: number;
-  outW: number;
-  outH: number;
-  fit: FitMode;
-  format: OutFormat;
-  quality: number;
-  background?: string;
-  filterCss: string;
-  useResize: boolean;
-}): Promise<{ blob: Blob }> {
-  const { srcUrl, srcW, srcH, outW, outH, fit, format, quality, background, filterCss, useResize } =
-    opts;
-
-  // Draw into a canvas with CSS filters applied, then encode.
-  const img = await createImageElement(srcUrl);
-
-  // compute target rect (same logic as resizeImage)
-  const targetW = Math.max(1, Math.round(outW));
-  const targetH = Math.max(1, Math.round(outH));
-  const srcAspect = srcW / srcH;
-  const dstAspect = targetW / targetH;
-
-  let drawW = targetW;
-  let drawH = targetH;
-
-  if (useResize && fit === "contain") {
-    if (srcAspect > dstAspect) {
-      drawW = targetW;
-      drawH = Math.round(targetW / srcAspect);
-    } else {
-      drawH = targetH;
-      drawW = Math.round(targetH * srcAspect);
-    }
-  } else if (useResize && fit === "cover") {
-    if (srcAspect > dstAspect) {
-      drawH = targetH;
-      drawW = Math.round(targetH * srcAspect);
-    } else {
-      drawW = targetW;
-      drawH = Math.round(targetW / srcAspect);
-    }
-  } else {
-    // no resize: keep native
-    drawW = targetW;
-    drawH = targetH;
-  }
-
-  const canvas = document.createElement("canvas");
-  canvas.width = targetW;
-  canvas.height = targetH;
-  const ctx = canvas.getContext("2d")!;
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  (ctx as any).filter = filterCss;
-
-  if (format === "jpeg" && background) {
-    // apply filters
-
-    ctx.fillStyle = background || "#ffffff";
-    ctx.fillRect(0, 0, targetW, targetH);
-  } else {
-    ctx.clearRect(0, 0, targetW, targetH);
-  }
-
-  if (useResize && fit === "contain") {
-    const dx = Math.round((targetW - drawW) / 2);
-    const dy = Math.round((targetH - drawH) / 2);
-    ctx.drawImage(img, 0, 0, srcW, srcH, dx, dy, drawW, drawH);
-  } else if (useResize && fit === "cover") {
-    const scale = Math.max(targetW / srcW, targetH / srcH);
-    const sw = Math.round(targetW / scale);
-    const sh = Math.round(targetH / scale);
-    const sx = Math.round((srcW - sw) / 2);
-    const sy = Math.round((srcH - sh) / 2);
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-  } else {
-    // direct convert
-    ctx.drawImage(img, 0, 0, targetW, targetH);
-  }
-
-  const mime = format === "png" ? "image/png" : format === "jpeg" ? "image/jpeg" : "image/webp";
-  const q = Math.min(1, Math.max(0.01, quality / 100));
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode image"))), mime, q);
-  });
-  return { blob };
+function Range({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label>{label}</Label>
+        <span className="text-xs text-muted-foreground">{value}%</span>
+      </div>
+      <Slider min={50} max={150} step={1} value={[value]} onValueChange={([v]) => onChange(v)} />
+    </div>
+  );
 }
 
 function createImageElement(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const img = new window.Image();
+    const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
@@ -706,7 +552,6 @@ function createImageElement(url: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Fast alpha check: downscale & scan A channel */
 async function detectHasAlpha(url: string): Promise<boolean> {
   const img = await createImageElement(url);
   const maxDim = 256;
@@ -720,8 +565,6 @@ async function detectHasAlpha(url: string): Promise<boolean> {
   const ctx = c.getContext("2d")!;
   ctx.drawImage(img, 0, 0, w, h);
   const data = ctx.getImageData(0, 0, w, h).data;
-  for (let i = 3; i < data.length; i += 4) {
-    if (data[i] !== 255) return true;
-  }
+  for (let i = 3; i < data.length; i += 4) if (data[i] !== 255) return true;
   return false;
 }

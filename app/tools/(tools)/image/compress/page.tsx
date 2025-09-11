@@ -1,22 +1,25 @@
+// app/tools/(tools)/image/compress/page.tsx
 "use client";
 
 import {
   ActivitySquare,
-  Check,
   CloudDownload,
-  Copy,
   Crop,
   ImageDown,
   Image as ImageIcon,
   Link2,
   Loader2,
-  Palette,
-  RotateCcw,
-  Upload,
 } from "lucide-react";
 import * as React from "react";
 import { useDropzone } from "react-dropzone";
-
+// ✅ reusable controls
+import {
+  DimControls,
+  type FitMode,
+  FormatControls,
+  type OutFormat,
+  TargetSizeControl,
+} from "@/components/image/controls";
 import { ImageDropzone } from "@/components/image/image-dropzone";
 import { ImagePreview, InfoPill } from "@/components/image/image-preview-meta";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
@@ -25,25 +28,21 @@ import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+
+// ✅ shared canvas utilities
+import {
+  type FitMode as BaseFitMode,
+  type OutFormat as BaseOutFormat,
+  canvasEncode,
+  drawToCanvas,
+  formatBytes,
+  suggestName,
+  triggerDownload,
+} from "@/lib/canvas";
 import { cn } from "@/lib/utils";
 
 /* ------------------- types ------------------- */
-type FitMode = "contain" | "cover";
-type OutFormat = "keep" | "jpeg" | "png" | "webp";
-
 interface LoadedImage {
   file: File;
   url: string;
@@ -66,17 +65,16 @@ export default function ImageCompressPage() {
 
   // Format/quality
   const [fmt, setFmt] = React.useState<OutFormat>("keep");
-  const [quality, setQuality] = React.useState(80); // 1..100
-  const [bg, setBg] = React.useState("#ffffff"); // for JPEG transparency / contain letterbox
+  const [quality, setQuality] = React.useState(80);
+  const [bg, setBg] = React.useState("#ffffff");
 
   // Target size (optional)
-  const [targetSize, setTargetSize] = React.useState<number | "">(""); // in KB/MB
+  const [targetSize, setTargetSize] = React.useState<number | "">("");
   const [sizeUnit, setSizeUnit] = React.useState<"KB" | "MB">("KB");
 
   // UI
   const [running, setRunning] = React.useState(false);
   const [log, setLog] = React.useState("");
-  const [copied, setCopied] = React.useState(false);
 
   const ratio = React.useMemo(() => (img ? img.width / img.height : 1), [img]);
 
@@ -170,25 +168,27 @@ export default function ImageCompressPage() {
           ? undefined
           : Math.max(1, Number(targetSize)) * (sizeUnit === "MB" ? 1024 * 1024 : 1024);
 
-      const { blob } = await compress({
+      // Draw to canvas using shared util
+      const canvas = await drawToCanvas({
         srcUrl: img.url,
         srcW: img.width,
         srcH: img.height,
         outW,
         outH,
-        fit,
-        format: actualFmt,
-        quality,
-        background: bg,
-        targetBytes: tgtBytes,
+        fit: fit as BaseFitMode,
+        background: actualFmt === "jpeg" ? bg : undefined,
       });
 
-      const filename = suggestName(img.file.name, actualFmt);
+      // Encode (with optional target-size binary search)
+      const blob =
+        tgtBytes && actualFmt !== "png"
+          ? await encodeToTargetBytes(canvas, toMime(actualFmt), tgtBytes, quality / 100)
+          : await canvasEncode(canvas, actualFmt as BaseOutFormat, quality);
+
+      const filename = suggestName(img.file.name, actualFmt as any);
       triggerDownload(blob, filename);
       setLog(
-        `Done → ${filename} (${formatBytes(blob.size)}).${
-          tgtBytes ? ` Target was ≤ ${formatBytes(tgtBytes)}.` : ""
-        }`,
+        `Done → ${filename} (${formatBytes(blob.size)}).${tgtBytes ? ` Target was ≤ ${formatBytes(tgtBytes)}.` : ""}`,
       );
     } catch (e: any) {
       setLog(`Error: ${e?.message || String(e)}`);
@@ -197,18 +197,11 @@ export default function ImageCompressPage() {
     }
   }
 
-  function copyLog() {
-    navigator.clipboard.writeText(log || "").then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1100);
-    });
-  }
-
   const lossy = fmt === "keep" && img ? !img.type.includes("png") : fmt !== "png";
+  const imgLoaded = !!img;
 
   return (
     <>
-      {/* ✅ Header now uses the shared ToolPageHeader */}
       <ToolPageHeader
         icon={ImageDown}
         title="Image Compress"
@@ -245,8 +238,7 @@ export default function ImageCompressPage() {
               url={img?.url}
               emptyNode={
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  <ImageIcon className="mr-2 h-4 w-4" />
-                  No image selected
+                  <ImageIcon className="mr-2 h-4 w-4" /> No image selected
                 </div>
               }
             />
@@ -256,13 +248,45 @@ export default function ImageCompressPage() {
               <InfoPill label="Width" value={img ? `${img.width}px` : "—"} />
               <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
             </div>
+
+            {/* Quick scale presets */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                onClick={() => setScale(50)}
+              >
+                50%
+              </button>
+              <button
+                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                onClick={() => setScale(75)}
+              >
+                75%
+              </button>
+              <button
+                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                onClick={() => setScale(200)}
+              >
+                200%
+              </button>
+              <button
+                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                onClick={() => {
+                  setW(img?.width ?? "");
+                  setH(img?.height ?? "");
+                  setScale("");
+                }}
+              >
+                Reset size
+              </button>
+            </div>
           </div>
         </CardContent>
       </GlassCard>
 
       <Separator className="my-4" />
 
-      {/* Settings */}
+      {/* Settings (now using reusable controls) */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
@@ -272,179 +296,37 @@ export default function ImageCompressPage() {
         </CardHeader>
 
         <CardContent className="grid gap-6 md:grid-cols-2">
-          {/* Dimensions */}
+          <DimControls
+            imgLoaded={imgLoaded}
+            locked={locked}
+            onToggleLocked={setLocked}
+            w={w}
+            h={h}
+            onW={setW}
+            onH={setH}
+            scale={scale}
+            onScale={setScale}
+            fit={fit}
+            onFit={setFit}
+          />
+
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="width">Width (px)</Label>
-                <Input
-                  id="width"
-                  type="number"
-                  min={1}
-                  value={w}
-                  onChange={(e) => setW(numOrEmpty(e.target.value))}
-                  disabled={!img}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="height">Height (px)</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  min={1}
-                  value={h}
-                  onChange={(e) => setH(numOrEmpty(e.target.value))}
-                  disabled={!img}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Switch checked={locked} onCheckedChange={setLocked} id="lock" />
-                <Label htmlFor="lock" className="flex items-center gap-1">
-                  <Link2 className="h-4 w-4" /> Lock aspect ratio
-                </Label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Label htmlFor="scale" className="text-sm text-muted-foreground">
-                  Scale (%)
-                </Label>
-                <Input
-                  id="scale"
-                  type="number"
-                  min={1}
-                  placeholder="e.g. 50 for half"
-                  className="w-36"
-                  value={scale}
-                  onChange={(e) => setScale(numOrEmpty(e.target.value))}
-                  disabled={!img}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Fit</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <Select value={fit} onValueChange={(v: FitMode) => setFit(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select fit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="contain">Contain (no crop)</SelectItem>
-                    <SelectItem value="cover">Cover (fills, may crop)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="rounded-md border p-2 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Crop className="h-3.5 w-3.5" />
-                    <span>
-                      <span className="font-medium">Contain</span> centers with padding;{" "}
-                      <span className="font-medium">Cover</span> fills box (smart crop).
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Format & Size */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Output Format</Label>
-              <Select value={fmt} onValueChange={(v: OutFormat) => setFmt(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Keep original" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="keep">Keep original</SelectItem>
-                  <SelectItem value="webp">WEBP (recommended)</SelectItem>
-                  <SelectItem value="jpeg">JPEG</SelectItem>
-                  <SelectItem value="png">PNG</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                WEBP is typically the smallest; PNG is best for sharp UI/graphics.
-              </p>
-            </div>
-
-            {/* Quality (lossy only) */}
-            <div className="space-y-2 opacity-100">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="quality" className={cn(!lossy && "text-muted-foreground")}>
-                  Quality {lossy ? "" : "(lossless)"}
-                </Label>
-                <span className="text-xs text-muted-foreground">{quality}</span>
-              </div>
-              <Slider
-                id="quality"
-                min={1}
-                max={100}
-                step={1}
-                value={[quality]}
-                onValueChange={([q]) => setQuality(q)}
-                disabled={!lossy}
-              />
-              {!lossy && (
-                <p className="text-xs text-muted-foreground">
-                  PNG ignores quality; consider WEBP/JPEG to reduce size.
-                </p>
-              )}
-            </div>
-
-            {/* Background color (used if JPEG or when padding for contain) */}
-            {(fmt === "jpeg" || (fmt === "keep" && img && img.type.includes("jpeg"))) && (
-              <div className="space-y-2">
-                <Label htmlFor="bg" className="text-sm flex items-center gap-2">
-                  <Palette className="h-4 w-4" /> Background (for transparency / contain padding)
-                </Label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    id="bg"
-                    type="color"
-                    className="h-9 w-16 p-1"
-                    value={bg}
-                    onChange={(e) => setBg(e.target.value)}
-                  />
-                  <Input
-                    aria-label="Background hex"
-                    value={bg}
-                    onChange={(e) => setBg(e.target.value)}
-                    className="w-36"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Target size */}
-            <div className="space-y-2">
-              <Label htmlFor="target">Target Size (optional)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="target"
-                  type="number"
-                  min={1}
-                  placeholder="e.g. 180"
-                  className="w-36"
-                  value={targetSize}
-                  onChange={(e) => setTargetSize(numOrEmpty(e.target.value))}
-                />
-                <Select value={sizeUnit} onValueChange={(v: "KB" | "MB") => setSizeUnit(v)}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue placeholder="KB" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="KB">KB</SelectItem>
-                    <SelectItem value="MB">MB</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Tries to meet the target by adjusting quality (lossy formats). PNG cannot target
-                size precisely.
-              </p>
-            </div>
+            <FormatControls
+              fmt={fmt}
+              onFmt={setFmt}
+              quality={quality}
+              onQuality={setQuality}
+              lossy={lossy}
+              bg={bg}
+              onBg={setBg}
+              showBgPicker={fmt === "jpeg" || (fmt === "keep" && img && img.type.includes("jpeg"))}
+            />
+            <TargetSizeControl
+              unit={sizeUnit}
+              onUnit={setSizeUnit}
+              value={targetSize}
+              onValue={setTargetSize}
+            />
           </div>
         </CardContent>
       </GlassCard>
@@ -461,8 +343,7 @@ export default function ImageCompressPage() {
           <div className="rounded-lg border p-3">
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2">
-                <ActivitySquare className="h-4 w-4" />
-                Target Dimensions
+                <ActivitySquare className="h-4 w-4" /> Target Dimensions
               </span>
               <span className="font-medium">
                 {typeof w === "number" && typeof h === "number" ? `${w} × ${h}px` : "—"}
@@ -477,36 +358,14 @@ export default function ImageCompressPage() {
             </ul>
           </div>
 
-          <ProcessLog
-            value={log}
-            onClear={() => setLog("")}
-            // Optional copy button (kept your behavior)
-            rightAddon={
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  if (!log) return;
-                  navigator.clipboard.writeText(log).then(() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 1100);
-                  });
-                }}
-                disabled={!log}
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                Copy
-              </Button>
-            }
-          />
+          <ProcessLog value={log} onClear={() => setLog("")} />
         </CardContent>
       </GlassCard>
     </>
   );
 }
 
-/* ------------------- helpers ------------------- */
+/* ------------------- helpers (local) ------------------- */
 
 function numOrEmpty(v: string): number | "" {
   const n = Number(v);
@@ -519,31 +378,8 @@ function mimeToFmt(mime: string): Exclude<OutFormat, "keep"> {
   return "jpeg";
 }
 
-function suggestName(name: string, fmt: Exclude<OutFormat, "keep">) {
-  const base = name.replace(/\.[^.]+$/, "");
-  return `${base}-compressed.${fmt === "jpeg" ? "jpg" : fmt}`;
-}
-
-function triggerDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function formatBytes(bytes: number) {
-  const units = ["B", "KB", "MB", "GB"];
-  let i = 0;
-  let n = bytes;
-  while (n >= 1024 && i < units.length - 1) {
-    n /= 1024;
-    i++;
-  }
-  return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+function toMime(fmt: Exclude<OutFormat, "keep">) {
+  return fmt === "png" ? "image/png" : fmt === "jpeg" ? "image/jpeg" : "image/webp";
 }
 
 function loadImageMeta(url: string): Promise<{ width: number; height: number }> {
@@ -555,149 +391,23 @@ function loadImageMeta(url: string): Promise<{ width: number; height: number }> 
   });
 }
 
-async function compress(opts: {
-  srcUrl: string;
-  srcW: number;
-  srcH: number;
-  outW: number;
-  outH: number;
-  fit: FitMode;
-  format: Exclude<OutFormat, "keep">;
-  quality: number; // 1..100
-  background: string;
-  targetBytes?: number;
-}): Promise<{ blob: Blob }> {
-  const { srcUrl, srcW, srcH, outW, outH, fit, format, quality, background, targetBytes } = opts;
-
-  // prepare canvas with draw (contain/cover)
-  const { canvas } = await drawCanvas({
-    srcUrl,
-    srcW,
-    srcH,
-    outW,
-    outH,
-    fit,
-    format,
-    background,
-  });
-
-  const mime = format === "png" ? "image/png" : format === "jpeg" ? "image/jpeg" : "image/webp";
-  const q = Math.min(1, Math.max(0.01, quality / 100));
-
-  // If targetBytes requested and lossy format → binary search on quality
-  if (targetBytes && format !== "png") {
-    const blob = await toTargetSize(canvas, mime, targetBytes, q);
-    return { blob };
-  }
-
-  // Single encode
-  const blob = await canvasToBlob(canvas, mime, q);
-  return { blob };
-}
-
-async function drawCanvas(opts: {
-  srcUrl: string;
-  srcW: number;
-  srcH: number;
-  outW: number;
-  outH: number;
-  fit: FitMode;
-  format: Exclude<OutFormat, "keep">;
-  background: string;
-}): Promise<{ canvas: HTMLCanvasElement }> {
-  const { srcUrl, srcW, srcH, outW, outH, fit, format, background } = opts;
-
-  const targetW = Math.max(1, Math.round(outW));
-  const targetH = Math.max(1, Math.round(outH));
-
-  const srcAspect = srcW / srcH;
-  const dstAspect = targetW / targetH;
-
-  let drawW = targetW;
-  let drawH = targetH;
-
-  if (fit === "contain") {
-    if (srcAspect > dstAspect) {
-      drawW = targetW;
-      drawH = Math.round(targetW / srcAspect);
-    } else {
-      drawH = targetH;
-      drawW = Math.round(targetH * srcAspect);
-    }
-  } else {
-    if (srcAspect > dstAspect) {
-      drawH = targetH;
-      drawW = Math.round(targetH * srcAspect);
-    } else {
-      drawW = targetW;
-      drawH = Math.round(targetW / srcAspect);
-    }
-  }
-
-  const canvas = document.createElement("canvas");
-  canvas.width = targetW;
-  canvas.height = targetH;
-  const ctx = canvas.getContext("2d")!;
-
-  // JPEG needs background to replace transparency; also used when contain pads
-  if (format === "jpeg") {
-    ctx.fillStyle = background || "#ffffff";
-    ctx.fillRect(0, 0, targetW, targetH);
-  } else {
-    ctx.clearRect(0, 0, targetW, targetH);
-  }
-
-  const imgEl = await createImageElement(srcUrl);
-
-  if (fit === "contain") {
-    const dx = Math.round((targetW - drawW) / 2);
-    const dy = Math.round((targetH - drawH) / 2);
-    ctx.drawImage(imgEl, 0, 0, srcW, srcH, dx, dy, drawW, drawH);
-  } else {
-    const scale = Math.max(targetW / srcW, targetH / srcH);
-    const sw = Math.round(targetW / scale);
-    const sh = Math.round(targetH / scale);
-    const sx = Math.round((srcW - sw) / 2);
-    const sy = Math.round((srcH - sh) / 2);
-    ctx.drawImage(imgEl, sx, sy, sw, sh, 0, 0, targetW, targetH);
-  }
-
-  return { canvas };
-}
-
-function createImageElement(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-function canvasToBlob(canvas: HTMLCanvasElement, mime: string, q: number): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode image"))), mime, q);
-  });
-}
-
-async function toTargetSize(
+/** Binary-search encoder to hit a target size (lossy only) */
+async function encodeToTargetBytes(
   canvas: HTMLCanvasElement,
   mime: string,
   targetBytes: number,
-  initialQ: number,
+  initialQ: number, // 0..1
 ): Promise<Blob> {
-  let lo = 0.05;
-  let hi = 1.0;
-  let best: Blob | null = null;
-
-  // Start near the requested quality
-  let q = Math.max(lo, Math.min(hi, initialQ));
-
+  let lo = 0.05,
+    hi = 1.0,
+    best: Blob | null = null;
+  let q = Math.max(lo, Math.min(hi, initialQ || 0.8));
   for (let i = 0; i < 8; i++) {
-    const blob = await canvasToBlob(canvas, mime, q);
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), mime, q),
+    );
     if (blob.size <= targetBytes) {
-      best = blob; // hit target — try higher quality under the cap
+      best = blob;
       lo = q;
       q = (q + hi) / 2;
     } else {
@@ -705,9 +415,10 @@ async function toTargetSize(
       q = (q + lo) / 2;
     }
   }
-
-  if (best) return best;
-
-  // If never under target, return smallest bound
-  return canvasToBlob(canvas, mime, lo);
+  return (
+    best ??
+    new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), mime, lo),
+    )
+  );
 }

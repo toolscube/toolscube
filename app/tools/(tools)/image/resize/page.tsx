@@ -1,4 +1,5 @@
 "use client";
+
 import {
   ActivitySquare,
   CloudDownload,
@@ -13,11 +14,14 @@ import {
   Palette,
 } from "lucide-react";
 import * as React from "react";
+
 import { ImageDropzone } from "@/components/image/image-dropzone";
 import { ImagePreview, InfoPill } from "@/components/image/image-preview-meta";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import { OutputPreview } from "@/components/shared/output-preview";
 import { ProcessLog } from "@/components/shared/process-log";
 import ToolPageHeader from "@/components/shared/tool-page-header";
+
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -33,8 +37,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { useAutoPreview } from "@/hooks/use-auto-preview";
 import { useImageInput } from "@/hooks/use-image-input";
+
 import {
+  canvasEncode,
   type FitMode,
   formatBytes,
   type OutFormat,
@@ -56,35 +63,32 @@ type Anchor =
 export default function ImageResizePage() {
   const [locked, setLocked] = React.useState(true);
   const [fit, setFit] = React.useState<FitMode>("contain");
-  const [anchor, setAnchor] = React.useState<Anchor>("center"); // NEW
+  const [anchor, setAnchor] = React.useState<Anchor>("center");
+
   const [fmt, setFmt] = React.useState<OutFormat>("webp");
   const [bg, setBg] = React.useState("#ffffff");
   const [quality, setQuality] = React.useState(90);
+
   const [scale, setScale] = React.useState<number | "">("");
   const [w, setW] = React.useState<number | "">("");
   const [h, setH] = React.useState<number | "">("");
-  const [running, setRunning] = React.useState(false);
-  const [log, setLog] = React.useState("");
 
-  // NEW: preview + alpha + checker + smoothing + noUpscale
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-  const [previewSize, setPreviewSize] = React.useState<number | null>(null);
-  const [hasAlpha, setHasAlpha] = React.useState<boolean | null>(null);
   const [checker, setChecker] = React.useState(true);
   const [noUpscale, setNoUpscale] = React.useState(true);
   const [smoothQ, setSmoothQ] = React.useState<CanvasImageSmoothingQuality>("high");
+  const [hasAlpha, setHasAlpha] = React.useState<boolean | null>(null);
+
+  const [running, setRunning] = React.useState(false);
+  const [log, setLog] = React.useState("");
 
   const { img, getRootProps, getInputProps, isDragActive, setImg } = useImageInput({
     onImage: async (im) => {
       setW(im.width);
       setH(im.height);
       setScale("");
-      setLog("");
+      setLog(`Loaded ${im.file.name} (${formatBytes(im.size ?? im.file.size)})`);
       setHasAlpha(await detectHasAlpha(im.url));
-      setFmt(
-        im.file.type.includes("png") ? "png" : im.file.type.includes("webp") ? "webp" : "webp",
-      );
-      clearPreview();
+      setFmt(im.file.type.includes("png") ? "png" : im.file.type.includes("webp") ? "webp" : "webp");
     },
   });
 
@@ -119,19 +123,12 @@ export default function ImageResizePage() {
     setScale("");
     setW("");
     setH("");
-    setRunning(false);
-    setLog("");
-    clearPreview();
     setHasAlpha(null);
     setChecker(true);
     setNoUpscale(true);
     setSmoothQ("high");
-  }
-
-  function clearPreview() {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(null);
-    setPreviewSize(null);
+    setRunning(false);
+    setLog("");
   }
 
   const numOrEmpty = (v: string): number | "" => {
@@ -139,169 +136,53 @@ export default function ImageResizePage() {
     return Number.isNaN(n) ? "" : n;
   };
 
-  // ---- Core draw with anchor (cover) + contain + background + smoothing ----
-  async function drawAndEncode(opts: {
-    srcUrl: string;
-    srcW: number;
-    srcH: number;
-    outW: number;
-    outH: number;
-    fit: FitMode;
-    anchor: Anchor;
-    format: OutFormat;
-    quality: number;
-    background?: string;
-    smoothing: CanvasImageSmoothingQuality;
-  }): Promise<{ blob: Blob }> {
-    const { srcUrl, srcW, srcH, outW, outH, fit, anchor, format, quality, background, smoothing } =
-      opts;
-    const imgEl = await createImageElement(srcUrl);
-
-    const targetW = Math.max(1, Math.round(outW));
-    const targetH = Math.max(1, Math.round(outH));
-    const srcAspect = srcW / srcH;
-    const dstAspect = targetW / targetH;
-
-    // Compute draw rects
-    let sx = 0,
-      sy = 0,
-      sw = srcW,
-      sh = srcH;
-    let dx = 0,
-      dy = 0,
-      dw = targetW,
-      dh = targetH;
-
-    if (fit === "contain") {
-      if (srcAspect > dstAspect) {
-        dw = targetW;
-        dh = Math.round(targetW / srcAspect);
-        dx = Math.round((targetW - dw) / 2);
-        dy = Math.round((targetH - dh) / 2);
-      } else {
-        dh = targetH;
-        dw = Math.round(targetH * srcAspect);
-        dx = Math.round((targetW - dw) / 2);
-        dy = Math.round((targetH - dh) / 2);
-      }
-    } else {
-      // cover with anchor crop
-      const scale = Math.max(targetW / srcW, targetH / srcH);
-      const needW = Math.round(targetW / scale);
-      const needH = Math.round(targetH / scale);
-
-      // anchor offsets
-      const ax = anchor.includes("left") ? 0 : anchor.includes("right") ? 1 : 0.5;
-      const ay = anchor.includes("top") ? 0 : anchor.includes("bottom") ? 1 : 0.5;
-
-      sx = Math.round((srcW - needW) * ax);
-      sy = Math.round((srcH - needH) * ay);
-
-      // clamp inside
-      sx = Math.max(0, Math.min(sx, srcW - needW));
-      sy = Math.max(0, Math.min(sy, srcH - needH));
-
-      sw = needW;
-      sh = needH;
-      // dest covers fully
-      dx = 0;
-      dy = 0;
-      dw = targetW;
-      dh = targetH;
-    }
-
-    const canvas = document.createElement("canvas");
-    canvas.width = targetW;
-    canvas.height = targetH;
-    const ctx = canvas.getContext("2d")!;
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = smoothing;
-
-    if (format === "jpeg" && background) {
-      ctx.fillStyle = background;
-      ctx.fillRect(0, 0, targetW, targetH);
-    } else {
-      ctx.clearRect(0, 0, targetW, targetH);
-    }
-
-    ctx.drawImage(imgEl, sx, sy, sw, sh, dx, dy, dw, dh);
-
-    const mime = format === "png" ? "image/png" : format === "jpeg" ? "image/jpeg" : "image/webp";
-    const q = Math.min(1, Math.max(0.01, quality / 100));
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode image"))), mime, q);
-    });
-    return { blob };
-  }
-
-  async function preview() {
-    if (!img) return;
-    try {
-      setRunning(true);
-      setLog("Generating preview…");
-      const outW = typeof w === "number" ? w : img.width;
-      const outH = typeof h === "number" ? h : img.height;
-      const cappedW = noUpscale ? Math.min(outW, img.width) : outW;
-      const cappedH = noUpscale ? Math.min(outH, img.height) : outH;
-
-      const res = await drawAndEncode({
+  // ---------- Auto Preview (debounced) ----------
+  const { previewUrl, previewSize, previewBusy } = useAutoPreview(
+    [img?.url, fit, anchor, fmt, quality, bg, w, h, noUpscale, smoothQ],
+    async () => {
+      if (!img || typeof w !== "number" || typeof h !== "number") return null;
+      const outW = noUpscale ? Math.min(w, img.width) : w;
+      const outH = noUpscale ? Math.min(h, img.height) : h;
+      const canvas = await drawWithAnchor({
         srcUrl: img.url,
         srcW: img.width,
         srcH: img.height,
-        outW: cappedW,
-        outH: cappedH,
+        outW: outW,
+        outH: outH,
         fit,
         anchor,
-        format: fmt,
-        quality,
         background: fmt === "jpeg" && hasAlpha ? bg : undefined,
         smoothing: smoothQ,
       });
-      clearPreview();
-      const url = URL.createObjectURL(res.blob);
-      setPreviewUrl(url);
-      setPreviewSize(res.blob.size);
-      setLog((s) => (s ? `${s}\n` : "") + "Preview ready.");
-    } catch (e: any) {
-      setLog(`Error: ${e?.message || String(e)}`);
-    } finally {
-      setRunning(false);
-    }
-  }
+      return await canvasEncode(canvas, fmt, quality);
+    },
+    300,
+  );
 
   async function run() {
-    if (!img) return;
+    if (!img || typeof w !== "number" || typeof h !== "number") return;
     try {
       setRunning(true);
       setLog("Processing…");
-      const outW = typeof w === "number" ? w : img.width;
-      const outH = typeof h === "number" ? h : img.height;
-      const cappedW = noUpscale ? Math.min(outW, img.width) : outW;
-      const cappedH = noUpscale ? Math.min(outH, img.height) : outH;
+      const outW = noUpscale ? Math.min(w, img.width) : w;
+      const outH = noUpscale ? Math.min(h, img.height) : h;
 
-      const result = await drawAndEncode({
+      const canvas = await drawWithAnchor({
         srcUrl: img.url,
         srcW: img.width,
         srcH: img.height,
-        outW: cappedW,
-        outH: cappedH,
+        outW: outW,
+        outH: outH,
         fit,
         anchor,
-        format: fmt,
-        quality,
         background: fmt === "jpeg" && hasAlpha ? bg : undefined,
         smoothing: smoothQ,
       });
 
+      const blob = await canvasEncode(canvas, fmt, quality);
       const filename = suggestName(img.file.name, "resized", fmt);
-      triggerDownload(result.blob, filename);
-      setLog(`Done → ${filename} (${formatBytes(result.blob.size)})`);
-
-      // keep preview in panel
-      clearPreview();
-      const url = URL.createObjectURL(result.blob);
-      setPreviewUrl(url);
-      setPreviewSize(result.blob.size);
+      triggerDownload(blob, filename);
+      setLog(`Done → ${filename} (${formatBytes(blob.size)})`);
     } catch (e: any) {
       setLog(`Error: ${e?.message || String(e)}`);
     } finally {
@@ -314,29 +195,22 @@ export default function ImageResizePage() {
       <ToolPageHeader
         icon={Maximize2}
         title="Image Resizer"
-        description="Resize, convert, and optimize images. Drag & drop, paste (Ctrl/Cmd+V), or upload."
+        description="Resize, convert, and optimize images with live preview."
         actions={
           <>
-            <Button
-              className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted"
-              onClick={preview}
-              disabled={!img || running}
-            >
-              {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-              {running ? "Processing…" : "Preview"}
-            </Button>
             <ResetButton onClick={resetAll} />
             <ActionButton
               variant="default"
               label={running ? "Processing…" : "Resize & Download"}
               icon={running ? Loader2 : CloudDownload}
               onClick={run}
-              disabled={!img || running}
+              disabled={!img || running || previewBusy}
             />
           </>
         }
       />
 
+      {/* Input / Meta */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Image</CardTitle>
@@ -373,26 +247,17 @@ export default function ImageResizePage() {
               <InfoPill label="Height" value={img ? `${img.height}px` : "—"} />
             </div>
 
-            {/* Quick scale presets */}
+            {/* Quick scales */}
             <div className="flex flex-wrap gap-2">
-              <button
-                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
-                onClick={() => setScale(50)}
-              >
-                50%
-              </button>
-              <button
-                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
-                onClick={() => setScale(75)}
-              >
-                75%
-              </button>
-              <button
-                className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
-                onClick={() => setScale(200)}
-              >
-                200%
-              </button>
+              {[50, 75, 200].map((p) => (
+                <button
+                  key={p}
+                  className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
+                  onClick={() => setScale(p)}
+                >
+                  {p}%
+                </button>
+              ))}
               <button
                 className="rounded border px-2.5 py-1 text-xs hover:bg-muted"
                 onClick={() => {
@@ -403,6 +268,16 @@ export default function ImageResizePage() {
               >
                 Reset size
               </button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setChecker((v) => !v)}
+                className="gap-2 ml-auto"
+              >
+                {checker ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                {checker ? "Hide" : "Show"} checkerboard
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -410,12 +285,14 @@ export default function ImageResizePage() {
 
       <Separator className="my-4" />
 
+      {/* Settings */}
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
-          <CardDescription>Customize size, fit, focus, format, quality.</CardDescription>
+          <CardDescription>Customize size, fit, focus, format, and quality.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
+          {/* Size / Ratio / Scale */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -472,22 +349,10 @@ export default function ImageResizePage() {
                   No upscale
                 </Label>
               </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setChecker((v) => !v)}
-                  className="gap-2"
-                >
-                  {checker ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  {checker ? "Hide" : "Show"} checkerboard
-                </Button>
-              </div>
             </div>
           </div>
 
+          {/* Fit / Anchor / Format / Quality */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -502,11 +367,10 @@ export default function ImageResizePage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Contain keeps all content; Cover fills the box.
+                  Contain সব কন্টেন্ট রাখে; Cover ফ্রেম ভরে (ক্রপ হতে পারে)।
                 </p>
               </div>
 
-              {/* Focus anchor (cover only) */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   <Focus className="h-4 w-4" /> Focus (cover)
@@ -531,7 +395,7 @@ export default function ImageResizePage() {
                     <SelectItem value="bottom-right">Bottom right</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">Crop bias when filling frame.</p>
+                <p className="text-xs text-muted-foreground">ফ্রেম ভরার সময় ক্রপের দিক নির্ধারণ।</p>
               </div>
             </div>
 
@@ -548,7 +412,9 @@ export default function ImageResizePage() {
                     <SelectItem value="png">PNG</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">WEBP balances size and quality.</p>
+                <p className="text-xs text-muted-foreground">
+                  WEBP সাধারণত ছোট; PNG UI/graphics জন্য তীক্ষ্ণ।
+                </p>
               </div>
 
               {fmt !== "png" && (
@@ -569,7 +435,6 @@ export default function ImageResizePage() {
               )}
             </div>
 
-            {/* JPEG bg only if transparency detected */}
             {fmt === "jpeg" && hasAlpha && (
               <div className="flex items-center gap-3">
                 <Label htmlFor="bg" className="flex items-center gap-2">
@@ -607,65 +472,24 @@ export default function ImageResizePage() {
 
       <Separator className="my-4" />
 
-      <GlassCard>
-        <CardHeader>
-          <CardTitle className="text-base">Output Preview & Log</CardTitle>
-          <CardDescription>Estimated output depends on content &amp; quality.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-3">
-            <div className="rounded-lg border p-3">
-              <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <Crop className="h-4 w-4" /> Target Dimensions
-                </span>
-                <span className="font-medium">
-                  {typeof w === "number" && typeof h === "number"
-                    ? `${noUpscale && img ? Math.min(w, img.width) : w} × ${noUpscale && img ? Math.min(h, img.height) : h}px`
-                    : "—"}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <ActivitySquare className="h-3.5 w-3.5" /> Fit:
-                  <span className="ml-1 font-medium text-foreground">{fit}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="h-3.5 w-3.5" /> Format:
-                  <span className="ml-1 font-medium text-foreground">{fmt.toUpperCase()}</span>
-                </div>
-              </div>
-
-              <div className="mt-3">
-                <div className="mb-1 text-xs text-muted-foreground">Preview (after resize)</div>
-                {!previewUrl ? (
-                  <div className="text-xs text-muted-foreground">
-                    Click <b>Preview</b> to see output without downloading.
-                  </div>
-                ) : (
-                  <>
-                    <div className="relative h-44 w-full overflow-hidden rounded bg-muted/40">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={previewUrl} alt="after" className="h-full w-full object-contain" />
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
-                      <InfoPill label="Output Size" value={formatBytes(previewSize ?? 0)} />
-                      <InfoPill label="Format" value={fmt.toUpperCase()} />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-                <li>Canvas export removes EXIF/metadata.</li>
-                <li>GIFs flatten to a single frame; SVG rasterized.</li>
-              </ul>
-            </div>
-          </div>
-
-          <ProcessLog value={log} onClear={() => setLog("")} />
-        </CardContent>
-      </GlassCard>
+      {/* Live Preview + Log */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <OutputPreview
+          title="Output Preview & Info"
+          description={previewBusy ? "Rendering preview…" : "Live preview (after resize)."}
+          previewUrl={previewUrl}
+          size={previewSize}
+          formatLabel={fmt.toUpperCase()}
+          checker={checker}
+          tips={
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              <li>Canvas export removes EXIF/metadata.</li>
+              <li>GIF ← single frame; SVG rasterized before resize.</li>
+            </ul>
+          }
+        />
+        <ProcessLog value={log} onClear={() => setLog("")} />
+      </div>
     </>
   );
 }
@@ -696,8 +520,88 @@ async function detectHasAlpha(url: string): Promise<boolean> {
   const ctx = c.getContext("2d")!;
   ctx.drawImage(img, 0, 0, w, h);
   const data = ctx.getImageData(0, 0, w, h).data;
-  for (let i = 3; i < data.length; i += 4) {
-    if (data[i] !== 255) return true;
-  }
+  for (let i = 3; i < data.length; i += 4) if (data[i] !== 255) return true;
   return false;
+}
+
+/** Draw with contain/cover + anchor crop, background & smoothing */
+async function drawWithAnchor(opts: {
+  srcUrl: string;
+  srcW: number;
+  srcH: number;
+  outW: number;
+  outH: number;
+  fit: FitMode;
+  anchor: Anchor;
+  background?: string;
+  smoothing: CanvasImageSmoothingQuality;
+}): Promise<HTMLCanvasElement> {
+  const { srcUrl, srcW, srcH, outW, outH, fit, anchor, background, smoothing } = opts;
+
+  const imgEl = await createImageElement(srcUrl);
+
+  const targetW = Math.max(1, Math.round(outW));
+  const targetH = Math.max(1, Math.round(outH));
+  const srcAspect = srcW / srcH;
+  const dstAspect = targetW / targetH;
+
+  // src crop (sx, sy, sw, sh) and dest (dx, dy, dw, dh)
+  let sx = 0,
+    sy = 0,
+    sw = srcW,
+    sh = srcH;
+  let dx = 0,
+    dy = 0,
+    dw = targetW,
+    dh = targetH;
+
+  if (fit === "contain") {
+    if (srcAspect > dstAspect) {
+      dw = targetW;
+      dh = Math.round(targetW / srcAspect);
+      dx = Math.round((targetW - dw) / 2);
+      dy = Math.round((targetH - dh) / 2);
+    } else {
+      dh = targetH;
+      dw = Math.round(targetH * srcAspect);
+      dx = Math.round((targetW - dw) / 2);
+      dy = Math.round((targetH - dh) / 2);
+    }
+  } else {
+    const scale = Math.max(targetW / srcW, targetH / srcH);
+    const needW = Math.round(targetW / scale);
+    const needH = Math.round(targetH / scale);
+
+    const ax = anchor.includes("left") ? 0 : anchor.includes("right") ? 1 : 0.5;
+    const ay = anchor.includes("top") ? 0 : anchor.includes("bottom") ? 1 : 0.5;
+
+    sx = Math.round((srcW - needW) * ax);
+    sy = Math.round((srcH - needH) * ay);
+    sx = Math.max(0, Math.min(sx, srcW - needW));
+    sy = Math.max(0, Math.min(sy, srcH - needH));
+
+    sw = needW;
+    sh = needH;
+    dx = 0;
+    dy = 0;
+    dw = targetW;
+    dh = targetH;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = smoothing;
+
+  if (background) {
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, targetW, targetH);
+  } else {
+    ctx.clearRect(0, 0, targetW, targetH);
+  }
+
+  ctx.drawImage(imgEl, sx, sy, sw, sh, dx, dy, dw, dh);
+  return canvas;
 }
