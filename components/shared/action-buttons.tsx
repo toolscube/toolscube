@@ -661,7 +661,7 @@ export function ActionButton({
 }: {
   onClick?: () => void | Promise<void>;
   label?: string;
-  type: "button" | "submit" | "reset";
+  type?: "button" | "submit" | "reset";
   variant?: Variant;
   size?: Size;
   className?: string;

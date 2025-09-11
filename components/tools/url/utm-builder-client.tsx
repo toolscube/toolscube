@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  ClipboardList,
   Download,
   Eraser,
+  FolderInput,
   History,
   Link2,
   Plus,
@@ -49,6 +49,7 @@ const DEFAULT_UTM: UTMState = {
   id: "",
   custom: [],
 };
+
 const DEFAULT_OPTS: OptionsState = {
   keepExisting: true,
   encodeParams: true,
@@ -56,16 +57,19 @@ const DEFAULT_OPTS: OptionsState = {
   prefixCustomWithUTM: false,
   batchMode: false,
 };
-const PRESET_LS_KEY = "utm-builder-presets-v1";
-const HISTORY_LS_KEY = "utm-builder-history-v1";
+
+const PRESET_LS_KEY = "toolshub:utm-builder-presets-v1";
+const HISTORY_LS_KEY = "toolshub:utm-builder-history-v1";
 
 /* Helpers */
 function rid(prefix = "row") {
   return `${prefix}-${crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 10)}`;
 }
+
 function encodeVal(v: string, should: boolean) {
   return should ? encodeURIComponent(v) : v;
 }
+
 function cleanBaseUrl(url: string) {
   const trimmed = url.trim();
   if (!trimmed) return "";
@@ -81,6 +85,7 @@ function cleanBaseUrl(url: string) {
     }
   }
 }
+
 function parseExisting(url: string) {
   try {
     const u = new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`);
@@ -107,6 +112,7 @@ function parseExisting(url: string) {
     return null;
   }
 }
+
 function genShortId() {
   if (crypto?.getRandomValues) {
     const bytes = new Uint8Array(6);
@@ -115,6 +121,7 @@ function genShortId() {
   }
   return Math.random().toString(36).slice(2, 10);
 }
+
 function isValidUrl(s: string) {
   try {
     new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`);
@@ -123,6 +130,7 @@ function isValidUrl(s: string) {
     return false;
   }
 }
+
 function buildSingle(baseUrl: string, utm: UTMState, opts: OptionsState) {
   if (!baseUrl || !baseUrl.trim()) return "";
 
@@ -163,19 +171,12 @@ function buildSingle(baseUrl: string, utm: UTMState, opts: OptionsState) {
 }
 
 export default function UTMBuilderClient() {
-  // base / batch
   const [baseUrl, setBaseUrl] = useState("");
   const [batchList, setBatchList] = useState("");
-
-  // utm + options
   const [utm, setUtm] = useState<UTMState>({ ...DEFAULT_UTM });
   const [opts, setOpts] = useState<OptionsState>({ ...DEFAULT_OPTS });
-
-  // presets
   const [presets, setPresets] = useState<Preset[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<string>("");
-
-  // results
   const result = useMemo(() => buildSingle(baseUrl, utm, opts), [baseUrl, utm, opts]);
   const resultBatch = useMemo(() => {
     if (!opts.batchMode) return [] as string[];
@@ -217,9 +218,11 @@ export default function UTMBuilderClient() {
       custom: [...u.custom, { id: rid("pair"), key: "", value: "", enabled: true }],
     }));
   }
+
   function removeCustomRow(id: string) {
     setUtm((u) => ({ ...u, custom: u.custom.filter((c) => c.id !== id) }));
   }
+
   function updateCustomRow(id: string, patch: Partial<Pair>) {
     setUtm((u) => ({
       ...u,
@@ -247,6 +250,7 @@ export default function UTMBuilderClient() {
     localStorage.setItem(PRESET_LS_KEY, JSON.stringify(next));
     setSelectedPreset(name);
   }
+
   function applyPreset(name: string) {
     const p = presets.find((x) => x.name === name);
     if (!p) return;
@@ -254,6 +258,7 @@ export default function UTMBuilderClient() {
     setOpts(p.options);
     setSelectedPreset(name);
   }
+
   function deletePreset(name: string) {
     const next = presets.filter((p) => p.name !== name);
     setPresets(next);
@@ -320,7 +325,7 @@ export default function UTMBuilderClient() {
                 className="flex-1"
               />
               <ActionButton
-                icon={ClipboardList}
+                icon={FolderInput}
                 label="Import from URL"
                 onClick={importFromUrl}
                 disabled={!isValidUrl(baseUrl)}
