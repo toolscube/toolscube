@@ -165,7 +165,7 @@ export default function RootLayout({
         <JsonLd data={siteLd} />
         <JsonLd data={orgLd} />
         <JsonLd data={navLd} />
-        <main className="mx-auto px-4">{children}</main>
+        <main className="mx-auto">{children}</main>
         <Toaster position="top-right" />
       </body>
     </html>
