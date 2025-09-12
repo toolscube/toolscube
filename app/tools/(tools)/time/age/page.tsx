@@ -6,7 +6,7 @@ import { buildMetadata } from "@/lib/seo";
 export const metadata = buildMetadata({
   title: "Age Calculator • Tools Hub",
   description:
-    "Instantly calculate exact age from date of birth — years, months, days, and next birthday — timezone-safe and leap-year aware. Copy and share results easily.",
+    "Instantly calculate exact age from date of birth — years, months, days, and next birthday. Timezone-safe, leap-year aware, and privacy-friendly.",
   path: "/tools/time/age",
   keywords: [
     "age calculator",
@@ -14,15 +14,29 @@ export const metadata = buildMetadata({
     "date of birth calculator",
     "how old am I",
     "calculate exact age",
+    "age finder online",
+    "age difference calculator",
     "years months days",
-    "next birthday",
     "age in days",
-    "age in months",
     "age in weeks",
+    "age in months",
+    "age in hours",
+    "age in minutes",
+    "next birthday",
     "weekday of next birthday",
+    "half birthday",
     "timezone safe age",
     "leap year aware age",
+    "accurate age calculator",
+    "date math",
+    "school admission age",
+    "job application age",
+    "visa age calculator",
+    "insurance age calculator",
+    "medical age calculator",
     "copy age result",
+    "share age result",
+    "export age details",
     "Tools Hub",
     "online tools",
     "privacy friendly tools",
@@ -46,15 +60,17 @@ export default function Page() {
       "Calculate precise age from date of birth with breakdown in years, months, and days. Shows next birthday and weekday. Timezone-safe and leap-year aware.",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     featureList: [
-      "DOB picker with Today shortcut",
-      "Exact age: years, months, days",
-      "Age in total days / weeks / months",
-      "Next birthday date & weekday",
-      "Timezone-safe calculations",
-      "Leap-year aware logic",
-      "Copy & share results instantly",
-      "Privacy-first: runs in your browser",
-      "Mobile-friendly UI",
+      "DOB picker with Today/Now shortcuts",
+      "Exact age: years, months, days (plus total days, weeks, months)",
+      "Fine-grained age: hours and minutes (optional)",
+      "Next birthday date, weekday, and countdown",
+      "Half-birthday highlight (optional)",
+      "Age difference between two dates (compare mode)",
+      "Timezone-safe calculations; leap-year aware",
+      "Copy & share formatted results; quick permalink",
+      "Export age breakdown to CSV/TXT/JSON",
+      "Privacy-first: runs locally in your browser",
+      "Responsive, mobile-friendly UI with keyboard access",
     ],
     creator: {
       "@type": "Person",
@@ -66,6 +82,10 @@ export default function Page() {
       target: toolUrl,
       name: "Calculate age from date of birth",
     },
+    additionalProperty: [
+      { "@type": "PropertyValue", name: "Supports", value: "Gregorian calendar" },
+      { "@type": "PropertyValue", name: "Data Storage", value: "Local only" },
+    ],
   };
 
   const crumbsLd = {
@@ -73,7 +93,12 @@ export default function Page() {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
-      { "@type": "ListItem", position: 2, name: "Date & Time", item: `${siteURL}/tools/time` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Date & Time",
+        item: `${siteURL}/tools#cat-date-time`,
+      },
       { "@type": "ListItem", position: 3, name: "Age Calculator", item: toolUrl },
     ],
   };
@@ -100,10 +125,26 @@ export default function Page() {
       },
       {
         "@type": "Question",
-        name: "Can I copy or share the result?",
+        name: "Can I see my age in days, weeks, hours, or minutes?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes. You can copy the formatted age breakdown and share it anywhere.",
+          text: "Yes. You can view fine-grained totals such as days, weeks, months, hours, and minutes.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I compare two dates (e.g., age difference)?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Use compare mode to calculate the difference between any two dates, not just DOB and today.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is my data uploaded or stored?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No. Everything runs locally in your browser. We do not upload, log, or store your inputs.",
         },
       },
     ],
