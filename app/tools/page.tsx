@@ -3,7 +3,8 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { ToolsData } from "@/data/tools";
 import { siteURL } from "@/lib/constants";
@@ -109,11 +110,7 @@ export default function ToolsIndexPage() {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {categories.map((c) => (
           <Link key={c.key} href={`#cat-${c.key}`} className="group focus:outline-none">
-            <Card className="relative h-full overflow-hidden rounded-2xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 transition-all hover:border-primary/50 hover:shadow-[0_8px_30px_rgba(2,132,199,0.08)] focus-within:ring-2 focus-within:ring-primary/40">
-              <div
-                aria-hidden
-                className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
-              />
+            <GlassCard>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   {c.icon && <c.icon className="h-4 w-4 text-muted-foreground" />}
@@ -123,16 +120,7 @@ export default function ToolsIndexPage() {
                   {c.items.length} tools
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="transition-transform group-hover:-translate-y-0.5"
-                >
-                  Open
-                </Button>
-              </CardContent>
-            </Card>
+            </GlassCard>
           </Link>
         ))}
       </section>
@@ -158,27 +146,14 @@ export default function ToolsIndexPage() {
                   className="group focus:outline-none"
                   aria-label={t.title}
                 >
-                  <Card className="relative h-full overflow-hidden rounded-2xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 transition-all hover:border-primary/50 hover:shadow-[0_8px_30px_rgba(2,132,199,0.08)] focus-within:ring-2 focus-within:ring-primary/40">
-                    <div
-                      aria-hidden
-                      className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"
-                    />
+                  <GlassCard className="h-full">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base">{t.title}</CardTitle>
                       <CardDescription className="text-sm text-muted-foreground">
                         {t.description}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="transition-transform group-hover:-translate-y-0.5"
-                      >
-                        Open
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  </GlassCard>
                 </Link>
               ))}
             </div>
