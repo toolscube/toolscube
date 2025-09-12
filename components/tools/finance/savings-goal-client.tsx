@@ -15,7 +15,6 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 export default function SavingsGoalClient() {
-  // Inputs
   const [goal, setGoal] = React.useState<number>(200000);
   const [current, setCurrent] = React.useState<number>(15000);
   const [rate, setRate] = React.useState<number>(8);
@@ -28,7 +27,6 @@ export default function SavingsGoalClient() {
   });
   const [begin, setBegin] = React.useState<boolean>(false);
 
-  // Derived
   const n = React.useMemo(
     () =>
       useDate ? monthsBetween(new Date(), parseISO(targetDate)) : Math.max(1, Math.floor(months)),
@@ -45,7 +43,6 @@ export default function SavingsGoalClient() {
     [current, result.monthly, i, n, begin],
   );
 
-  // Actions
   function resetAll() {
     setGoal(200000);
     setCurrent(15000);
