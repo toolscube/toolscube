@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Text to List • Tools Hub",
+  title: "Text to List",
   description:
     "Split text by commas, newlines, semicolons, or tabs into a clean list. Trim, dedupe, sort, change case, and add prefix/suffix or numbering. Export to CSV or TXT.",
   path: "/tools/text/to-list",

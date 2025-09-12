@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Text Cleaner • Tools Hub",
+  title: "Text Cleaner",
   description:
     "Remove extra spaces, emojis, HTML, punctuation, diacritics, URLs, and unwanted characters. Normalize whitespace, decode entities, and format text instantly.",
   path: "/tools/text/cleaner",

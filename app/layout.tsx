@@ -40,7 +40,7 @@ const smartDescription = description || siteDescriptionFallback(ToolsData);
 export const metadata: Metadata = {
   title: {
     default: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
-    template: "%s • Tools Hub",
+    template: "%s - Tools Hub",
   },
   description: smartDescription,
   metadataBase: new URL(siteURL),

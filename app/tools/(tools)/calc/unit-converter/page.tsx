@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Unit Converter • Tools Hub",
+  title: "Unit Converter",
   description:
     "Free online unit converter for length, weight, temperature, volume, area, speed, energy, time, digital storage, and more. Accurate, fast, and mobile-friendly.",
   path: "/tools/calc/unit-converter",

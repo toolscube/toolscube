@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "QR Code • Tools Hub",
+  title: "QR Code",
   description:
     "Create QR codes from text and links in seconds. Support for Wi-Fi, vCard, Email, SMS, and WhatsApp. Customize colors, error correction, add a center logo, and export as PNG or SVG.",
   path: "/tools/url/qr",

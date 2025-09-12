@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "URL Shortener • Tools Hub",
+  title: "URL Shortener",
   description:
     "Shorten URLs with custom slugs, analytics, and QR code export. Fast, privacy-friendly, and free. Paste a link and get a tiny short URL instantly.",
   path: "/tools/url/shortener",

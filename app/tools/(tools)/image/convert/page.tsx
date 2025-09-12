@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Image Convert • Tools Hub",
+  title: "Image Convert",
   description:
     "Convert images between JPG, PNG, WebP, and AVIF instantly. High quality, batch mode, resize & compress, no watermark — private and fast.",
   path: "/tools/image/convert",

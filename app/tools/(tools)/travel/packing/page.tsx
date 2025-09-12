@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Packing Checklist • Tools Hub",
+  title: "Packing Checklist",
   description:
     "Generate a smart packing checklist in seconds. Pick a template (business, beach, camping, family), tweak items & quantities, and export or print.",
   path: "/tools/travel/packing",

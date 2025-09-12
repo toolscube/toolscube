@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Distance & ETA • Tools Hub",
+  title: "Distance & ETA",
   description:
     "Calculate rough distance and estimated travel time between two or more map points. Supports driving, walking, cycling, and straight-line distances.",
   path: "/tools/travel/distance",

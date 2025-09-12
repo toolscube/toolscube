@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "BMI Calculator • Tools Hub",
+  title: "BMI Calculator",
   description:
     "Free online BMI Calculator. Calculate your Body Mass Index instantly using height and weight. Supports metric/imperial units, shows BMI categories, and provides healthy weight ranges.",
   path: "/tools/calc/bmi",

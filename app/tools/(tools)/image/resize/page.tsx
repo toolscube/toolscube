@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Image Resize • Tools Hub",
+  title: "Image Resize",
   description:
     "Resize, crop, and scale images online for free. Adjust width, height, aspect ratio, and quality — works with JPG, PNG, WebP, and AVIF.",
   path: "/tools/image/resize",

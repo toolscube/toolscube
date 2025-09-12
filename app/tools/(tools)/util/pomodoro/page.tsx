@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Pomodoro Focus Timer • Tools Hub",
+  title: "Pomodoro Focus Timer",
   description:
     "Boost productivity with the Pomodoro Timer. Work in focused 25/5 cycles, customize intervals, track session history, and stay distraction-free.",
   path: "/tools/util/pomodoro",

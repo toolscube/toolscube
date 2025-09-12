@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Time Zone Converter • Tools Hub",
+  title: "Time Zone Converter",
   description:
     "Convert time across different cities and countries instantly. Compare time zones, plan meetings, and copy or share results with ease.",
   path: "/tools/time/timezone",

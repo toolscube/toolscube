@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Meeting Notes • Tools Hub",
+  title: "Meeting Notes",
   description:
     "Take structured meeting notes with timestamps, speakers, agendas, action items, and decisions. Export to Markdown, PDF, CSV, or JSON. Free, fast, and privacy-friendly.",
   path: "/tools/office/meeting-notes",

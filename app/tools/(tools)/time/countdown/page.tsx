@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Countdown & Pomodoro Timer • Tools Hub",
+  title: "Countdown & Pomodoro Timer",
   description:
     "Create countdowns, Pomodoro cycles, and event timers. Multi-timer dashboard with sound alerts, recurring sessions, and offline support.",
   path: "/tools/time/countdown",

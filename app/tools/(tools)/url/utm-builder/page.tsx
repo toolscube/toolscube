@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "UTM Builder • Tools Hub",
+  title: "UTM Builder",
   description:
     "Quickly build campaign tracking links with UTM parameters. Batch-generate tagged URLs, save presets, export CSV, and track campaigns accurately.",
   path: "/tools/url/utm-builder",

@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "To-Do (Offline) • Tools Hub",
+  title: "To-Do (Offline)",
   description:
     "Local, private offline to-do list that works without internet. Add, organize, and track tasks securely in your browser. No signup required.",
   path: "/tools/office/todo",

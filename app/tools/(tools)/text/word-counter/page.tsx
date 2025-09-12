@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Word Counter • Tools Hub",
+  title: "Word Counter",
   description:
     "Count words, characters, sentences, paragraphs, and lines. Estimate reading/speaking time, analyze keyword density, and apply quick text transforms—free and privacy-friendly.",
   path: "/tools/text/word-counter",

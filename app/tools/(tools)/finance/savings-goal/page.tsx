@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Savings Goal Calculator • Tools Hub",
+  title: "Savings Goal Calculator",
   description:
     "Find out how much you need to save per month or week to reach your financial goals by a target date. Supports interest, APY, compounding, and progress tracking.",
   path: "/tools/finance/savings-goal",

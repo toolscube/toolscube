@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Clipboard Cleaner • Tools Hub",
+  title: "Clipboard Cleaner",
   description:
     "Clean your clipboard instantly. Strip formatting, remove emojis, links, and hidden characters. Paste as plain text and copy/export with one click.",
   path: "/tools/util/clipboard-cleaner",

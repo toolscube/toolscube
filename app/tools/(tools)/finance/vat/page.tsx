@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "GST/VAT Calculator • Tools Hub",
+  title: "GST/VAT Calculator",
   description:
     "Add or remove GST/VAT from any price. Convert between tax-inclusive and tax-exclusive amounts instantly. Custom rates, rounding, net/gross breakdowns, and export options.",
   path: "/tools/finance/vat",

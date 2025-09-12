@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "GUID / UUID / Order ID Generator • Tools Hub",
+  title: "GUID / UUID / Order ID Generator",
   description:
     "Generate random GUIDs, UUIDs (v1, v4), NanoIDs, and readable Order IDs instantly. Batch generate, copy, and export. Secure and free.",
   path: "/tools/util/id-generator",

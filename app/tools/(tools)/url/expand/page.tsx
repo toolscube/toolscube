@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Link Expander • Tools Hub",
+  title: "Link Expander",
   description:
     "Unshorten links, trace the full redirect chain (301/302), preview Open Graph data, and safely inspect the final destination—works with t.co, bit.ly, TinyURL, and more.",
   path: "/tools/url/expand",

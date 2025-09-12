@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Unit Price Compare • Tools Hub",
+  title: "Unit Price Compare",
   description:
     "Find the cheapest option instantly by comparing unit prices. Enter price, quantity, and unit to calculate cost per kg, liter, or piece. Supports discounts and taxes.",
   path: "/tools/util/unit-price",

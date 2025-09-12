@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Slugify • Tools Hub",
+  title: "Slugify",
   description:
     "Create SEO-friendly slugs from text. Live/manual modes, delimiters, transliteration, stopwords, custom rules, casing, max length, and batch processing.",
   path: "/tools/text/slugify",

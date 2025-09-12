@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Case Converter • Tools Hub",
+  title: "Case Converter",
   description:
     "Convert text to upper, lower, title, sentence, camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE, and more. Includes cleanup, diacritics removal, and copy/export.",
   path: "/tools/text/case-converter",

@@ -20,7 +20,7 @@ export function buildMetadata(input: BuildMetaInput): Metadata {
   return {
     title: {
       default: input.title,
-      template: `%s • Tools Hub`,
+      template: `%s`,
     },
     description: input.description,
     keywords: input.keywords ?? [

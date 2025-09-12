@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Currency Converter • Tools Hub",
+  title: "Currency Converter",
   description:
     "Convert currencies with live exchange rates. Supports 150+ currencies worldwide including USD, EUR, GBP, BDT, INR, and more. Fast, free, and accurate.",
   path: "/tools/calc/currency",

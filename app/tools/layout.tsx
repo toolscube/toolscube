@@ -27,7 +27,7 @@ const smartDescription = description || siteDescriptionFallback(ToolsData);
 export const metadata: Metadata = {
   title: {
     default: "Tools — Tools Hub",
-    template: "%s • Tools Hub",
+    template: "%s - Tools Hub",
   },
   description: smartDescription,
   keywords: KEYWORDS,

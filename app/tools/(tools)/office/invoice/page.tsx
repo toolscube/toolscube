@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Simple Invoice Generator • Tools Hub",
+  title: "Simple Invoice Generator",
   description:
     "Create professional invoices instantly. Add line items, tax, discounts, shipping, and paid status. Export invoices to PDF, CSV, or JSON. Free and privacy-friendly.",
   path: "/tools/office/invoice",

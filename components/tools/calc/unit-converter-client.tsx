@@ -167,8 +167,8 @@ export default function UnitConverterClient() {
       {/* header */}
       <ToolPageHeader
         icon={Sparkles}
-        description="Select a category, pick units, input an amount—then copy or explore the full table."
-        title="Conversion"
+        title="Unit Converter"
+        description="Convert length, weight, temp, etc."
         actions={
           <>
             <ResetButton onClick={resetAll} />

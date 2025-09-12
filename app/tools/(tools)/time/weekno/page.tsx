@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "ISO Week Number • Tools Hub",
+  title: "ISO Week Number",
   description:
     "Find the ISO week number, ISO week-year, and Monday–Sunday date range for any date. Timezone-safe, leap-year aware, and copy/share friendly.",
   path: "/tools/time/weekno",

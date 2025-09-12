@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Regex Tester • Tools Hub",
+  title: "Regex Tester",
   description:
     "Test and debug regular expressions online. Supports flags, match highlighting, groups, replacements, and validation for JavaScript, PCRE, and more.",
   path: "/tools/dev/regex-tester",

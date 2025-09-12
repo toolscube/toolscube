@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Random Picker • Tools Hub",
+  title: "Random Picker",
   description:
     "Pick random winners fairly from a list of names or entries. Ideal for giveaways, raffles, classrooms, teams, and events. Free, fast, and privacy-friendly.",
   path: "/tools/util/random-picker",

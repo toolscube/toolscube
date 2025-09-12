@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Age Calculator • Tools Hub",
+  title: "Age Calculator",
   description:
     "Instantly calculate exact age from date of birth — years, months, days, and next birthday. Timezone-safe, leap-year aware, and privacy-friendly.",
   path: "/tools/time/age",

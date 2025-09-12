@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Line Tools • Tools Hub",
+  title: "Line Tools",
   description:
     "Sort, dedupe, trim, filter, and find & replace lines of text online. Natural sort, regex, line numbering, prefix/suffix, shuffle, and more—fast and privacy-friendly.",
   path: "/tools/text/line-tools",

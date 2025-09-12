@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Base64 Encode/Decode • Tools Hub",
+  title: "Base64 Encode/Decode",
   description:
     "Encode text, images, or files to Base64 and decode Base64 back to the original. Free, fast, privacy-friendly Base64 converter with copy & download.",
   path: "/tools/text/base64",

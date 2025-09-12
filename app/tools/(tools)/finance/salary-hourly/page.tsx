@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Salary ↔ Hourly Pay Calculator • Tools Hub",
+  title: "Salary ↔ Hourly Pay Calculator",
   description:
     "Convert annual salary to hourly, daily, weekly, or monthly pay. PTO-aware effective hourly rate, currency presets, overtime options, and quick exports.",
   path: "/tools/finance/salary-hourly",

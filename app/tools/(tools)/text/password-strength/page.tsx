@@ -4,7 +4,7 @@ import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Password Strength • Tools Hub",
+  title: "Password Strength",
   description:
     "Check password strength and entropy instantly. Analyze character sets, estimate crack time, and get actionable tips to improve security. Free, private, and fast.",
   path: "/tools/text/password-strength",
