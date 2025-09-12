@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { useMemo } from "react";
 import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
+import Footer from "@/components/shared/footer";
 import {
   Accordion,
   AccordionContent,
@@ -407,73 +408,5 @@ function ToolsGrid({ tools }: { tools: ToolItem[] }) {
         </Link>
       ))}
     </div>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="mx-auto max-w-7xl px-3 pb-10">
-      <div className="grid gap-6 md:grid-cols-2 md:items-center">
-        <div className="space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2 font-semibold">
-            <LayoutGrid className="h-5 w-5" />
-            <span>Tools Hub</span>
-          </Link>
-          <p className="max-w-prose text-sm text-muted-foreground">
-            Everyday tools with beautiful, accessible design. Built with ShadCN UI.
-          </p>
-          <div className="flex gap-2 pt-1">
-            <Badge variant="secondary">Open Source</Badge>
-            <Badge variant="secondary">No Login</Badge>
-            <Badge variant="secondary">Fast</Badge>
-          </div>
-        </div>
-        <div className="justify-self-end">
-          <form
-            className="flex w-full max-w-md items-center gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert("Subscribed! (wire this up to your backend)");
-            }}
-          >
-            <div className="w-full">
-              <Label htmlFor="email" className="sr-only">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                required
-                className="h-10"
-              />
-            </div>
-            <Button type="submit" className="h-10">
-              Subscribe
-            </Button>
-          </form>
-        </div>
-      </div>
-
-      <Separator className="my-6" />
-
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <div className="">© {new Date().getFullYear()} Tools Hub</div>
-        <nav className="flex gap-5">
-          <Link href="/privacy" className="hover:underline">
-            Privacy
-          </Link>
-          <Link href="/terms" className="hover:underline">
-            Terms
-          </Link>
-          <Link href="/about" className="hover:underline">
-            About
-          </Link>
-          <Link href="/sponsor" className="hover:underline">
-            Sponsor
-          </Link>
-        </nav>
-      </div>
-    </footer>
   );
 }
