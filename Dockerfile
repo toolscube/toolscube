@@ -16,7 +16,7 @@ WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
-    PORT=3001
+    PORT=3005
 
 RUN useradd -m -u 10001 nextjs
 

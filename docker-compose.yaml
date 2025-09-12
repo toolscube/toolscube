@@ -15,7 +15,7 @@ services:
       - ./.env
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=3005
       - NEXT_TELEMETRY_DISABLED=1
 
     expose:

@@ -30,7 +30,6 @@ export function NavMain({
   }[];
 }) {
   const pathname = usePathname();
-  // const { toggleSidebar } = useSidebar();
 
   const isActiveItems = (url: string) =>
     url === "/admin" ? pathname === url : pathname.startsWith(url);
