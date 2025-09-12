@@ -30,7 +30,7 @@ export default function Layout({ children }: ChildrenProps) {
           <ToolsHeader />
 
           <main className="flex-1 py-4">
-            <div className="@container/main min-h-screen w-full">{children}</div>
+            <div className="@container/main min-h-screen w-full px-4">{children}</div>
           </main>
         </div>
       </div>

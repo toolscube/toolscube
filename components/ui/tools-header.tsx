@@ -35,15 +35,13 @@ type FlatItem = ToolItem & {
   icon?: unknown;
 };
 
-const RECENT_KEY = "tools-hub:recent-items";
+const RECENT_KEY = "tools-hub:recent-items-v1";
 const MAX_RECENT = 8;
 
-// Icon normalizer
 function asIcon(maybe: unknown): LucideIcon {
   return typeof maybe === "function" ? (maybe as LucideIcon) : Link2;
 }
 
-// Utils
 function flattenTools(data: typeof ToolsData): FlatItem[] {
   const out: FlatItem[] = [];
   for (const group of data) {
@@ -88,7 +86,6 @@ export default function ToolsHeader() {
   const popular = useMemo(() => all.filter((i) => i.popular), [all]);
   const inputProxyRef = useRef<HTMLButtonElement | null>(null);
 
-  // Keyboard shortcuts: Cmd/Ctrl+K to open, "/" to quick-open
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -108,7 +105,6 @@ export default function ToolsHeader() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // load recent on mount and whenever dialog opens
   useEffect(() => {
     if (open) setRecent(getRecent());
   }, [open]);
@@ -119,7 +115,6 @@ export default function ToolsHeader() {
     router.push(item.url);
   }
 
-  // Group results by category
   const groupedByCategory = useMemo(() => {
     const map = new Map<string, FlatItem[]>();
     for (const item of all) {
@@ -132,7 +127,6 @@ export default function ToolsHeader() {
 
   return (
     <>
-      {/* Header with glass effect */}
       <header className="sticky top-0 z-40 flex shrink-0 items-center border-b py-3 overflow-hidden border-b-muted/40 bg-background/40 backdrop-blur supports-[backdrop-filter]:bg-background/30">
         <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
           <SidebarTrigger className="-ml-1" />
@@ -149,7 +143,7 @@ export default function ToolsHeader() {
                     type="button"
                     ref={inputProxyRef}
                     onClick={() => setOpen(true)}
-                    className="hidden sm:flex items-center gap-2 rounded-xl border bg-background/50 px-3 py-2 text-sm text-muted-foreground hover:bg-background/70 ring-1 ring-border/50 shadow-sm transition backdrop-blur supports-[backdrop-filter]:bg-background/40"
+                    className="hidden sm:flex items-center gap-2 rounded-md border bg-background/50 px-3 py-2 text-sm text-muted-foreground hover:bg-background/70 ring-1 ring-border/50 shadow-sm transition backdrop-blur supports-[backdrop-filter]:bg-background/40"
                     aria-label="Search tools"
                   >
                     <Search className="h-4 w-4" />

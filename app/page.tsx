@@ -129,14 +129,13 @@ export default function HomePage() {
 
       {/* Categories grid */}
       <section className="mx-auto max-w-7xl px-2 pt-12">
-        <SectionHeader title="Browse by category" href="/tools/categories" cta="View all" />
+        <SectionHeader title="Browse by category" href="/tools" cta="View all" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {getActiveCategories().map((c) => (
             <Link key={c.url} href={c.url} className="group focus:outline-none">
               <GlassCard className="h-full border-none">
                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
                   <div className="rounded-xl border bg-background p-2">
-                    {/* @ts-ignore */}
                     <c.icon className="h-5 w-5" />
                   </div>
                   <div>
