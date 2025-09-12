@@ -1,417 +1,147 @@
-"use client";
+import JsonLd from "@/components/seo/json-ld";
+import PackingChecklistClient from "@/components/tools/travel/packing-checklist-client";
+import { siteURL } from "@/lib/constants";
+import { buildMetadata } from "@/lib/seo";
 
-import {
-  Backpack,
-  Briefcase,
-  ClipboardList,
-  Luggage,
-  Mountain,
-  Plus,
-  Sun,
-  ThermometerSnowflake,
-  ThermometerSun,
-  Trash2,
-  Umbrella,
-} from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SelectField from "@/components/shared/form-fields/select-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+export const metadata = buildMetadata({
+  title: "Packing Checklist • Tools Hub",
+  description:
+    "Generate a smart packing checklist in seconds. Pick a template (business, beach, camping, family), tweak items & quantities, and export or print.",
+  path: "/tools/travel/packing",
+  keywords: [
+    "packing checklist",
+    "travel packing list",
+    "trip checklist",
+    "vacation packing list",
+    "luggage checklist",
+    "carry-on checklist",
+    "smart packing list",
+    "business trip packing",
+    "beach holiday packing",
+    "camping packing list",
+    "city break packing",
+    "backpacking checklist",
+    "festival packing",
+    "road trip packing",
+    "family packing list",
+    "baby packing checklist",
+    "international travel checklist",
+    "clothing checklist",
+    "toiletries list",
+    "electronics checklist",
+    "documents passport visa",
+    "first aid kit list",
+    "medications checklist",
+    "weather packing",
+    "packing list generator",
+    "packing list templates",
+    "quantities and weights",
+    "share and print packing list",
+    "export CSV PDF",
+    "offline packing tool",
+    "Tools Hub",
+    "travel tools",
+    "online tools",
+    "Bangladesh",
+  ],
+});
 
-// Types & helpers
-type Climate = "mild" | "warm" | "cold" | "rainy";
-type Template = "basic" | "business" | "beach" | "hiking";
-type Filter = "must" | "all" | "todo";
+export default function Page() {
+  const toolUrl = `${siteURL}/tools/travel/packing`;
 
-type Item = {
-  id: string;
-  cat: string;
-  label: string;
-  qty?: number;
-  checked?: boolean;
-  note?: string;
-  must?: boolean;
-};
+  const appLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Packing Checklist — Tools Hub",
+    url: toolUrl,
+    applicationCategory: "TravelApplication",
+    operatingSystem: "Web",
+    isAccessibleForFree: true,
+    inLanguage: ["en", "bn"],
+    description:
+      "Create a smart, templated packing checklist for any trip. Choose a template, customize items and quantities, and export or print.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Starter templates: Business, Beach, Camping, City Break, Backpacking, Festival, Family/Baby",
+      "Auto-grouped categories: Clothing, Toiletries, Electronics, Documents, Health, Misc",
+      "Customize items, notes, and quantities; add your own categories",
+      "Tick-off progress with live completion stats",
+      "Optional weight per item with total weight estimate",
+      "Weather & duration hints (e.g., rain gear, layers) — if enabled",
+      "Multi-traveler support (assign items per person) — if enabled",
+      "Save/load presets locally; duplicate lists for new trips",
+      "Export to CSV/JSON; Print/Save as PDF; share link",
+      "Offline-capable and privacy-friendly (runs in your browser)",
+      "Mobile-friendly UI with drag & drop reordering",
+    ],
+    creator: {
+      "@type": "Person",
+      name: "Tariqul Islam",
+      url: "https://tariqul.dev",
+    },
+    potentialAction: {
+      "@type": "CreateAction",
+      target: toolUrl,
+      name: "Generate a packing checklist",
+    },
+  };
 
-// uid helper
-const uid = () => Math.random().toString(36).slice(2, 9);
+  const crumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
+      { "@type": "ListItem", position: 2, name: "Travel", item: `${siteURL}/tools#cat-travel` },
+      { "@type": "ListItem", position: 3, name: "Packing Checklist", item: toolUrl },
+    ],
+  };
 
-// categories ordering
-const CATS = [
-  "Documents",
-  "Clothing",
-  "Toiletries",
-  "Tech",
-  "Health",
-  "Accessories",
-  "Misc",
-] as const;
-
-/* smart templates */
-const BASE_TEMPLATE: Item[] = [
-  { id: uid(), cat: "Documents", label: "Passport / ID", must: true },
-  { id: uid(), cat: "Documents", label: "Tickets / Boarding pass" },
-  { id: uid(), cat: "Documents", label: "Wallet (cards + cash)" },
-  { id: uid(), cat: "Tech", label: "Phone + Charger", must: true },
-  { id: uid(), cat: "Tech", label: "Power bank" },
-  { id: uid(), cat: "Clothing", label: "Underwear", qty: 3 },
-  { id: uid(), cat: "Clothing", label: "Socks", qty: 3 },
-  { id: uid(), cat: "Toiletries", label: "Toothbrush / Paste" },
-  { id: uid(), cat: "Toiletries", label: "Deodorant" },
-  { id: uid(), cat: "Misc", label: "Reusable water bottle" },
-];
-
-const BUSINESS_TEMPLATE: Item[] = [
-  { id: uid(), cat: "Clothing", label: "Dress shirt", qty: 2 },
-  { id: uid(), cat: "Clothing", label: "Trousers / Skirt", qty: 1 },
-  { id: uid(), cat: "Clothing", label: "Blazer", qty: 1 },
-  { id: uid(), cat: "Accessories", label: "Belt / Tie / Scarf" },
-  { id: uid(), cat: "Tech", label: "Laptop + Charger", must: true },
-  { id: uid(), cat: "Documents", label: "Business cards" },
-];
-
-const BEACH_TEMPLATE: Item[] = [
-  { id: uid(), cat: "Clothing", label: "Swimsuit", qty: 1 },
-  { id: uid(), cat: "Accessories", label: "Sunglasses" },
-  { id: uid(), cat: "Accessories", label: "Hat / Cap" },
-  { id: uid(), cat: "Health", label: "Sunscreen (100ml TSA)" },
-  { id: uid(), cat: "Misc", label: "Beach towel" },
-];
-
-const HIKING_TEMPLATE: Item[] = [
-  { id: uid(), cat: "Accessories", label: "Daypack" },
-  { id: uid(), cat: "Clothing", label: "Hiking socks", qty: 2 },
-  { id: uid(), cat: "Health", label: "Basic first-aid kit" },
-  { id: uid(), cat: "Tech", label: "Headlamp" },
-  { id: uid(), cat: "Misc", label: "Snacks / Trail mix" },
-];
-
-// climate adjuster
-function climateAdds(climate: Climate): Item[] {
-  switch (climate) {
-    case "warm":
-      return [
-        { id: uid(), cat: "Clothing", label: "Light T-shirts", qty: 2 },
-        { id: uid(), cat: "Clothing", label: "Shorts", qty: 1 },
-      ];
-    case "cold":
-      return [
-        { id: uid(), cat: "Clothing", label: "Jacket / Fleece", qty: 1 },
-        { id: uid(), cat: "Accessories", label: "Beanie / Gloves" },
-      ];
-    case "rainy":
-      return [
-        { id: uid(), cat: "Accessories", label: "Compact umbrella" },
-        { id: uid(), cat: "Clothing", label: "Rain jacket" },
-      ];
-    default:
-      return [];
-  }
-}
-
-// length scaling
-function scaleByNights(items: Item[], nights: number) {
-  const mult = Math.max(1, Math.ceil(nights / 2));
-  return items.map((it) =>
-    /underwear|socks|t-?shirts?/i.test(it.label)
-      ? { ...it, qty: Math.max(it.qty ?? 1, mult + (it.qty ?? 0)) }
-      : it,
-  );
-}
-
-export default function PackingChecklistClient() {
-  const LS_KEY = "packing-checklist.v1";
-
-  const [template, setTemplate] = useState<Template>("basic");
-  const [climate, setClimate] = useState<Climate>("mild");
-  const [nights, setNights] = useState<number>(2);
-
-  const [items, setItems] = useState<Item[]>([]);
-  const [filter, setFilter] = useState<Filter>("all");
-  const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    localStorage.setItem(LS_KEY, JSON.stringify(items));
-  }, [items]);
-
-  /* smart fill from template */
-  const smartFill = useCallback(() => {
-    let base = [...BASE_TEMPLATE];
-    if (template === "business") base = base.concat(BUSINESS_TEMPLATE);
-    if (template === "beach") base = base.concat(BEACH_TEMPLATE);
-    if (template === "hiking") base = base.concat(HIKING_TEMPLATE);
-
-    base = base.concat(climateAdds(climate));
-    base = scaleByNights(base, nights);
-
-    const map = new Map<string, Item>();
-    for (const it of base) {
-      const key = `${it.cat}::${String(it.label).toLowerCase()}`;
-      const existing = map.get(key);
-      if (!existing) {
-        map.set(key, { ...it, id: uid(), checked: false });
-      } else {
-        map.set(key, {
-          ...existing,
-          qty: Math.max(existing.qty ?? 0, it.qty ?? 0) || undefined,
-          must: Boolean(existing.must || it.must),
-        });
-      }
-    }
-    setItems(Array.from(map.values()));
-  }, [template, climate, nights]);
-
-  // load / persist
-  React.useEffect(() => {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      try {
-        setItems(JSON.parse(raw));
-      } catch {
-        smartFill();
-      }
-    } else {
-      smartFill();
-    }
-  }, [smartFill]);
-
-  function resetAll() {
-    setItems([]);
-  }
-
-  function addItem(cat = "Misc") {
-    const label = prompt("Item name");
-    if (!label) return;
-    setItems((s) => [{ id: uid(), cat, label, qty: 1, checked: false }, ...s]);
-  }
-
-  function removeItem(id: string) {
-    setItems((s) => s.filter((x) => x.id !== id));
-  }
-
-  function toggleCheck(id: string, v: boolean) {
-    setItems((s) => s.map((x) => (x.id === id ? { ...x, checked: v } : x)));
-  }
-
-  function updateQty(id: string, qty: number) {
-    setItems((s) => s.map((x) => (x.id === id ? { ...x, qty: qty || undefined } : x)));
-  }
-
-  function updateNote(id: string, note: string) {
-    setItems((s) => s.map((x) => (x.id === id ? { ...x, note } : x)));
-  }
-
-  const filtered = useMemo(() => {
-    let arr = items;
-    if (filter === "todo") arr = arr.filter((x) => !x.checked);
-    if (filter === "must") arr = arr.filter((x) => x.must);
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      arr = arr.filter((x) => x.label.toLowerCase().includes(q) || x.cat.toLowerCase().includes(q));
-    }
-    // group by category using CATS order
-    const byCat: Record<string, Item[]> = {};
-    for (const it of arr) {
-      if (!byCat[it.cat]) byCat[it.cat] = [];
-      byCat[it.cat].push(it);
-    }
-    const orderedCatNames = [...new Set([...CATS, ...Object.keys(byCat)])];
-    return orderedCatNames
-      .filter((c) => byCat[c]?.length)
-      .map((c) => ({
-        cat: c,
-        items: byCat[c].sort((a, b) => (a.must === b.must ? 0 : a.must ? -1 : 1)),
-      }));
-  }, [items, filter, query]);
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Can I customize the packing templates?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Start from any template and freely add, edit, or remove items and categories. You can also save your custom list as a preset.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Does it support quantities and total weight?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "You can set quantities per item and optionally add weights to estimate total luggage weight.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Will my packing list be saved online?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "The tool runs locally in your browser. Lists are saved to local storage and never uploaded unless you choose to export or share.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I print or export my list?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. You can print or save as PDF, and export to CSV or JSON for backups or sharing.",
+        },
+      },
+    ],
+  };
 
   return (
-    <>
-      {/* Flowing header */}
-      <ToolPageHeader
-        icon={Luggage}
-        title="Packing Checklist"
-        description="Template → tune → check off. Everything saves in your browser."
-        actions={
-          <>
-            <ResetButton onClick={resetAll} />
-            <ActionButton
-              variant="default"
-              icon={ClipboardList}
-              label="Smart Fill"
-              onClick={smartFill}
-            />
-          </>
-        }
-      />
+    <div className="space-y-4">
+      <JsonLd data={appLd} />
+      <JsonLd data={crumbsLd} />
+      <JsonLd data={faqLd} />
 
-      {/* Settings */}
-      <GlassCard>
-        <CardHeader>
-          <CardTitle className="text-base">Trip Settings</CardTitle>
-          <CardDescription>
-            Choose a template, trip length, and expected climate. Then hit Smart Fill.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-center">
-          <SelectField
-            label="Template"
-            value={template}
-            onValueChange={(v) => setTemplate(v as Template)}
-            options={[
-              { icon: Backpack, value: "basic", label: "Basic" },
-              { icon: Briefcase, value: "business", label: "Business" },
-              { icon: Sun, value: "beach", label: "Beach" },
-              { icon: Mountain, value: "hiking", label: "Hiking" },
-            ]}
-          />
-
-          <InputField
-            label="Nights"
-            type="number"
-            min={0}
-            value={nights}
-            onChange={(e) => setNights(Math.max(0, Number(e.target.value) || 0))}
-          />
-
-          <SelectField
-            label="Climate"
-            value={climate}
-            onValueChange={(v) => setClimate(v as Climate)}
-            options={[
-              { icon: ThermometerSun, value: "mild", label: "Mild" },
-              { icon: Sun, value: "warm", label: "Warm" },
-              { icon: ThermometerSnowflake, value: "cold", label: "Cold" },
-              { icon: Umbrella, value: "rainy", label: "Rainy" },
-            ]}
-          />
-
-          <div className="space-y-2">
-            <Label>Quick add</Label>
-            <div className="flex gap-2">
-              <ActionButton size="sm" label="Docs +" onClick={() => addItem("Documents")} />
-              <ActionButton size="sm" label=" Clothes +" onClick={() => addItem("Clothing")} />
-              <ActionButton size="sm" label=" Tech +" onClick={() => addItem("Tech")} />
-            </div>
-          </div>
-        </CardContent>
-      </GlassCard>
-
-      <Separator className="my-4" />
-
-      {/* Toolbar */}
-      <GlassCard className="px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <SelectField
-          value={filter}
-          onValueChange={(v) => setFilter(v as Filter)}
-          options={[
-            { value: "all", label: "Show: All" },
-            { value: "todo", label: "Show: To Do" },
-            { value: "must", label: "Show: Essentials ★" },
-          ]}
-        />
-
-        <div className="flex-1" />
-
-        <div className="flex items-center gap-2">
-          <InputField
-            placeholder="Search items or categories..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-      </GlassCard>
-
-      {/* Checklist */}
-      <GlassCard className="mt-4">
-        <CardHeader>
-          <CardTitle className="text-base">Your List</CardTitle>
-          <CardDescription>
-            Check items as you pack. Quantities and notes are saved automatically.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {filtered.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No items. Try Smart Fill or add items with Quick add.
-            </p>
-          )}
-
-          {filtered.map((group) => (
-            <div key={group.cat}>
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-medium tracking-tight">{group.cat}</h3>
-                <ActionButton
-                  icon={Plus}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => addItem(group.cat)}
-                  label="Add"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                {group.items.map((it) => (
-                  <div
-                    key={it.id}
-                    className="flex flex-col rounded-xl border p-3 sm:flex-row sm:items-center sm:gap-3"
-                  >
-                    <div className="flex items-center gap-3 sm:w-[40%]">
-                      <Checkbox
-                        checked={!!it.checked}
-                        onCheckedChange={(v) => toggleCheck(it.id, !!v)}
-                        aria-label={`check ${it.label}`}
-                      />
-                      <span
-                        className={`text-sm ${it.checked ? "line-through text-muted-foreground" : ""}`}
-                      >
-                        {it.label}{" "}
-                        {it.must && (
-                          <Badge variant="outline" className="ml-1">
-                            ★
-                          </Badge>
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 items-end">
-                      <InputField
-                        placeholder="Qty"
-                        type="number"
-                        min={0}
-                        value={it.qty ?? ""}
-                        onChange={(e) => updateQty(it.id, Number(e.target.value))}
-                      />
-                      <div className="col-span-2 sm:col-span-2">
-                        <InputField
-                          placeholder="Note (optional)"
-                          value={it.note ?? ""}
-                          onChange={(e) => updateNote(it.id, e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <ActionButton
-                      icon={Trash2}
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeItem(it.id)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </GlassCard>
-    </>
+      <PackingChecklistClient />
+    </div>
   );
 }
