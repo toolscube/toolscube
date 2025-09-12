@@ -86,7 +86,12 @@ export default function Page() {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
-      { "@type": "ListItem", position: 2, name: "Calculators", item: `${siteURL}/tools/calc` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Calculators",
+        item: `${siteURL}/tools#cat-calculators`,
+      },
       { "@type": "ListItem", position: 3, name: "Currency Converter", item: toolUrl },
     ],
   };
