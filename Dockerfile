@@ -1,4 +1,4 @@
-# ---- Build Stage ----
+# Build Stage
 FROM node:20-slim AS builder
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# ---- Runtime Stage ----
+# Runtime Stage
 FROM node:20-slim AS runner
 WORKDIR /app
 
@@ -27,5 +27,5 @@ COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 RUN mkdir -p /app/.next/cache && chown -R nextjs:nextjs /app
 
 USER nextjs
-EXPOSE 3001
+EXPOSE 3005
 CMD ["node", "server.js"]

@@ -31,25 +31,25 @@ services:
       - 'traefik.enable=true'
       - 'traefik.docker.network=proxy'
 
-      # ---- Router (apex) ----
+      # Router (apex)
       - 'traefik.http.routers.toolshub.rule=Host(`toolshub.tariqul.dev`)'
       - 'traefik.http.routers.toolshub.entrypoints=websecure'
       - 'traefik.http.routers.toolshub.tls=true'
       - 'traefik.http.routers.toolshub.tls.certresolver=letsencrypt'
       - 'traefik.http.routers.toolshub.service=toolshub-svc'
 
-      # ---- Service ----
-      - 'traefik.http.services.toolshub-svc.loadbalancer.server.port=3001'
+      # Service
+      - 'traefik.http.services.toolshub-svc.loadbalancer.server.port=3005'
       - 'traefik.http.services.toolshub-svc.loadbalancer.passhostheader=true'
 
-      # ---- www → non-www (HTTPS) ----
+      # www → non-www (HTTPS)
       - 'traefik.http.routers.toolshub-www.rule=Host(`www.toolshub.tariqul.dev`)'
       - 'traefik.http.routers.toolshub-www.entrypoints=websecure'
       - 'traefik.http.routers.toolshub-www.tls=true'
       - 'traefik.http.routers.toolshub-www.tls.certresolver=letsencrypt'
       - 'traefik.http.routers.toolshub-www.middlewares=toolshub-redirect@docker'
 
-      # ---- Redirect middleware ----
-      - "traefik.http.middlewares.toolshub-redirect.redirectregex.regex=^https?://www\\.tariqul\\.dev(.*)"
+      # Redirect middleware
+      - "traefik.http.middlewares.toolshub-redirect.redirectregex.regex=^https?://www\\.toolshub\\.tariqul\\.dev(.*)"
       - 'traefik.http.middlewares.toolshub-redirect.redirectregex.replacement=https://toolshub.tariqul.dev$1'
       - 'traefik.http.middlewares.toolshub-redirect.redirectregex.permanent=true'
