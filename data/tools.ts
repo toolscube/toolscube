@@ -7,12 +7,27 @@ import {
   ImageIcon,
   LinkIcon,
   Map as MapIcon,
+  Settings2,
   Type,
   Wallet,
   Wrench,
 } from "lucide-react";
 
 export const ToolsData = [
+  {
+    title: "Tools",
+    url: "/tools",
+    icon: Settings2,
+    isActive: true,
+    items: [
+      {
+        title: "All Tools",
+        url: "/tools",
+        description: "Browse and search all available tools",
+        popular: true,
+      },
+    ],
+  },
   {
     title: "URL",
     url: "/tools/url",

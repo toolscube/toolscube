@@ -1,13 +1,71 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
+import JsonLd from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ToolsData } from "@/data/tools";
+import { siteURL } from "@/lib/constants";
+import { buildDynamicKeywords, mergeKeywords, siteDescriptionFallback } from "@/lib/seo-tools";
 
-const categories = ToolsData.map((cat) => ({
+const STATIC_KEYWORDS = [
+  "online tools",
+  "url shortener",
+  "pdf tools",
+  "image tools",
+  "text utilities",
+  "developer tools",
+  "seo tools",
+  "calculators",
+  "free tools",
+  "privacy friendly",
+];
+
+const DYNAMIC_KEYWORDS = buildDynamicKeywords(ToolsData);
+const KEYWORDS = mergeKeywords(STATIC_KEYWORDS, DYNAMIC_KEYWORDS);
+
+const description =
+  "Browse all online utilities: URL shortener, PDF & image tools, text utilities, developer helpers, SEO tools, and calculators.";
+const smartDescription = description || siteDescriptionFallback(ToolsData);
+
+export const metadata: Metadata = {
+  title: "Tools",
+  description: smartDescription,
+  keywords: KEYWORDS,
+  openGraph: {
+    title: "Tools — Tools Hub",
+    description: smartDescription,
+    url: `${siteURL}/tools`,
+    type: "website",
+    siteName: "Tools Hub",
+    images: [
+      {
+        url: `${siteURL}/og/tools-hub-og.png`,
+        width: 1200,
+        height: 630,
+        alt: "Tools Hub",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@toolshub",
+    creator: "@toolshub",
+    title: "Tools — Tools Hub",
+    description: smartDescription,
+    images: [`${siteURL}/og/tools-hub-og.png`],
+  },
+  alternates: {
+    canonical: `${siteURL}/tools`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+const categories = ToolsData.filter((cat) => cat.title !== "Tools").map((cat) => ({
   key: cat.title
     .toLowerCase()
     .replace(/\s+/g, "-")
@@ -21,41 +79,31 @@ const categories = ToolsData.map((cat) => ({
 }));
 
 export default function ToolsIndexPage() {
+  const navLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Tools Hub Categories",
+    itemListElement: ToolsData.map((c, i: number) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: c.title,
+      url: `${siteURL}${c.url}`,
+    })),
+  };
+
   return (
-    <main className="py-10">
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(60%_40%_at_20%_10%,hsl(var(--primary)/.15),transparent_60%),radial-gradient(40%_30%_at_80%_0%,hsl(var(--muted-foreground)/.12),transparent_60%),radial-gradient(30%_30%_at_50%_80%,hsl(var(--primary)/.12),transparent_60%)]" />
-        <div className="absolute inset-0 [mask-image:radial-gradient(60%_50%_at_50%_30%,#000_40%,transparent_70%)]">
-          <div className="h-full w-full bg-[linear-gradient(to_right,transparent_0,transparent_49%,hsl(var(--border))_50%,transparent_51%),linear-gradient(to_bottom,transparent_0,transparent_49%,hsl(var(--border))_50%,transparent_51%)] bg-[length:32px_32px] motion-safe:animate-[slow-pan_30s_linear_infinite]" />
-        </div>
-      </div>
+    <main>
+      <JsonLd data={navLd} />
 
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border bg-background/60 p-6 md:p-10 mb-8">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
-        />
-        <div className="relative flex flex-col gap-4">
-          <Badge variant="secondary" className="w-fit">
-            Explore tools
-          </Badge>
-          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
-            All Tools
-          </h1>
-          <p className="max-w-2xl text-pretty text-muted-foreground">
-            Utilities for links, text, PDF, images, development, SEO, and quick calculations.
-          </p>
-          <div className="flex gap-3 pt-1">
-            <Button asChild>
-              <Link href="/">Home</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/about">About</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <header className="space-y-2 mb-6">
+        <h1 className="text-balance text-2xl font-semibold leading-tight tracking-tight md:text-3xl">
+          All Tools
+        </h1>
+        <p className="max-w-2xl text-pretty text-muted-foreground">
+          Utilities for links, text, PDF, images, development, SEO, and quick calculations.
+        </p>
+      </header>
 
       {/* Category tiles */}
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
