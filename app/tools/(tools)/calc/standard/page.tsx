@@ -1,223 +1,134 @@
-"use client";
+import JsonLd from "@/components/seo/json-ld";
+import StandardCalculatorClient from "@/components/tools/calc/standard-calculator-client";
+import { siteURL } from "@/lib/constants";
+import { buildMetadata } from "@/lib/seo";
 
-import {
-  Calculator,
-  Copy,
-  Delete,
-  Divide,
-  Equal,
-  Eraser,
-  FunctionSquare,
-  Percent,
-  X,
-} from "lucide-react";
-import * as React from "react";
-import toast from "react-hot-toast";
-import { CalcButton } from "@/components/calculators/calc-button";
-import { Display } from "@/components/calculators/display";
-import { ActionButton, LinkButton, ResetButton } from "@/components/shared/action-buttons";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { GlassCard, MotionGlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
-import { safeEval } from "@/lib/safe-eval";
+export const metadata = buildMetadata({
+  title: "Standard Calculator",
+  description:
+    "Free online standard calculator for everyday math. Perform basic arithmetic — addition, subtraction, multiplication, and division — with history, keyboard input, and offline support.",
+  path: "/tools/calc/standard",
+  keywords: [
+    "standard calculator",
+    "basic calculator",
+    "online calculator",
+    "math calculator",
+    "arithmetic calculator",
+    "simple calculator",
+    "everyday calculator",
+    "addition calculator",
+    "subtraction calculator",
+    "multiplication calculator",
+    "division calculator",
+    "percentage calculator",
+    "square root calculator",
+    "calculator with history",
+    "calculator with keyboard support",
+    "copy calculator result",
+    "offline calculator",
+    "mobile calculator",
+    "desktop calculator",
+    "responsive calculator",
+    "Tools Hub",
+    "online tools",
+    "Bangladesh",
+  ],
+});
 
-export default function StandardCalculatorClient() {
-  const [expr, setExpr] = React.useState<string>("");
-  const [ans, setAns] = React.useState<string>("");
-  const [lastAns, setLastAns] = React.useState<string>("");
+export default function Page() {
+  const toolUrl = `${siteURL}/tools/calc/standard`;
 
-  const exprWithAns = React.useMemo(() => {
-    if (!expr) return "";
-    if (!lastAns) return expr;
-    return expr.replace(/\bANS\b/g, lastAns);
-  }, [expr, lastAns]);
-
-  // Live preview
-  React.useEffect(() => {
-    const v = safeEval(exprWithAns);
-    setAns(v == null ? "" : String(v));
-  }, [exprWithAns]);
-
-  const push = (t: string) => setExpr((e) => e + t);
-
-  const clear = React.useCallback(() => {
-    setExpr("");
-    setAns("");
-  }, []);
-
-  const back = React.useCallback(() => {
-    setExpr((e) => e.slice(0, -1));
-  }, []);
-
-  const equal = React.useCallback(() => {
-    const v = safeEval(exprWithAns);
-    if (v == null) return;
-    const s = String(v);
-    setExpr(s);
-    setLastAns(s);
-    setAns("");
-  }, [exprWithAns]);
-
-  const copyExpr = async () => {
-    try {
-      await navigator.clipboard.writeText(expr || "0");
-      toast.success("Expression copied");
-    } catch {
-      toast.error("Copy failed");
-    }
-  };
-
-  const copyAns = async () => {
-    try {
-      const v = ans || expr;
-      if (!v) return;
-      await navigator.clipboard.writeText(String(v));
-      toast.success("Result copied");
-    } catch {
-      toast.error("Copy failed");
-    }
-  };
-
-  // stable key handler that references the stable handlers
-  const onKey = React.useCallback(
-    (e: KeyboardEvent) => {
-      const k = e.key;
-      if (/^[0-9.+\-*/()% ]$/.test(k)) {
-        setExpr((x) => x + k);
-      } else if (k === "Enter") {
-        equal();
-      } else if (k === "Backspace") {
-        back();
-      } else if (k.toLowerCase() === "c") {
-        clear();
-      }
+  const appLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Standard Calculator — Tools Hub",
+    url: toolUrl,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    isAccessibleForFree: true,
+    inLanguage: ["en", "bn"],
+    description:
+      "Perform basic arithmetic operations online — addition, subtraction, multiplication, division, and percentages. Free, fast, and offline-capable.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Perform basic arithmetic: add, subtract, multiply, divide",
+      "Supports percentages, square roots, and memory functions",
+      "Keyboard input support (use numpad/shortcuts)",
+      "Calculation history with clear/reset options",
+      "Copy result with one click",
+      "Dark/light mode support",
+      "Responsive design for mobile & desktop",
+      "Offline-capable — works without internet",
+      "Completely free and privacy-friendly (no data stored)",
+    ],
+    creator: {
+      "@type": "Person",
+      name: "Tariqul Islam",
+      url: "https://tariqul.dev",
     },
-    [equal, back, clear],
-  );
+    potentialAction: {
+      "@type": "UseAction",
+      target: toolUrl,
+      name: "Calculate numbers online",
+    },
+  };
 
-  // effect depends on the stable onKey
-  React.useEffect(() => {
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onKey]);
+  const crumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
+      { "@type": "ListItem", position: 2, name: "Calculators", item: `${siteURL}/tools/calc` },
+      { "@type": "ListItem", position: 3, name: "Standard Calculator", item: toolUrl },
+    ],
+  };
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is a standard calculator?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A standard calculator performs basic arithmetic operations such as addition, subtraction, multiplication, and division. It is suitable for everyday calculations.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Does this calculator work offline?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. The calculator runs entirely in your browser and works even without an internet connection.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I use my keyboard or numpad?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. You can type numbers and operators directly using your keyboard or numpad for faster input.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I copy or save my results?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. You can copy the result with one click and also review previous calculations in the history panel.",
+        },
+      },
+    ],
+  };
 
   return (
-    <>
-      <ToolPageHeader
-        icon={Calculator}
-        title="Standard Calculator"
-        description="Type freely; preview updates live. Use ANS to reuse the last result."
-        actions={
-          <>
-            <ResetButton onClick={clear} />
-            <ActionButton icon={Copy} label="Copy Expr" onClick={copyExpr} />
-            <ActionButton
-              variant="default"
-              icon={Copy}
-              label="Copy Result"
-              onClick={copyAns}
-              disabled={!ans && !expr}
-            />
-          </>
-        }
-      />
+    <div className="space-y-4">
+      <JsonLd data={appLd} />
+      <JsonLd data={crumbsLd} />
+      <JsonLd data={faqLd} />
 
-      {/* Quick nav */}
-      <GlassCard className="px-4 py-3">
-        <div className="mb-1 flex flex-wrap gap-2 items-center justify-between">
-          <div className="flex flex-wrap gap-2">
-            <LinkButton
-              size="sm"
-              variant="default"
-              icon={Calculator}
-              label="Standard"
-              href="/tools/calc/standard"
-            />
-            <LinkButton
-              size="sm"
-              icon={FunctionSquare}
-              label="Scientific"
-              href="/tools/calc/scientific"
-            />
-            <LinkButton size="sm" icon={Percent} label="Percentage" href="/tools/calc/percentage" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <ActionButton size="sm" icon={Delete} label="Back" onClick={back} />
-            <ActionButton
-              size="sm"
-              icon={Calculator}
-              variant="default"
-              label="Equals"
-              onClick={equal}
-              aria-label="Equals"
-            />
-          </div>
-        </div>
-      </GlassCard>
-
-      <Separator className="my-4" />
-
-      <MotionGlassCard>
-        {/* Calculator */}
-        <div className="grid grid-cols-4 gap-3">
-          {/* Display spans all columns */}
-          <Display value={expr || "0"} hint={ans ? `= ${ans}` : ""} />
-
-          {/* Top row */}
-          <CalcButton
-            onClick={clear}
-            variantIntent="danger"
-            className="col-span-2"
-            title="All Clear (C)"
-          >
-            <Eraser className="mr-2 h-4 w-4" />
-            AC
-          </CalcButton>
-          <CalcButton onClick={back} variantIntent="accent" title="Delete (Backspace)">
-            <Delete className="mr-2 h-4 w-4" />
-            DEL
-          </CalcButton>
-          <CalcButton onClick={() => push("/")} variantIntent="accent" title="Divide">
-            <Divide className="h-4 w-4" />
-          </CalcButton>
-
-          {/* Digits & ops grid */}
-          {["7", "8", "9", "*", "4", "5", "6", "-", "1", "2", "3", "+", "0", ".", "(", ")"].map(
-            (t) => (
-              <CalcButton
-                key={t}
-                onClick={() => push(t)}
-                variantIntent={["*", "-", "+"].includes(t) ? "accent" : "ghost"}
-                title={t === "*" ? "Multiply" : t}
-              >
-                {t === "*" ? <X className="h-4 w-4" /> : t}
-              </CalcButton>
-            ),
-          )}
-
-          {/* Bottom row */}
-          <CalcButton onClick={() => push("%")} variantIntent="ghost" title="Percent">
-            %
-          </CalcButton>
-          <CalcButton
-            onClick={() => push("ANS")}
-            onDoubleClick={() => push(lastAns)}
-            variantIntent="ghost"
-            title="Insert ANS (double-click to insert numeric)"
-          >
-            ANS
-          </CalcButton>
-          <CalcButton
-            className="col-span-2"
-            variantIntent="primary"
-            onClick={equal}
-            title="Equals (Enter)"
-          >
-            <Equal className="mr-2 h-4 w-4" />
-            Equals
-          </CalcButton>
-        </div>
-      </MotionGlassCard>
-    </>
+      <StandardCalculatorClient />
+    </div>
   );
 }
