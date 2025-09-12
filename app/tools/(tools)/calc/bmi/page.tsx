@@ -9,7 +9,6 @@ export const metadata = buildMetadata({
     "Free online BMI Calculator. Calculate your Body Mass Index instantly using height and weight. Supports metric/imperial units, shows BMI categories, and provides healthy weight ranges.",
   path: "/tools/calc/bmi",
   keywords: [
-    // core
     "BMI calculator",
     "body mass index calculator",
     "BMI chart",
