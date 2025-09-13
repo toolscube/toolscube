@@ -17,6 +17,7 @@ import {
   ResetButton,
 } from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,6 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   base64ToU8,
@@ -39,7 +39,7 @@ import {
 
 export default function Base64Client() {
   const [tab, setTab] = React.useState<TabKey>("text");
-  const [mode, setMode] = React.useState<Mode>("encode");
+  const [mode, setMode] = React.useState<Base64Mode>("encode");
   const [urlSafe, setUrlSafe] = React.useState<boolean>(false);
   const [noPadding, setNoPadding] = React.useState<boolean>(false);
   const [wrapCol, setWrapCol] = React.useState<number>(0);
@@ -222,38 +222,32 @@ export default function Base64Client() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center justify-between rounded-lg border p-2">
-              <div className="mr-3">
-                <p className="text-sm font-medium leading-none">URL-safe</p>
-                <p className="text-xs text-muted-foreground">
-                  Use <code>-</code> and <code>_</code> instead of <code>+</code>/<code>/</code>.
-                </p>
-              </div>
-              <Switch checked={urlSafe} onCheckedChange={setUrlSafe} />
-            </div>
+            <SwitchRow
+              label="URL-safe"
+              hint="Use - and _ instead of +//."
+              className="w-full sm:w-auto"
+              checked={urlSafe}
+              onCheckedChange={setUrlSafe}
+            />
 
-            <div className="flex items-center justify-between rounded-lg border p-2">
-              <div className="mr-3">
-                <p className="text-sm font-medium leading-none">No padding</p>
-                <p className="text-xs text-muted-foreground">
-                  Remove trailing <code>=</code> signs.
-                </p>
-              </div>
-              <Switch checked={noPadding} onCheckedChange={setNoPadding} />
-            </div>
+            <SwitchRow
+              hint="Remove trailing &gt;= signs."
+              label="No padding"
+              className="w-full sm:w-auto"
+              checked={noPadding}
+              onCheckedChange={setNoPadding}
+            />
 
-            <div className="flex items-center gap-2">
-              <InputField
-                label="Line wrap"
-                id="wrap"
-                type="number"
-                min={0}
-                placeholder="0 (off)"
-                value={wrapCol || ""}
-                onChange={(e) => setWrapCol(Math.max(0, Number(e.target.value) || 0))}
-                className="w-28"
-              />
-            </div>
+            <InputField
+              label="Line wrap"
+              id="wrap"
+              type="number"
+              min={0}
+              placeholder="0 (off)"
+              value={wrapCol || ""}
+              onChange={(e) => setWrapCol(Math.max(0, Number(e.target.value) || 0))}
+              className="w-full sm:w-28"
+            />
           </div>
         </div>
       </GlassCard>

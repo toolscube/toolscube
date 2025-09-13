@@ -185,7 +185,7 @@ export default function CaseConverterClient() {
           {/* Pipeline toggles */}
           <div className="space-y-2">
             <Label className="text-sm">Clean-up Pipeline</Label>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+            <div className="grid sm:grid-cols-2 gap-2 md:grid-cols-3">
               <SwitchRow
                 label="Trim ends"
                 checked={toggles.trim}

@@ -1,5 +1,7 @@
+/** biome-ignore-all lint/correctness/noUnusedVariables: <> */
+
 // Base64 Encoder / Decoder
-type Mode = "encode" | "decode";
+type Base64Mode = "encode" | "decode";
 type TabKey = "text" | "file";
 
 type FileInfo = {
@@ -33,6 +35,8 @@ type PipelineToggle =
 // slugify
 type DelimiterChar = "-" | "_" | "";
 type DelimiterKey = "dash" | "underscore" | "none";
+type SlugifyMode = "single" | "batch";
+type PresetKey = "seo" | "github" | "id" | "raw";
 
 type Options = {
   delimiter: DelimiterChar;

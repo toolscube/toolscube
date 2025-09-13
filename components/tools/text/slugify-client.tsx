@@ -16,11 +16,10 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { delimiterFromKey, slugify } from "@/lib/utils/text/slugify";
 
-type Mode = "single" | "batch";
-type PresetKey = "seo" | "github" | "id" | "raw";
+
 
 export default function SlugifyPage() {
-  const [mode, setMode] = React.useState<Mode>("single");
+  const [mode, setMode] = React.useState<SlugifyMode>("single");
   const [input, setInput] = React.useState<string>("");
   const [batchInput, setBatchInput] = React.useState<string>("");
   const [output, setOutput] = React.useState<string>("");
@@ -168,7 +167,7 @@ export default function SlugifyPage() {
             <ResetButton className="ml-auto" onClick={resetAll} />
           </div>
 
-          <div className="flex items-start gap-4 flex-wrap">
+          <div className="flex items-end gap-4 flex-wrap">
             <SelectField
               label="Delimiter"
               placeholder="Choose"
@@ -192,14 +191,14 @@ export default function SlugifyPage() {
             />
 
             <SwitchRow
-              className="ml-auto"
+              className="ml-auto w-full sm:w-auto"
               label="Live mode"
               hint="Apply changes as you type."
               checked={live}
               onCheckedChange={setLive}
             />
 
-            <div className="grid grid-cols-2 gap-3 w-full">
+            <div className="grid sm:grid-cols-2 gap-3 w-full">
               <SwitchRow label="Lowercase" checked={lowercase} onCheckedChange={setLowercase} />
               <SwitchRow label="Trim edges" checked={trim} onCheckedChange={setTrim} />
               <SwitchRow
@@ -252,7 +251,7 @@ export default function SlugifyPage() {
       <Separator />
 
       {/* Tabs: Single / Batch */}
-      <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="w-full">
+      <Tabs value={mode} onValueChange={(v) => setMode(v as SlugifyMode)} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="single" className="gap-2">
             <Type className="h-4 w-4" /> Single
