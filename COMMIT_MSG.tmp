@@ -1,0 +1,8 @@
+feat(ux): enable smooth scrolling and update QR component
+
+This commit introduces smooth scrolling for a better user experience and includes minor updates to the QR code component.
+
+Changes:
+- Added `scroll-smooth` to the main layout for smoother navigation.
+- Updated the QR code component to ignore a `dangerouslySetInnerHTML` linting warning.
+- Performed minor code cleanup in the QR code component.
