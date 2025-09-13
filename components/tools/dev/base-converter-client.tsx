@@ -425,7 +425,7 @@ export default function BaseConverterClient() {
             <div className="rounded-lg border p-3">
               <div className="mb-2 text-sm font-medium">Converted</div>
               <div className="rounded-md border bg-muted/30 p-2">
-                <code className="block max-h-[140px] overflow-auto break-words font-mono text-xs">
+                <code className="block max-h-[140px] overflow-auto break-words text-xs">
                   {quickOut || "—"}
                 </code>
               </div>
@@ -671,9 +671,7 @@ function ResultCard({
         <CopyButton size="sm" getText={() => onCopyText} />
       </div>
       <div className="rounded-md border bg-muted/30 p-2">
-        <code className="block max-h-[140px] overflow-auto break-words font-mono text-xs">
-          {value}
-        </code>
+        <code className="block max-h-[140px] overflow-auto break-words text-xs">{value}</code>
       </div>
     </div>
   );

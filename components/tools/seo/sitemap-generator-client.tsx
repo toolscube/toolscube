@@ -733,7 +733,7 @@ export default function SitemapGeneratorClient() {
             <TextareaField
               readOnly
               rows={16}
-              textareaClassName="font-mono text-sm"
+              textareaClassName="text-sm"
               value={preview ? preview.xml : "<urlset />"}
             />
             <div className="flex flex-wrap gap-2">

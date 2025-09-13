@@ -495,7 +495,7 @@ for (const m of matches) {
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Preview</div>
                   <div className="rounded-md border bg-muted/30 p-3">
-                    <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-sm">
+                    <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words text-sm">
                       {replaced}
                     </pre>
                   </div>
@@ -561,7 +561,7 @@ for (const m of matches) {
                   onCheckedChange={(v) => setLineFilterKeep(Boolean(v))}
                 />
                 <div className="rounded-md border bg-muted/30 p-3">
-                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-sm">
+                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words text-sm">
                     {(() => {
                       const rx = buildRegex();
                       if (!rx) return "";

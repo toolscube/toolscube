@@ -570,7 +570,7 @@ const EditorPanel = React.forwardRef<
         value={value}
         onChange={onChange}
         textareaClassName={cn(
-          "min-h-[360px] resize-none rounded-md border bg-background/70 font-mono text-sm",
+          "min-h-[360px] resize-none rounded-md border bg-background/70 text-sm",
           softWrap ? "whitespace-pre-wrap" : "whitespace-pre",
         )}
         placeholder="Start typing your Markdown here… (paste images directly)"
@@ -654,7 +654,7 @@ function buildMarkdownComponents(mdx: MDXProvided): Components {
 
   const DefaultCodeBlock = ({ children }: { children?: React.ReactNode }) => (
     <pre className="overflow-auto rounded-lg bg-muted/60 p-3">
-      <code className="font-mono text-xs">{children}</code>
+      <code className="text-xs">{children}</code>
     </pre>
   );
 

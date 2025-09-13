@@ -578,7 +578,7 @@ export default function UuidNanoidClient() {
                     readOnly
                     value={list.join("\n")}
                     onValueChange={() => {}}
-                    textareaClassName="min-h-[260px] font-mono text-xs"
+                    textareaClassName="min-h-[260px] text-xs"
                   />
                 </div>
               </>

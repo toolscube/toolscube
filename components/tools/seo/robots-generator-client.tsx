@@ -596,7 +596,7 @@ export default function RobotsGeneratorClient() {
               id="preview"
               readOnly
               value={output}
-              textareaClassName="min-h-[320px] font-mono text-sm"
+              textareaClassName="min-h-[320px] text-sm"
             />
             <div className="flex flex-wrap gap-2">
               <CopyButton getText={output} />

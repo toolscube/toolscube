@@ -392,11 +392,7 @@ export default function SchemaGeneratorClient() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
-            <TextareaField
-              readOnly
-              textareaClassName="min-h-[320px] font-mono text-sm"
-              value={output}
-            />
+            <TextareaField readOnly textareaClassName="min-h-[320px] text-sm" value={output} />
             <div className="flex flex-wrap gap-2">
               <CopyButton size="sm" getText={output} />
               <ExportTextButton

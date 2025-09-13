@@ -142,7 +142,6 @@
     @apply bg-background text-foreground;
   }
 
-  /* Headings & display */
   h1,
   h2,
   h3,
@@ -166,7 +165,6 @@
     }
   }
 
-  /* Code & monospaced */
   code,
   pre,
   .font-mono {
@@ -182,7 +180,11 @@
     tab-size: 2;
   }
 
-  /* <pre> block defaults */
+  input,
+  textarea {
+    @apply font-mono;
+  }
+
   pre {
     overflow-x: auto;
     padding: 0.75rem 1rem;

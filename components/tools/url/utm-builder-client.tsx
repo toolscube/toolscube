@@ -242,13 +242,13 @@ export default function UTMBuilderClient() {
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <InputField
                 id="base-url"
                 placeholder="https://example.com/landing"
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
-                className="flex-1"
+                className="w-full md:flex-1"
               />
               <ActionButton
                 icon={FolderInput}
@@ -429,8 +429,8 @@ export default function UTMBuilderClient() {
               <Label className="flex items-center gap-2">
                 <Link2 className="h-4 w-4" /> Result URL
               </Label>
-              <div className="flex gap-2">
-                <InputField readOnly value={result} placeholder="—" className="font-mono flex-1" />
+              <div className="flex flex-wrap gap-2">
+                <InputField readOnly value={result} placeholder="—" className="w-full md:flex-1" />
                 <CopyButton getText={() => result} disabled={!result} />
                 <LinkButton
                   disabled={!result}

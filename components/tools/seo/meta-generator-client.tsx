@@ -768,12 +768,7 @@ export default function MetaGeneratorClient() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
-            <TextareaField
-              readOnly
-              rows={16}
-              textareaClassName="font-mono text-sm"
-              value={output}
-            />
+            <TextareaField readOnly rows={16} textareaClassName="text-sm" value={output} />
             <div className="flex flex-wrap gap-2">
               <CopyButton size="sm" disabled={!output} getText={output} />
               <ExportTextButton
