@@ -34,15 +34,6 @@ import {
 } from "@/lib/utils/text/word-counter";
 import StatItem from "./stat-item";
 
-/* Quick Actions */
-type Action = {
-  key: string;
-  label: string;
-  run: () => void;
-  hotkey?: string;
-  span2?: boolean;
-};
-
 export default function WordCounterClient() {
   const [text, setText] = React.useState<string>("");
 
@@ -136,7 +127,7 @@ export default function WordCounterClient() {
       {/* Editor & Stats */}
       <section className="grid gap-4 md:grid-cols-2">
         <GlassCard className="p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Label className="text-sm font-medium">Your Text</Label>
             <div className="flex flex-wrap gap-2">
               <PasteButton

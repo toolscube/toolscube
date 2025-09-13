@@ -53,3 +53,10 @@ type Options = {
 
 // word counter
 type DensityRow = { word: string; count: number; percent: number };
+type Action = {
+  key: string;
+  label: string;
+  run: () => void;
+  hotkey?: string;
+  span2?: boolean;
+};

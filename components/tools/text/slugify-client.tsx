@@ -16,9 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { delimiterFromKey, slugify } from "@/lib/utils/text/slugify";
 
-
-
-export default function SlugifyPage() {
+export default function SlugifyClient() {
   const [mode, setMode] = React.useState<SlugifyMode>("single");
   const [input, setInput] = React.useState<string>("");
   const [batchInput, setBatchInput] = React.useState<string>("");
