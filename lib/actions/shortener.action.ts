@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { normalizeUrl } from "@/lib/normalize-url";
-import prisma from "../prisma";
+import { prisma } from "../prisma";
 
 const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 

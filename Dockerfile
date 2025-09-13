@@ -6,7 +6,9 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-c
   && rm -rf /var/lib/apt/lists/*
 
 ARG NEXT_PUBLIC_SITE_URL
+ARG DATABASE_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+ENV DATABASE_URL=$DATABASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY package*.json ./
