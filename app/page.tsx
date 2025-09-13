@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { useMemo } from "react";
 import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
+import { GridPattern } from "@/components/magicui/grid-pattern";
 import Footer from "@/components/shared/footer";
 import { Navbar } from "@/components/shared/navbar";
 import {
@@ -68,7 +69,8 @@ export default function HomePage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="flex flex-col items-center text-center space-y-6 my-20">
+      <section className="flex flex-col items-center text-center space-y-6 my-24">
+        <GridPattern />
         <div className="z-10 flex items-center justify-center">
           <div
             className={cn(
@@ -88,7 +90,7 @@ export default function HomePage() {
           for speed.
         </p>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 z-10">
           <Button asChild size="lg">
             <Link href="/tools" aria-label="Explore all tools">
               Explore Tools <ArrowRight className="ml-2 h-4 w-4" />
@@ -103,7 +105,7 @@ export default function HomePage() {
       </section>
 
       {/* Three-up feature row */}
-      <section className="mx-auto max-w-7xl px-2 pt-10">
+      <section className="mx-auto max-w-7xl px-2 pt-30">
         <div className="grid gap-4 md:grid-cols-3">
           <FeatureCard icon={<Rocket className="h-5 w-5" />} title="Blazing fast">
             Instant load, lightweight pages and cache‑friendly.
