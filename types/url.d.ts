@@ -1,4 +1,7 @@
+/** biome-ignore-all lint/correctness/noUnusedVariables: <> */
+
 // url shortener
+type RecentItem = { slug: string; url: string; createdAt: number };
 type ECC = "L" | "M" | "Q" | "H";
 
 // qr code

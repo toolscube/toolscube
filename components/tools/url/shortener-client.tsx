@@ -35,8 +35,6 @@ import { useQrExport } from "@/hooks/use-qr-export";
 import { createShort } from "@/lib/actions/shortener.action";
 import { timeAgo } from "@/lib/utils/time-ago";
 
-/* Types & LS helpers */
-type RecentItem = { slug: string; url: string; createdAt: number };
 const RECENT_KEY = "toolshub:shortener-v1";
 
 function loadRecent(): RecentItem[] {
@@ -190,7 +188,7 @@ export default function ShortenerClient() {
           )}
 
           {/* Compact Controls */}
-          <div className="grid w-full grid-cols-3 gap-2">
+          <div className="grid w-full grid-cols-2 md:grid-cols-3 gap-2 items-end">
             <InputField
               id="qr-size"
               type="number"
@@ -311,7 +309,7 @@ export default function ShortenerClient() {
       <GlassCard className="p-4">
         <div className="grid gap-2">
           <Label>Destination URL</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <InputField
               id="dest-url"
               type="url"
@@ -319,7 +317,7 @@ export default function ShortenerClient() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               inputClassName="bg-background/60 backdrop-blur"
-              className="flex-1"
+              className="w-full md:flex-1"
             />
             <ActionButton
               variant="default"
@@ -405,7 +403,7 @@ export default function ShortenerClient() {
                   </div>
 
                   {/* Right: actions */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
                     {/* Copy */}
                     <Tooltip>
                       <TooltipTrigger asChild>

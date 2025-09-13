@@ -107,7 +107,7 @@ export default function ToolsIndexPage() {
       </header>
 
       {/* Category tiles */}
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         {categories.map((c) => (
           <Link key={c.key} href={`#cat-${c.key}`} className="group focus:outline-none">
             <GlassCard>
