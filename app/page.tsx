@@ -1,22 +1,17 @@
-"use client";
-
 import {
   ArrowRight,
   Fingerprint,
   Github,
-  LayoutGrid,
   Lock,
   type LucideIcon,
-  Menu,
   MonitorSmartphone,
   Rocket,
-  Search,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
 import Footer from "@/components/shared/footer";
+import { Navbar } from "@/components/shared/navbar";
 import {
   Accordion,
   AccordionContent,
@@ -28,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTrigger } from "@/components/ui/sheet";
 import { ToolsData } from "@/data/tools";
 import { cn } from "@/lib/utils";
 
@@ -83,7 +77,6 @@ export default function HomePage() {
           >
             <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-600 hover:duration-300 hover:dark:text-neutral-400">
               <span>✨ Fast • Free • Privacy‑Friendly</span>
-              {/* <ArrowRightIcon className="ml-1 size-3 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5" /> */}
             </AnimatedShinyText>
           </div>
         </div>
@@ -248,104 +241,6 @@ export default function HomePage() {
 
       <Footer />
     </main>
-  );
-}
-
-function Navbar() {
-  return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/75 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="inline-flex items-center gap-2 font-semibold">
-            <LayoutGrid className="h-5 w-5" />
-            <span>Tools Hub</span>
-          </Link>
-          <nav className="ml-6 hidden items-center gap-6 text-sm md:flex">
-            <Link href="/tools" className="hover:opacity-80">
-              Tools
-            </Link>
-            <Link href="/tools/categories" className="hover:opacity-80">
-              Categories
-            </Link>
-            <Link href="/about" className="hover:opacity-80">
-              About
-            </Link>
-            <Link href="/sponsor" className="hover:opacity-80">
-              Sponsor
-            </Link>
-          </nav>
-        </div>
-
-        <div className="hidden items-center gap-2 md:flex">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/tools">
-              <Search className="mr-2 h-4 w-4" /> Find a tool
-            </Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/tools/new">New</Link>
-          </Button>
-          <Button asChild size="icon" variant="ghost" aria-label="GitHub">
-            <Link href="https://github.com/tariqul420/tools-hub" target="_blank" rel="noreferrer">
-              <Github className="h-5 w-5" />
-            </Link>
-          </Button>
-        </div>
-
-        {/* Mobile */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[88vw] sm:w-96">
-            <SheetHeader>
-              <div className="flex items-center justify-between">
-                <Link href="/" className="inline-flex items-center gap-2 font-semibold">
-                  <LayoutGrid className="h-5 w-5" />
-                  <span>Tools Hub</span>
-                </Link>
-                <SheetClose asChild>
-                  <Button variant="ghost" size="icon" aria-label="Close menu">
-                    <X className="h-5 w-5" />
-                  </Button>
-                </SheetClose>
-              </div>
-            </SheetHeader>
-            <div className="mt-6 grid gap-2">
-              <SheetClose asChild>
-                <Link href="/tools" className="rounded-md p-2 hover:bg-muted">
-                  Tools
-                </Link>
-              </SheetClose>
-              <SheetClose asChild>
-                <Link href="/tools/categories" className="rounded-md p-2 hover:bg-muted">
-                  Categories
-                </Link>
-              </SheetClose>
-              <SheetClose asChild>
-                <Link href="/about" className="rounded-md p-2 hover:bg-muted">
-                  About
-                </Link>
-              </SheetClose>
-              <SheetClose asChild>
-                <Link href="/sponsor" className="rounded-md p-2 hover:bg-muted">
-                  Sponsor
-                </Link>
-              </SheetClose>
-              <div className="pt-4">
-                <Button asChild className="w-full">
-                  <Link href="/tools">
-                    <Search className="mr-2 h-4 w-4" /> Find a tool
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-    </header>
   );
 }
 

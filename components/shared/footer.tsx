@@ -1,4 +1,4 @@
-import { Settings2 } from "lucide-react";
+import Image from "next/image";
 
 function Footer() {
   const navLinks = [
@@ -111,8 +111,8 @@ function Footer() {
   return (
     <footer className="py-6 px-4 sm:px-6 lg:px-8 font-inter relative overflow-hidden ">
       <div className="max-w-7xl mx-auto flex flex-col items-center relative z-10">
-        <div className="mb-6 flex items-center justify-center gap-4">
-          <Settings2 />
+        <div className="mb-6 flex items-center justify-center">
+          <Image src="/assets/logo-transplant.png" height={60} width={60} alt="Tools Hub Logo" />
           <span className="text-gray-900 dark:text-white text-3xl font-extrabold tracking-wide">
             Tools Hub
           </span>
