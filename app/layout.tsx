@@ -171,7 +171,7 @@ export default function RootLayout({
         <JsonLd data={siteLd} />
         <JsonLd data={orgLd} />
         <JsonLd data={navLd} />
-        <main className="max-w-7xl mx-auto">{children}</main>
+        <main>{children}</main>
         <Toaster position="top-right" />
       </body>
     </html>
