@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://naturalsefaa.com";
-const SITE_NAME = "Tools Hub • Natural Sefa";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://toolshub.tariqul.dev";
+const SITE_NAME = "Tools Hub";
 const SITE_TWITTER = "@toolshub";
-const DEFAULT_IMAGE = `${SITE_URL}/og/tools-hub-og.png`;
+const DEFAULT_IMAGE = `${SITE_URL}/assets/logo-tools-hub.png`;
 
 type BuildMetaInput = {
   title: string;

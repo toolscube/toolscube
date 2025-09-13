@@ -93,7 +93,7 @@ export default function ToolsIndexPage() {
   };
 
   return (
-    <main>
+    <main className="scroll-smooth">
       <JsonLd data={navLd} />
 
       {/* Hero */}
