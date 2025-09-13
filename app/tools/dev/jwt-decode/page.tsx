@@ -96,7 +96,12 @@ export default function Page() {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
-      { "@type": "ListItem", position: 2, name: "Developer", item: `${siteURL}/tools/dev` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Developer",
+        item: `${siteURL}/tools#cat-developer`,
+      },
       { "@type": "ListItem", position: 3, name: "JWT Decoder", item: toolUrl },
     ],
   };

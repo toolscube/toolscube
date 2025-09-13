@@ -1,448 +1,161 @@
-"use client";
+import JsonLd from "@/components/seo/json-ld";
+import TimestampConverterClient from "@/components/tools/dev/timestamp-converter-client";
+import { siteURL } from "@/lib/constants";
+import { buildMetadata } from "@/lib/seo";
 
-import { CalendarClock, Clock3, RefreshCw, Timer, TimerReset } from "lucide-react";
-import React from "react";
-import {
-  ActionButton,
-  CopyButton,
-  ExportCSVButton,
-  ExportTextButton,
-  ResetButton,
-} from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SelectField from "@/components/shared/form-fields/select-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { CardContent } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
+export const metadata = buildMetadata({
+  title: "Timestamp Converter",
+  description:
+    "Convert UNIX timestamps to human-readable dates and back. Supports seconds/milliseconds, UTC/local time, time zones, ISO/RFC formats, and copy/export.",
+  path: "/tools/dev/timestamp-converter",
+  keywords: [
+    "timestamp converter",
+    "unix timestamp",
+    "epoch time",
+    "epoch converter",
+    "seconds since epoch",
+    "milliseconds since epoch",
+    "timestamp to date",
+    "date to timestamp",
+    "ISO 8601 converter",
+    "RFC 3339 converter",
+    "parse ISO date",
+    "UTC to local time",
+    "timezone converter",
+    "DST safe time",
+    "current unix time",
+    "now timestamp",
+    "copy timestamp",
+    "format date string",
+    "developer tools",
+    "Tools Hub",
+    "online tools",
+    "Bangladesh",
+  ],
+});
 
-/* Types & Constants */
+export default function Page() {
+  const toolUrl = `${siteURL}/tools/dev/timestamp-converter`;
 
-type Unit = "seconds" | "milliseconds" | "microseconds" | "nanoseconds";
-type Direction = "toDate" | "toEpoch";
-
-const UNITS: { label: string; value: Unit; factor: number }[] = [
-  { label: "Seconds (10 digits)", value: "seconds", factor: 1_000 },
-  { label: "Milliseconds (13 digits)", value: "milliseconds", factor: 1 },
-  { label: "Microseconds (16 digits)", value: "microseconds", factor: 1 / 1_000 },
-  { label: "Nanoseconds (19 digits)", value: "nanoseconds", factor: 1 / 1_000_000 },
-];
-
-const TZ_PRESETS = [
-  "local",
-  "UTC",
-  "America/New_York",
-  "Europe/London",
-  "Europe/Berlin",
-  "Asia/Dhaka",
-  "Asia/Kolkata",
-  "Asia/Tokyo",
-  "Australia/Sydney",
-] as const;
-
-type PresetTz = (typeof TZ_PRESETS)[number];
-
-function isPresetTz(x: string): x is PresetTz {
-  return (TZ_PRESETS as readonly string[]).includes(x);
-}
-
-/* Helpers */
-
-function clampIntString(s: string, maxLen = 32) {
-  return s.replace(/[^\d-]/g, "").slice(0, maxLen);
-}
-
-function detectUnit(raw: string): Unit | null {
-  const len = raw.replace(/^-/, "").length;
-  if (len === 10) return "seconds";
-  if (len === 13) return "milliseconds";
-  if (len === 16) return "microseconds";
-  if (len === 19) return "nanoseconds";
-  return null;
-}
-
-function toMsFromEpoch(raw: string, unit: Unit): number | null {
-  if (!raw) return null;
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return null;
-
-  const match = UNITS.find((u) => u.value === unit);
-  if (!match) return null;
-
-  return Math.trunc(n * match.factor);
-}
-
-function safeDate(d: number | Date | null): Date | null {
-  if (d == null) return null;
-  const dt = d instanceof Date ? d : new Date(d);
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
-
-function fmtInTz(d: Date, timeZone: string) {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      timeZone: timeZone === "local" ? undefined : timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(d);
-  } catch {
-    return d.toString();
-  }
-}
-
-function shareUrl(params: Record<string, string>) {
-  const sp = new URLSearchParams(params);
-  return `${location.origin}${location.pathname}?${sp.toString()}`;
-}
-
-export default function TimestampConverterClient() {
-  // direction
-  const [dir, setDir] = React.useState<Direction>("toDate");
-
-  // inputs
-  const [stamp, setStamp] = React.useState("");
-  const [dateText, setDateText] = React.useState("");
-  const [tz, setTz] = React.useState<PresetTz>("local");
-  const [customTz, setCustomTz] = React.useState("");
-  const [unit, setUnit] = React.useState<Unit>("seconds");
-  const [autoDetect, setAutoDetect] = React.useState(true);
-  const [autoTick, setAutoTick] = React.useState(true);
-
-  // results
-  const [result, setResult] = React.useState<Record<string, string>>({});
-  const [error, setError] = React.useState<string | null>(null);
-
-  // hydrate from URL once
-  React.useEffect(() => {
-    try {
-      const sp = new URLSearchParams(location.search);
-      const _dir = (sp.get("dir") as Direction) || undefined;
-      const _t = sp.get("t") || "";
-      const _u = (sp.get("u") as Unit) || undefined;
-      const _tz = sp.get("tz") || undefined;
-
-      if (_dir) setDir(_dir);
-      if (_t) {
-        if (_dir === "toEpoch") setDateText(_t);
-        else setStamp(_t);
-      }
-      if (_u && UNITS.some((x) => x.value === _u)) setUnit(_u);
-
-      if (_tz) {
-        if (isPresetTz(_tz)) {
-          setTz(_tz); // fully typed safe
-        } else {
-          setTz("local");
-          setCustomTz(_tz);
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const run = React.useCallback(
-    (
-      _dir = dir,
-      _stamp = stamp,
-      _unit = unit,
-      _tz = tz,
-      _customTz = customTz,
-      _dateText = dateText,
-    ) => {
-      setError(null);
-      const zone = _tz === "local" ? (_customTz.trim() ? _customTz.trim() : "local") : _tz;
-
-      try {
-        if (_dir === "toDate") {
-          const chosenUnit = autoDetect ? (detectUnit(_stamp) ?? _unit) : _unit;
-          const ms = toMsFromEpoch(_stamp, chosenUnit);
-          const dt = safeDate(ms);
-          if (!dt) throw new Error("Invalid timestamp.");
-
-          const iso = dt.toISOString();
-          const locale = fmtInTz(dt, zone);
-          const utc = dt.toUTCString();
-
-          const s = Math.floor(dt.getTime() / 1000);
-          const msPrec = dt.getTime();
-          const micros = msPrec * 1000;
-          const nanos = msPrec * 1_000_000;
-
-          setResult({
-            "Detected unit": chosenUnit,
-            "Local/Zone": locale,
-            UTC: utc,
-            "ISO 8601": iso,
-            "Epoch (s)": String(s),
-            "Epoch (ms)": String(msPrec),
-            "Epoch (μs)": String(micros),
-            "Epoch (ns)": String(nanos),
-          });
-        } else {
-          const raw = _dateText.trim();
-          if (!raw) throw new Error("Enter a date/time (prefer ISO 8601).");
-
-          // We currently parse as-is; if no TZ info included, it's local time
-          const dt = safeDate(new Date(raw));
-          if (!dt) throw new Error("Unrecognized date/time.");
-
-          const ms = dt.getTime();
-          setResult({
-            "Input (parsed)": dt.toString(),
-            "ISO 8601": dt.toISOString(),
-            "Epoch (s)": String(Math.floor(ms / 1000)),
-            "Epoch (ms)": String(ms),
-            "Epoch (μs)": String(ms * 1000),
-            "Epoch (ns)": String(ms * 1_000_000),
-            "Rendered (zone)": fmtInTz(dt, zone),
-          });
-        }
-      } catch (e: unknown) {
-        setResult({});
-        setError(e instanceof Error ? e.message : "Conversion failed.");
-      }
+  const appLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Timestamp Converter — Tools Hub",
+    url: toolUrl,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web",
+    isAccessibleForFree: true,
+    inLanguage: ["en", "bn"],
+    description:
+      "Free online UNIX timestamp converter. Convert timestamps (seconds/ms) ↔ dates, view UTC/local, apply time zones, and copy/export results. ISO 8601 & RFC 3339 friendly.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Convert UNIX epoch ↔ human-readable date/time",
+      "Supports seconds and milliseconds timestamps",
+      "View in UTC and Local simultaneously",
+      "Choose arbitrary IANA time zones (e.g., Asia/Dhaka, UTC, America/New_York)",
+      "Parse/format ISO 8601 & RFC 3339 strings",
+      "Show weekday, ISO week number, and day of year",
+      "Current time (now) with live tick & copy",
+      "Copy individual fields; export CSV/JSON",
+      "Permalink to a specific timestamp",
+      "DST-safe, leap-year aware calculations",
+      "Offline-capable; privacy-first (runs in browser)",
+      "Responsive UI with dark mode",
+    ],
+    creator: {
+      "@type": "Person",
+      name: "Tariqul Islam",
+      url: "https://tariqul.dev",
     },
-    [dir, stamp, unit, tz, customTz, dateText, autoDetect],
-  );
+    potentialAction: {
+      "@type": "CalculateAction",
+      target: toolUrl,
+      name: "Convert UNIX timestamps online",
+    },
+    additionalProperty: [
+      {
+        "@type": "PropertyValue",
+        name: "Inputs",
+        value: "Epoch seconds/ms, ISO/RFC strings, date/time pickers",
+      },
+      {
+        "@type": "PropertyValue",
+        name: "Outputs",
+        value: "UTC, Local, selected time zone, ISO/RFC strings",
+      },
+    ],
+  };
 
-  // auto-tick "Now"
-  React.useEffect(() => {
-    if (!autoTick) return;
-    const id = setInterval(() => {
-      const now = new Date();
+  const crumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Developer",
+        item: `${siteURL}/tools#cat-developer`,
+      },
+      { "@type": "ListItem", position: 3, name: "Timestamp Converter", item: toolUrl },
+    ],
+  };
 
-      if (dir === "toDate") {
-        const nowSec = Math.floor(now.getTime() / 1000);
-        setStamp(String(nowSec));
-        run("toDate", String(nowSec), unit, tz, customTz, dateText);
-      } else {
-        const iso = now.toISOString();
-        setDateText(iso);
-        run("toEpoch", stamp, unit, tz, customTz, iso);
-      }
-    }, 1000);
-
-    return () => clearInterval(id);
-  }, [autoTick, dir, unit, tz, customTz, dateText, stamp, run]);
-
-  const unitOptions = UNITS.map((u) => ({ label: u.label, value: u.value }));
-  const tzOptions = TZ_PRESETS.map((z) => ({
-    label: z === "local" ? "Local time" : z,
-    value: z,
-  })) as Array<{ label: string; value: string }>;
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is a UNIX timestamp?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A UNIX timestamp is the number of seconds (or milliseconds) elapsed since 00:00:00 UTC on 1 January 1970, not counting leap seconds.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What’s the difference between seconds and milliseconds?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Seconds timestamps are 10-digit values (e.g., 1726200000). Milliseconds timestamps are 13-digit values (e.g., 1726200000000). The tool auto-detects and converts both.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Does the converter handle time zones and DST?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. You can view times in UTC, your local time, or a chosen IANA time zone. Conversions are DST-safe and leap-year aware.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I convert ISO 8601/RFC 3339 strings?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Paste an ISO/RFC string and the tool will parse it into epoch and formatted outputs in multiple zones.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is my data uploaded anywhere?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No. The converter runs locally in your browser. Nothing is sent to a server unless you export to a file on your device.",
+        },
+      },
+    ],
+  };
 
   return (
-    <>
-      <ToolPageHeader
-        title="Timestamp Converter"
-        description="Convert UNIX timestamps to human-readable dates"
-        icon={CalendarClock}
-        actions={
-          <>
-            <ResetButton onClick={resetAll} />
-            <CopyButton
-              getText={() =>
-                shareUrl({
-                  dir,
-                  t: dir === "toDate" ? stamp : dateText,
-                  u: unit,
-                  tz: tz === "local" ? customTz || "local" : tz,
-                })
-              }
-            />
-            <ExportCSVButton
-              variant="default"
-              filename="timestamp-conversion.csv"
-              getRows={() => Object.entries(result)}
-              disabled={!Object.keys(result).length}
-            />
-          </>
-        }
-      />
+    <div className="space-y-4">
+      <JsonLd data={appLd} />
+      <JsonLd data={crumbsLd} />
+      <JsonLd data={faqLd} />
 
-      <GlassCard>
-        <CardContent className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
-          {/* Left: Inputs */}
-          <div className="rounded-xl border p-4 space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <SelectField
-                id="direction"
-                label="Mode"
-                value={dir}
-                onValueChange={(v) => setDir(v as Direction)}
-                options={[
-                  { label: "Epoch → Date", value: "toDate" },
-                  { label: "Date → Epoch", value: "toEpoch" },
-                ]}
-                icon={Timer}
-              />
-              <SelectField
-                id="unit"
-                label="Unit"
-                value={unit}
-                onValueChange={(v) => setUnit(v as Unit)}
-                options={unitOptions}
-                disabled={dir !== "toDate" || autoDetect}
-                icon={TimerReset}
-              />
-            </div>
-
-            {dir === "toDate" ? (
-              <div className="flex items-end gap-4">
-                <InputField
-                  className="w-full"
-                  id="epoch"
-                  label="UNIX Timestamp"
-                  placeholder="e.g. 1704067200 (seconds), 1704067200000 (ms)…"
-                  value={stamp}
-                  onChange={(v) => setStamp(clampIntString(String(v ?? "")))}
-                />
-                <div className="flex items-center gap-1">
-                  <ActionButton
-                    label="Now"
-                    onClick={() => setStamp(String(Math.floor(Date.now() / 1000)))}
-                    icon={Clock3}
-                    variant="default"
-                  />
-                  <CopyButton getText={stamp} disabled={!stamp} />
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-end gap-4">
-                <InputField
-                  id="date"
-                  label="Date / Time"
-                  placeholder="ISO preferred (e.g., 2025-09-07T14:10:00Z or 2025-09-07 20:10)"
-                  value={dateText}
-                  onChange={(e) => setDateText(e.target.value)}
-                  className="w-full"
-                />
-                <div className="flex items-center gap-1">
-                  <ActionButton
-                    label="Now"
-                    onClick={() => setDateText(new Date().toISOString())}
-                    icon={Clock3}
-                    variant="default"
-                  />
-                  <CopyButton getText={dateText} disabled={!dateText} />
-                </div>
-              </div>
-            )}
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <SelectField
-                id="tz"
-                label="Time Zone (for rendering)"
-                value={tz}
-                onValueChange={(v) => {
-                  const val = String(v);
-                  if (isPresetTz(val)) setTz(val);
-                }}
-                options={tzOptions}
-                icon={RefreshCw}
-              />
-              <InputField
-                id="custom-tz"
-                label="Custom TZ (optional)"
-                placeholder="e.g., Asia/Dhaka"
-                value={customTz}
-                onChange={(v) => setCustomTz(String(v ?? ""))}
-                disabled={tz !== "local"}
-                hint={tz !== "local" ? "Disabled (using preset)" : "Overrides Local for display"}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="grid gap-3 sm:grid-cols-1">
-              <SwitchRow
-                label="Auto-detect unit"
-                checked={autoDetect}
-                onCheckedChange={setAutoDetect}
-                hint="10=sec, 13=ms, 16=μs, 19=ns"
-                disabled={dir !== "toDate"}
-              />
-              <SwitchRow
-                label="Tick 'Now' every second"
-                checked={autoTick}
-                onCheckedChange={setAutoTick}
-                hint={dir === "toDate" ? "Fills current epoch seconds" : "Fills current ISO time"}
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <ActionButton
-                variant="default"
-                label="Convert"
-                onClick={() => run()}
-                icon={CalendarClock}
-              />
-              <ExportTextButton
-                filename="timestamp-conversion.txt"
-                getText={() =>
-                  Object.entries(result)
-                    .map(([k, v]) => `${k}: ${v}`)
-                    .join("\n")
-                }
-                disabled={!Object.keys(result).length}
-              />
-            </div>
-          </div>
-
-          {/* Right: Results */}
-          <div className="rounded-xl border p-4">
-            <h3 className="mb-2 text-sm font-medium tracking-wide uppercase text-muted-foreground">
-              Result
-            </h3>
-
-            {!error && !Object.keys(result).length ? (
-              <div className="rounded-md border p-3 text-sm text-muted-foreground">
-                Enter a value and click <b>Convert</b>. Use <b>Now</b> for quick checks.
-              </div>
-            ) : null}
-
-            {error ? (
-              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
-              </div>
-            ) : (
-              <div className="grid gap-2">
-                {Object.entries(result).map(([k, v]) => (
-                  <div
-                    key={k}
-                    className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2"
-                  >
-                    <div className="min-w-[160px] text-xs text-muted-foreground">{k}</div>
-                    <div className="flex-1 truncate font-mono text-sm">{v}</div>
-                    <CopyButton size="sm" getText={v} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </GlassCard>
-    </>
+      <TimestampConverterClient />
+    </div>
   );
-
-  /* ------------------------------- Local helpers ------------------------------ */
-
-  function resetAll() {
-    setDir("toDate");
-    setStamp("");
-    setDateText("");
-    setTz("local");
-    setCustomTz("");
-    setUnit("seconds");
-    setAutoDetect(true);
-    setAutoTick(true);
-    setResult({});
-    setError(null);
-  }
 }

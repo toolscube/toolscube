@@ -1,312 +1,145 @@
-"use client";
+import JsonLd from "@/components/seo/json-ld";
+import PasswordGeneratorClient from "@/components/tools/dev/password-generator-client";
+import { siteURL } from "@/lib/constants";
+import { buildMetadata } from "@/lib/seo";
 
-import { Key, ShieldAlert, ShieldCheck } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ActionButton,
-  CopyButton,
-  ExportTextButton,
-  ResetButton,
-} from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import TextareaField from "@/components/shared/form-fields/textarea-field";
-import Stat from "@/components/shared/stat";
-import ToolPageHeader from "@/components/shared/tool-page-header";
+export const metadata = buildMetadata({
+  title: "Password Generator",
+  description:
+    "Generate secure random passwords and passphrases. Control length, character sets, entropy, and rules. Batch generate, copy, and export — all local and private.",
+  path: "/tools/dev/password-generator",
+  keywords: [
+    "password generator",
+    "secure password generator",
+    "random password",
+    "strong password",
+    "passphrase generator",
+    "entropy calculator",
+    "uppercase lowercase numbers symbols",
+    "avoid ambiguous characters",
+    "no similar characters",
+    "exclude lookalikes",
+    "must include rules",
+    "regex password rules",
+    "pronounceable passwords",
+    "diceware passphrase",
+    "batch password generator",
+    "copy password",
+    "export passwords",
+    "password length",
+    "password policy",
+    "developer tools",
+    "Tools Hub",
+    "online tools",
+    "Bangladesh",
+  ],
+});
 
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
+export default function Page() {
+  const toolUrl = `${siteURL}/tools/dev/password-generator`;
 
-type GenFlags = {
-  upper: boolean;
-  lower: boolean;
-  numbers: boolean;
-  symbols: boolean;
-  excludeAmbiguous: boolean;
-  requireEachSet: boolean;
-};
+  const appLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Password Generator — Tools Hub",
+    url: toolUrl,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web",
+    isAccessibleForFree: true,
+    inLanguage: ["en", "bn"],
+    description:
+      "Create strong random passwords or passphrases with customizable length, character sets, entropy estimates, and policy rules. Batch generate, copy, and export locally.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Random passwords and passphrases (Diceware-style)",
+      "Length control with live entropy estimate (bits)",
+      "Character set toggles: upper/lower, digits, symbols",
+      "Exclude ambiguous/lookalike chars (O/0, l/1/I, etc.)",
+      "Must-include rules & custom regex policy checks",
+      "Pronounceable option for easier typing",
+      "Batch generation with copy-all and per-line copy",
+      "Export to CSV/JSON/TXT; print-friendly sheet",
+      "One-click regenerate & clipboard integration",
+      "Autosave settings; dark mode; responsive UI",
+      "Offline, privacy-first: runs entirely in your browser",
+    ],
+    creator: {
+      "@type": "Person",
+      name: "Tariqul Islam",
+      url: "https://tariqul.dev",
+    },
+    potentialAction: {
+      "@type": "CreateAction",
+      target: toolUrl,
+      name: "Generate a secure password",
+    },
+    additionalProperty: [
+      { "@type": "PropertyValue", name: "Outputs", value: "Passwords / passphrases with entropy" },
+      { "@type": "PropertyValue", name: "Export", value: "CSV, JSON, TXT" },
+    ],
+  };
 
-const DEFAULT_SYMBOLS = `!@#$%^&*()-_=+[]{};:,.<>/?`;
-const AMBIGUOUS = "0OoIlI|`'\"{}[]()<>";
+  const crumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Tools", item: `${siteURL}/tools` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Developer",
+        item: `${siteURL}/tools#cat-developer`,
+      },
+      { "@type": "ListItem", position: 3, name: "Password Generator", item: toolUrl },
+    ],
+  };
 
-function uniqueChars(s: string): string {
-  return Array.from(new Set(s.split(""))).join("");
-}
-
-function buildCharset(flags: GenFlags, customSymbols: string): string {
-  const U = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const L = "abcdefghijklmnopqrstuvwxyz";
-  const N = "0123456789";
-  const S = customSymbols || DEFAULT_SYMBOLS;
-
-  let chars = "";
-  if (flags.upper) chars += U;
-  if (flags.lower) chars += L;
-  if (flags.numbers) chars += N;
-  if (flags.symbols) chars += S;
-  if (!chars) chars = L;
-
-  if (flags.excludeAmbiguous) {
-    const amb = new Set(AMBIGUOUS.split(""));
-    chars = chars
-      .split("")
-      .filter((c) => !amb.has(c))
-      .join("");
-  }
-
-  return uniqueChars(chars);
-}
-
-// Rejection-sampling to avoid modulo bias
-function randInt(maxExclusive: number): number {
-  if (maxExclusive <= 0) return 0;
-  const maxUint = 0xffffffff;
-  const limit = Math.floor((maxUint + 1) / maxExclusive) * maxExclusive;
-  const buf = new Uint32Array(1);
-  while (true) {
-    crypto.getRandomValues(buf);
-    const x = buf[0];
-    if (x < limit) return x % maxExclusive;
-  }
-}
-
-function shuffleInPlace<T>(arr: T[]): T[] {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = randInt(i + 1);
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function pick(charset: string): string {
-  return charset.charAt(randInt(charset.length));
-}
-
-function ensureAtLeastOneFromEach(
-  length: number,
-  flags: GenFlags,
-  charset: string,
-  customSymbols: string,
-): string {
-  const req: string[] = [];
-  if (flags.upper) req.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-  if (flags.lower) req.push("abcdefghijklmnopqrstuvwxyz");
-  if (flags.numbers) req.push("0123456789");
-  if (flags.symbols) req.push(customSymbols || DEFAULT_SYMBOLS);
-
-  const out: string[] = [];
-  if (flags.requireEachSet) {
-    for (const set of req) {
-      const setFiltered = charset
-        .split("")
-        .filter((c) => set.includes(c))
-        .join("");
-      if (setFiltered.length > 0) out.push(pick(setFiltered));
-    }
-  }
-  // Fill the rest
-  while (out.length < length) out.push(pick(charset));
-  return shuffleInPlace(out).join("");
-}
-
-function entropyBits(length: number, charsetSize: number): number {
-  return length * Math.log2(Math.max(1, charsetSize));
-}
-
-function strengthLabel(bits: number): { label: string; tone: "ok" | "warn" | "good" } {
-  if (bits < 60) return { label: "Weak", tone: "warn" };
-  if (bits < 80) return { label: "Okay", tone: "ok" };
-  if (bits < 100) return { label: "Strong", tone: "good" };
-  return { label: "Very strong", tone: "good" };
-}
-
-export default function PasswordGeneratorPage() {
-  const [length, setLength] = useState<number>(16);
-  const [count, setCount] = useState<number>(18);
-  const [flags, setFlags] = useState<GenFlags>({
-    upper: true,
-    lower: true,
-    numbers: true,
-    symbols: false,
-    excludeAmbiguous: true,
-    requireEachSet: true,
-  });
-  const [customSymbols, setCustomSymbols] = useState<string>(DEFAULT_SYMBOLS);
-  const [autoRun, setAutoRun] = useState<boolean>(true);
-  const [passwords, setPasswords] = useState<string[]>([]);
-
-  const charset = useMemo(() => buildCharset(flags, customSymbols), [flags, customSymbols]);
-  const bits = useMemo(() => entropyBits(length, charset.length), [length, charset.length]);
-  const strength = useMemo(() => strengthLabel(bits), [bits]);
-
-  const run = useCallback(() => {
-    const out: string[] = [];
-    for (let i = 0; i < Math.max(1, count); i++) {
-      out.push(ensureAtLeastOneFromEach(Math.max(4, length), flags, charset, customSymbols));
-    }
-    setPasswords(out);
-  }, [count, length, flags, charset, customSymbols]);
-
-  useEffect(() => {
-    if (autoRun) run();
-  }, [autoRun, run]);
-
-  function resetAll() {
-    setLength(16);
-    setCount(18);
-    setFlags({
-      upper: true,
-      lower: true,
-      numbers: true,
-      symbols: false,
-      excludeAmbiguous: true,
-      requireEachSet: true,
-    });
-    setCustomSymbols(DEFAULT_SYMBOLS);
-    setPasswords([]);
-    setAutoRun(true);
-  }
-
-  const allText = useMemo(() => passwords.join("\n"), [passwords]);
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What makes a password strong?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Length and randomness are key. Use 12–16+ characters and a mix of character sets. The tool shows an entropy estimate to help you gauge strength.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Are the generated passwords stored or uploaded?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No. Passwords are generated locally in your browser. Nothing is sent to a server unless you explicitly export to a file on your device.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is a passphrase and when should I use it?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A passphrase is a sequence of random words (e.g., Diceware). It can be easier to remember while still offering high entropy if you include enough words.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I enforce custom password policies?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. You can require certain character classes and even use custom regex checks to ensure generated passwords meet your policy.",
+        },
+      },
+    ],
+  };
 
   return (
-    <>
-      <ToolPageHeader
-        icon={Key}
-        title="Password Generator"
-        description="Secure, customizable passwords with entropy and bias‑free randomness."
-        actions={
-          <>
-            <ResetButton onClick={resetAll} />
-            <CopyButton getText={() => allText} disabled={!allText} />
-            <ExportTextButton
-              filename="passwords.txt"
-              getText={() => allText || ""}
-              disabled={!allText}
-            />
-            <ActionButton variant="default" label="Generate" icon={Key} onClick={run} />
-          </>
-        }
-      />
+    <div className="space-y-4">
+      <JsonLd data={appLd} />
+      <JsonLd data={crumbsLd} />
+      <JsonLd data={faqLd} />
 
-      {/* Quick stats */}
-      <div className="mb-4 grid gap-3 sm:grid-cols-4">
-        <Stat label="Count" value={count} />
-        <Stat label="Length" value={length} />
-        <Stat label="Charset" value={charset.length} hint="unique characters" />
-        <Stat
-          label="Entropy"
-          value={`${bits.toFixed(1)} bits`}
-          hint={strength.label}
-          Icon={strength.tone === "warn" ? ShieldAlert : ShieldCheck}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Left: Settings */}
-        <GlassCard>
-          <CardHeader>
-            <CardTitle className="text-base">Settings</CardTitle>
-            <CardDescription>Length, count, character sets, and rules.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <InputField
-                label="Length"
-                type="number"
-                min={4}
-                max={128}
-                value={String(length)}
-                onChange={(e) => setLength(Math.min(128, Math.max(4, Number(e.target.value) || 4)))}
-              />
-              <InputField
-                label="Count"
-                type="number"
-                min={1}
-                max={100}
-                value={String(count)}
-                onChange={(e) => setCount(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
-              />
-            </div>
-
-            <SwitchRow
-              label="Uppercase (A–Z)"
-              checked={flags.upper}
-              onCheckedChange={(v) => setFlags((f) => ({ ...f, upper: Boolean(v) }))}
-            />
-            <SwitchRow
-              label="Lowercase (a–z)"
-              checked={flags.lower}
-              onCheckedChange={(v) => setFlags((f) => ({ ...f, lower: Boolean(v) }))}
-            />
-            <SwitchRow
-              label="Numbers (0–9)"
-              checked={flags.numbers}
-              onCheckedChange={(v) => setFlags((f) => ({ ...f, numbers: Boolean(v) }))}
-            />
-            <SwitchRow
-              label="Symbols"
-              checked={flags.symbols}
-              onCheckedChange={(v) => setFlags((f) => ({ ...f, symbols: Boolean(v) }))}
-            />
-            <TextareaField
-              label="Custom symbols"
-              value={customSymbols}
-              onValueChange={setCustomSymbols}
-              textareaClassName="min-h-[64px] font-mono"
-              placeholder={DEFAULT_SYMBOLS}
-              disabled={!flags.symbols}
-            />
-
-            <Separator />
-
-            <SwitchRow
-              label="Exclude ambiguous characters"
-              hint="Avoid 0/O, 1/l/I, brackets, angle brackets, quotes, etc."
-              checked={flags.excludeAmbiguous}
-              onCheckedChange={(v) => setFlags((f) => ({ ...f, excludeAmbiguous: Boolean(v) }))}
-            />
-            <SwitchRow
-              label="Require at least one from each selected set"
-              checked={flags.requireEachSet}
-              onCheckedChange={(v) => setFlags((f) => ({ ...f, requireEachSet: Boolean(v) }))}
-            />
-
-            <Separator />
-
-            <SwitchRow
-              label="Auto‑generate"
-              checked={autoRun}
-              onCheckedChange={(v) => setAutoRun(Boolean(v))}
-            />
-          </CardContent>
-        </GlassCard>
-
-        {/* Right: Output */}
-        <GlassCard className="shadow-sm lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Generated Passwords</CardTitle>
-            <CardDescription>Click a copy button or export all as a text file.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2">
-            {passwords.length === 0 ? (
-              <div className="rounded-md border p-3 text-sm text-muted-foreground">
-                No passwords yet. Click <em>Generate</em> or enable Auto‑generate.
-              </div>
-            ) : null}
-            {passwords.map((pwd, i) => (
-              <div
-                key={`pwd-${i as number}`}
-                className="flex items-center justify-between rounded-md border p-3"
-              >
-                <span className="font-mono text-sm break-all">{pwd}</span>
-                <CopyButton size="sm" getText={() => pwd} />
-              </div>
-            ))}
-          </CardContent>
-        </GlassCard>
-      </div>
-    </>
+      <PasswordGeneratorClient />
+    </div>
   );
 }
