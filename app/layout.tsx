@@ -66,13 +66,13 @@ export const metadata: Metadata = {
     alternateLocale: ["bn_BD"],
     images: [
       {
-        url: `${siteURL}/og/tools-hub-og.png`,
+        url: `${siteURL}/assets/logo-tools-hub.png`,
         width: 1200,
         height: 630,
         alt: "Tools Hub",
       },
       {
-        url: `${siteURL}/og/tools-hub-square.png`,
+        url: `${siteURL}/assets/logo-tools.png`,
         width: 800,
         height: 800,
         alt: "Tools Hub",
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
     title: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
     description:
       "Shorten links, convert files, optimize images, and more. 100% free and privacy-first.",
-    images: [`${siteURL}/og/tools-hub-og.png`],
+    images: [`${siteURL}/assets/logo-rounded.webp`],
   },
   robots: {
     index: true,
@@ -107,7 +107,13 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [{ url: "/favicon.ico" }],
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/assets/logo-rounded.webp" },
+      { url: "/assets/logo-tools-hub.png" },
+      { url: "/assets/logo-tools.png" },
+      { url: "/assets/logo-corner.png" },
+    ],
   },
 };
 
@@ -165,7 +171,7 @@ export default function RootLayout({
         <JsonLd data={siteLd} />
         <JsonLd data={orgLd} />
         <JsonLd data={navLd} />
-        <main className="mx-auto">{children}</main>
+        <main className="max-w-7xl mx-auto">{children}</main>
         <Toaster position="top-right" />
       </body>
     </html>

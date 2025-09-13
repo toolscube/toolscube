@@ -32,7 +32,7 @@ export function NavMain({
   const pathname = usePathname();
 
   const isActiveItems = (url: string) =>
-    url === "/admin" ? pathname === url : pathname.startsWith(url);
+    url === "/tools" ? pathname === url : pathname.startsWith(url);
 
   return (
     <SidebarGroup>
