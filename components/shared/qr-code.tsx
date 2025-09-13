@@ -99,11 +99,8 @@ export function QRCodeBox({
   return (
     <div className={className}>
       {format === "svg" ? (
-        <div
-          className={svgClassName}
-          dangerouslySetInnerHTML={{ __html: svgMarkup || "<svg/>" }}
-          aria-label="QR SVG"
-        />
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: <>
+        <div className={svgClassName} dangerouslySetInnerHTML={{ __html: svgMarkup || "<svg/>" }} />
       ) : (
         <canvas
           ref={canvasRef}
@@ -117,7 +114,7 @@ export function QRCodeBox({
   );
 }
 
-/* logo overlay helper (canvas only) */
+/* logo overlay helper */
 async function overlayLogo(
   canvas: HTMLCanvasElement,
   cfg: { src: string; sizePct: number; roundedPct: number; pad: number },
@@ -136,7 +133,6 @@ async function overlayLogo(
       const y = Math.round(h / 2 - size / 2);
       const r = Math.round((size * cfg.roundedPct) / 100);
 
-      // white rounded background with padding
       const bgX = x - cfg.pad;
       const bgY = y - cfg.pad;
       const bgW = size + cfg.pad * 2;

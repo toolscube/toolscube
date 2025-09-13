@@ -165,7 +165,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrains.variable}`}
+      className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrains.variable} scroll-smooth`}
     >
       <body className="min-h-screen bg-background text-foreground antialiased">
         <JsonLd data={siteLd} />
