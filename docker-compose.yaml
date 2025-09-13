@@ -9,7 +9,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-      target: builder
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         DATABASE_URL: ${DATABASE_URL}
@@ -24,37 +23,44 @@ services:
       - DATABASE_URL=${DATABASE_URL}
 
     expose:
-      - '3005'
+      - "3005"
 
     restart: unless-stopped
-
     networks:
       - proxy
       - appnet
-    command: ["npx", "prisma", "migrate", "deploy"]
+
     labels:
-      - 'traefik.enable=true'
-      - 'traefik.docker.network=proxy'
-
-      # Router (apex)
-      - 'traefik.http.routers.toolshub.rule=Host(`toolshub.tariqul.dev`)'
-      - 'traefik.http.routers.toolshub.entrypoints=websecure'
-      - 'traefik.http.routers.toolshub.tls=true'
-      - 'traefik.http.routers.toolshub.tls.certresolver=letsencrypt'
-      - 'traefik.http.routers.toolshub.service=toolshub-svc'
-
-      # Service
-      - 'traefik.http.services.toolshub-svc.loadbalancer.server.port=3005'
-      - 'traefik.http.services.toolshub-svc.loadbalancer.passhostheader=true'
-
-      # www → non-www (HTTPS)
-      - 'traefik.http.routers.toolshub-www.rule=Host(`www.toolshub.tariqul.dev`)'
-      - 'traefik.http.routers.toolshub-www.entrypoints=websecure'
-      - 'traefik.http.routers.toolshub-www.tls=true'
-      - 'traefik.http.routers.toolshub-www.tls.certresolver=letsencrypt'
-      - 'traefik.http.routers.toolshub-www.middlewares=toolshub-redirect@docker'
-
-      # Redirect middleware
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.toolshub.rule=Host(`toolshub.tariqul.dev`)"
+      - "traefik.http.routers.toolshub.entrypoints=websecure"
+      - "traefik.http.routers.toolshub.tls=true"
+      - "traefik.http.routers.toolshub.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.toolshub.service=toolshub-svc"
+      - "traefik.http.services.toolshub-svc.loadbalancer.server.port=3005"
+      - "traefik.http.services.toolshub-svc.loadbalancer.passhostheader=true"
+      - "traefik.http.routers.toolshub-www.rule=Host(`www.toolshub.tariqul.dev`)"
+      - "traefik.http.routers.toolshub-www.entrypoints=websecure"
+      - "traefik.http.routers.toolshub-www.tls=true"
+      - "traefik.http.routers.toolshub-www.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.toolshub-www.middlewares=toolshub-redirect@docker"
       - "traefik.http.middlewares.toolshub-redirect.redirectregex.regex=^https?://www\\.toolshub\\.tariqul\\.dev(.*)"
-      - 'traefik.http.middlewares.toolshub-redirect.redirectregex.replacement=https://toolshub.tariqul.dev$1'
-      - 'traefik.http.middlewares.toolshub-redirect.redirectregex.permanent=true'
+      - "traefik.http.middlewares.toolshub-redirect.redirectregex.replacement=https://toolshub.tariqul.dev$1"
+      - "traefik.http.middlewares.toolshub-redirect.redirectregex.permanent=true"
+
+  migrate:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: builder
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        DATABASE_URL: ${DATABASE_URL}
+    env_file:
+      - ./.env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    networks:
+      - appnet
+    command: ["npx", "prisma", "migrate", "deploy"]
