@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  Check,
-  ClipboardCopy,
   Clock,
   Download as DownloadIcon,
   Eye,
@@ -35,31 +33,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-/* Types */
-type CopyWhich = "header" | "payload" | "token";
-
-type JwtHeader = {
-  alg?: string;
-  kid?: string;
-  typ?: string;
-  [k: string]: unknown;
-};
-
-type JwtPayloadStd = {
-  iss?: string;
-  sub?: string;
-  aud?: string | string[];
-  exp?: number;
-  nbf?: number;
-  iat?: number;
-  jti?: string;
-  [k: string]: unknown;
-};
-
-type Status =
-  | { state: "none" }
-  | { state: "valid" | "expired" | "nbf"; exp?: number; iat?: number; nbf?: number };
-
 export default function JwtDecoderClient() {
   const [token, setToken] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -68,7 +41,6 @@ export default function JwtDecoderClient() {
   const [signatureB64u, setSignatureB64u] = useState<string>("");
 
   const [autoOnPaste, setAutoOnPaste] = useState<boolean>(true);
-  const [copied, setCopied] = useState<CopyWhich | null>(null);
 
   // Verify
   const [secret, setSecret] = useState<string>("");
@@ -126,12 +98,6 @@ export default function JwtDecoderClient() {
     if (bearerMatch) return bearerMatch[1];
     const rawMatch = text.match(/([A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+)/);
     return rawMatch ? rawMatch[1] : null;
-  }
-
-  async function copy(text: string, which: CopyWhich) {
-    await navigator.clipboard.writeText(text);
-    setCopied(which);
-    setTimeout(() => setCopied(null), 1200);
   }
 
   function clearAll() {
@@ -308,7 +274,7 @@ export default function JwtDecoderClient() {
               onValueChange={setToken}
               onPaste={onPaste}
               placeholder="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM..."
-              textareaClassName="min-h-[200px] font-mono"
+              textareaClassName="min-h-[390px] font-mono"
             />
 
             {error && (
@@ -409,17 +375,15 @@ export default function JwtDecoderClient() {
 
                   {/* Quick actions */}
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <ActionButton
-                      onClick={() => copy(headerJson, "header")}
+                    <CopyButton
+                      getText={headerJson}
+                      label="Copy header JSON"
                       disabled={!headerJson}
-                      label={copied === "header" ? "Copied" : "Copy header JSON"}
-                      icon={copied === "header" ? Check : ClipboardCopy}
                     />
-                    <ActionButton
-                      onClick={() => copy(payloadJson, "payload")}
+                    <CopyButton
+                      getText={payloadJson}
+                      label="Copy payload JSON"
                       disabled={!payloadJson}
-                      label={copied === "payload" ? "Copied" : "Copy payload JSON"}
-                      icon={copied === "payload" ? Check : ClipboardCopy}
                     />
                     <ExportTextButton
                       filename="payload.json"
