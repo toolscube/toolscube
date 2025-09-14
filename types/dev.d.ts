@@ -48,3 +48,13 @@ type GenOptions = {
   punctuation: boolean;
   rng: () => number;
 };
+
+// Password Generator
+type GenFlags = {
+  upper: boolean;
+  lower: boolean;
+  numbers: boolean;
+  symbols: boolean;
+  excludeAmbiguous: boolean;
+  requireEachSet: boolean;
+};
