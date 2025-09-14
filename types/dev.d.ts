@@ -40,3 +40,11 @@ type MatchItem = {
 // Hash Generator
 type AlgoKey = "MD5" | "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
 type ResultRow = { name: AlgoKey; value: string };
+
+// Lorem Ipsum Generator
+type GenOptions = {
+  wordsPerParagraph: number;
+  startWithClassic: boolean;
+  punctuation: boolean;
+  rng: () => number;
+};

@@ -13,7 +13,6 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import Stat from "@/components/shared/stat";
 import ToolPageHeader from "@/components/shared/tool-page-header";
-
 import {
   CardContent,
   CardDescription,
@@ -23,70 +22,9 @@ import {
 } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-
-// Static Latin word bank (classic + a bit extended)
-const WORDS =
-  "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum".split(
-    /\s+/,
-  );
-
-// Simple deterministic RNG (mulberry32)
-function mulberry32(seed: number) {
-  let t = seed >>> 0;
-  return () => {
-    t += 0x6d2b79f5;
-    let r = Math.imul(t ^ (t >>> 15), 1 | t);
-    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function capitalizeFirst(s: string) {
-  return s.length ? s[0].toUpperCase() + s.slice(1) : s;
-}
-
-type GenOptions = {
-  wordsPerParagraph: number;
-  startWithClassic: boolean;
-  punctuation: boolean;
-  rng: () => number;
-};
-
-function generateParagraph(opts: GenOptions): string {
-  const { wordsPerParagraph, startWithClassic, punctuation, rng } = opts;
-  const parts: string[] = [];
-
-  for (let i = 0; i < wordsPerParagraph; i++) {
-    const w = WORDS[Math.floor(rng() * WORDS.length)] || "lorem";
-    parts.push(w.toLowerCase());
-  }
-
-  // Optional punctuation sprinkles: commas roughly every ~10-16 words
-  if (punctuation && parts.length > 8) {
-    const step = 10 + Math.floor(rng() * 6); // 10..15
-    for (let i = step; i < parts.length - 4; i += step) {
-      parts[i] = parts[i].replace(/,$/, "");
-      parts[i] += ",";
-    }
-  }
-
-  let sentence = parts.join(" ").replace(/\s+,/g, ",");
-  sentence = capitalizeFirst(sentence);
-  if (!/[.!?]$/.test(sentence)) sentence += ".";
-
-  if (startWithClassic) {
-    const classic = "Lorem ipsum dolor sit amet,";
-    if (!sentence.startsWith("Lorem ipsum")) {
-      sentence = `${classic} ${sentence.charAt(0).toLowerCase()}${sentence.slice(1)}`;
-      sentence = capitalizeFirst(sentence);
-    }
-  }
-
-  return sentence;
-}
+import { generateParagraph, mulberry32 } from "@/lib/utils/dev/lorem-ipsum";
 
 export default function LoremIpsumClient() {
-  // Controls
   const [paragraphs, setParagraphs] = useState<number>(3);
   const [words, setWords] = useState<number>(50);
   const [startWithClassic, setStartWithClassic] = useState<boolean>(true);
@@ -95,18 +33,10 @@ export default function LoremIpsumClient() {
   const [seed, setSeed] = useState<number>(() => Math.floor(Math.random() * 1_000_000));
   const [autoRun, setAutoRun] = useState<boolean>(true);
   const [separatorBlankLine, setSeparatorBlankLine] = useState<boolean>(true);
-
-  // Output
   const [output, setOutput] = useState<string[]>([]);
 
-  // Derived
-  // const rng = useMemo(
-  //   () => (deterministic ? mulberry32(seed) : Math.random),
-  //   [deterministic, seed],
-  // );
-
   const run = useCallback(() => {
-    const localRng = deterministic ? mulberry32(seed) : Math.random; // stable for a single run
+    const localRng = deterministic ? mulberry32(seed) : Math.random;
     const paras: string[] = [];
     for (let p = 0; p < Math.max(1, paragraphs); p++) {
       paras.push(
@@ -274,9 +204,20 @@ export default function LoremIpsumClient() {
 
         {/* Right: Output */}
         <GlassCard className="shadow-sm lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Output</CardTitle>
-            <CardDescription>Your generated Lorem Ipsum text.</CardDescription>
+          <CardHeader className="flex items-end justify-between flex-wrap">
+            <div>
+              <CardTitle className="text-base">Output</CardTitle>
+              <CardDescription>Your generated Lorem Ipsum text.</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <CopyButton getText={() => outputText} disabled={!outputText} />
+              <ExportTextButton
+                variant="default"
+                filename="lorem-ipsum.txt"
+                getText={() => outputText}
+                disabled={!outputText}
+              />
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {output.length === 0 ? (
@@ -288,18 +229,10 @@ export default function LoremIpsumClient() {
                 readOnly
                 value={outputText}
                 onValueChange={() => {}}
-                textareaClassName="min-h-[240px] font-mono"
+                textareaClassName="min-h-[530px] font-mono"
               />
             )}
           </CardContent>
-          <CardFooter className="flex flex-wrap gap-2">
-            <CopyButton getText={() => outputText} disabled={!outputText} />
-            <ExportTextButton
-              filename="lorem-ipsum.txt"
-              getText={() => outputText}
-              disabled={!outputText}
-            />
-          </CardFooter>
         </GlassCard>
       </div>
     </>
