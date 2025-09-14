@@ -58,3 +58,7 @@ type GenFlags = {
   excludeAmbiguous: boolean;
   requireEachSet: boolean;
 };
+
+// UUID & NanoID Generator
+type Mode = "uuid" | "nanoid";
+type UuidVersion = "v1" | "v4" | "v5" | "v7";

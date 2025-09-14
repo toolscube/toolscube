@@ -183,7 +183,7 @@ export default function NavRight() {
         <CommandList>
           <CommandEmpty>No tools found.</CommandEmpty>
 
-          {/* Recent (only when no query) */}
+          {/* Recent */}
           {!query && recent.length > 0 && (
             <>
               <CommandGroup heading="Recent">
