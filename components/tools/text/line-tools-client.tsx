@@ -30,9 +30,9 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { normalizeEOL } from "@/lib/utils";
 
-/* Utilities */
 const LS_KEY = "toolshub:line-tools-v1";
 
+/* Utilities */
 function splitLines(s: string) {
   if (!s) return [] as string[];
   return normalizeEOL(s).split("\n");
@@ -444,7 +444,7 @@ export default function LineToolsClient() {
                 onChange={(e) => setSuffix(e.target.value)}
                 placeholder="e.g. ;"
               />
-              <div className="grid grid-cols-2 gap-2 items-end">
+              <div className="grid sm:grid-cols-2 gap-2 items-end">
                 <SwitchRow
                   label="Enable numbering"
                   checked={numbering}
@@ -474,7 +474,7 @@ export default function LineToolsClient() {
       {/* Output */}
       <GlassCard>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between">
             <div className="flex items-center gap-2">
               <CardTitle className="text-base">Output</CardTitle>
               <Badge variant="secondary">Live</Badge>
