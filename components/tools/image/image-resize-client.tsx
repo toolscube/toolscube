@@ -39,17 +39,6 @@ import {
   triggerDownload,
 } from "@/lib/canvas";
 
-type Anchor =
-  | "center"
-  | "top-left"
-  | "top"
-  | "top-right"
-  | "left"
-  | "right"
-  | "bottom-left"
-  | "bottom"
-  | "bottom-right";
-
 export default function ImageResizeClient() {
   const [locked, setLocked] = React.useState(true);
   const [fit, setFit] = React.useState<FitMode>("contain");
@@ -285,8 +274,14 @@ export default function ImageResizeClient() {
                 label="Lock aspect ratio"
                 checked={locked}
                 onCheckedChange={setLocked}
+                className="w-full sm:w-auto"
               />
-              <SwitchRow checked={noUpscale} onCheckedChange={setNoUpscale} label="No upscale" />
+              <SwitchRow
+                checked={noUpscale}
+                onCheckedChange={setNoUpscale}
+                label="No upscale"
+                className="w-full sm:w-auto"
+              />
 
               <InputField
                 className="w-full"
