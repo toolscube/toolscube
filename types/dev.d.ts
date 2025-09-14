@@ -36,3 +36,7 @@ type MatchItem = {
   length: number;
   groups: Record<string, string | undefined>;
 };
+
+// Hash Generator
+type AlgoKey = "MD5" | "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
+type ResultRow = { name: AlgoKey; value: string };
