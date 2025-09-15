@@ -67,3 +67,14 @@ type UuidVersion = "v1" | "v4" | "v5" | "v7";
 type Unit = "seconds" | "milliseconds" | "microseconds" | "nanoseconds";
 type Direction = "toDate" | "toEpoch";
 type PresetTz = (typeof TZ_PRESETS)[number];
+
+// Diff Checker
+type Granularity = "line" | "word" | "char";
+type Op = "equal" | "add" | "remove";
+type TabKey = "split" | "unified" | "stats";
+
+type DiffChunk = {
+  op: Op;
+  a: string[];
+  b: string[];
+};
