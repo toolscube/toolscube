@@ -62,3 +62,8 @@ type GenFlags = {
 // UUID & NanoID Generator
 type Mode = "uuid" | "nanoid";
 type UuidVersion = "v1" | "v4" | "v5" | "v7";
+
+// Timestamp Converter
+type Unit = "seconds" | "milliseconds" | "microseconds" | "nanoseconds";
+type Direction = "toDate" | "toEpoch";
+type PresetTz = (typeof TZ_PRESETS)[number];

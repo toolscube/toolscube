@@ -82,7 +82,7 @@ export default function HomePage() {
             </AnimatedShinyText>
           </div>
         </div>
-        <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+        <h1 className="max-w-4xl text-balance text-4xl font-bold leading-tight tracking-tight md:text-6xl">
           Build faster with everyday developer & business tools.
         </h1>
         <p className="max-w-2xl text-pretty text-muted-foreground">

@@ -16,89 +16,17 @@ import ToolPageHeader from "@/components/shared/tool-page-header";
 import { CardContent } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-
-/* Types & Constants */
-
-type Unit = "seconds" | "milliseconds" | "microseconds" | "nanoseconds";
-type Direction = "toDate" | "toEpoch";
-
-const UNITS: { label: string; value: Unit; factor: number }[] = [
-  { label: "Seconds (10 digits)", value: "seconds", factor: 1_000 },
-  { label: "Milliseconds (13 digits)", value: "milliseconds", factor: 1 },
-  { label: "Microseconds (16 digits)", value: "microseconds", factor: 1 / 1_000 },
-  { label: "Nanoseconds (19 digits)", value: "nanoseconds", factor: 1 / 1_000_000 },
-];
-
-const TZ_PRESETS = [
-  "local",
-  "UTC",
-  "America/New_York",
-  "Europe/London",
-  "Europe/Berlin",
-  "Asia/Dhaka",
-  "Asia/Kolkata",
-  "Asia/Tokyo",
-  "Australia/Sydney",
-] as const;
-
-type PresetTz = (typeof TZ_PRESETS)[number];
-
-function isPresetTz(x: string): x is PresetTz {
-  return (TZ_PRESETS as readonly string[]).includes(x);
-}
-
-/* Helpers */
-
-function clampIntString(s: string, maxLen = 32) {
-  return s.replace(/[^\d-]/g, "").slice(0, maxLen);
-}
-
-function detectUnit(raw: string): Unit | null {
-  const len = raw.replace(/^-/, "").length;
-  if (len === 10) return "seconds";
-  if (len === 13) return "milliseconds";
-  if (len === 16) return "microseconds";
-  if (len === 19) return "nanoseconds";
-  return null;
-}
-
-function toMsFromEpoch(raw: string, unit: Unit): number | null {
-  if (!raw) return null;
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return null;
-
-  const match = UNITS.find((u) => u.value === unit);
-  if (!match) return null;
-
-  return Math.trunc(n * match.factor);
-}
-
-function safeDate(d: number | Date | null): Date | null {
-  if (d == null) return null;
-  const dt = d instanceof Date ? d : new Date(d);
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
-
-function fmtInTz(d: Date, timeZone: string) {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      timeZone: timeZone === "local" ? undefined : timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(d);
-  } catch {
-    return d.toString();
-  }
-}
-
-function shareUrl(params: Record<string, string>) {
-  const sp = new URLSearchParams(params);
-  return `${location.origin}${location.pathname}?${sp.toString()}`;
-}
+import {
+  clampIntString,
+  detectUnit,
+  fmtInTz,
+  isPresetTz,
+  safeDate,
+  shareUrl,
+  TZ_PRESETS,
+  toMsFromEpoch,
+  UNITS,
+} from "@/lib/utils/dev/timestamp-converter";
 
 export default function TimestampConverterClient() {
   // direction
@@ -135,7 +63,7 @@ export default function TimestampConverterClient() {
 
       if (_tz) {
         if (isPresetTz(_tz)) {
-          setTz(_tz); // fully typed safe
+          setTz(_tz);
         } else {
           setTz("local");
           setCustomTz(_tz);
@@ -188,7 +116,6 @@ export default function TimestampConverterClient() {
           const raw = _dateText.trim();
           if (!raw) throw new Error("Enter a date/time (prefer ISO 8601).");
 
-          // We currently parse as-is; if no TZ info included, it's local time
           const dt = safeDate(new Date(raw));
           if (!dt) throw new Error("Unrecognized date/time.");
 
@@ -237,6 +164,19 @@ export default function TimestampConverterClient() {
     value: z,
   })) as Array<{ label: string; value: string }>;
 
+  function resetAll() {
+    setStamp("");
+    setDateText("");
+    setTz("local");
+    setCustomTz("");
+    setUnit("seconds");
+    setAutoDetect(true);
+    setAutoTick(true);
+    setResult({});
+    setError(null);
+    setDir("toDate");
+  }
+
   return (
     <>
       <ToolPageHeader
@@ -267,7 +207,7 @@ export default function TimestampConverterClient() {
       />
 
       <GlassCard>
-        <CardContent className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
+        <CardContent className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Left: Inputs */}
           <div className="rounded-xl border p-4 space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
@@ -396,7 +336,7 @@ export default function TimestampConverterClient() {
           </div>
 
           {/* Right: Results */}
-          <div className="rounded-xl border p-4">
+          <div className="rounded-xl border overflow-auto p-4">
             <h3 className="mb-2 text-sm font-medium tracking-wide uppercase text-muted-foreground">
               Result
             </h3>
@@ -430,19 +370,4 @@ export default function TimestampConverterClient() {
       </GlassCard>
     </>
   );
-
-  /* ------------------------------- Local helpers ------------------------------ */
-
-  function resetAll() {
-    setDir("toDate");
-    setStamp("");
-    setDateText("");
-    setTz("local");
-    setCustomTz("");
-    setUnit("seconds");
-    setAutoDetect(true);
-    setAutoTick(true);
-    setResult({});
-    setError(null);
-  }
 }
