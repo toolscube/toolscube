@@ -226,11 +226,7 @@ export default function HomePage() {
                 <Link href="/sponsor">Become a sponsor</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link
-                  href="https://github.com/tariqul420/tools-hub"
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <Link href="https://github.com/tariqul420" target="_blank" rel="noreferrer">
                   <Github className="mr-2 h-4 w-4" /> GitHub
                 </Link>
               </Button>
