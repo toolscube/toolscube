@@ -37,6 +37,14 @@ import {
   wrapLines,
 } from "@/lib/utils/text/base64";
 
+type TabKey = "text" | "file";
+type Base64Mode = "encode" | "decode";
+type FileInfo = {
+  name: string;
+  size: number;
+  type: string;
+};
+
 export default function Base64Client() {
   const [tab, setTab] = React.useState<TabKey>("text");
   const [mode, setMode] = React.useState<Base64Mode>("encode");
