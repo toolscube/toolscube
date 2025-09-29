@@ -126,10 +126,12 @@ export default function SponsorPage() {
             high-intent makers and professionals. Flexible tiers. Brand-safe placement.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Button variant="ghost" value="+8801785875454" size="lg" className="gap-2">
-              <Image src="/assets/bkash.png" alt="Sponsor Tools Hub" width={32} height={32} />
-              +8801785875454
-            </Button>
+            <Link href="tel:+8801785875454" className="w-full sm:w-auto">
+              <Button variant="ghost" value="+8801785875454" size="lg" className="gap-2">
+                <Image src="/assets/bkash.png" alt="Sponsor Tools Hub" width={32} height={32} />
+                +8801785875454
+              </Button>
+            </Link>
             <Button size="lg" className="gap-2" asChild>
               <Link href={"/tools"}>
                 Explore Tools <ArrowRight className="h-4 w-4" />
@@ -255,10 +257,12 @@ export default function SponsorPage() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" value="+8801785875454" size="lg" className="gap-2">
-                <Image src="/assets/bkash.png" alt="Sponsor Tools Hub" width={32} height={32} />
-                +8801785875454
-              </Button>
+              <Link href="tel:+8801785875454" className="w-full sm:w-auto">
+                <Button variant="ghost" value="+8801785875454" size="lg" className="gap-2">
+                  <Image src="/assets/bkash.png" alt="Sponsor Tools Hub" width={32} height={32} />
+                  +8801785875454
+                </Button>
+              </Link>
               <Button variant="outline" asChild>
                 <Link href="#contact" className="gap-2 inline-flex items-center">
                   <Mail className="h-4 w-4" /> Contact us
