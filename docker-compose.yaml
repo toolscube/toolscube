@@ -1,8 +1,4 @@
-networks:
-  proxy:
-    external: true
-  appnet:
-    external: true
+version: "3.9"
 
 services:
   toolshub:
@@ -11,16 +7,14 @@ services:
       dockerfile: ./Dockerfile
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
-        DATABASE_URL: ${DATABASE_URL}
     container_name: toolshub
 
     env_file:
       - ./.env
     environment:
-      - NODE_ENV=production
-      - PORT=3005
-      - NEXT_TELEMETRY_DISABLED=1
-      - DATABASE_URL=${DATABASE_URL}
+      NODE_ENV: production
+      PORT: 3005
+      DATABASE_URL: ${DATABASE_URL}
 
     expose:
       - "3005"
@@ -33,13 +27,19 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
+
+      # primary domain
       - "traefik.http.routers.toolshub.rule=Host(`toolshub.tariqul.dev`)"
       - "traefik.http.routers.toolshub.entrypoints=websecure"
       - "traefik.http.routers.toolshub.tls=true"
       - "traefik.http.routers.toolshub.tls.certresolver=letsencrypt"
       - "traefik.http.routers.toolshub.service=toolshub-svc"
+
+      # service port
       - "traefik.http.services.toolshub-svc.loadbalancer.server.port=3005"
       - "traefik.http.services.toolshub-svc.loadbalancer.passhostheader=true"
+
+      # www -> non-www redirect
       - "traefik.http.routers.toolshub-www.rule=Host(`www.toolshub.tariqul.dev`)"
       - "traefik.http.routers.toolshub-www.entrypoints=websecure"
       - "traefik.http.routers.toolshub-www.tls=true"
@@ -49,18 +49,8 @@ services:
       - "traefik.http.middlewares.toolshub-redirect.redirectregex.replacement=https://toolshub.tariqul.dev$1"
       - "traefik.http.middlewares.toolshub-redirect.redirectregex.permanent=true"
 
-  migrate:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: builder
-      args:
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
-        DATABASE_URL: ${DATABASE_URL}
-    env_file:
-      - ./.env
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-    networks:
-      - appnet
-    command: ["npx", "prisma", "migrate", "deploy"]
+networks:
+  proxy:
+    external: true
+  appnet:
+    external: true
