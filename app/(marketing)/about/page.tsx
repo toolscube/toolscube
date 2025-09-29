@@ -151,7 +151,7 @@ export default function AboutPage() {
                 <a href="/tools">Explore tools</a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="mailto:support@your-domain.com">Contact</a>
+                <a href="mailto:tariqul@tariqul.dev">Contact</a>
               </Button>
             </div>
           </CardContent>

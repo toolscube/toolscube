@@ -114,7 +114,7 @@ function Panel({
   );
 }
 
-const STORAGE_KEY = "toolshub.markdown-previewer.v9";
+const STORAGE_KEY = "toolshub:markdown-previewer-v1";
 const SAMPLE_MD = `# ✨ Markdown Previewer
 
 Write in **Write** tab — see live **Preview**.
@@ -124,7 +124,6 @@ Write in **Write** tab — see live **Preview**.
 - Export .md / .html
 `;
 
-/* page */
 
 export default function MarkdownPreviewerClient() {
   const [state, setState] = useLocalStorage(STORAGE_KEY, {
@@ -144,7 +143,7 @@ export default function MarkdownPreviewerClient() {
   const useGfm = state.useGfm as boolean;
   const softWrap = state.softWrap as boolean;
 
-  // plugins (lazy)
+  // plugins
   const [gfmList, setGfmList] = React.useState<PluggableList>([]);
   const [highlightList, setHighlightList] = React.useState<PluggableList>([]);
   React.useEffect(() => {
@@ -191,7 +190,7 @@ export default function MarkdownPreviewerClient() {
     return String(marked.parse(md));
   }, [md]);
 
-  /* selection helpers (stable) */
+  /* selection helpers */
   const insertAtCursor = React.useCallback(
     (snippet: string) => {
       const el = editorRef.current;

@@ -10,12 +10,13 @@ import {
   Star,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import InputField from "@/components/shared/form-fields/input-field";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 // Data
@@ -125,10 +126,11 @@ export default function SponsorPage() {
             high-intent makers and professionals. Flexible tiers. Brand-safe placement.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" className="gap-2">
-              Become a sponsor <ArrowRight className="h-4 w-4" />
+            <Button variant="ghost" value="+8801785875454" size="lg" className="gap-2">
+              <Image src="/assets/bkash.png" alt="Sponsor Tools Hub" width={32} height={32} />
+              +8801785875454
             </Button>
-            <Button size="lg" variant="outline" className="gap-2" asChild>
+            <Button size="lg" className="gap-2" asChild>
               <Link href={"/tools"}>
                 Explore Tools <ArrowRight className="h-4 w-4" />
               </Link>
@@ -253,13 +255,14 @@ export default function SponsorPage() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Button className="gap-2">
-                Become a sponsor <ArrowRight className="h-4 w-4" />
+              <Button variant="ghost" value="+8801785875454" size="lg" className="gap-2">
+                <Image src="/assets/bkash.png" alt="Sponsor Tools Hub" width={32} height={32} />
+                +8801785875454
               </Button>
               <Button variant="outline" asChild>
-                <a href="#contact" className="gap-2 inline-flex items-center">
+                <Link href="#contact" className="gap-2 inline-flex items-center">
                   <Mail className="h-4 w-4" /> Contact us
-                </a>
+                </Link>
               </Button>
             </div>
           </div>
@@ -290,10 +293,10 @@ export default function SponsorPage() {
             <h3 className="text-lg font-semibold">Tell us about your goals</h3>
           </div>
           <form className="grid gap-4 sm:grid-cols-2">
-            <Input placeholder="Company" className="sm:col-span-1" />
-            <Input type="email" placeholder="Work email" className="sm:col-span-1" />
-            <Input placeholder="Website (https://)" className="sm:col-span-2" />
-            <Textarea
+            <InputField placeholder="Company" className="sm:col-span-1" />
+            <InputField type="email" placeholder="Work email" className="sm:col-span-1" />
+            <InputField placeholder="Website (https://)" className="sm:col-span-2" />
+            <TextareaField
               placeholder="What would you like to achieve?"
               className="min-h-28 sm:col-span-2"
             />
