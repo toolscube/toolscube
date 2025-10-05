@@ -76,7 +76,7 @@ const DEFAULT: State = {
   description:
     "URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators — all in one place.",
   author: "Tariqul Islam",
-  canonical: "https://toolshub.dev/tools",
+  canonical: "https://toolscube.app/tools",
   robotsIndex: true,
   robotsFollow: true,
   robotsNoSnippet: false,
@@ -92,17 +92,17 @@ const DEFAULT: State = {
 
   useOG: true,
   ogType: "website",
-  ogUrl: "https://toolshub.dev/tools",
-  ogImage: "https://toolshub.dev/og-image.jpg",
+  ogUrl: "https://toolscube.app/tools",
+  ogImage: "https://toolscube.app/og-image.jpg",
   ogImageAlt: "Open Graph image",
   ogImageWidth: "1200",
   ogImageHeight: "630",
 
   useTwitter: true,
   twitterCard: "summary_large_image",
-  twitterSite: "@toolshub",
+  twitterSite: "@toolscube",
   twitterCreator: "@tariqul_420",
-  twitterImage: "https://toolshub.dev/og-image.jpg",
+  twitterImage: "https://toolscube.app/og-image.jpg",
   twitterImageAlt: "Social image",
 
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",

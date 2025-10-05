@@ -65,8 +65,8 @@ const DEFAULT_OPTS: OptionsState = {
   batchMode: false,
 };
 
-const PRESET_LS_KEY = "toolshub:utm-builder-presets-v1";
-const HISTORY_LS_KEY = "toolshub:utm-builder-history-v1";
+const PRESET_LS_KEY = "toolscube:utm-builder-presets-v1";
+const HISTORY_LS_KEY = "toolscube:utm-builder-history-v1";
 
 /* Helpers */
 export function parseExisting(url: string) {

@@ -30,7 +30,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { normalizeEOL } from "@/lib/utils";
 
-const LS_KEY = "toolshub:line-tools-v1";
+const LS_KEY = "toolscube:line-tools-v1";
 
 /* Utilities */
 function splitLines(s: string) {

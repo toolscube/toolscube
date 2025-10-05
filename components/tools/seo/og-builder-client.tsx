@@ -97,7 +97,7 @@ const DEFAULT: State = {
   title: "Your Catchy Post Title",
   subtitle: "Optional subtitle goes here to add context for social previews.",
   badge: "Tools Cube",
-  brand: "toolshub.dev",
+  brand: "toolscube.app",
 
   titleSize: 92,
   subtitleSize: 36,

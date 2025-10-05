@@ -35,7 +35,7 @@ import { useQrExport } from "@/hooks/use-qr-export";
 import { createShort } from "@/lib/actions/shortener.action";
 import { timeAgo } from "@/lib/utils/time-ago";
 
-const RECENT_KEY = "toolshub:shortener-v1";
+const RECENT_KEY = "toolscube:shortener-v1";
 
 function loadRecent(): RecentItem[] {
   if (typeof window === "undefined") return [];

@@ -34,7 +34,7 @@ import {
   trimEachLine,
 } from "@/lib/utils/text/text-cleaner";
 
-const LS_KEY = "toolshub:text-cleaner-v1";
+const LS_KEY = "toolscube:text-cleaner-v1";
 
 type CaseMode = "none" | "lower" | "upper" | "sentence" | "title";
 

@@ -134,7 +134,7 @@ export async function GET(req: Request) {
       method: "GET",
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; ToolsHub-OGPreview/1.0; +https://example.com/bot) AppleWebKit/537.36",
+          "Mozilla/5.0 (compatible; ToolsCube-OGPreview/1.0; +https://toolscube.app/bot) AppleWebKit/537.36",
         Accept: "text/html,application/xhtml+xml",
         "Accept-Language": "en-US,en;q=0.8",
       },

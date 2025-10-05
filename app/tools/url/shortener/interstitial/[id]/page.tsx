@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Link as LinkIcon, Lock, ShieldCheck, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,6 +7,13 @@ import ContinueForm from "@/components/tools/url/continue-form";
 import { Badge } from "@/components/ui/badge";
 import { GlassCard } from "@/components/ui/glass-card";
 import { getLink, recordClickAndRedirect } from "@/lib/actions/shortener.action";
+import { generateSEOMetadata } from "@/lib/seo-config";
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: "Safe Link Preview",
+  description: "Preview this link before continuing. Tools Cube helps protect you from potentially harmful links.",
+  noIndex: true,
+});
 
 export default async function InterstitialPage({ params }: { params: { id: string } }) {
   const { id } = await params;

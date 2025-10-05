@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://toolshub.tariqul.dev";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://toolscube.app";
 const SITE_NAME = "Tools Cube";
 const SITE_TWITTER = "@toolscube";
 const DEFAULT_IMAGE = `${SITE_URL}/assets/logo-tools-cube.png`;

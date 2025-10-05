@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LinkButton } from "@/components/shared/action-buttons";
@@ -7,6 +8,13 @@ import TopTable from "@/components/tools/url/top-table";
 import { Card } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { getAnalytics } from "@/lib/actions/shortener.action";
+import { generateSEOMetadata } from "@/lib/seo-config";
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: "Link Analytics Dashboard",
+  description: "View detailed analytics for your shortened links including clicks, referrers, countries, and trends over time.",
+  noIndex: true,
+});
 
 export default async function AnalyticsPage({ params }: { params: { id: string } }) {
   const { id } = await params;
