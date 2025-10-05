@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { ToolsData } from "@/data/tools";
 
-const site = process.env.NEXT_PUBLIC_SITE_URL || "http://toolshub.dev";
+const site = process.env.NEXT_PUBLIC_SITE_URL || "https://toolscube.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = ["", "/tools", "/about", "/privacy", "/terms", "/sponsors"];

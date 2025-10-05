@@ -8,6 +8,7 @@ import JsonLd from "@/components/seo/json-ld";
 import { ToolsData } from "@/data/tools";
 import { siteURL } from "@/lib/constants";
 import { buildDynamicKeywords, mergeKeywords, siteDescriptionFallback } from "@/lib/seo-tools";
+import { structuredData } from "@/lib/seo-config";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
@@ -171,6 +172,9 @@ export default function RootLayout({
         <JsonLd data={siteLd} />
         <JsonLd data={orgLd} />
         <JsonLd data={navLd} />
+        <JsonLd data={structuredData.website} />
+        <JsonLd data={structuredData.organization} />
+        <JsonLd data={structuredData.webApplication} />
         <main>{children}</main>
         <Toaster position="top-right" />
       </body>

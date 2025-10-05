@@ -11,8 +11,8 @@ This document provides guidelines for contributing to the Tools Cube project.
 2. **Clone** your fork locally:
 
    ```bash
-   git clone https://github.com/tariqul420/tools-hub.git
-   cd tools-hub
+   git clone https://github.com/tariqul420/tools-cube.git
+   cd tools-cube
    ```
 
 3. **Install dependencies:**
