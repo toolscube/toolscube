@@ -35,27 +35,27 @@ export const metadata: Metadata = {
   description: smartDescription,
   keywords: KEYWORDS,
   openGraph: {
-    title: "Tools — Tools Hub",
+    title: "Tools — Tools Cube",
     description: smartDescription,
     url: `${siteURL}/tools`,
     type: "website",
-    siteName: "Tools Hub",
+    siteName: "Tools Cube",
     images: [
       {
-        url: `${siteURL}/assets/logo-tools-hub.png`,
+        url: `${siteURL}/assets/logo-tools-cube.png`,
         width: 1200,
         height: 630,
-        alt: "Tools Hub",
+        alt: "Tools Cube",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    site: "@toolshub",
-    creator: "@toolshub",
-    title: "Tools — Tools Hub",
+    site: "@toolscube",
+    creator: "@toolscube",
+    title: "Tools — Tools Cube",
     description: smartDescription,
-    images: [`${siteURL}/assets/logo-tools-hub.png`],
+    images: [`${siteURL}/assets/logo-tools-cube.png`],
   },
   alternates: {
     canonical: `${siteURL}/tools`,
@@ -83,7 +83,7 @@ export default function ToolsIndexPage() {
   const navLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Tools Hub Categories",
+    name: "Tools Cube Categories",
     itemListElement: ToolsData.map((c, i: number) => ({
       "@type": "ListItem",
       position: i + 1,

@@ -96,7 +96,7 @@ const DEFAULT: State = {
 
   title: "Your Catchy Post Title",
   subtitle: "Optional subtitle goes here to add context for social previews.",
-  badge: "Tools Hub",
+  badge: "Tools Cube",
   brand: "toolshub.dev",
 
   titleSize: 92,
@@ -730,7 +730,7 @@ export default function OGBuilderClient() {
                   label="Badge"
                   value={s.badge}
                   onChange={(e) => setS((p) => ({ ...p, badge: e.target.value }))}
-                  placeholder="Tools Hub"
+                  placeholder="Tools Cube"
                 />
                 <InputField
                   id="brand"

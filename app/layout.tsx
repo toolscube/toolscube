@@ -7,8 +7,8 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import JsonLd from "@/components/seo/json-ld";
 import { ToolsData } from "@/data/tools";
 import { siteURL } from "@/lib/constants";
-import { buildDynamicKeywords, mergeKeywords, siteDescriptionFallback } from "@/lib/seo-tools";
 import { structuredData } from "@/lib/seo-config";
+import { buildDynamicKeywords, mergeKeywords, siteDescriptionFallback } from "@/lib/seo-tools";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });

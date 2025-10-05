@@ -2,11 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { generateSEOMetadata } from "@/lib/seo-config";
 
-export const metadata = {
-  title: "Terms of Service — Tools Hub",
-  description: "Terms and acceptable use for Tools Hub.",
-};
+export const metadata = generateSEOMetadata({
+  title: "Terms of Service",
+  description: "Terms and acceptable use for Tools Cube. Read our terms of service and acceptable use policy for our online tools platform.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   const lastUpdated = new Date().toISOString().slice(0, 10);
@@ -27,7 +29,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="max-w-2xl text-pretty text-muted-foreground">
-            By using Tools Hub, you agree to the terms below. Please read them carefully.
+            By using Tools Cube, you agree to the terms below. Please read them carefully.
           </p>
           <div className="mt-2 text-sm text-muted-foreground">Last updated: {lastUpdated}</div>
         </div>

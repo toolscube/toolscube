@@ -2,11 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { generateSEOMetadata } from "@/lib/seo-config";
 
-export const metadata = {
-  title: "Privacy Policy — Tools Hub",
-  description: "Our commitment to privacy and data handling practices.",
-};
+export const metadata = generateSEOMetadata({
+  title: "Privacy Policy",
+  description: "Our commitment to privacy and data handling practices at Tools Cube. Learn how we protect your data and maintain privacy-first principles.",
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   const lastUpdated = new Date().toISOString().slice(0, 10);
@@ -27,7 +29,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="max-w-2xl text-pretty text-muted-foreground">
-            We design Tools Hub to be privacy-friendly. This page explains what we collect, how we
+            We design Tools Cube to be privacy-friendly. This page explains what we collect, how we
             use it, and the choices you have.
           </p>
           <div className="mt-2 text-sm text-muted-foreground">Last updated: {lastUpdated}</div>
@@ -131,7 +133,7 @@ export default function PrivacyPage() {
           </p>
           <div className="pt-2">
             <Button asChild>
-              <a href="/about">Learn more about Tools Hub</a>
+              <a href="/about">Learn more about Tools Cube</a>
             </Button>
           </div>
         </CardContent>

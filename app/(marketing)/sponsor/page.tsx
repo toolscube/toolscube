@@ -18,6 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { generateSEOMetadata } from "@/lib/seo-config";
+
+export const metadata = generateSEOMetadata({
+  title: "Sponsor Tools Cube",
+  description: "Support Tools Cube development and help us keep our online tools free for everyone. Choose from flexible sponsorship tiers and get featured recognition.",
+  path: "/sponsor",
+});
 
 // Data
 const tiers = [
@@ -116,19 +123,19 @@ export default function SponsorPage() {
       <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:py-14">
         <div className="flex flex-col items-center text-center">
           <span className="inline-flex items-center gap-2 rounded-full border bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-            <Gem className="h-3.5 w-3.5" /> Sponsor Tools Hub
+            <Gem className="h-3.5 w-3.5" /> Sponsor Tools Cube
           </span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Power useful tools for millions
           </h1>
           <p className="mt-3 max-w-2xl text-balance text-sm text-muted-foreground sm:text-base">
-            Help us keep Tools Hub free and blazing-fast while putting your brand in front of
+            Help us keep Tools Cube free and blazing-fast while putting your brand in front of
             high-intent makers and professionals. Flexible tiers. Brand-safe placement.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link href="tel:+8801785875454" className="w-full sm:w-auto">
               <Button variant="ghost" value="+8801785875454" size="lg" className="gap-2">
-                <Image src="/assets/bkash.png" alt="Sponsor Tools Hub" width={32} height={32} />
+                <Image src="/assets/bkash.png" alt="Sponsor Tools Cube" width={32} height={32} />
                 +8801785875454
               </Button>
             </Link>
@@ -259,7 +266,7 @@ export default function SponsorPage() {
             <div className="flex gap-2">
               <Link href="tel:+8801785875454" className="w-full sm:w-auto">
                 <Button variant="ghost" value="+8801785875454" size="lg" className="gap-2">
-                  <Image src="/assets/bkash.png" alt="Sponsor Tools Hub" width={32} height={32} />
+                  <Image src="/assets/bkash.png" alt="Sponsor Tools Cube" width={32} height={32} />
                   +8801785875454
                 </Button>
               </Link>

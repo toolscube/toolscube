@@ -25,7 +25,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { ToolsData } from "@/data/tools";
+import { generateSEOMetadata } from "@/lib/seo-config";
 import { cn } from "@/lib/utils";
+
+export const metadata = generateSEOMetadata({
+  title: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
+  description:
+    "Build faster with everyday developer & business tools. Shorten links, convert files, format JSON, calculate values — all in one place. Free and privacy-friendly.",
+  path: "/",
+});
 
 type ToolItem = {
   title: string;

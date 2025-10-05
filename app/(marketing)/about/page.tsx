@@ -2,12 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { generateSEOMetadata } from "@/lib/seo-config";
 
-export const metadata = {
-  title: "About — Tools Hub",
-  description:
-    "Learn about Tools Hub — our mission is to provide fast, free, privacy-friendly online utilities.",
-};
+export const metadata = generateSEOMetadata({
+  title: "About Tools Cube",
+  description: "Learn about Tools Cube — our mission is to provide fast, free, privacy-friendly online utilities for developers and businesses worldwide.",
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (
@@ -24,10 +25,10 @@ export default function AboutPage() {
             Fast • Free • Privacy-Friendly
           </Badge>
           <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-            About Tools Hub
+            About Tools Cube
           </h1>
           <p className="max-w-2xl text-pretty text-muted-foreground">
-            Tools Hub brings essential online utilities together — URL shortener, PDF & image tools,
+            Tools Cube brings essential online utilities together — URL shortener, PDF & image tools,
             text utilities, developer helpers, and calculators — with a focus on speed, simplicity,
             and privacy.
           </p>
@@ -125,7 +126,7 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
-              We started Tools Hub to remove small daily frictions: converting files, cleaning text,
+              We started Tools Cube to remove small daily frictions: converting files, cleaning text,
               generating links, and validating data — quickly, without sign-ups or bloated apps.
             </p>
             <p>
