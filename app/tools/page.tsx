@@ -125,12 +125,12 @@ export default function ToolsIndexPage() {
         ))}
       </section>
 
-      <Separator className="my-8" />
+      <Separator className="mt-8" />
 
       {/* Grouped lists */}
-      <section className="space-y-10">
+      <section>
         {categories.map((c) => (
-          <div key={c.key} id={`cat-${c.key}`}>
+          <div key={c.key} id={`cat-${c.key}`} className="py-4 first:pt-8">
             <div className="mb-3 flex items-center gap-3">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 {c.icon && <c.icon className="h-5 w-5 text-muted-foreground" />}

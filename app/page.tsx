@@ -126,8 +126,18 @@ export default function HomePage() {
       <section className="mx-auto max-w-7xl px-2 pt-12">
         <SectionHeader title="Browse by category" href="/tools" cta="View all" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {getActiveCategories().map((c) => (
-            <Link key={c.url} href={c.url} className="group focus:outline-none">
+          {getActiveCategories().map((c, idx) => (
+            <Link
+              key={idx as number}
+              href={`/tools#cat-${c.title
+                .toLowerCase()
+                .replace(/\s+/g, "-")
+                .replace(/&/g, "")
+                .replace(/[^a-z0-9-]/g, "")
+                .replace(/-+/g, "-")
+                .replace(/^-|-$/g, "")}`}
+              className="group focus:outline-none"
+            >
               <GlassCard className="h-full border-none">
                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
                   <div className="rounded-xl border bg-background p-2">
