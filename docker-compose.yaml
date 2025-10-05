@@ -1,11 +1,11 @@
 services:
-  toolshub:
+  toolscube:
     build:
       context: .
       dockerfile: ./Dockerfile
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
-    container_name: toolshub
+    container_name: toolscube
 
     env_file:
       - ./.env
@@ -27,25 +27,25 @@ services:
       - "traefik.docker.network=proxy"
 
       # Primary domain
-      - "traefik.http.routers.toolshub.rule=Host(`toolshub.tariqul.dev`)"
-      - "traefik.http.routers.toolshub.entrypoints=websecure"
-      - "traefik.http.routers.toolshub.tls=true"
-      - "traefik.http.routers.toolshub.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.toolshub.service=toolshub-svc"
+      - "traefik.http.routers.toolscube.rule=Host(`toolscube.app`)"
+      - "traefik.http.routers.toolscube.entrypoints=websecure"
+      - "traefik.http.routers.toolscube.tls=true"
+      - "traefik.http.routers.toolscube.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.toolscube.service=toolscube-svc"
 
       # Service port
-      - "traefik.http.services.toolshub-svc.loadbalancer.server.port=3005"
-      - "traefik.http.services.toolshub-svc.loadbalancer.passhostheader=true"
+      - "traefik.http.services.toolscube-svc.loadbalancer.server.port=3005"
+      - "traefik.http.services.toolscube-svc.loadbalancer.passhostheader=true"
 
       # www -> non-www redirect
-      - "traefik.http.routers.toolshub-www.rule=Host(`www.toolshub.tariqul.dev`)"
-      - "traefik.http.routers.toolshub-www.entrypoints=websecure"
-      - "traefik.http.routers.toolshub-www.tls=true"
-      - "traefik.http.routers.toolshub-www.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.toolshub-www.middlewares=toolshub-redirect@docker"
-      - "traefik.http.middlewares.toolshub-redirect.redirectregex.regex=^https?://www\\.toolshub\\.tariqul\\.dev(.*)"
-      - "traefik.http.middlewares.toolshub-redirect.redirectregex.replacement=https://toolshub.tariqul.dev$1"
-      - "traefik.http.middlewares.toolshub-redirect.redirectregex.permanent=true"
+      - "traefik.http.routers.toolscube-www.rule=Host(`www.toolscube.app`)"
+      - "traefik.http.routers.toolscube-www.entrypoints=websecure"
+      - "traefik.http.routers.toolscube-www.tls=true"
+      - "traefik.http.routers.toolscube-www.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.toolscube-www.middlewares=toolscube-redirect@docker"
+      - "traefik.http.middlewares.toolscube-redirect.redirectregex.regex=^https?://www\\.toolscube\\.app(.*)"
+      - "traefik.http.middlewares.toolscube-redirect.redirectregex.replacement=https://toolscube.app$1"
+      - "traefik.http.middlewares.toolscube-redirect.redirectregex.permanent=true"
 
 networks:
   proxy:

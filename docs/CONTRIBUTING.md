@@ -1,7 +1,7 @@
-# 🤝 Contributing to Tools Hub
+# 🤝 Contributing to Tools Cube
 
 Thank you for your interest in contributing!
-This document provides guidelines for contributing to the Tools Hub project.
+This document provides guidelines for contributing to the Tools Cube project.
 
 ---
 
@@ -102,5 +102,5 @@ Before submitting:
 
 ## 🙏 Thanks
 
-Your contributions make **Tools Hub** better for everyone.
+Your contributions make **Tools Cube** better for everyone.
 We appreciate your help in building an open, useful platform!

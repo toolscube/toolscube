@@ -97,7 +97,7 @@ export default function HomePage() {
             </Link>
           </Button>
           <Button variant="outline" asChild size="lg">
-            <Link href="/about" aria-label="Learn more about Tools Hub">
+            <Link href="/about" aria-label="Learn more about Tools Cube">
               About
             </Link>
           </Button>
@@ -202,7 +202,7 @@ export default function HomePage() {
         <h2 className="mb-4 text-xl font-semibold tracking-tight">FAQs</h2>
         <Accordion type="single" collapsible className="rounded-2xl border p-2">
           <AccordionItem value="a1">
-            <AccordionTrigger>Is Tools Hub free?</AccordionTrigger>
+            <AccordionTrigger>Is Tools Cube free?</AccordionTrigger>
             <AccordionContent>Yes. Most tools are free to use without an account.</AccordionContent>
           </AccordionItem>
           <AccordionItem value="a2">
@@ -228,7 +228,7 @@ export default function HomePage() {
             <div className="relative">
               <h3 className="text-2xl font-semibold tracking-tight">Support the project</h3>
               <p className="mt-2 max-w-prose text-sm text-muted-foreground">
-                Sponsor to help us ship faster and keep Tools Hub free for everyone.
+                Sponsor to help us ship faster and keep Tools Cube free for everyone.
               </p>
             </div>
             <div className="relative flex flex-wrap gap-3 md:justify-end">

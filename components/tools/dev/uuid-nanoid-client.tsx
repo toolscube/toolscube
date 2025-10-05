@@ -22,7 +22,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const STORAGE_KEY = "toolshub:uuid-nanoid-v1";
+const STORAGE_KEY = "toolscube:uuid-nanoid-v1";
 
 const DEFAULT_NANO_ALPHABET = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const PRESETS: Record<string, string> = {

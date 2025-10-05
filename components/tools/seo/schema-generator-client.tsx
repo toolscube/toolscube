@@ -95,13 +95,13 @@ const DEFAULT: State = {
   pretty: true,
 
   article: {
-    headline: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
+    headline: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
     description:
       "URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators — all in one place.",
     authorName: "Tariqul Islam",
     authorUrl: "https://tariqul.dev",
-    publisherName: "Tools Hub",
-    publisherLogo: "https://toolshub.dev/og/tools-hub-og.png",
+    publisherName: "Tools Cube",
+    publisherLogo: "https://toolscube.app/og/tools-cube-og.png",
     datePublished: "2025-02-10",
     dateModified: "2025-02-12",
     url: "https://toolshub.dev",

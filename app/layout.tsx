@@ -39,8 +39,8 @@ const smartDescription = description || siteDescriptionFallback(ToolsData);
 
 export const metadata: Metadata = {
   title: {
-    default: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
-    template: "%s - Tools Hub",
+    default: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
+    template: "%s - Tools Cube",
   },
   description: smartDescription,
   metadataBase: new URL(siteURL),
@@ -49,41 +49,41 @@ export const metadata: Metadata = {
   creator: "Tariqul Islam",
   publisher: "Tariqul Islam",
   category: "UtilitiesApplication",
-  applicationName: "Tools Hub",
+  applicationName: "Tools Cube",
   appLinks: {
     web: {
       url: `${siteURL}`,
     },
   },
   openGraph: {
-    title: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
+    title: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
     description:
       "Fast, free, privacy-friendly online tools. Shorten links, convert files, optimize images, and more.",
     type: "website",
     url: `${siteURL}/tools`,
-    siteName: "Tools Hub",
+    siteName: "Tools Cube",
     locale: "en_US",
     alternateLocale: ["bn_BD"],
     images: [
       {
-        url: `${siteURL}/assets/logo-tools-hub.png`,
+        url: `${siteURL}/assets/logo-tools-cube.png`,
         width: 1200,
         height: 630,
-        alt: "Tools Hub",
+        alt: "Tools Cube",
       },
       {
         url: `${siteURL}/assets/logo-tools.png`,
         width: 800,
         height: 800,
-        alt: "Tools Hub",
+        alt: "Tools Cube",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    site: "@toolshub",
-    creator: "@toolshub",
-    title: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
+    site: "@toolscube",
+    creator: "@toolscube",
+    title: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
     description:
       "Shorten links, convert files, optimize images, and more. 100% free and privacy-first.",
     images: [`${siteURL}/assets/logo-rounded.webp`],
@@ -110,7 +110,7 @@ export const metadata: Metadata = {
     icon: [
       { url: "/favicon.ico" },
       { url: "/assets/logo-rounded.webp" },
-      { url: "/assets/logo-tools-hub.png" },
+      { url: "/assets/logo-tools-cube.png" },
       { url: "/assets/logo-tools.png" },
       { url: "/assets/logo-corner.png" },
     ],
@@ -125,7 +125,7 @@ export default function RootLayout({
   const siteLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Tools Hub",
+    name: "Tools Cube",
     url: siteURL,
     inLanguage: ["en", "bn"],
     potentialAction: {
@@ -138,9 +138,9 @@ export default function RootLayout({
   const orgLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Tools Hub",
+    name: "Tools Cube",
     url: siteURL,
-    logo: `${siteURL}/og/tools-hub-square.png`,
+    logo: `${siteURL}/og/tools-cube-square.png`,
     sameAs: [
       "https://tariqul.dev",
       "https://github.com/tariqul420",
@@ -152,7 +152,7 @@ export default function RootLayout({
   const navLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Tools Hub Categories",
+    name: "Tools Cube Categories",
     itemListElement: ToolsData.map((c, i: number) => ({
       "@type": "ListItem",
       position: i + 1,

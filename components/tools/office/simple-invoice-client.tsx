@@ -741,7 +741,7 @@ export default function SimpleInvoiceClient() {
             )}
 
             <div className="mt-8 text-center text-xs text-muted-foreground">
-              Generated with Tools Hub — Simple Invoice
+              Generated with Tools Cube — Simple Invoice
             </div>
           </div>
         </CardContent>

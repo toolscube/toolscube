@@ -1,8 +1,8 @@
-# Tools Hub – Project Roadmap & Documentation
+# Tools Cube – Project Roadmap & Documentation
 
 ## 🏷️ Project Overview
 
-- **Project Name:** Tools Hub (Utility / Productivity Tools Platform)
+- **Project Name:** Tools Cube (Utility / Productivity Tools Platform)
 - **Goal:** Provide free, fast, privacy-friendly online tools (URL shortener, PDF tools, image converters, text utilities, calculators).
 - **Monetization:** Google AdSense (banner, sticky, in-content ads) + premium subscriptions (optional, for shortener or advanced tools).
 
@@ -40,7 +40,7 @@ project-root/
 │ │ ├── about/page.tsx
 │ │ ├── privacy/page.tsx
 │ │ └── terms/page.tsx
-│ ├── tools/ # Tools hub main route
+│ ├── tools/ # Tools cube main route
 │ │ ├── layout.tsx
 │ │ ├── page.tsx # Tools index + categories
 │ │ ├── url/

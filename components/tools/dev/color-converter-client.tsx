@@ -263,7 +263,7 @@ function randomHex() {
   return `#${n.toString(16).padStart(6, "0")}`;
 }
 
-const RECENT_KEY = "toolshub.color.recent";
+const RECENT_KEY = "toolscube.color.recent";
 
 export default function ColorConverterClient() {
   const [rgb, setRgb] = React.useState<RGB>({ r: 30, g: 144, b: 255 });

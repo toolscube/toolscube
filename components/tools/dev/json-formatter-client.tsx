@@ -35,7 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-const LS_KEY = "toolshub:json-formatter-v1";
+const LS_KEY = "toolscube:json-formatter-v1";
 
 export default function JsonFormatterClient() {
   const [input, setInput] = useState<string>("");

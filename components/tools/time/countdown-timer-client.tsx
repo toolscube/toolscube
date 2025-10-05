@@ -189,9 +189,9 @@ function toICSAlarmCountdown(label: string, seconds: number) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//ToolsHub//Countdown//EN",
+    "PRODID:-//ToolsCube//Countdown//EN",
     "BEGIN:VEVENT",
-    `UID:countdown-${uid()}@toolshub`,
+    `UID:countdown-${uid()}@toolscube`,
     `DTSTAMP:${dt(new Date())}`,
     `DTSTART:${dt(start)}`,
     `DTEND:${dt(end)}`,

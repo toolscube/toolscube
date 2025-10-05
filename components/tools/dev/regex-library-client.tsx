@@ -228,7 +228,7 @@ const LIBRARY: Pattern[] = [
     pattern: String.raw`#\w+`,
     flags: "g",
     category: "Text",
-    sample: "Loving #ToolsHub and #regex",
+    sample: "Loving #ToolsCube and #regex",
   },
   {
     id: "mentions",

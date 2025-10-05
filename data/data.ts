@@ -8,7 +8,7 @@ export const qrCodeData = {
   wifiHidden: false,
   vcFirst: "Tariqul",
   vcLast: "Islam",
-  vcOrg: "Tools Hub",
+  vcOrg: "Tools Cube",
   vcTitle: "",
   vcPhone: "+8801XXXXXXXXX",
   vcEmail: "tariqul@tariqul.dev",

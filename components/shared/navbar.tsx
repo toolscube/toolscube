@@ -14,8 +14,8 @@ export function Navbar() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3">
         <div className="flex items-center gap-3">
           <Link href="/" className="inline-flex items-center font-semibold">
-            <Image src="/assets/logo-transplant.png" height={40} width={40} alt="Tools Hub Logo" />
-            <span>Tools Hub</span>
+            <Image src="/assets/logo-transplant.png" height={40} width={40} alt="Tools Cube Logo" />
+            <span>Tools Cube</span>
           </Link>
           <nav className="ml-6 hidden items-center gap-6 text-sm md:flex">
             <Link href="/tools" className="hover:opacity-80">
@@ -40,7 +40,7 @@ export function Navbar() {
               <div className="flex items-center justify-between">
                 <Link href="/" className="inline-flex items-center gap-2 font-semibold">
                   <LayoutGrid className="h-5 w-5" />
-                  <span>Tools Hub</span>
+                  <span>Tools Cube</span>
                 </Link>
                 <SheetClose asChild>
                   <Button variant="ghost" size="icon" aria-label="Close menu">

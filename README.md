@@ -1,6 +1,6 @@
-# 🔧 Tools Hub – Online Utilities Platform
+# 🧊 Tools Cube – Online Utilities Platform
 
-Tools Hub is a **Next.js (App Router)** based platform providing free, fast, and privacy-friendly online tools.  
+Tools Cube is a **Next.js (App Router)** based platform providing free, fast, and privacy-friendly online tools.  
 It includes a wide range of utilities such as URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators.
 
 ---
@@ -64,8 +64,8 @@ project-root/
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/your-username/tools-hub.git
-cd tools-hub
+git clone https://github.com/your-username/tools-cube.git
+cd tools-cube
 npm install
 ```
 
@@ -74,7 +74,7 @@ npm install
 Create a `.env` file with:
 
 ```env
-DATABASE_URL="postgresql://user:pass@localhost:5432/tools_hub"
+DATABASE_URL="postgresql://user:pass@localhost:5432/tools_cube"
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 # Optional
 CLERK_SECRET_KEY=...
@@ -102,8 +102,8 @@ Open [http://localhost:3000](http://localhost:3000).
 Build & run with Docker:
 
 ```bash
-docker build -t tools-hub .
-docker run -d --name tools-hub -p 3000:3000 --env-file .env tools-hub
+docker build -t tools-cube .
+docker run -d --name tools-cube -p 3000:3000 --env-file .env tools-cube
 ```
 
 ---

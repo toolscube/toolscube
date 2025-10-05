@@ -497,7 +497,7 @@ export default function MeetingNotesClient() {
             </div>
 
             <div className="mt-8 text-center text-xs text-muted-foreground">
-              Generated with Tools Hub — Meeting Notes
+              Generated with Tools Cube — Meeting Notes
             </div>
           </div>
 

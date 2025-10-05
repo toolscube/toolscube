@@ -114,7 +114,7 @@ function Panel({
   );
 }
 
-const STORAGE_KEY = "toolshub:markdown-previewer-v1";
+const STORAGE_KEY = "toolscube:markdown-previewer-v1";
 const SAMPLE_MD = `# ✨ Markdown Previewer
 
 Write in **Write** tab — see live **Preview**.
