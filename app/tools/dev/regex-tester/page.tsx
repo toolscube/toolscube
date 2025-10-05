@@ -44,7 +44,7 @@ export const metadata = buildMetadata({
     "date regex",
     "password regex",
     "custom regex pattern",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -57,7 +57,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Regex Tester — Tools Hub",
+    name: "Regex Tester — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

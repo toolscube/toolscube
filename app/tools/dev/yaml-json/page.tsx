@@ -21,7 +21,7 @@ export const metadata = buildMetadata({
     "free converter",
     "online YAML JSON converter",
     "copy export YAML JSON",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
   ],
 });
@@ -32,7 +32,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "YAML ⇄ JSON Converter — Tools Hub",
+    name: "YAML ⇄ JSON Converter — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

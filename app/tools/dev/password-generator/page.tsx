@@ -29,7 +29,7 @@ export const metadata = buildMetadata({
     "password length",
     "password policy",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -41,7 +41,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Password Generator — Tools Hub",
+    name: "Password Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

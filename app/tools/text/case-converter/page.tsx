@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
     "punctuation cleanup",
     "copy text",
     "download text",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -46,7 +46,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Case Converter — Tools Hub",
+    name: "Case Converter — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

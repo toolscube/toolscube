@@ -27,7 +27,7 @@ export const metadata = buildMetadata({
     "group expense calculator",
     "party bill calculator",
     "meal cost sharing",
-    "Tools Hub",
+    "Tools Cube",
     "calculators",
     "finance tools",
     "Bangladesh",
@@ -41,7 +41,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Tip Splitter — Tools Hub",
+    name: "Tip Splitter — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

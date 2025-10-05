@@ -32,7 +32,7 @@ export const metadata = buildMetadata({
     "custom domain short link",
     "SVG QR",
     "PNG QR",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -45,7 +45,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "URL Shortener — Tools Hub",
+    name: "URL Shortener — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

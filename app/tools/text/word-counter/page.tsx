@@ -25,7 +25,7 @@ export const metadata = buildMetadata({
     "uppercase lowercase title case",
     "slugify text",
     "copy and export text stats",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -38,7 +38,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Word Counter — Tools Hub",
+    name: "Word Counter — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

@@ -48,7 +48,7 @@ export const metadata = buildMetadata({
     "offline converter",
     "developer tools",
     "data tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -60,7 +60,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "CSV ⇄ JSON Converter — Tools Hub",
+    name: "CSV ⇄ JSON Converter — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

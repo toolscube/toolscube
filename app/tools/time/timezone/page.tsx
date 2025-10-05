@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
     "time zone calculator",
     "current time by city",
     "time zone planner tool",
-    "Tools Hub",
+    "Tools Cube",
     "utilities",
     "online tools",
     "Bangladesh",
@@ -46,7 +46,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Time Zone Converter — Tools Hub",
+    name: "Time Zone Converter — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",
@@ -70,7 +70,7 @@ export default function Page() {
     ],
     creator: {
       "@type": "Organization",
-      name: "Tools Hub",
+      name: "Tools Cube",
       url: siteURL,
     },
     potentialAction: {

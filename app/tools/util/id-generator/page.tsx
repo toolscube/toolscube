@@ -28,7 +28,7 @@ export const metadata = buildMetadata({
     "UUID export JSON",
     "unique identifier generator",
     "free online ID generator",
-    "Tools Hub",
+    "Tools Cube",
     "utilities",
     "online tools",
     "Bangladesh",
@@ -41,7 +41,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "GUID / UUID / Order ID Generator — Tools Hub",
+    name: "GUID / UUID / Order ID Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

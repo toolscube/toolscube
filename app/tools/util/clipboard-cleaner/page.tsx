@@ -30,7 +30,7 @@ export const metadata = buildMetadata({
     "strip markdown clipboard",
     "convert rich text to plain text",
     "export clipboard text",
-    "Tools Hub",
+    "Tools Cube",
     "utilities",
     "online tools",
     "Bangladesh",
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Clipboard Cleaner — Tools Hub",
+    name: "Clipboard Cleaner — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

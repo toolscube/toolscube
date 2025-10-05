@@ -35,7 +35,7 @@ export const metadata = buildMetadata({
     "finance tools",
     "online tools",
     "privacy friendly tools",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
   ],
 });
@@ -46,7 +46,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Savings Goal Calculator — Tools Hub",
+    name: "Savings Goal Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",

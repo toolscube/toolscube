@@ -35,7 +35,7 @@ export const metadata = buildMetadata({
     "finance tools",
     "budget calculator",
     "invoice calculator",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
   ],
 });
@@ -46,7 +46,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "GST/VAT Calculator — Tools Hub",
+    name: "GST/VAT Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",

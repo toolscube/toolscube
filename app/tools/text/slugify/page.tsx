@@ -29,7 +29,7 @@ export const metadata = buildMetadata({
     "custom replacements",
     "find and replace rules",
     "batch slugify",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -42,7 +42,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Slugify — Tools Hub",
+    name: "Slugify — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

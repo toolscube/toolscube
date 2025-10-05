@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
     "client-side image convert",
     "secure image converter",
     "offline capable image tool",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -46,7 +46,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Image Convert — Tools Hub",
+    name: "Image Convert — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

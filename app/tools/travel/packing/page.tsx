@@ -39,7 +39,7 @@ export const metadata = buildMetadata({
     "share and print packing list",
     "export CSV PDF",
     "offline packing tool",
-    "Tools Hub",
+    "Tools Cube",
     "travel tools",
     "online tools",
     "Bangladesh",
@@ -52,7 +52,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Packing Checklist — Tools Hub",
+    name: "Packing Checklist — Tools Cube",
     url: toolUrl,
     applicationCategory: "TravelApplication",
     operatingSystem: "Web",

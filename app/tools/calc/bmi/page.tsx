@@ -31,7 +31,7 @@ export const metadata = buildMetadata({
     "BMI ranges",
     "BMI copy share export",
     "health calculator",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "BMI Calculator — Tools Hub",
+    name: "BMI Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "HealthApplication",
     operatingSystem: "Web",

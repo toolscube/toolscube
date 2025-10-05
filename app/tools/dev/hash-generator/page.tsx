@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
     "crypto hash",
     "password hash",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -45,7 +45,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Hash Generator — Tools Hub",
+    name: "Hash Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

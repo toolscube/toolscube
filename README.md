@@ -37,7 +37,7 @@ project-root/
 │ ├── page.tsx # Homepage
 │ ├── sitemap.ts # Dynamic sitemap
 │ ├── robots.ts # Robots.txt
-│ ├── tools/ # Tools Hub routes
+│ ├── tools/ # Tools Cube routes
 │ │ ├── url/ # URL shortener
 │ │ ├── text/ # Text tools
 │ │ ├── pdf/ # PDF tools

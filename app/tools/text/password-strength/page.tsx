@@ -30,7 +30,7 @@ export const metadata = buildMetadata({
     "passphrase generator guidance",
     "two factor authentication",
     // product & locale
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Password Strength — Tools Hub",
+    name: "Password Strength — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

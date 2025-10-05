@@ -41,7 +41,7 @@ export const metadata = buildMetadata({
     "keyboard calculator",
     "calculator with history",
     "calculator with memory",
-    "Tools Hub",
+    "Tools Cube",
     "calculators",
     "online tools",
     "Bangladesh",
@@ -54,7 +54,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Scientific Calculator — Tools Hub",
+    name: "Scientific Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "EducationalApplication",
     operatingSystem: "Web",

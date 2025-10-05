@@ -27,7 +27,7 @@ export const metadata = buildMetadata({
     "utf-8 Base64",
     "Base64 validator",
     "mime type detector",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -40,7 +40,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Base64 Encode/Decode — Tools Hub",
+    name: "Base64 Encode/Decode — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

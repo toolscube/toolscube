@@ -71,8 +71,8 @@ type State = {
 };
 
 const DEFAULT: State = {
-  title: "Tools Hub — Fast, Free, Privacy-Friendly Online Tools",
-  siteName: "Tools Hub",
+  title: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
+  siteName: "Tools Cube",
   description:
     "URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators — all in one place.",
   author: "Tariqul Islam",

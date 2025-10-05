@@ -31,7 +31,7 @@ export const metadata = buildMetadata({
     "sentence case",
     "title case",
     "unicode normalize",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -44,7 +44,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Text Cleaner — Tools Hub",
+    name: "Text Cleaner — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

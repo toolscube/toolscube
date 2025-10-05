@@ -44,7 +44,7 @@ export const metadata = buildMetadata({
     "link safety preview",
     "no redirect open",
     "privacy-first link expand",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
     "online tools",
     "free tools",
@@ -58,7 +58,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Link Expander — Tools Hub",
+    name: "Link Expander — Tools Cube",
     alternateName: [
       "URL Unshortener",
       "Redirect Chain Checker",

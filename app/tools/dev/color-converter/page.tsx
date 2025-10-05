@@ -24,7 +24,7 @@ export const metadata = buildMetadata({
     "web design colors",
     "UI design color tool",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -36,7 +36,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Color Converter — Tools Hub",
+    name: "Color Converter — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

@@ -6,7 +6,8 @@ import { generateSEOMetadata } from "@/lib/seo-config";
 
 export const metadata = generateSEOMetadata({
   title: "About Tools Cube",
-  description: "Learn about Tools Cube — our mission is to provide fast, free, privacy-friendly online utilities for developers and businesses worldwide.",
+  description:
+    "Learn about Tools Cube — our mission is to provide fast, free, privacy-friendly online utilities for developers and businesses worldwide.",
   path: "/about",
 });
 
@@ -28,9 +29,9 @@ export default function AboutPage() {
             About Tools Cube
           </h1>
           <p className="max-w-2xl text-pretty text-muted-foreground">
-            Tools Cube brings essential online utilities together — URL shortener, PDF & image tools,
-            text utilities, developer helpers, and calculators — with a focus on speed, simplicity,
-            and privacy.
+            Tools Cube brings essential online utilities together — URL shortener, PDF & image
+            tools, text utilities, developer helpers, and calculators — with a focus on speed,
+            simplicity, and privacy.
           </p>
           <div className="mt-2 flex gap-3">
             <Button asChild>
@@ -126,8 +127,9 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
-              We started Tools Cube to remove small daily frictions: converting files, cleaning text,
-              generating links, and validating data — quickly, without sign-ups or bloated apps.
+              We started Tools Cube to remove small daily frictions: converting files, cleaning
+              text, generating links, and validating data — quickly, without sign-ups or bloated
+              apps.
             </p>
             <p>
               Today, we’re expanding responsibly: better performance, clearer privacy choices, and a

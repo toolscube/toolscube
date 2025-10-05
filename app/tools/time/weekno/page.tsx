@@ -31,7 +31,7 @@ export const metadata = buildMetadata({
     "week date range",
     "week Monday to Sunday",
     "week start end dates",
-    "Tools Hub",
+    "Tools Cube",
     "time tools",
     "utilities",
     "online tools",
@@ -45,7 +45,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "ISO Week Number — Tools Hub",
+    name: "ISO Week Number — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

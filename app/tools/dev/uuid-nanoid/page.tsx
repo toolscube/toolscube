@@ -28,7 +28,7 @@ export const metadata = buildMetadata({
     "crypto random IDs",
     "collision resistant ID",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -40,7 +40,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "UUID / NanoID Generator — Tools Hub",
+    name: "UUID / NanoID Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

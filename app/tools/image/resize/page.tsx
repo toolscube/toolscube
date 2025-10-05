@@ -34,7 +34,7 @@ export const metadata = buildMetadata({
     "no watermark image resize",
     "fast image resize tool",
     "secure online image tool",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -47,7 +47,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Image Resize — Tools Hub",
+    name: "Image Resize — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

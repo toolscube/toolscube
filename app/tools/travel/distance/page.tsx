@@ -30,7 +30,7 @@ export const metadata = buildMetadata({
     "map tools",
     "kilometers to miles",
     "miles to km",
-    "Tools Hub",
+    "Tools Cube",
     "travel tools",
     "online tools",
     "Bangladesh",
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Distance & ETA — Tools Hub",
+    name: "Distance & ETA — Tools Cube",
     url: toolUrl,
     applicationCategory: "TravelApplication",
     operatingSystem: "Web",

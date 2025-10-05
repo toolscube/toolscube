@@ -25,7 +25,7 @@ export const metadata = buildMetadata({
     "meta tags preview",
     "SEO head builder",
     "SEO tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -37,7 +37,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Meta Tags Generator — Tools Hub",
+    name: "Meta Tags Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

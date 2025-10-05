@@ -37,7 +37,7 @@ export const metadata = buildMetadata({
     "product invoice",
     "client billing",
     "office tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -49,7 +49,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Simple Invoice Generator — Tools Hub",
+    name: "Simple Invoice Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",

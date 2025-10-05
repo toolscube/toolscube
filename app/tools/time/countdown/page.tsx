@@ -29,7 +29,7 @@ export const metadata = buildMetadata({
     "dark mode timer",
     "offline timer app",
     "local storage timer",
-    "Tools Hub",
+    "Tools Cube",
     "time tools",
     "utilities",
     "online tools",
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Countdown & Pomodoro Timer — Tools Hub",
+    name: "Countdown & Pomodoro Timer — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

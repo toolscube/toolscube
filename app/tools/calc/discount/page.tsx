@@ -30,7 +30,7 @@ export const metadata = buildMetadata({
     "what percent off",
     "reverse discount",
     "original price from discount",
-    "Tools Hub",
+    "Tools Cube",
     "calculators",
     "online tools",
     "Bangladesh",
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Discount Finder — Tools Hub",
+    name: "Discount Finder — Tools Cube",
     url: toolUrl,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",

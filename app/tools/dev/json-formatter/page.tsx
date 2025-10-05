@@ -27,7 +27,7 @@ export const metadata = buildMetadata({
     "copy JSON",
     "download JSON",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -39,7 +39,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "JSON Formatter & Validator — Tools Hub",
+    name: "JSON Formatter & Validator — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://toolshub.tariqul.dev";
-const SITE_NAME = "Tools Hub";
-const SITE_TWITTER = "@toolshub";
-const DEFAULT_IMAGE = `${SITE_URL}/assets/logo-tools-hub.png`;
+const SITE_NAME = "Tools Cube";
+const SITE_TWITTER = "@toolscube";
+const DEFAULT_IMAGE = `${SITE_URL}/assets/logo-tools-cube.png`;
 
 type BuildMetaInput = {
   title: string;
@@ -82,7 +82,7 @@ export function buildMetadata(input: BuildMetaInput): Metadata {
       apple: "/favicon.ico",
     },
 
-    applicationName: "Tools Hub",
+    applicationName: "Tools Cube",
     other: {
       "og:locale": "en_US",
     },

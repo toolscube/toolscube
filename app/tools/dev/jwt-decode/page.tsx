@@ -37,7 +37,7 @@ export const metadata = buildMetadata({
     "clock skew",
     "malformed JWT",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -49,7 +49,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "JWT Decoder — Tools Hub",
+    name: "JWT Decoder — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

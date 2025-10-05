@@ -31,7 +31,7 @@ export const metadata = buildMetadata({
     "regex for developers",
     "regex testing",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
     "online tools",
   ],
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Regex Library — Tools Hub",
+    name: "Regex Library — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

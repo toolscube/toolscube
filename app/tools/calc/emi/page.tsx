@@ -36,7 +36,7 @@ export const metadata = buildMetadata({
     "amortization export PDF",
     "finance tools",
     "calculators",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -48,7 +48,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Loan / EMI Calculator — Tools Hub",
+    name: "Loan / EMI Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",

@@ -31,7 +31,7 @@ export const metadata = buildMetadata({
     "YouTube thumbnail alternative",
     "meta image generator",
     "SEO tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "OG Image Builder — Tools Hub",
+    name: "OG Image Builder — Tools Cube",
     url: toolUrl,
     applicationCategory: "DesignApplication",
     operatingSystem: "Web",

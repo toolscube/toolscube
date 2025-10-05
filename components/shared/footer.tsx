@@ -112,10 +112,10 @@ function Footer() {
     <footer className="py-6 px-4 sm:px-6 lg:px-8 font-inter relative overflow-hidden ">
       <div className="max-w-7xl mx-auto flex flex-col items-center relative z-10">
         <div className="mb-6 flex items-center justify-center">
-          <Image src="/assets/logo-transplant.png" height={60} width={60} alt="Tools Hub Logo" />
-          <span className="text-gray-900 dark:text-white text-3xl font-extrabold tracking-wide">
-            Tools Hub
-          </span>
+          <Image src="/assets/logo-transplant.png" height={60} width={60} alt="Tools Cube Logo" />
+          <div>
+            Tools Cube
+          </div>
         </div>
 
         <nav className="mb-6 w-full">
@@ -149,7 +149,7 @@ function Footer() {
         </div>
 
         <p className="text-center text-xs text-gray-500 dark:text-gray-500 mt-4">
-          &copy; {new Date().getFullYear()} Tools Hub. All rights reserved.
+          &copy; {new Date().getFullYear()} Tools Cube. All rights reserved.
         </p>
       </div>
     </footer>

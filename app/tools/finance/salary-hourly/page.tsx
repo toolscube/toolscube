@@ -32,7 +32,7 @@ export const metadata = buildMetadata({
     "weeks per year",
     "pay conversion tool",
     "finance tools",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
   ],
 });
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Salary ↔ Hourly Pay Calculator — Tools Hub",
+    name: "Salary ↔ Hourly Pay Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",

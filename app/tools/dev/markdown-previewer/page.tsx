@@ -26,7 +26,7 @@ export const metadata = buildMetadata({
     "download HTML",
     "offline markdown preview",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
     "online tools",
     "free markdown preview",
@@ -39,7 +39,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Markdown Previewer — Tools Hub",
+    name: "Markdown Previewer — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

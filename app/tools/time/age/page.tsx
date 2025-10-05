@@ -37,7 +37,7 @@ export const metadata = buildMetadata({
     "copy age result",
     "share age result",
     "export age details",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -50,7 +50,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Age Calculator — Tools Hub",
+    name: "Age Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

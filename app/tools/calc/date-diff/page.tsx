@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
     "deadline calculator",
     "workdays calculator",
     "school days calculator",
-    "Tools Hub",
+    "Tools Cube",
     "calculators",
     "online tools",
     "Bangladesh",
@@ -46,7 +46,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Date Difference Calculator — Tools Hub",
+    name: "Date Difference Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

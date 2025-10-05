@@ -32,7 +32,7 @@ export const metadata = buildMetadata({
     "card large summary",
     "meta charset viewport head",
     "SEO tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -44,7 +44,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Open Graph Preview — Tools Hub",
+    name: "Open Graph Preview — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

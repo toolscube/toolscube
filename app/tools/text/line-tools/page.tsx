@@ -39,7 +39,7 @@ export const metadata = buildMetadata({
     "dedent lines",
     "join lines",
     "split to lines",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -52,7 +52,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Line Tools — Tools Hub",
+    name: "Line Tools — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

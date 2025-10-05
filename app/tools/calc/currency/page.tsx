@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
     "multi-currency conversion",
     "currency history",
     "cross-currency exchange",
-    "Tools Hub",
+    "Tools Cube",
     "calculators",
     "finance tools",
     "Bangladesh",
@@ -47,7 +47,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Currency Converter — Tools Hub",
+    name: "Currency Converter — Tools Cube",
     url: toolUrl,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",

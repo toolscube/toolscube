@@ -30,7 +30,7 @@ export const metadata = buildMetadata({
     "link tracking",
     "analytics tags",
     "privacy friendly UTM builder",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
     "online tools",
   ],
@@ -42,7 +42,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "UTM Builder — Tools Hub",
+    name: "UTM Builder — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

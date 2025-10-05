@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
     "diff history",
     "local autosave",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -45,7 +45,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Diff Checker — Tools Hub",
+    name: "Diff Checker — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

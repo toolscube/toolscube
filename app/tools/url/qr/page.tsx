@@ -36,7 +36,7 @@ export const metadata = buildMetadata({
     "download QR PNG",
     "download QR SVG",
     "copy data URL",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
     "online tools",
     "privacy friendly tools",
@@ -49,7 +49,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "QR Code — Tools Hub",
+    name: "QR Code — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

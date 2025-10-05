@@ -28,7 +28,7 @@ export const metadata = buildMetadata({
     "copy timestamp",
     "format date string",
     "developer tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -40,7 +40,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Timestamp Converter — Tools Hub",
+    name: "Timestamp Converter — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

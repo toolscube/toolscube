@@ -31,7 +31,7 @@ export const metadata = buildMetadata({
     "import/export JSON",
     "multiple languages",
     "SEO tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Schema Markup Generator — Tools Hub",
+    name: "Schema Markup Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

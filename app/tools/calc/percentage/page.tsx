@@ -26,7 +26,7 @@ export const metadata = buildMetadata({
     "percentage to decimal",
     "decimal to percentage",
     "fraction to percentage",
-    "Tools Hub",
+    "Tools Cube",
     "calculators",
     "online tools",
     "Bangladesh",
@@ -39,7 +39,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Percentage Calculator — Tools Hub",
+    name: "Percentage Calculator — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

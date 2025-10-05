@@ -28,7 +28,7 @@ export const metadata = buildMetadata({
     "raffle draw app",
     "contest winner picker",
     "wheel of names alternative",
-    "Tools Hub",
+    "Tools Cube",
     "utilities",
     "online tools",
     "Bangladesh",
@@ -41,7 +41,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Random Picker — Tools Hub",
+    name: "Random Picker — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

@@ -45,7 +45,7 @@ export const metadata = buildMetadata({
     "scientific calculator units",
     "quick conversion tool",
     "multi-unit converter",
-    "Tools Hub",
+    "Tools Cube",
     "calculators",
     "Bangladesh",
   ],
@@ -57,7 +57,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Unit Converter — Tools Hub",
+    name: "Unit Converter — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

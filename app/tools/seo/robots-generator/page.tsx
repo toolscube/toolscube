@@ -30,7 +30,7 @@ export const metadata = buildMetadata({
     "block private pages",
     "allow public pages",
     "manage search bots",
-    "Tools Hub",
+    "Tools Cube",
     "SEO optimization",
     "online tools",
     "Bangladesh",
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "robots.txt Generator — Tools Hub",
+    name: "robots.txt Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

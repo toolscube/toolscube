@@ -23,7 +23,7 @@ export const metadata = buildMetadata({
     "JSON response viewer",
     "developer tools",
     "online API tester",
-    "Tools Hub",
+    "Tools Cube",
     "Bangladesh",
   ],
 });
@@ -34,7 +34,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "API Request Tester — Tools Hub",
+    name: "API Request Tester — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

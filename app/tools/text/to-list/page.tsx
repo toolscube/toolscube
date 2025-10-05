@@ -30,7 +30,7 @@ export const metadata = buildMetadata({
     "add numbering",
     "export list CSV",
     "export list TXT",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "privacy friendly tools",
     "Bangladesh",
@@ -43,7 +43,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Text to List — Tools Hub",
+    name: "Text to List — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

@@ -17,12 +17,13 @@ import TextareaField from "@/components/shared/form-fields/textarea-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { generateSEOMetadata } from "@/lib/seo-config";
+import { cn } from "@/lib/utils";
 
 export const metadata = generateSEOMetadata({
   title: "Sponsor Tools Cube",
-  description: "Support Tools Cube development and help us keep our online tools free for everyone. Choose from flexible sponsorship tiers and get featured recognition.",
+  description:
+    "Support Tools Cube development and help us keep our online tools free for everyone. Choose from flexible sponsorship tiers and get featured recognition.",
   path: "/sponsor",
 });
 

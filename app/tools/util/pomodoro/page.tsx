@@ -35,7 +35,7 @@ export const metadata = buildMetadata({
     "dark mode Pomodoro timer",
     "offline Pomodoro timer",
     "mobile Pomodoro timer",
-    "Tools Hub",
+    "Tools Cube",
     "utilities",
     "online tools",
     "Bangladesh",
@@ -48,7 +48,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Pomodoro Focus Timer — Tools Hub",
+    name: "Pomodoro Focus Timer — Tools Cube",
     url: toolUrl,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",

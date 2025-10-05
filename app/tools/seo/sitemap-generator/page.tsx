@@ -30,7 +30,7 @@ export const metadata = buildMetadata({
     "large site sitemap",
     "multi-language sitemap",
     "SEO tools",
-    "Tools Hub",
+    "Tools Cube",
     "online tools",
     "Bangladesh",
   ],
@@ -42,7 +42,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Sitemap.xml Generator — Tools Hub",
+    name: "Sitemap.xml Generator — Tools Cube",
     url: toolUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",

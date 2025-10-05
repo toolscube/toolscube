@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
     "CSV to-do export",
     "JSON to-do export",
     "offline productivity app",
-    "Tools Hub",
+    "Tools Cube",
     "office tools",
     "online tools",
     "Bangladesh",
@@ -46,7 +46,7 @@ export default function Page() {
   const appLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "To-Do (Offline) — Tools Hub",
+    name: "To-Do (Offline) — Tools Cube",
     url: toolUrl,
     applicationCategory: "ProductivityApplication",
     operatingSystem: "Web",
