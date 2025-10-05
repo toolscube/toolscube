@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   toolshub:
     build:
@@ -13,12 +11,12 @@ services:
       - ./.env
     environment:
       NODE_ENV: production
-      PORT: 3005
+      PORT: "3005"
+      NEXT_TELEMETRY_DISABLED: "1"
       DATABASE_URL: ${DATABASE_URL}
 
     expose:
       - "3005"
-
     restart: unless-stopped
     networks:
       - proxy
@@ -28,14 +26,14 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
 
-      # primary domain
+      # Primary domain
       - "traefik.http.routers.toolshub.rule=Host(`toolshub.tariqul.dev`)"
       - "traefik.http.routers.toolshub.entrypoints=websecure"
       - "traefik.http.routers.toolshub.tls=true"
       - "traefik.http.routers.toolshub.tls.certresolver=letsencrypt"
       - "traefik.http.routers.toolshub.service=toolshub-svc"
 
-      # service port
+      # Service port
       - "traefik.http.services.toolshub-svc.loadbalancer.server.port=3005"
       - "traefik.http.services.toolshub-svc.loadbalancer.passhostheader=true"
 
