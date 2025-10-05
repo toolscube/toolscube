@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { Link as LinkIcon, Lock, ShieldCheck, TriangleAlert } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyButton, LinkButton } from "@/components/shared/action-buttons";
@@ -11,7 +11,8 @@ import { generateSEOMetadata } from "@/lib/seo-config";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Safe Link Preview",
-  description: "Preview this link before continuing. Tools Cube helps protect you from potentially harmful links.",
+  description:
+    "Preview this link before continuing. Tools Cube helps protect you from potentially harmful links.",
   noIndex: true,
 });
 

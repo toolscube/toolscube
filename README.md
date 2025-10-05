@@ -1,135 +1,97 @@
-# 🧊 Tools Cube – Online Utilities Platform
+# 🧊 Tools Cube
 
-Tools Cube is a **Next.js (App Router)** based platform providing free, fast, and privacy-friendly online tools.  
-It includes a wide range of utilities such as URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators.
+> **Fast, Free, Privacy-Friendly Online Tools**
 
----
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 🚀 Features
+**Tools Cube** is a modern web platform offering 70+ essential online utilities for developers, businesses, and everyday users. Built with Next.js 15, featuring lightning-fast performance and privacy-first design.
 
-- URL Shortener with custom slugs & click analytics
-- Text & String Tools (case converter, slugify, word counter, base64 encode/decode)
-- PDF Tools (merge, split, compress, convert)
-- Image Tools (convert, resize, remove EXIF)
-- Developer Tools (JSON formatter, JWT decoder, regex tester)
-- SEO Tools (robots.txt generator, OG builder, meta preview)
-- Calculators (BMI, unit converter, date diff, percentage)
+🌐 **Live Demo:** [toolscube.app](https://toolscube.app)
 
 ---
 
-## ⚙️ Tech Stack
+## ✨ Features
 
-- **Framework:** [Next.js 14+ (App Router)](https://nextjs.org)
-- **UI:** [ShadCN UI](https://ui.shadcn.com) + TailwindCSS
-- **Database:** PostgreSQL with Prisma ORM (for shortener & analytics)
-- **Auth (optional):** Clerk / NextAuth
-- **Storage:** Cloudinary or AWS S3 (for media/PDF if needed)
-- **Deployment:** Docker + Traefik (reverse proxy, SSL via Let’s Encrypt)
-
----
-
-## 📂 Project Structure
-
-```
-
-project-root/
-├── app/
-│ ├── page.tsx # Homepage
-│ ├── sitemap.ts # Dynamic sitemap
-│ ├── robots.ts # Robots.txt
-│ ├── tools/ # Tools Cube routes
-│ │ ├── url/ # URL shortener
-│ │ ├── text/ # Text tools
-│ │ ├── pdf/ # PDF tools
-│ │ ├── image/ # Image tools
-│ │ ├── dev/ # Developer tools
-│ │ ├── seo/ # SEO tools
-│ │ └── calc/ # Calculators
-├── components/ # UI & shared components
-├── lib/ # DB, rate-limit, utilities
-├── prisma/ # Prisma schema & migrations
-├── public/ # Static assets
-├── styles/ # Global styles
-├── docs/PROJECT.md # Roadmap & full documentation
-├── Dockerfile
-├── docker/entrypoint.sh
-└── README.md
-
-```
+🔗 **URL Tools** - Shortener, QR codes, UTM builder  
+📝 **Text Tools** - Case converter, word counter, regex tester  
+🧮 **Calculators** - BMI, unit converter, percentage, currency  
+⚙️ **Developer Tools** - JSON formatter, JWT decoder, API tester  
+🎨 **Design Tools** - Color converter, OG image builder  
+📊 **SEO Tools** - Meta generator, schema builder, robots.txt  
+💼 **Office Tools** - Invoice generator, meeting notes  
 
 ---
 
-## 🛠️ Getting Started
-
-### 1. Clone & Install
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/your-username/tools-cube.git
+# Clone repository
+git clone https://github.com/tariqul420/tools-cube.git
 cd tools-cube
+
+# Install dependencies
 npm install
-```
 
-### 2. Environment Setup
+# Set up environment
+cp .env.example .env.local
+# Edit .env.local with your settings
 
-Create a `.env` file with:
-
-```env
-DATABASE_URL="postgresql://user:pass@localhost:5432/tools_cube"
-NEXT_PUBLIC_SITE_URL="http://localhost:3000"
-# Optional
-CLERK_SECRET_KEY=...
-CLERK_PUBLISHABLE_KEY=...
-```
-
-### 3. Prisma Migration
-
-```bash
-npx prisma migrate deploy
-```
-
-### 4. Run Development Server
-
-```bash
+# Run development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) to see the result.
 
 ---
 
-## 🐳 Docker (Production)
+## 🛠️ Tech Stack
 
-Build & run with Docker:
+- **Framework:** Next.js 15 (App Router)
+- **UI:** ShadCN UI + Tailwind CSS
+- **Database:** PostgreSQL + Prisma ORM
+- **Deployment:** Docker + Traefik
+- **TypeScript:** Full type safety
 
-```bash
-docker build -t tools-cube .
-docker run -d --name tools-cube -p 3000:3000 --env-file .env tools-cube
+---
+
+## � Project Structure
+
+```
+app/
+├── (marketing)/          # Marketing pages
+├── tools/               # Tool categories
+│   ├── url/            # URL utilities
+│   ├── text/           # Text processors
+│   ├── dev/            # Developer tools
+│   ├── calc/           # Calculators
+│   └── seo/            # SEO utilities
+components/
+├── tools/              # Tool components
+├── ui/                 # UI components
+└── shared/             # Shared components
+lib/                    # Utilities & config
 ```
 
 ---
 
-## 📊 Roadmap
+## 🌟 Highlights
 
-- [x] Base Next.js setup with ShadCN theme
-- [x] Core UI (Navbar, Footer, Ads slots, SEO layout)
-- [x] URL shortener + analytics with Prisma
-- [ ] 15–20 initial tools live (text, PDF, image, calc)
-- [ ] Deploy with Docker + Traefik
-- [ ] Google AdSense integration
-- [ ] Add advanced tools (SEO/dev/media)
-- [ ] Multi-language support (EN/BN)
+- **70+ Tools** - Comprehensive utility collection
+- **Privacy First** - No data tracking or storage
+- **Mobile Ready** - Responsive design
+- **SEO Optimized** - Perfect search engine optimization
+- **Open Source** - MIT licensed
+- **Fast Performance** - Optimized for speed
 
 ---
 
-## 📖 Learn More
+## � License
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [ShadCN UI](https://ui.shadcn.com)
-- [Prisma ORM](https://www.prisma.io/docs)
-- [Traefik Reverse Proxy](https://doc.traefik.io/traefik/)
+MIT © [Tariqul Islam](https://tariqul.dev)
 
 ---
 
-## 📜 License
-
-MIT License © 2025
+**⭐ Star this repo if you find it helpful!**
