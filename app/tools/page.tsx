@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     siteName: "Tools Cube",
     images: [
       {
-        url: `${siteURL}/assets/logo-tools-cube.png`,
+        url: `${siteURL}/assets/tools-cube.jpg`,
         width: 1200,
         height: 630,
         alt: "Tools Cube",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     creator: "@toolscube",
     title: "Tools — Tools Cube",
     description: smartDescription,
-    images: [`${siteURL}/assets/logo-tools-cube.png`],
+    images: [`${siteURL}/assets/tools-cube.jpg`],
   },
   alternates: {
     canonical: `${siteURL}/tools`,

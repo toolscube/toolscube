@@ -120,25 +120,25 @@ export const structuredData = {
       "query-input": "required name=search_term_string",
     },
   },
-  
+
   organization: {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteConfig.name,
     url: siteConfig.url,
-    logo: `${siteConfig.url}/og/tools-cube-square.png`,
+    logo: `${siteConfig.url}/assets/logo.png`,
     description: siteConfig.description,
     foundingDate: "2025",
     sameAs: [
       "https://tariqul.dev",
       "https://github.com/tariqul420",
-      "https://linkedin.com/in/tariqul-dev"
+      "https://linkedin.com/in/tariqul-dev",
     ],
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
-      availableLanguage: ["English", "Bengali"]
-    }
+      availableLanguage: ["English", "Bengali"],
+    },
   },
 
   webApplication: {
@@ -154,19 +154,19 @@ export const structuredData = {
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD",
-      availability: "https://schema.org/InStock"
+      availability: "https://schema.org/InStock",
     },
     screenshot: siteConfig.ogImage,
     softwareVersion: "1.0",
     releaseNotes: "Free online tools for productivity and development",
     featureList: [
       "URL Shortener",
-      "PDF Tools", 
+      "PDF Tools",
       "Image Converter",
       "Text Utilities",
       "Developer Tools",
       "Calculators",
-      "SEO Tools"
-    ]
-  }
+      "SEO Tools",
+    ],
+  },
 };

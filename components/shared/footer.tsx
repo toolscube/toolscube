@@ -112,10 +112,8 @@ function Footer() {
     <footer className="py-6 px-4 sm:px-6 lg:px-8 font-inter relative overflow-hidden ">
       <div className="max-w-7xl mx-auto flex flex-col items-center relative z-10">
         <div className="mb-6 flex items-center justify-center">
-          <Image src="/assets/logo-transplant.png" height={60} width={60} alt="Tools Cube Logo" />
-          <div>
-            Tools Cube
-          </div>
+          <Image src="/assets/logo.png" height={60} width={60} alt="Tools Cube Logo" />
+          <h2 className="text-2xl">Tools Cube</h2>
         </div>
 
         <nav className="mb-6 w-full">

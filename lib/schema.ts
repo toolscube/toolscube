@@ -104,18 +104,15 @@ export const siteSchema = {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: `${siteURL}/tools?q={search_term_string}`
+      urlTemplate: `${siteURL}/tools?q={search_term_string}`,
     },
-    "query-input": "required name=search_term_string"
+    "query-input": "required name=search_term_string",
   },
   publisher: {
-    "@type": "Organization", 
+    "@type": "Organization",
     name: "Tools Cube",
     url: siteURL,
-    logo: `${siteURL}/og/tools-cube-square.png`,
-    sameAs: [
-      "https://github.com/tariqul420",
-      "https://tariqul.dev"
-    ]
-  }
+    logo: `${siteURL}/assets/logo.png`,
+    sameAs: ["https://github.com/tariqul420", "https://tariqul.dev"],
+  },
 };

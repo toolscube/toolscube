@@ -25,7 +25,7 @@ export function ToolsSidebar(props: React.ComponentProps<typeof Sidebar>) {
           className="inline-flex items-center gap-2 font-semibold"
           aria-label="Tools Cube home"
         >
-          <Image src="/assets/logo-transplant.png" height={40} width={40} alt="Tools Cube Logo" />
+          <Image src="/assets/logo.png" height={40} width={40} alt="Tools Cube Logo" />
           {state !== "collapsed" && <span className="truncate">Tools Cube</span>}
         </Link>
       </SidebarHeader>

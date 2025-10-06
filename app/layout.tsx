@@ -67,15 +67,9 @@ export const metadata: Metadata = {
     alternateLocale: ["bn_BD"],
     images: [
       {
-        url: `${siteURL}/assets/logo-tools-cube.png`,
+        url: `${siteURL}/assets/tools-cube.jpg`,
         width: 1200,
         height: 630,
-        alt: "Tools Cube",
-      },
-      {
-        url: `${siteURL}/assets/logo-tools.png`,
-        width: 800,
-        height: 800,
         alt: "Tools Cube",
       },
     ],
@@ -87,7 +81,7 @@ export const metadata: Metadata = {
     title: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
     description:
       "Shorten links, convert files, optimize images, and more. 100% free and privacy-first.",
-    images: [`${siteURL}/assets/logo-rounded.webp`],
+    images: [`${siteURL}/assets/tools-cube.jpg`],
   },
   robots: {
     index: true,
@@ -108,13 +102,7 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [
-      { url: "/favicon.ico" },
-      { url: "/assets/logo-rounded.webp" },
-      { url: "/assets/logo-tools-cube.png" },
-      { url: "/assets/logo-tools.png" },
-      { url: "/assets/logo-corner.png" },
-    ],
+    icon: [{ url: "/favicon.ico" }],
   },
 };
 
@@ -141,7 +129,7 @@ export default function RootLayout({
     "@type": "Organization",
     name: "Tools Cube",
     url: siteURL,
-    logo: `${siteURL}/og/tools-cube-square.png`,
+    logo: `${siteURL}/assets/logo.png`,
     sameAs: [
       "https://tariqul.dev",
       "https://github.com/tariqul420",

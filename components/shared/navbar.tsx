@@ -14,7 +14,7 @@ export function Navbar() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3">
         <div className="flex items-center gap-3">
           <Link href="/" className="inline-flex items-center font-semibold">
-            <Image src="/assets/logo-transplant.png" height={40} width={40} alt="Tools Cube Logo" />
+            <Image src="/assets/logo.png" height={40} width={40} alt="Tools Cube Logo" />
             <span>Tools Cube</span>
           </Link>
           <nav className="ml-6 hidden items-center gap-6 text-sm md:flex">
