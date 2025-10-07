@@ -1,18 +1,8 @@
 "use client";
 
-import type { Metadata } from "next";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-
-export const metadata: Metadata = {
-  title: "404 - Page Not Found - Tools Cube",
-  description: "Sorry, the page you're looking for doesn't exist. Explore our free online tools for productivity and development.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
 
 export default function NotFound() {
   const router = useRouter();
