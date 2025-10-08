@@ -11,7 +11,7 @@ export const qrCodeData = {
   vcOrg: "Tools Cube",
   vcTitle: "",
   vcPhone: "+8801XXXXXXXXX",
-  vcEmail: "tariqul@tariqul.dev",
+  vcEmail: "hello@toolscube.app",
   vcUrl: "https://tariqul.dev",
   emailTo: "hello@example.com",
   emailSubject: "Hello!",

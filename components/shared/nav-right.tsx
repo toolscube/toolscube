@@ -1,7 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { ArrowRight, Github, Link2, Linkedin, Search, Star } from "lucide-react";
+import { ArrowRight, Facebook, Link2, Search, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/command";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ToolsData } from "@/data/tools";
+import { socialIcons } from "./icons";
 
 // Types
 type ToolItem = {
@@ -153,22 +154,22 @@ export default function NavRight() {
 
         <Button variant="outline" asChild size="icon" className="hidden sm:flex">
           <Link
-            href="https://www.linkedin.com/in/tariqul-dev"
+            href="https://www.facebook.com/profile.php?id=61581928709555"
             rel="noopener noreferrer"
             target="_blank"
             className="dark:text-foreground inline-flex items-center gap-1"
           >
-            <Linkedin className="h-4 w-4" />
+            <Facebook className="size-6" />
           </Link>
         </Button>
         <Button variant="outline" asChild size="icon" className="hidden sm:flex">
           <Link
-            href="https://github.com/tariqul420"
+            href="https://discord.gg/e5v3J6eX"
             rel="noopener noreferrer"
             target="_blank"
             className="dark:text-foreground inline-flex items-center gap-1"
           >
-            <Github className="h-4 w-4" />
+            {socialIcons.find((icon) => icon.name === "Discord")?.svg}
           </Link>
         </Button>
       </div>

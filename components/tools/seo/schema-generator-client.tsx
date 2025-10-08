@@ -135,7 +135,7 @@ const DEFAULT: State = {
       "https://tariqul.dev, https://www.linkedin.com/in/tariqul-dev, https://github.com/tariqul420",
     contactType: "customer support",
     telephone: "+8801743892058",
-    email: "tariqul@tariqul.dev",
+    email: "hello@toolscube.app",
     addressStreet: "Pabna, Bangladesh",
     addressLocality: "Pabna, Bangladesh",
     addressRegion: "Bangladeshi",

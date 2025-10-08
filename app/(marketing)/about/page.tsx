@@ -154,7 +154,7 @@ export default function AboutPage() {
                 <a href="/tools">Explore tools</a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="mailto:tariqul@tariqul.dev">Contact</a>
+                <a href="mailto:contact@toolscube.app">Contact</a>
               </Button>
             </div>
           </CardContent>

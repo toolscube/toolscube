@@ -167,7 +167,7 @@ export default function ToolsIndexPage() {
       <footer className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <div>Didn’t find a tool? Request a new one.</div>
         <Button asChild variant="outline">
-          <a href="mailto:tariqul@tariqul.dev">Request a tool</a>
+          <a href="mailto:contact@toolscube.app">Request a tool</a>
         </Button>
       </footer>
     </main>

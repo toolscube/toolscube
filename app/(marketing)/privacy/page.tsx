@@ -127,8 +127,8 @@ export default function PrivacyPage() {
           <p>• You can request removal of any account-bound data you control.</p>
           <p>
             • Contact us for privacy requests:{" "}
-            <a className="underline" href="mailto:tariqul@tariqul.dev">
-              tariqul@tariqul.dev
+            <a className="underline" href="mailto:contact@toolscube.app">
+              contact@toolscube.app
             </a>
           </p>
           <div className="pt-2">
