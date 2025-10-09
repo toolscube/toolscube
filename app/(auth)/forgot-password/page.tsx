@@ -2,15 +2,15 @@ import { Suspense } from "react";
 import ForgotPasswordForm from "@/components/auth/forgot-password-form";
 
 interface ForgotPasswordPageProps {
-  searchParams: {
-    token?: string;
-  };
+  searchParams: Promise<{ token?: string }>;
 }
 
-export default function ForgotPasswordPage({ searchParams }: ForgotPasswordPageProps) {
+export default async function ForgotPasswordPage({ searchParams }: ForgotPasswordPageProps) {
+  const { token } = await searchParams;
+
   return (
     <Suspense fallback={<div className="w-full max-w-md mx-auto p-6">Loading...</div>}>
-      <ForgotPasswordForm token={searchParams.token} />
+      <ForgotPasswordForm token={token} />
     </Suspense>
   );
 }

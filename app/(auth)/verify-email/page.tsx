@@ -4,13 +4,11 @@ import VerifyEmailForm from "@/components/auth/verify-email-form";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface VerifyEmailPageProps {
-  searchParams: {
-    token?: string;
-    email?: string;
-  };
+  searchParams: Promise<{ token?: string; email?: string }>;
 }
 
-export default function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) {
+export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) {
+  const { token, email } = await searchParams;
   return (
     <Suspense
       fallback={
@@ -25,7 +23,7 @@ export default function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) 
         </Card>
       }
     >
-      <VerifyEmailForm token={searchParams.token} email={searchParams.email} />
+      <VerifyEmailForm token={token} email={email} />
     </Suspense>
   );
 }
