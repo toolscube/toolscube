@@ -5,11 +5,11 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import SignInWithGoogle from "@/components/auth/sign-in-with-google";
 import InputField from "@/components/shared/form-fields/input-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +40,6 @@ type SignUpFormData = z.infer<typeof signUpFormSchema>;
 
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -81,25 +80,6 @@ export default function SignUpPage() {
     }
   };
 
-  const signUpWithGoogle = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const result = await signIn("google", {
-        callbackUrl: "/",
-        redirect: false,
-      });
-
-      if (result?.error) {
-        toast.error("Failed to sign up with Google");
-      }
-    } catch (error) {
-      logger.error({ error }, "Google sign up error");
-      toast.error("Failed to sign up with Google");
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
@@ -112,22 +92,7 @@ export default function SignUpPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button
-          variant="outline"
-          onClick={signUpWithGoogle}
-          disabled={isGoogleLoading || isLoading}
-          className="w-full"
-        >
-          {isGoogleLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-              <title>Google</title>
-              <path d="M564 325.8C564 467.3 467.1 568 324 568C186.8 568 76 457.2 76 320C76 182.8 186.8 72 324 72C390.8 72 447 96.5 490.3 136.9L422.8 201.8C334.5 116.6 170.3 180.6 170.3 320C170.3 406.5 239.4 476.6 324 476.6C422.2 476.6 459 406.2 464.8 369.7L324 369.7L324 284.4L560.1 284.4C562.4 297.1 564 309.3 564 325.8z" />
-            </svg>
-          )}
-          Continue with Google
-        </Button>
+        <SignInWithGoogle />
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -145,7 +110,7 @@ export default function SignUpPage() {
               label="Full Name"
               type="text"
               placeholder="John Doe"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -155,7 +120,7 @@ export default function SignUpPage() {
               label="Email"
               type="email"
               placeholder="name@example.com"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -165,7 +130,7 @@ export default function SignUpPage() {
               label="Password"
               type="password"
               placeholder="Create a strong password"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -175,12 +140,12 @@ export default function SignUpPage() {
               label="Confirm Password"
               type="password"
               placeholder="Confirm your password"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Account
             </Button>
