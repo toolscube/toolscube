@@ -3,7 +3,6 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { ZodError } from "zod";
-import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import {
   type ForgotPasswordData,
@@ -13,6 +12,7 @@ import {
   type SignUpData,
   signUpSchema,
 } from "@/lib/validations/auth";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../email";
 
 // Sign up
 export async function signUpAction(data: SignUpData) {
@@ -55,18 +55,7 @@ export async function signUpAction(data: SignUpData) {
     });
 
     // Send verification email
-    await sendEmail({
-      to: user.email,
-      subject: "Verify your email address",
-      html: `
-        <h1>Welcome to Tools Cube!</h1>
-        <p>Please verify your email address by clicking the link below:</p>
-        <a href="${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}">
-          Verify Email Address
-        </a>
-        <p>This link will expire in 24 hours.</p>
-      `,
-    });
+    await sendVerificationEmail(user.email, verificationToken);
 
     return {
       success: true,
@@ -117,19 +106,7 @@ export async function forgotPasswordAction(data: ForgotPasswordData) {
     });
 
     // Send reset email
-    await sendEmail({
-      to: user.email,
-      subject: "Reset your password",
-      html: `
-        <h1>Password Reset Request</h1>
-        <p>You requested a password reset. Click the link below to reset your password:</p>
-        <a href="${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}">
-          Reset Password
-        </a>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-      `,
-    });
+    await sendPasswordResetEmail(user.email, resetToken);
 
     return {
       success: true,
@@ -246,18 +223,7 @@ export async function resendVerificationEmailAction(email: string) {
     });
 
     // Send verification email
-    await sendEmail({
-      to: user.email,
-      subject: "Verify your email address",
-      html: `
-        <h1>Email Verification</h1>
-        <p>Please verify your email address by clicking the link below:</p>
-        <a href="${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}">
-          Verify Email Address
-        </a>
-        <p>This link will expire in 24 hours.</p>
-      `,
-    });
+    await sendVerificationEmail(user.email, verificationToken);
 
     return { success: true, message: "Verification email sent successfully" };
   } catch (error) {
