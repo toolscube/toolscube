@@ -2,6 +2,7 @@
 
 import { CheckCircle, Loader2, Mail, XCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,9 @@ export default function VerifyEmailPage() {
   const [isResending, setIsResending] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const token = searchParams.get("token");
+  const email = searchParams.get("email") || session?.user?.email;
 
   const verifyEmail = useCallback(async (verificationToken: string) => {
     try {
@@ -46,11 +49,15 @@ export default function VerifyEmailPage() {
   }, [token, verifyEmail]);
 
   const resendVerificationEmail = async () => {
+    if (!email) {
+      toast.error("Email address not found. Please sign up again.");
+      router.push("/sign-up");
+      return;
+    }
+
     setIsResending(true);
     try {
-      // For demo purposes, using a placeholder email
-      // In real app, you would get this from user session or state
-      const result = await resendVerificationEmailAction("user@example.com");
+      const result = await resendVerificationEmailAction(email);
 
       if (result.error) {
         toast.error(result.error);

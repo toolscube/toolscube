@@ -19,6 +19,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ToolsData } from "@/data/tools";
 import { socialIcons } from "./icons";
+import { UserNav } from "./user-nav";
 
 // Types
 type ToolItem = {
@@ -172,6 +173,7 @@ export default function NavRight() {
             {socialIcons.find((icon) => icon.name === "Discord")?.svg}
           </Link>
         </Button>
+        <UserNav />
       </div>
 
       {/* Search Modal */}
