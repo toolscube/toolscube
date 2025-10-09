@@ -112,9 +112,9 @@ export default function ForgotPasswordPage() {
           <div className="flex items-center justify-center mb-4">
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
-          <CardTitle className="text-2xl text-center">Password Updated</CardTitle>
+          <CardTitle className="text-2xl text-center">Password Updated! 🎉</CardTitle>
           <CardDescription className="text-center">
-            Your password has been successfully updated. You can now sign in with your new password.
+            Your password has been successfully updated. Now login with the new password.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -134,8 +134,10 @@ export default function ForgotPasswordPage() {
           <div className="flex items-center justify-center mb-4">
             <KeyRound className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl text-center">Reset Password</CardTitle>
-          <CardDescription className="text-center">Enter your new password below.</CardDescription>
+          <CardTitle className="text-2xl text-center">Reset Your Password</CardTitle>
+          <CardDescription className="text-center">
+            Secure your account with a new password.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Form {...resetForm}>
@@ -160,9 +162,12 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => resetForm.setValue("confirmPassword", e.target.value)}
               />
 
+              <div className="text-xs text-muted-foreground">
+                💡 Password must be at least 8 characters with uppercase, lowercase, and numbers.
+              </div>
+
               <Button type="submit" className="w-full" disabled={isResetting}>
-                {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Reset Password
+                {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}🔐 Reset Password
               </Button>
             </form>
           </Form>
@@ -184,20 +189,20 @@ export default function ForgotPasswordPage() {
           <div className="flex items-center justify-center mb-4">
             <KeyRound className="h-8 w-8 text-green-600" />
           </div>
-          <CardTitle className="text-2xl text-center">Check your email</CardTitle>
+          <CardTitle className="text-2xl text-center">Check Your Email 📧</CardTitle>
           <CardDescription className="text-center">
-            We've sent a password reset link to your email address.
+            A password reset link has been sent to your email address.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-center text-sm text-muted-foreground">
-            Didn't receive the email? Check your spam folder or{" "}
+            Did not receive the email? Check your spam folder or{" "}
             <button
               onClick={() => setIsSubmitted(false)}
               className="text-primary underline underline-offset-4 hover:no-underline"
               type="button"
             >
-              try again
+              Try again
             </button>
           </div>
 
@@ -217,9 +222,9 @@ export default function ForgotPasswordPage() {
         <div className="flex items-center justify-center mb-4">
           <KeyRound className="h-8 w-8 text-primary" />
         </div>
-        <CardTitle className="text-2xl text-center">Forgot password?</CardTitle>
+        <CardTitle className="text-2xl text-center">Forgot Password? 🔑</CardTitle>
         <CardDescription className="text-center">
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we'll send you a password reset link.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -236,8 +241,7 @@ export default function ForgotPasswordPage() {
             />
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send reset link
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}📧 Send reset link
             </Button>
           </form>
         </Form>
