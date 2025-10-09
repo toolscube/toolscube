@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { resendVerificationEmailAction, verifyEmailAction } from "@/lib/actions/auth";
+import { resendVerificationEmailAction, verifyEmailAction } from "@/lib/actions/auth.action";
 
 export default function VerifyEmailPage() {
   const [isLoading, setIsLoading] = useState(true);

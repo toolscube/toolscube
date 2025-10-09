@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { signUpAction } from "@/lib/actions/auth";
+import { signUpAction } from "@/lib/actions/auth.action";
 
 const signUpFormSchema = z
   .object({

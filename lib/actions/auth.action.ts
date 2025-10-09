@@ -14,7 +14,7 @@ import {
   signUpSchema,
 } from "@/lib/validations/auth";
 
-// Sign up action
+// Sign up
 export async function signUpAction(data: SignUpData) {
   try {
     const validatedData = signUpSchema.parse(data);

@@ -11,7 +11,7 @@ import InputField from "@/components/shared/form-fields/input-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-import { forgotPasswordAction, resetPasswordAction } from "@/lib/actions/auth";
+import { forgotPasswordAction, resetPasswordAction } from "@/lib/actions/auth.action";
 import { type ForgotPasswordData, forgotPasswordSchema } from "@/lib/validations/auth";
 
 type ForgotPasswordFormData = ForgotPasswordData;
