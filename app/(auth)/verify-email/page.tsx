@@ -2,7 +2,7 @@
 
 import { CheckCircle, Loader2, Mail, XCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,15 +17,7 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  useEffect(() => {
-    if (token) {
-      verifyEmail(token);
-    } else {
-      setIsLoading(false);
-    }
-  }, [token]);
-
-  const verifyEmail = async (verificationToken: string) => {
+  const verifyEmail = useCallback(async (verificationToken: string) => {
     try {
       const result = await verifyEmailAction(verificationToken);
 
@@ -36,14 +28,22 @@ export default function VerifyEmailPage() {
         setIsVerified(true);
         toast.success(result.message || "Email verified successfully!");
       }
-    } catch (error) {
+    } catch {
       const errorMessage = "Failed to verify email. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      verifyEmail(token);
+    } else {
+      setIsLoading(false);
+    }
+  }, [token, verifyEmail]);
 
   const resendVerificationEmail = async () => {
     setIsResending(true);
@@ -58,7 +58,7 @@ export default function VerifyEmailPage() {
       } else if (result.success) {
         toast.success(result.message || "Verification email sent successfully!");
       }
-    } catch (error) {
+    } catch {
       const errorMessage = "Failed to resend verification email";
       setError(errorMessage);
       toast.error(errorMessage);
