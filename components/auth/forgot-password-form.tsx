@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, CheckCircle, KeyRound, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -16,7 +16,6 @@ import { type ForgotPasswordData, forgotPasswordSchema } from "@/lib/validations
 
 type ForgotPasswordFormData = ForgotPasswordData;
 
-// Reset password form schema (with confirm password)
 const resetPasswordFormSchema = z
   .object({
     password: z
@@ -35,7 +34,7 @@ const resetPasswordFormSchema = z
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordFormSchema>;
 
-function ForgotPasswordContent() {
+export default function ForgotPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -252,13 +251,5 @@ function ForgotPasswordContent() {
         </Button>
       </CardContent>
     </Card>
-  );
-}
-
-export default function ForgotPasswordPage() {
-  return (
-    <Suspense fallback={<div className="w-full max-w-md mx-auto p-6">Loading...</div>}>
-      <ForgotPasswordContent />
-    </Suspense>
   );
 }
