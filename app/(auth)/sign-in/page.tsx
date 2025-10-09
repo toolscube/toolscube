@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Chrome, Loader2, Mail } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -84,8 +85,8 @@ export default function SignInPage() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
-        <div className="flex items-center justify-center mb-4">
-          <Mail className="h-8 w-8 text-primary" />
+        <div className="flex items-center justify-center">
+          <Image src="/assets/logo.png" alt="Logo" width={60} height={60} />
         </div>
         <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
         <CardDescription className="text-center">
@@ -102,7 +103,10 @@ export default function SignInPage() {
           {isGoogleLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Chrome className="mr-2 h-4 w-4" />
+            <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+              <title>Google</title>
+              <path d="M564 325.8C564 467.3 467.1 568 324 568C186.8 568 76 457.2 76 320C76 182.8 186.8 72 324 72C390.8 72 447 96.5 490.3 136.9L422.8 201.8C334.5 116.6 170.3 180.6 170.3 320C170.3 406.5 239.4 476.6 324 476.6C422.2 476.6 459 406.2 464.8 369.7L324 369.7L324 284.4L560.1 284.4C562.4 297.1 564 309.3 564 325.8z" />
+            </svg>
           )}
           Continue with Google
         </Button>
