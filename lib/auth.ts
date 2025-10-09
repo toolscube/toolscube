@@ -51,10 +51,80 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt" as const,
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        try {
+          if (!user.email) return false;
+
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+
+          if (!existingUser) {
+            // Create new user
+            const newUser = await prisma.user.create({
+              data: {
+                email: user.email,
+                name: user.name || profile?.name || null,
+                image: user.image || (profile as { picture?: string })?.picture || null,
+                emailVerified: new Date(),
+                role: "USER",
+              },
+            });
+            user.id = newUser.id;
+          } else {
+            user.id = existingUser.id;
+          }
+
+          // Create or update account
+          await prisma.account.upsert({
+            where: {
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
+            update: {
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              id_token: account.id_token,
+              refresh_token: account.refresh_token,
+              scope: account.scope,
+              session_state: account.session_state,
+              token_type: account.token_type,
+            },
+            create: {
+              userId: user.id,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              id_token: account.id_token,
+              refresh_token: account.refresh_token,
+              scope: account.scope,
+              session_state: account.session_state,
+              token_type: account.token_type,
+            },
+          });
+
+          return true;
+        } catch (error) {
+          console.error("Error in Google OAuth:", error);
+          return false;
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
-      if (user && "role" in user) {
-        token.role = user.role;
-        token.emailVerified = user.emailVerified;
+      if (user) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.emailVerified = dbUser.emailVerified;
+        }
       }
       return token;
     },
