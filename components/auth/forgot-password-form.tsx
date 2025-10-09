@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, CheckCircle, KeyRound, Loader2 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -34,14 +34,16 @@ const resetPasswordFormSchema = z
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordFormSchema>;
 
-export default function ForgotPasswordForm() {
+interface ForgotPasswordFormProps {
+  token?: string | null;
+}
+
+export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
 
   const forgotForm = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
