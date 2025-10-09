@@ -13,6 +13,7 @@ import {
   signUpSchema,
 } from "@/lib/validations/auth";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../email";
+import logger from "../logger";
 
 // Sign up
 export async function signUpAction(data: SignUpData) {
@@ -62,7 +63,7 @@ export async function signUpAction(data: SignUpData) {
       message: "Account created successfully. Please check your email to verify your account.",
     };
   } catch (error) {
-    console.error("Sign up error:", error);
+    logger.error({ error }, "Sign up error");
     if (error instanceof ZodError) {
       return { error: error.issues[0].message };
     }
@@ -113,7 +114,7 @@ export async function forgotPasswordAction(data: ForgotPasswordData) {
       message: "If an account with that email exists, we've sent a password reset link.",
     };
   } catch (error) {
-    console.error("Forgot password error:", error);
+    logger.error({ error }, "Forgot password error");
     if (error instanceof ZodError) {
       return { error: error.issues[0].message };
     }
@@ -151,7 +152,7 @@ export async function resetPasswordAction(data: ResetPasswordData) {
 
     return { success: true, message: "Password reset successfully" };
   } catch (error) {
-    console.error("Reset password error:", error);
+    logger.error({ error }, "Reset password error");
     if (error instanceof ZodError) {
       return { error: error.issues[0].message };
     }
@@ -184,7 +185,7 @@ export async function verifyEmailAction(token: string) {
 
     return { success: true, message: "Email verified successfully" };
   } catch (error) {
-    console.error("Email verification error:", error);
+    logger.error({ error }, "Email verification error");
     return { error: "Something went wrong. Please try again." };
   }
 }
@@ -227,7 +228,7 @@ export async function resendVerificationEmailAction(email: string) {
 
     return { success: true, message: "Verification email sent successfully" };
   } catch (error) {
-    console.error("Resend verification email error:", error);
+    logger.error({ error }, "Resend verification email error");
     return { error: "Something went wrong. Please try again." };
   }
 }

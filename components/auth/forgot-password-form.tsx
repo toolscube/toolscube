@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form } from "@/components/ui/form";
 import { forgotPasswordAction, resetPasswordAction } from "@/lib/actions/auth.action";
 import { type ForgotPasswordData, forgotPasswordSchema } from "@/lib/validations/auth";
+import logger from "@/lib/logger";
 
 type ForgotPasswordFormData = ForgotPasswordData;
 
@@ -73,7 +74,7 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
         setIsSubmitted(true);
       }
     } catch (error) {
-      console.error("Forgot password error:", error);
+      logger.error({ error }, "Forgot password error");
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -98,7 +99,7 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
         setIsSuccess(true);
       }
     } catch (error) {
-      console.error("Reset password error:", error);
+      logger.error({ error }, "Reset password error");
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsResetting(false);

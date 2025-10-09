@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { signUpAction } from "@/lib/actions/auth.action";
+import logger from "@/lib/logger";
 
 const signUpFormSchema = z
   .object({
@@ -73,7 +74,7 @@ export default function SignUpPage() {
         router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
       }
     } catch (error) {
-      console.error("Sign up error:", error);
+      logger.error({ error }, "Sign up error");
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -92,7 +93,7 @@ export default function SignUpPage() {
         toast.error("Failed to sign up with Google");
       }
     } catch (error) {
-      console.error("Google sign up error:", error);
+      logger.error({ error }, "Google sign up error");
       toast.error("Failed to sign up with Google");
     } finally {
       setIsGoogleLoading(false);

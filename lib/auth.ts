@@ -4,6 +4,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
+import logger from "./logger";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -110,7 +111,7 @@ export const authOptions: NextAuthOptions = {
 
           return true;
         } catch (error) {
-          console.error("Error in Google OAuth:", error);
+          logger.error({ error }, "Error in Google OAuth");
           return false;
         }
       }

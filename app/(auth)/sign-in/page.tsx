@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
+import logger from "@/lib/logger";
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -56,7 +57,7 @@ export default function SignInPage() {
         router.refresh();
       }
     } catch (error) {
-      console.error("Sign in error:", error);
+      logger.error({ error }, "Sign in error");
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -75,7 +76,7 @@ export default function SignInPage() {
         toast.error("Failed to sign in with Google");
       }
     } catch (error) {
-      console.error("Google sign in error:", error);
+      logger.error({ error }, "Google sign in error");
       toast.error("Failed to sign in with Google");
     } finally {
       setIsGoogleLoading(false);
