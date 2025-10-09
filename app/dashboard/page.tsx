@@ -2,7 +2,7 @@ import { BarChart3, Link as LinkIcon, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { requireAuth } from "@/lib/auth-utils";
+import { requireAuth } from "@/lib/utils/auth-utils";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
