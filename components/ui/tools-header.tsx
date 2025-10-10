@@ -1,3 +1,5 @@
+"use client";
+
 import NavRight from "../shared/nav-right";
 import { Separator } from "./separator";
 import { SidebarTrigger } from "./sidebar";

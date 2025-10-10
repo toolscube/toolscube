@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import AuthSessionProvider from "@/components/providers/session-provider";
 import ToasterProvider from "@/components/providers/toaster-provider";
 import JsonLd from "@/components/seo/json-ld";
 import { ToolsData } from "@/data/tools";
@@ -163,7 +164,9 @@ export default function RootLayout({
         <JsonLd data={structuredData.website} />
         <JsonLd data={structuredData.organization} />
         <JsonLd data={structuredData.webApplication} />
-        <main>{children}</main>
+        <AuthSessionProvider>
+          <main>{children}</main>
+        </AuthSessionProvider>
         <ToasterProvider />
       </body>
     </html>

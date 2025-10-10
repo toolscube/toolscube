@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ToolsHeader from "@/components/ui/tools-header";
 import { ToolsSidebar } from "@/components/ui/tools-sidebar";

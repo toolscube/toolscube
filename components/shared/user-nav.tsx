@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 export function UserNav() {
   const { data: session, status } = useSession();
 
-  if (status === "loading") {
+  if (typeof window === "undefined" || status === "loading") {
     return <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />;
   }
 
