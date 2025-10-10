@@ -28,7 +28,9 @@ export default function SignInPage() {
             <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
           </div>
         </div>
+
         <SignInForm />
+
         <div className="text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link href="/sign-up" className="underline underline-offset-4 hover:text-primary">
