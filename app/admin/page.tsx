@@ -1,8 +1,11 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { BarChart3, Settings, Shield, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useSession } from "next-auth/react";
+
 import { UserNav } from "@/components/shared/user-nav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +21,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!session) {
+  if (status === "unauthenticated" || !session) {
     redirect("/sign-in");
   }
 
