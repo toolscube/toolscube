@@ -8,10 +8,8 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 # Build-time args
 ARG NEXT_PUBLIC_SITE_URL
-ARG DATABASE_URL
 
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
-ENV DATABASE_URL=${DATABASE_URL:-postgresql://dummy:dummy@localhost:5432/dummy}
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY package*.json ./
