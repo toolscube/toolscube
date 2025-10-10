@@ -5,13 +5,14 @@ import { ArrowLeft, CheckCircle, KeyRound, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { z } from "zod";
 import InputField from "@/components/shared/form-fields/input-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { forgotPasswordAction, resetPasswordAction } from "@/lib/actions/auth.action";
+import logger from "@/lib/logger";
 import { type ForgotPasswordData, forgotPasswordSchema } from "@/lib/validations/auth";
 
 type ForgotPasswordFormData = ForgotPasswordData;
@@ -73,7 +74,7 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
         setIsSubmitted(true);
       }
     } catch (error) {
-      console.error("Forgot password error:", error);
+      logger.error({ error }, "Forgot password error");
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -98,7 +99,7 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
         setIsSuccess(true);
       }
     } catch (error) {
-      console.error("Reset password error:", error);
+      logger.error({ error }, "Reset password error");
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsResetting(false);
@@ -106,7 +107,6 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
   };
 
   if (isSuccess) {
-    // Show success page after password reset
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1">
@@ -128,7 +128,6 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
   }
 
   if (token && !isSuccess) {
-    // Show reset password form if we have a token
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1">

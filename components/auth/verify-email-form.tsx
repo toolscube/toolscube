@@ -4,7 +4,7 @@ import { CheckCircle, Loader2, Mail, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { resendVerificationEmailAction, verifyEmailAction } from "@/lib/actions/auth.action";

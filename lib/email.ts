@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import logger from "./logger";
 
 interface EmailOptions {
   to: string;
@@ -21,13 +22,6 @@ const createTransporter = () => {
     },
   };
 
-  console.log("Email config:", {
-    host: config.host,
-    port: config.port,
-    user: config.auth.user,
-    hasPassword: !!config.auth.pass,
-  });
-
   return nodemailer.createTransport(config);
 };
 
@@ -42,12 +36,10 @@ export const sendEmail = async ({ to, subject, html }: EmailOptions) => {
       html,
     };
 
-    console.log(`Sending email to: ${to}`);
     const result = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("Email sending failed:", error);
+    logger.error({ error }, "Email sending failed");
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 };

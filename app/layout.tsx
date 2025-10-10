@@ -3,7 +3,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
-import { Providers } from "@/components/providers";
+import ToasterProvider from "@/components/providers/toaster-provider";
 import JsonLd from "@/components/seo/json-ld";
 import { ToolsData } from "@/data/tools";
 import { siteURL } from "@/lib/constants";
@@ -157,15 +157,14 @@ export default function RootLayout({
       className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrains.variable} scroll-smooth`}
     >
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <Providers>
-          <JsonLd data={siteLd} />
-          <JsonLd data={orgLd} />
-          <JsonLd data={navLd} />
-          <JsonLd data={structuredData.website} />
-          <JsonLd data={structuredData.organization} />
-          <JsonLd data={structuredData.webApplication} />
-          <main>{children}</main>
-        </Providers>
+        <JsonLd data={siteLd} />
+        <JsonLd data={orgLd} />
+        <JsonLd data={navLd} />
+        <JsonLd data={structuredData.website} />
+        <JsonLd data={structuredData.organization} />
+        <JsonLd data={structuredData.webApplication} />
+        <main>{children}</main>
+        <ToasterProvider />
       </body>
     </html>
   );
