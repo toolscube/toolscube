@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
+import { trackToolConversion, trackToolUsage } from "@/lib/gtm";
 
 /* Config & Types */
 

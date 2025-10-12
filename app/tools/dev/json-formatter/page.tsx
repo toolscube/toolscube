@@ -1,4 +1,5 @@
 import JsonLd from "@/components/seo/json-ld";
+import { ToolPageTracker } from "@/components/analytics/tool-page-tracker";
 import JSONFormatterClient from "@/components/tools/dev/json-formatter-client";
 import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
@@ -133,6 +134,7 @@ export default function Page() {
 
   return (
     <div className="space-y-4">
+      <ToolPageTracker toolName="JSON Formatter" category="Developer" />
       <JsonLd data={appLd} />
       <JsonLd data={crumbsLd} />
       <JsonLd data={faqLd} />

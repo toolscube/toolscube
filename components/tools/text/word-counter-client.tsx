@@ -18,6 +18,7 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from "@/component
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { trackToolUsage } from "@/lib/gtm";
 import { countWords } from "@/lib/utils";
 import { toTitleCase } from "@/lib/utils/text/case-converter";
 import {
@@ -32,7 +33,6 @@ import {
   slugify,
   squeezeSpaces,
 } from "@/lib/utils/text/word-counter";
-import { trackToolUsage } from "@/lib/gtm";
 import StatItem from "./stat-item";
 
 export default function WordCounterClient() {

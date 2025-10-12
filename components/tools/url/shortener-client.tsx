@@ -33,7 +33,14 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQrExport } from "@/hooks/use-qr-export";
 import { createShort } from "@/lib/actions/shortener.action";
-import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
+import { 
+  trackToolConversion, 
+  trackToolUsage, 
+  trackToolCompletion,
+  trackUserEngagement,
+  trackProcessingTime,
+  trackError 
+} from "@/lib/gtm";
 import { timeAgo } from "@/lib/utils/time-ago";
 
 const RECENT_KEY = "toolscube:shortener-v1";
@@ -100,14 +107,21 @@ export default function ShortenerClient() {
   const onShorten = async () => {
     if (!url.trim()) return;
     setStatus("saving");
+
+    const startTime = performance.now();
     
-    // Track tool usage
+    // Track tool usage with URL length for better insights
     trackToolUsage("URL Shortener", "URL");
-    
+    trackUserEngagement("URL Shortener", "url_input", url.length);
+
     const res = await createShort({ url });
+    const endTime = performance.now();
+    const processingTime = endTime - startTime;
+    
     if (!res.ok) {
       setStatus("error");
       toast.error("Invalid URL!");
+      trackError("URL Shortener", "shortening_failed", "Invalid URL");
       return;
     }
     setSlug(res.link.short);
@@ -121,9 +135,15 @@ export default function ShortenerClient() {
     setRecent(next);
     saveRecent(next);
 
-    // Track successful conversion
+    // Enhanced tracking for better ad optimization
     trackToolConversion("URL Shortener", "completed");
-    
+    trackProcessingTime("URL Shortener", "url_shortening", processingTime);
+    trackToolCompletion("URL Shortener", "URL", {
+      processingTime,
+      inputFormat: "long_url",
+      outputFormat: "short_url"
+    });
+
     setStatus("done");
   };
 

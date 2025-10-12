@@ -12,7 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
+import { 
+  trackToolConversion, 
+  trackToolUsage, 
+  trackToolCompletion,
+  trackUserEngagement,
+  trackFeatureUsage 
+} from "@/lib/gtm";
 
 type HeightUnit = "cm" | "in";
 type WeightUnit = "kg" | "lb";
@@ -96,7 +102,8 @@ export default function BMICalculatorClient() {
 
   function calculate() {
     trackToolUsage("BMI Calculator", "Calculators");
-    
+    trackUserEngagement("BMI Calculator", "calculate_attempt");
+
     if (!heightValue || !weightValue) {
       setNote("Please enter both height and weight.");
       setSubmitted(true);
@@ -111,7 +118,21 @@ export default function BMICalculatorClient() {
     } else if ((weightUnit === "kg" && w < 20) || (weightUnit === "lb" && w < 45)) {
       setNote("Weight looks too small — please recheck.");
     } else {
+      // Track successful calculation with rich data
       trackToolConversion("BMI Calculator", "calculated");
+      trackFeatureUsage("BMI Calculator", "height_unit", heightUnit);
+      trackFeatureUsage("BMI Calculator", "weight_unit", weightUnit);
+      trackUserEngagement("BMI Calculator", "height_value", h);
+      trackUserEngagement("BMI Calculator", "weight_value", w);
+      
+      if (parsed) {
+        trackUserEngagement("BMI Calculator", "bmi_result", Math.round(parsed.bmi * 10) / 10);
+        trackFeatureUsage("BMI Calculator", "bmi_category", parsed.category.toLowerCase());
+        trackToolCompletion("BMI Calculator", "Calculators", {
+          inputFormat: `${heightUnit}_${weightUnit}`,
+          outputFormat: "bmi_score"
+        });
+      }
       setNote("");
     }
     setSubmitted(true);

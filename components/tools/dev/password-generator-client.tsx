@@ -17,6 +17,7 @@ import ToolPageHeader from "@/components/shared/tool-page-header";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
+import { trackToolConversion, trackToolUsage } from "@/lib/gtm";
 import {
   buildCharset,
   DEFAULT_SYMBOLS,
@@ -24,8 +25,6 @@ import {
   entropyBits,
   strengthLabel,
 } from "@/lib/utils/dev/password-generator";
-import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
-
 
 export default function PasswordGeneratorClient() {
   const [length, setLength] = useState<number>(16);

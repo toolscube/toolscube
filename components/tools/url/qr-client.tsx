@@ -26,8 +26,8 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { qrCodeData } from "@/data/data";
 import { useQrExport } from "@/hooks/use-qr-export";
+import { trackToolConversion, trackToolUsage } from "@/lib/gtm";
 import { buildPayload } from "@/lib/utils/url/qr-code";
-import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
 
 export default function QRClient() {
   const [size, setSize] = React.useState<number>(320);
