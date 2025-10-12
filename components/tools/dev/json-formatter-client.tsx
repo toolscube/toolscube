@@ -33,6 +33,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
 import { cn } from "@/lib/utils";
 
 const LS_KEY = "toolscube:json-formatter-v1";
@@ -116,12 +117,14 @@ export default function JsonFormatterClient() {
 
   /* Actions */
   function prettify() {
+    trackToolUsage("JSON Formatter", "Developer");
     try {
       const json = parseSafe(input);
       const value = sortKeys ? sortObjectDeep(json) : json;
       const pretty = JSON.stringify(value, null, getIndentValue());
       setOutput(pretty);
       setError("");
+      trackToolConversion("JSON Formatter", "prettify");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Invalid JSON";
       setError(msg);
@@ -130,12 +133,14 @@ export default function JsonFormatterClient() {
   }
 
   function minify() {
+    trackToolUsage("JSON Formatter", "Developer");
     try {
       const json = parseSafe(input);
       const value = sortKeys ? sortObjectDeep(json) : json;
       const compact = JSON.stringify(value);
       setOutput(compact);
       setError("");
+      trackToolConversion("JSON Formatter", "minify");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Invalid JSON";
       setError(msg);
@@ -144,10 +149,12 @@ export default function JsonFormatterClient() {
   }
 
   function validate() {
+    trackToolUsage("JSON Formatter", "Developer");
     try {
       parseSafe(input);
       setError("");
       setOutput("✅ Valid JSON");
+      trackToolConversion("JSON Formatter", "validate");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Invalid JSON";
       setError(msg);

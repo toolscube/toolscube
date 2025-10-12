@@ -33,6 +33,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQrExport } from "@/hooks/use-qr-export";
 import { createShort } from "@/lib/actions/shortener.action";
+import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
 import { timeAgo } from "@/lib/utils/time-ago";
 
 const RECENT_KEY = "toolscube:shortener-v1";
@@ -99,6 +100,10 @@ export default function ShortenerClient() {
   const onShorten = async () => {
     if (!url.trim()) return;
     setStatus("saving");
+    
+    // Track tool usage
+    trackToolUsage("URL Shortener", "URL");
+    
     const res = await createShort({ url });
     if (!res.ok) {
       setStatus("error");
@@ -116,6 +121,9 @@ export default function ShortenerClient() {
     setRecent(next);
     saveRecent(next);
 
+    // Track successful conversion
+    trackToolConversion("URL Shortener", "completed");
+    
     setStatus("done");
   };
 

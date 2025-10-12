@@ -41,6 +41,7 @@ import {
   suggestName,
   triggerDownload,
 } from "@/lib/canvas";
+import { trackFileUpload, trackDownload, trackToolUsage } from "@/lib/gtm";
 
 export default function ImageConvertClient() {
   const [fmt, setFmt] = React.useState<OutFormat>("webp");
@@ -67,6 +68,9 @@ export default function ImageConvertClient() {
 
   const { img, getRootProps, getInputProps, isDragActive, setImg } = useImageInput({
     onImage: async (im) => {
+      // Track file upload
+      trackFileUpload("Image Convert", im.file.type, im.file.size);
+      
       setHasAlpha(await detectHasAlpha(im.url));
       setFmt(im.file.type.includes("png") ? "png" : "webp");
       setW(im.width);
@@ -151,6 +155,8 @@ export default function ImageConvertClient() {
     if (!img) return;
     try {
       setRunning(true);
+      trackToolUsage("Image Convert", "Image");
+      
       const outW = enableResize && typeof w === "number" ? w : img.width;
       const outH = enableResize && typeof h === "number" ? h : img.height;
 
@@ -169,6 +175,7 @@ export default function ImageConvertClient() {
 
       const filename = suggestName(img.file.name, enableResize ? "resized" : "converted", fmt);
       triggerDownload(blob, filename);
+      trackDownload("Image Convert", fmt.toUpperCase());
       setLog(`Done → ${filename} (${formatBytes(blob.size)})`);
     } catch (e: unknown) {
       if (e instanceof Error) {

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
+import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
 
 type HeightUnit = "cm" | "in";
 type WeightUnit = "kg" | "lb";
@@ -94,6 +95,8 @@ export default function BMICalculatorClient() {
   }
 
   function calculate() {
+    trackToolUsage("BMI Calculator", "Calculators");
+    
     if (!heightValue || !weightValue) {
       setNote("Please enter both height and weight.");
       setSubmitted(true);
@@ -108,6 +111,7 @@ export default function BMICalculatorClient() {
     } else if ((weightUnit === "kg" && w < 20) || (weightUnit === "lb" && w < 45)) {
       setNote("Weight looks too small — please recheck.");
     } else {
+      trackToolConversion("BMI Calculator", "calculated");
       setNote("");
     }
     setSubmitted(true);

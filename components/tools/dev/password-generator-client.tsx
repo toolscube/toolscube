@@ -24,6 +24,7 @@ import {
   entropyBits,
   strengthLabel,
 } from "@/lib/utils/dev/password-generator";
+import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
 
 
 export default function PasswordGeneratorClient() {
@@ -46,11 +47,13 @@ export default function PasswordGeneratorClient() {
   const strength = useMemo(() => strengthLabel(bits), [bits]);
 
   const run = useCallback(() => {
+    trackToolUsage("Password Generator", "Developer");
     const out: string[] = [];
     for (let i = 0; i < Math.max(1, count); i++) {
       out.push(ensureAtLeastOneFromEach(Math.max(4, length), flags, charset, customSymbols));
     }
     setPasswords(out);
+    trackToolConversion("Password Generator", "generated");
   }, [count, length, flags, charset, customSymbols]);
 
   useEffect(() => {

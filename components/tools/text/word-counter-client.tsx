@@ -32,6 +32,7 @@ import {
   slugify,
   squeezeSpaces,
 } from "@/lib/utils/text/word-counter";
+import { trackToolUsage } from "@/lib/gtm";
 import StatItem from "./stat-item";
 
 export default function WordCounterClient() {
@@ -71,11 +72,26 @@ export default function WordCounterClient() {
     setExcludeStopwords(true);
   };
 
-  const toUpper = () => setText(displayText.toUpperCase());
-  const toLower = () => setText(displayText.toLowerCase());
-  const toTitle = () => setText(toTitleCase(displayText));
-  const toSlug = () => setText(slugify(displayText));
-  const cleanSpaces = () => setText(squeezeSpaces(displayText));
+  const toUpper = () => {
+    trackToolUsage("Word Counter", "Text");
+    setText(displayText.toUpperCase());
+  };
+  const toLower = () => {
+    trackToolUsage("Word Counter", "Text");
+    setText(displayText.toLowerCase());
+  };
+  const toTitle = () => {
+    trackToolUsage("Word Counter", "Text");
+    setText(toTitleCase(displayText));
+  };
+  const toSlug = () => {
+    trackToolUsage("Word Counter", "Text");
+    setText(slugify(displayText));
+  };
+  const cleanSpaces = () => {
+    trackToolUsage("Word Counter", "Text");
+    setText(squeezeSpaces(displayText));
+  };
 
   const actions: Action[] = [
     { key: "upper", label: "UPPERCASE", run: toUpper },

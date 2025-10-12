@@ -27,6 +27,7 @@ import { Switch } from "@/components/ui/switch";
 import { qrCodeData } from "@/data/data";
 import { useQrExport } from "@/hooks/use-qr-export";
 import { buildPayload } from "@/lib/utils/url/qr-code";
+import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
 
 export default function QRClient() {
   const [size, setSize] = React.useState<number>(320);
@@ -97,7 +98,11 @@ export default function QRClient() {
     controlForm.reset({ kind: "url", ecl: "M", format: "png", wifiAuth: "WPA" });
   };
 
-  const runGenerate = () => setGenTick((t) => t + 1);
+  const runGenerate = () => {
+    trackToolUsage("QR Code", "URL");
+    setGenTick((t) => t + 1);
+    trackToolConversion("QR Code", "generated");
+  };
 
   return (
     <>

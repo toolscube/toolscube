@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
+import { trackToolUsage, trackToolConversion } from "@/lib/gtm";
 
 /* Config & Types */
 
@@ -219,7 +220,9 @@ export default function CurrencyConverterClient() {
 
   function convert() {
     if (!rate) return;
+    trackToolUsage("Currency Converter", "Calculators");
     setHistory((h) => [{ ts: nowISO(), from, to, amount: amtNum, result, rate }, ...h]);
+    trackToolConversion("Currency Converter", "converted");
   }
 
   function toggleFavorite() {
