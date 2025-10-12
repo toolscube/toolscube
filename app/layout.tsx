@@ -3,6 +3,10 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import {
+  GoogleTagManager,
+  GoogleTagManagerNoScript,
+} from "@/components/analytics/google-tag-manager";
 import AuthSessionProvider from "@/components/providers/session-provider";
 import ToasterProvider from "@/components/providers/toaster-provider";
 import JsonLd from "@/components/seo/json-ld";
@@ -157,7 +161,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrains.variable} scroll-smooth`}
     >
+      <head>
+        <GoogleTagManager />
+      </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
+        <GoogleTagManagerNoScript />
         <JsonLd data={siteLd} />
         <JsonLd data={orgLd} />
         <JsonLd data={navLd} />
