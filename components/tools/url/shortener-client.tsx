@@ -33,13 +33,13 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQrExport } from "@/hooks/use-qr-export";
 import { createShort } from "@/lib/actions/shortener.action";
-import { 
-  trackToolConversion, 
-  trackToolUsage, 
-  trackToolCompletion,
-  trackUserEngagement,
+import {
+  trackError,
   trackProcessingTime,
-  trackError 
+  trackToolCompletion,
+  trackToolConversion,
+  trackToolUsage,
+  trackUserEngagement,
 } from "@/lib/gtm";
 import { timeAgo } from "@/lib/utils/time-ago";
 
@@ -109,7 +109,7 @@ export default function ShortenerClient() {
     setStatus("saving");
 
     const startTime = performance.now();
-    
+
     // Track tool usage with URL length for better insights
     trackToolUsage("URL Shortener", "URL");
     trackUserEngagement("URL Shortener", "url_input", url.length);
@@ -117,7 +117,7 @@ export default function ShortenerClient() {
     const res = await createShort({ url });
     const endTime = performance.now();
     const processingTime = endTime - startTime;
-    
+
     if (!res.ok) {
       setStatus("error");
       toast.error("Invalid URL!");
@@ -141,7 +141,7 @@ export default function ShortenerClient() {
     trackToolCompletion("URL Shortener", "URL", {
       processingTime,
       inputFormat: "long_url",
-      outputFormat: "short_url"
+      outputFormat: "short_url",
     });
 
     setStatus("done");

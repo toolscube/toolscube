@@ -12,12 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
-import { 
-  trackToolConversion, 
-  trackToolUsage, 
+import {
+  trackFeatureUsage,
   trackToolCompletion,
+  trackToolConversion,
+  trackToolUsage,
   trackUserEngagement,
-  trackFeatureUsage 
 } from "@/lib/gtm";
 
 type HeightUnit = "cm" | "in";
@@ -124,13 +124,13 @@ export default function BMICalculatorClient() {
       trackFeatureUsage("BMI Calculator", "weight_unit", weightUnit);
       trackUserEngagement("BMI Calculator", "height_value", h);
       trackUserEngagement("BMI Calculator", "weight_value", w);
-      
+
       if (parsed) {
         trackUserEngagement("BMI Calculator", "bmi_result", Math.round(parsed.bmi * 10) / 10);
         trackFeatureUsage("BMI Calculator", "bmi_category", parsed.category.toLowerCase());
         trackToolCompletion("BMI Calculator", "Calculators", {
           inputFormat: `${heightUnit}_${weightUnit}`,
-          outputFormat: "bmi_score"
+          outputFormat: "bmi_score",
         });
       }
       setNote("");

@@ -33,15 +33,15 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { 
-  trackToolConversion, 
-  trackToolUsage, 
-  trackToolCompletion,
-  trackUserEngagement,
-  trackProcessingTime,
+import {
+  trackConversionValue,
   trackError,
   trackFeatureUsage,
-  trackConversionValue
+  trackProcessingTime,
+  trackToolCompletion,
+  trackToolConversion,
+  trackToolUsage,
+  trackUserEngagement,
 } from "@/lib/gtm";
 
 // Enhanced copy tracking
@@ -49,6 +49,7 @@ export function trackCopyAction(toolName: string, contentLength?: number) {
   trackUserEngagement(toolName, "copy_result", contentLength);
   trackConversionValue(toolName, "engagement", 2); // Higher value for copy actions
 }
+
 import { cn } from "@/lib/utils";
 
 const LS_KEY = "toolscube:json-formatter-v1";
@@ -135,17 +136,17 @@ export default function JsonFormatterClient() {
     const startTime = performance.now();
     trackToolUsage("JSON Formatter", "Developer");
     trackUserEngagement("JSON Formatter", "prettify_action", input.length);
-    
+
     try {
       const json = parseSafe(input);
       const value = sortKeys ? sortObjectDeep(json) : json;
       const pretty = JSON.stringify(value, null, getIndentValue());
       const endTime = performance.now();
       const processingTime = endTime - startTime;
-      
+
       setOutput(pretty);
       setError("");
-      
+
       // Enhanced tracking
       trackToolConversion("JSON Formatter", "prettify");
       trackProcessingTime("JSON Formatter", "prettify", processingTime);
@@ -154,7 +155,7 @@ export default function JsonFormatterClient() {
       trackToolCompletion("JSON Formatter", "Developer", {
         processingTime,
         inputFormat: "minified_json",
-        outputFormat: "prettified_json"
+        outputFormat: "prettified_json",
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Invalid JSON";
@@ -168,7 +169,7 @@ export default function JsonFormatterClient() {
     const startTime = performance.now();
     trackToolUsage("JSON Formatter", "Developer");
     trackUserEngagement("JSON Formatter", "minify_action", input.length);
-    
+
     try {
       const json = parseSafe(input);
       const value = sortKeys ? sortObjectDeep(json) : json;
@@ -176,17 +177,17 @@ export default function JsonFormatterClient() {
       const endTime = performance.now();
       const processingTime = endTime - startTime;
       const spaceSaved = input.length - compact.length;
-      
+
       setOutput(compact);
       setError("");
-      
+
       trackToolConversion("JSON Formatter", "minify");
       trackProcessingTime("JSON Formatter", "minify", processingTime);
       trackUserEngagement("JSON Formatter", "space_saved", spaceSaved);
       trackToolCompletion("JSON Formatter", "Developer", {
         processingTime,
         inputFormat: "formatted_json",
-        outputFormat: "minified_json"
+        outputFormat: "minified_json",
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Invalid JSON";
@@ -200,21 +201,21 @@ export default function JsonFormatterClient() {
     const startTime = performance.now();
     trackToolUsage("JSON Formatter", "Developer");
     trackUserEngagement("JSON Formatter", "validate_action", input.length);
-    
+
     try {
       parseSafe(input);
       const endTime = performance.now();
       const processingTime = endTime - startTime;
-      
+
       setError("");
       setOutput("✅ Valid JSON");
-      
+
       trackToolConversion("JSON Formatter", "validate");
       trackProcessingTime("JSON Formatter", "validate", processingTime);
       trackToolCompletion("JSON Formatter", "Developer", {
         processingTime,
         inputFormat: "json",
-        outputFormat: "validation_result"
+        outputFormat: "validation_result",
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Invalid JSON";

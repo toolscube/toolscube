@@ -1,5 +1,5 @@
-import JsonLd from "@/components/seo/json-ld";
 import { ToolPageTracker } from "@/components/analytics/tool-page-tracker";
+import JsonLd from "@/components/seo/json-ld";
 import JSONFormatterClient from "@/components/tools/dev/json-formatter-client";
 import { siteURL } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
