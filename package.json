@@ -6,9 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "biome check",
-    "lint:fix": "biome check --write --unsafe",
-    "format": "biome format --write"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.0",
@@ -45,9 +44,9 @@
     "lucide-react": "^0.542.0",
     "marked": "^16.2.1",
     "nanoid": "^5.1.5",
-    "next": "15.5.2",
+    "next": "^16.0.0",
     "next-auth": "^4.24.11",
-    "nodemailer": "^6.10.1",
+    "nodemailer": "^7.0.7",
     "pino": "^9.9.4",
     "preact": "10.11.3",
     "qrcode": "^1.5.4",
@@ -67,13 +66,14 @@
     "zod": "^4.1.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/js-yaml": "^4.0.9",
     "@types/leaflet": "^1.9.20",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16.0.0",
     "prisma": "^6.15.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
