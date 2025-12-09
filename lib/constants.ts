@@ -1,1 +1,3 @@
-export const siteURL = process.env.NEXT_PUBLIC_SITE_URL || "https://toolscube.app";
+import { env } from "@/lib/env";
+
+export const siteURL = env.app.siteUrl;

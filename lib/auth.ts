@@ -1,16 +1,18 @@
+import { prisma } from "@/lib/prisma";
 import type { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { prisma } from "@/lib/prisma";
 import logger from "./logger";
+
+import { env } from "@/lib/env";
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: env.auth.google.clientId,
+      clientSecret: env.auth.google.clientSecret,
     }),
     CredentialsProvider({
       name: "credentials",
@@ -33,7 +35,10 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
 
         if (!isPasswordValid) {
           return null;
@@ -67,7 +72,10 @@ export const authOptions: NextAuthOptions = {
               data: {
                 email: user.email,
                 name: user.name || profile?.name || null,
-                image: user.image || (profile as { picture?: string })?.picture || null,
+                image:
+                  user.image ||
+                  (profile as { picture?: string })?.picture ||
+                  null,
                 emailVerified: new Date(),
                 role: "USER",
               },
@@ -133,11 +141,13 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.sub || "";
         if (token.role) {
-          (session.user as typeof session.user & { role: Role }).role = token.role as Role;
+          (session.user as typeof session.user & { role: Role }).role =
+            token.role as Role;
         }
         if (token.emailVerified) {
-          (session.user as typeof session.user & { emailVerified: Date | null }).emailVerified =
-            token.emailVerified as Date | null;
+          (
+            session.user as typeof session.user & { emailVerified: Date | null }
+          ).emailVerified = token.emailVerified as Date | null;
         }
       }
       return session;

@@ -1,10 +1,18 @@
-import type { MetadataRoute } from "next";
 import { ToolsData } from "@/data/tools";
+import { env } from "@/lib/env";
+import type { MetadataRoute } from "next";
 
-const site = process.env.NEXT_PUBLIC_SITE_URL || "https://toolscube.app";
+const site = env.app.siteUrl;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticRoutes = ["", "/tools", "/about", "/privacy", "/terms", "/sponsors"];
+  const staticRoutes = [
+    "",
+    "/tools",
+    "/about",
+    "/privacy",
+    "/terms",
+    "/sponsors",
+  ];
 
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
     url: new URL(route, site).toString(),
@@ -19,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: item.popular ? 0.9 : 0.6,
-    })),
+    }))
   );
 
   return [...staticEntries, ...toolEntries];

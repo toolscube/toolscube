@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import nodemailer from "nodemailer";
 import logger from "./logger";
 
@@ -10,12 +11,12 @@ interface EmailOptions {
 // Create transporter
 const createTransporter = () => {
   const config = {
-    host: process.env.EMAIL_SERVER_HOST,
-    port: parseInt(process.env.EMAIL_SERVER_PORT || "587"),
+    host: env.email.host,
+    port: env.email.port,
     secure: false,
     auth: {
-      user: process.env.EMAIL_SERVER_USER,
-      pass: process.env.EMAIL_SERVER_PASSWORD,
+      user: env.email.user,
+      pass: env.email.password,
     },
     tls: {
       rejectUnauthorized: false,
@@ -30,7 +31,7 @@ export const sendEmail = async ({ to, subject, html }: EmailOptions) => {
     const transporter = createTransporter();
 
     const mailOptions = {
-      from: process.env.EMAIL_FROM || "noreply@toolscube.app",
+      from: env.email.from,
       to,
       subject,
       html,
@@ -40,12 +41,15 @@ export const sendEmail = async ({ to, subject, html }: EmailOptions) => {
     return { success: true, messageId: result.messageId };
   } catch (error) {
     logger.error({ error }, "Email sending failed");
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
-  const verifyUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}`;
+  const verifyUrl = `${env.auth.url}/verify-email?token=${token}`;
 
   const html = `
     <!DOCTYPE html>
@@ -60,7 +64,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
         
         <!-- Header with Logo and Brand -->
         <div style="background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); padding: 40px 20px; text-align: center;">
-          <img src="${process.env.NEXTAUTH_URL}/assets/logo.png" alt="ToolsCube Logo" style="width: 60px; height: 60px; margin-bottom: 16px; border-radius: 12px;">
+          <img src="${env.auth.url}/assets/logo.png" alt="ToolsCube Logo" style="width: 60px; height: 60px; margin-bottom: 16px; border-radius: 12px;">
           <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">ToolsCube</h1>
           <p style="color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 16px;">Your All-in-One Tools Platform</p>
         </div>
@@ -137,7 +141,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
-  const resetUrl = `${process.env.NEXTAUTH_URL}/forgot-password?token=${token}`;
+  const resetUrl = `${env.auth.url}/forgot-password?token=${token}`;
 
   const html = `
     <!DOCTYPE html>
@@ -152,7 +156,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
         
         <!-- Header with Logo and Brand -->
         <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 40px 20px; text-align: center;">
-          <img src="${process.env.NEXTAUTH_URL}/assets/logo.png" alt="ToolsCube Logo" style="width: 60px; height: 60px; margin-bottom: 16px; border-radius: 12px;">
+          <img src="${env.auth.url}/assets/logo.png" alt="ToolsCube Logo" style="width: 60px; height: 60px; margin-bottom: 16px; border-radius: 12px;">
           <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">ToolsCube</h1>
           <p style="color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 16px;">Password Reset Request</p>
         </div>
