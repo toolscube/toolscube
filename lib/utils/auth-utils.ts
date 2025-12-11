@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
 export async function getCurrentUser() {
   const session = await getServerSession(authOptions);
@@ -11,14 +11,6 @@ export async function requireAuth() {
   const user = await getCurrentUser();
   if (!user) {
     redirect("/sign-in");
-  }
-  return user;
-}
-
-export async function requireAdmin() {
-  const user = await requireAuth();
-  if (user.role !== "ADMIN") {
-    redirect("/");
   }
   return user;
 }
