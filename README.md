@@ -1,97 +1,52 @@
-# 🧊 Tools Cube
+# Tools Cube
 
-> **Fast, Free, Privacy-Friendly Online Tools**
+> Free and open source online tools platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Tools Cube** is a modern web platform offering 70+ essential online utilities for developers, businesses, and everyday users. Built with Next.js 15, featuring lightning-fast performance and privacy-first design.
+70+ essential online utilities for developers and professionals. Built with Next.js 15, privacy-focused, and MIT licensed.
 
-🌐 **Live Demo:** [toolscube.app](https://toolscube.app)
+**Live:** [toolscube.app](https://toolscube.app) • **Docs:** [/docs](./docs)
 
----
-
-## ✨ Features
-
-🔗 **URL Tools** - Shortener, QR codes, UTM builder  
-📝 **Text Tools** - Case converter, word counter, regex tester  
-🧮 **Calculators** - BMI, unit converter, percentage, currency  
-⚙️ **Developer Tools** - JSON formatter, JWT decoder, API tester  
-🎨 **Design Tools** - Color converter, OG image builder  
-📊 **SEO Tools** - Meta generator, schema builder, robots.txt  
-💼 **Office Tools** - Invoice generator, meeting notes  
-
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
-# Clone repository
-git clone https://github.com/tariqul420/tools-cube.git
+git clone https://github.com/toolscube/tools-cube.git
 cd tools-cube
-
-# Install dependencies
 npm install
-
-# Set up environment
 cp .env.example .env.local
-# Edit .env.local with your settings
-
-# Run development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the result.
+Open [localhost:3000](http://localhost:3000)
 
----
-
-## 🛠️ Tech Stack
+## Stack
 
 - **Framework:** Next.js 15 (App Router)
-- **UI:** ShadCN UI + Tailwind CSS
-- **Database:** PostgreSQL + Prisma ORM
-- **Deployment:** Docker + Traefik
-- **TypeScript:** Full type safety
+- **UI:** Shadcn/ui + Tailwind CSS
+- **Database:** PostgreSQL + Prisma
+- **Auth:** NextAuth.js
+- **Deployment:** Docker
+
+## Features
+
+- URL shortener, QR codes, UTM builder
+- Text utilities, case converter, word counter
+- Developer tools, JSON/JWT, regex tester
+- Calculators, unit converter, BMI
+- SEO tools, meta generator, schema builder
+- Image tools, resize, compress, convert
+
+## Contributing
+
+See [CONTRIBUTING.md](./docs/CONTRIBUTING.md)
+
+## License
+
+MIT © [toolscube](https://github.com/toolscube)
 
 ---
 
-## � Project Structure
-
-```
-app/
-├── (marketing)/          # Marketing pages
-├── tools/               # Tool categories
-│   ├── url/            # URL utilities
-│   ├── text/           # Text processors
-│   ├── dev/            # Developer tools
-│   ├── calc/           # Calculators
-│   └── seo/            # SEO utilities
-components/
-├── tools/              # Tool components
-├── ui/                 # UI components
-└── shared/             # Shared components
-lib/                    # Utilities & config
-```
-
----
-
-## 🌟 Highlights
-
-- **70+ Tools** - Comprehensive utility collection
-- **Privacy First** - No data tracking or storage
-- **Mobile Ready** - Responsive design
-- **SEO Optimized** - Perfect search engine optimization
-- **Open Source** - MIT licensed
-- **Fast Performance** - Optimized for speed
-
----
-
-## � License
-
-MIT © [Tariqul Islam](https://tariqul.dev)
-
----
-
-**⭐ Star this repo if you find it helpful!**
+⭐ Star this repo • 💙 [Sponsor](https://github.com/sponsors/toolscube)

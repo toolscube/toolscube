@@ -1,106 +1,46 @@
-# 🤝 Contributing to Tools Cube
+# Contributing
 
-Thank you for your interest in contributing!
-This document provides guidelines for contributing to the Tools Cube project.
+Thanks for your interest in contributing to Tools Cube!
 
----
+## Getting Started
 
-## 🛠️ Getting Started
+1. Fork and clone the repo
+2. Install dependencies: `npm install`
+3. Create a branch: `git checkout -b feature/your-feature`
+4. Make your changes
+5. Run tests: `npm run build && npm run lint`
+6. Commit using [Conventional Commits](https://conventionalcommits.org):
+   - `feat:` new feature
+   - `fix:` bug fix
+   - `docs:` documentation
+   - `chore:` maintenance
+7. Push and open a Pull Request
 
-1. **Fork** the repository on GitHub.
-2. **Clone** your fork locally:
+## Development
 
-   ```bash
-   git clone https://github.com/tariqul420/tools-cube.git
-   cd tools-cube
-   ```
+```bash
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run lint         # Run linter
+```
 
-3. **Install dependencies:**
+## Code Guidelines
 
-   ```bash
-   npm install
-   ```
+- Use TypeScript with proper types
+- Follow existing code style (Prettier + ESLint)
+- Write semantic, accessible HTML
+- Test your changes locally
+- Include screenshots for UI changes
 
-4. **Run the development server:**
+## Pull Request
 
-   ```bash
-   npm run dev
-   ```
+- Clear title and description
+- Link related issues
+- Ensure CI passes
+- Request review when ready
 
----
+## Questions?
 
-## 🌱 Contribution Workflow
+Open an issue or join discussions on GitHub.
 
-1. Create a new branch for your feature or fix:
-
-   ```bash
-   git checkout -b feature/tool-name
-   ```
-
-   Example: `feature/pdf-merge-tool`
-
-2. Make your changes (code, tests, docs).
-
-3. Commit with a clear message:
-
-   ```bash
-   git commit -m "feat: add pdf merge tool with drag-and-drop UI"
-   ```
-
-   - Use [Conventional Commits](https://www.conventionalcommits.org/) style:
-
-     - `feat:` → new feature
-     - `fix:` → bug fix
-     - `docs:` → documentation change
-     - `chore:` → maintenance, config updates
-
-4. Push your branch:
-
-   ```bash
-   git push origin feature/tool-name
-   ```
-
-5. Open a **Pull Request**:
-
-   - Title: short summary of the change
-   - Description: explain the problem, solution, screenshots (if UI)
-   - Link any related issues
-
----
-
-## 🧪 Code Guidelines
-
-- **Framework:** Next.js (App Router)
-- **UI:** ShadCN + TailwindCSS
-- **Code Style:** TypeScript, ESLint, Prettier
-- **Tests:** Add tests if adding new logic or fixing a bug
-- **Accessibility:** Use semantic HTML, ARIA attributes when needed
-- **Performance:** Ensure Core Web Vitals-friendly
-
----
-
-## ✅ Pull Request Checklist
-
-Before submitting:
-
-- [ ] Code builds without errors (`npm run build`)
-- [ ] Lint passes (`npm run lint`)
-- [ ] Added/updated documentation if needed
-- [ ] Tested locally (UI + functionality)
-- [ ] Screenshots included (if UI change)
-
----
-
-## 📖 Resources
-
-- [Next.js Docs](https://nextjs.org/docs)
-- [ShadCN UI](https://ui.shadcn.com)
-- [Prisma ORM](https://www.prisma.io/docs)
-- [Conventional Commits](https://www.conventionalcommits.org/)
-
----
-
-## 🙏 Thanks
-
-Your contributions make **Tools Cube** better for everyone.
-We appreciate your help in building an open, useful platform!
+Thank you! 🙏
