@@ -10,14 +10,13 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // Optional for open source
+    requireEmailVerification: false,
+    autoSignIn: true,
     sendResetPassword: async ({ user, url }) => {
-      // Email sending with fallback for open source
       try {
         const { sendPasswordResetEmail } = await import("@/lib/email");
         await sendPasswordResetEmail(user.email, url);
       } catch (error) {
-        // Fallback for development/open source without email config
         logger.warn(
           { url, email: user.email },
           "Password reset email not sent (email not configured). Reset URL:"
