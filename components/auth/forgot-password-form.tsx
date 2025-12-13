@@ -1,5 +1,16 @@
 "use client";
 
+import InputField from "@/components/shared/form-fields/input-field";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
+import logger from "@/lib/logger";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, CheckCircle, KeyRound, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -7,11 +18,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
-import InputField from "@/components/shared/form-fields/input-field";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
-import logger from "@/lib/logger";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
