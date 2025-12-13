@@ -41,8 +41,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Copy Prisma schema
+# Copy Prisma schema and config
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # Copy production node_modules (incl. prisma CLI + deps)
 COPY --from=builder /app/node_modules ./node_modules
@@ -50,4 +51,4 @@ COPY --from=builder /app/node_modules ./node_modules
 EXPOSE 3005
 
 # Run migrations then start Next.js
-CMD npx prisma migrate deploy && node server.js
+CMD npx prisma migrate deploy --config prisma.config.ts && node server.js

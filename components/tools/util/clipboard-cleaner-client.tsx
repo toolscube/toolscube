@@ -202,7 +202,11 @@ export default function ClipboardCleanerClient() {
             <ResetButton onClick={resetAll} />
             <PasteButton />
             <ResetButton icon={Wand2} onClick={onCleanClick} label="Clean" />
-            <CopyButton variant="default" getText={() => cleaned || ""} disabled={!cleaned} />
+            <CopyButton
+              variant="default"
+              getText={() => cleaned || ""}
+              disabled={!cleaned}
+            />
           </>
         }
       />
@@ -218,7 +222,10 @@ export default function ClipboardCleanerClient() {
             label="Case"
             value={opts.caseMode}
             onValueChange={(v) =>
-              setOpts({ ...opts, caseMode: (v as CleanOptions["caseMode"]) ?? "none" })
+              setOpts({
+                ...opts,
+                caseMode: (v as CleanOptions["caseMode"]) ?? "none",
+              })
             }
             options={[
               { label: "No change", value: "none" },
@@ -249,17 +256,23 @@ export default function ClipboardCleanerClient() {
               />
               <SwitchRow
                 checked={opts.stripLineBreaks}
-                onCheckedChange={(v) => setOpts({ ...opts, stripLineBreaks: v })}
+                onCheckedChange={(v) =>
+                  setOpts({ ...opts, stripLineBreaks: v })
+                }
                 label="Flatten line breaks"
               />
               <SwitchRow
                 checked={opts.stripExtraBlankLines}
-                onCheckedChange={(v) => setOpts({ ...opts, stripExtraBlankLines: v })}
+                onCheckedChange={(v) =>
+                  setOpts({ ...opts, stripExtraBlankLines: v })
+                }
                 label="Keep max 1 blank line"
               />
               <SwitchRow
                 checked={opts.autoCleanOnPaste}
-                onCheckedChange={(v) => setOpts({ ...opts, autoCleanOnPaste: v })}
+                onCheckedChange={(v) =>
+                  setOpts({ ...opts, autoCleanOnPaste: v })
+                }
                 label="Auto‑clean on paste"
               />
             </div>
@@ -270,22 +283,30 @@ export default function ClipboardCleanerClient() {
             <div className="flex flex-col gap-2 text-sm">
               <SwitchRow
                 checked={opts.normalizeQuotes}
-                onCheckedChange={(v) => setOpts({ ...opts, normalizeQuotes: v })}
+                onCheckedChange={(v) =>
+                  setOpts({ ...opts, normalizeQuotes: v })
+                }
                 label="Smart quotes → ' "
               />
               <SwitchRow
                 checked={opts.normalizeDashes}
-                onCheckedChange={(v) => setOpts({ ...opts, normalizeDashes: v })}
+                onCheckedChange={(v) =>
+                  setOpts({ ...opts, normalizeDashes: v })
+                }
                 label="En/Em dashes → -"
               />
               <SwitchRow
                 checked={opts.replaceEllipsis}
-                onCheckedChange={(v) => setOpts({ ...opts, replaceEllipsis: v })}
+                onCheckedChange={(v) =>
+                  setOpts({ ...opts, replaceEllipsis: v })
+                }
                 label="Ellipsis … → ..."
               />
               <SwitchRow
                 checked={opts.removeZeroWidth}
-                onCheckedChange={(v) => setOpts({ ...opts, removeZeroWidth: v })}
+                onCheckedChange={(v) =>
+                  setOpts({ ...opts, removeZeroWidth: v })
+                }
                 label="Remove zero‑width chars"
               />
               <SwitchRow
@@ -309,7 +330,9 @@ export default function ClipboardCleanerClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Editor</CardTitle>
-          <CardDescription>Paste on the left, get clean text on the right.</CardDescription>
+          <CardDescription>
+            Paste on the left, get clean text on the right.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -326,7 +349,11 @@ export default function ClipboardCleanerClient() {
                     setRaw(txt);
                   }}
                 />
-                <ResetButton icon={Eraser} label="Clear" onClick={() => setRaw("")} />
+                <ResetButton
+                  icon={Eraser}
+                  label="Clear"
+                  onClick={() => setRaw("")}
+                />
               </div>
             </div>
 
@@ -342,7 +369,9 @@ export default function ClipboardCleanerClient() {
                   const ta = e.target as HTMLTextAreaElement;
                   const selStart = ta.selectionStart || 0;
                   const selEnd = ta.selectionEnd || 0;
-                  setRaw((prev) => prev.slice(0, selStart) + out + prev.slice(selEnd));
+                  setRaw(
+                    (prev) => prev.slice(0, selStart) + out + prev.slice(selEnd)
+                  );
                 }
               }}
               placeholder="Paste here (Ctrl/Cmd + V)…"
@@ -367,7 +396,7 @@ export default function ClipboardCleanerClient() {
                 <CopyButton variant="default" getText={cleaned || ""} />
               </div>
             </div>
-            <Textarea readOnly value={cleaned} className="min-h-[220px]" />
+            <Textarea readOnly value={cleaned} className="min-h-55" />
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="secondary">{stats.words} words</Badge>
               <Badge variant="secondary">{stats.chars} chars</Badge>
@@ -394,14 +423,18 @@ export default function ClipboardCleanerClient() {
               <div key={h.id} className="rounded-lg border p-3 space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{new Date(h.ts).toLocaleString()}</span>
-                  <CopyButton variant="outline" size="sm" getText={() => h.out || ""} />
+                  <CopyButton
+                    variant="outline"
+                    size="sm"
+                    getText={() => h.out || ""}
+                  />
                 </div>
                 <div className="text-xs text-muted-foreground">Source</div>
-                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap wrap-break-word bg-muted/30 rounded p-2 max-h-32">
                   {h.src}
                 </pre>
                 <div className="text-xs text-muted-foreground">Cleaned</div>
-                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words bg-muted/30 rounded p-2 max-h-32">
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap wrap-break-word bg-muted/30 rounded p-2 max-h-32">
                   {h.out}
                 </pre>
               </div>

@@ -283,7 +283,9 @@ export default function EmiCalculatorClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Inputs</CardTitle>
-          <CardDescription>Enter your loan details and optional extra payment.</CardDescription>
+          <CardDescription>
+            Enter your loan details and optional extra payment.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Currency */}
@@ -384,32 +386,50 @@ export default function EmiCalculatorClient() {
             <CardDescription>Key numbers at a glance.</CardDescription>
           </div>
 
-          <CopyButton size="sm" label="Copy EMI" getText={() => fmt(baseEmi, currency)} />
+          <CopyButton
+            size="sm"
+            label="Copy EMI"
+            getText={() => fmt(baseEmi, currency)}
+          />
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border p-4">
-            <div className="text-xs text-muted-foreground">EMI (without extra)</div>
+            <div className="text-xs text-muted-foreground">
+              EMI (without extra)
+            </div>
             <div className="mt-1 flex items-center gap-2 text-xl font-semibold">
               {fmt(baseEmi, currency)}
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">Base monthly installment</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Base monthly installment
+            </div>
           </div>
 
           <div className="rounded-xl border p-4">
             <div className="text-xs text-muted-foreground">Total Interest</div>
-            <div className="mt-1 text-xl font-semibold">{fmt(totalInterest, currency)}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Over the loan life</div>
+            <div className="mt-1 text-xl font-semibold">
+              {fmt(totalInterest, currency)}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Over the loan life
+            </div>
           </div>
 
           <div className="rounded-xl border p-4">
             <div className="text-xs text-muted-foreground">Total Payment</div>
-            <div className="mt-1 text-xl font-semibold">{fmt(totalPayment, currency)}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Principal + Interest</div>
+            <div className="mt-1 text-xl font-semibold">
+              {fmt(totalPayment, currency)}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Principal + Interest
+            </div>
           </div>
 
           <div className="rounded-xl border p-4">
             <div className="text-xs text-muted-foreground">Payoff Date</div>
-            <div className="mt-1 text-xl font-semibold">{payoffDate || "—"}</div>
+            <div className="mt-1 text-xl font-semibold">
+              {payoffDate || "—"}
+            </div>
             <div className="mt-1 text-xs text-muted-foreground">
               {actualMonths ? `${fmtInt(actualMonths)} months` : ""}
             </div>
@@ -440,14 +460,18 @@ export default function EmiCalculatorClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Amortization Schedule</CardTitle>
-          <CardDescription>Month-by-month breakdown including extra payments.</CardDescription>
+          <CardDescription>
+            Month-by-month breakdown including extra payments.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {schedule.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Enter loan details to see the schedule.</p>
+            <p className="text-sm text-muted-foreground">
+              Enter loan details to see the schedule.
+            </p>
           ) : (
             <div className="overflow-auto rounded-md border">
-              <table className="w-full min-w-[720px] border-collapse text-sm">
+              <table className="w-full min-w-180 border-collapse text-sm">
                 <thead className="sticky top-0 bg-background/80 backdrop-blur">
                   <tr className="[&>th]:border-b [&>th]:px-3 [&>th]:py-2 text-muted-foreground">
                     <th className="text-left">#</th>
@@ -462,12 +486,19 @@ export default function EmiCalculatorClient() {
                 </thead>
                 <tbody>
                   {schedule.map((r) => (
-                    <tr key={r.month} className="[&>td]:border-b [&>td]:px-3 [&>td]:py-2">
+                    <tr
+                      key={r.month}
+                      className="[&>td]:border-b [&>td]:px-3 [&>td]:py-2"
+                    >
                       <td className="text-left">{r.month}</td>
                       <td className="text-left">{r.date}</td>
                       <td className="text-right">{fmt(r.opening, currency)}</td>
-                      <td className="text-right">{fmt(r.interest, currency)}</td>
-                      <td className="text-right">{fmt(r.principal, currency)}</td>
+                      <td className="text-right">
+                        {fmt(r.interest, currency)}
+                      </td>
+                      <td className="text-right">
+                        {fmt(r.principal, currency)}
+                      </td>
                       <td className="text-right">{fmt(r.extra, currency)}</td>
                       <td className="text-right">{fmt(r.payment, currency)}</td>
                       <td className="text-right">{fmt(r.closing, currency)}</td>

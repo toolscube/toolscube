@@ -236,7 +236,7 @@ function TimeZoneSelect({
         <SelectTrigger>
           <SelectValue placeholder={placeholder || "Select time zone"} />
         </SelectTrigger>
-        <SelectContent className="max-h-[300px]">
+        <SelectContent className="max-h-75">
           {items.map((z) => (
             <SelectItem key={z.value} value={z.value}>
               {z.label}
@@ -531,7 +531,7 @@ export default function TimezoneConverterClient() {
                 <SelectTrigger>
                   <SelectValue placeholder="Add a time zone" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
+                <SelectContent className="max-h-75">
                   {filteredTargets.slice(0, 200).map((z) => (
                     <SelectItem key={z.value} value={z.value}>
                       {z.label}

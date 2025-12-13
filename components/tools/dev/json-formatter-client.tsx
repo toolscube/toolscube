@@ -497,7 +497,9 @@ export default function JsonFormatterClient() {
             {error ? (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
                 <div className="font-medium mb-1">Invalid JSON</div>
-                <div className="whitespace-pre-wrap break-words">{error}</div>
+                <div className="whitespace-pre-wrap wrap-break-word">
+                  {error}
+                </div>
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">
