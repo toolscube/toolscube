@@ -17,7 +17,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/profile">
+          <Link href="/dashboard/settings/profile">
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </Link>
