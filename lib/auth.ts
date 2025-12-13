@@ -12,16 +12,44 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
     autoSignIn: true,
-    sendResetPassword: async ({ user, url }) => {
+    sendResetPassword: async ({
+      user,
+      url,
+    }: {
+      user: { email: string };
+      url: string;
+    }) => {
       try {
         const { sendPasswordResetEmail } = await import("@/lib/email");
-        await sendPasswordResetEmail(user.email, url);
+        // Extract token from URL
+        const token = url.split("token=")[1] || url;
+        await sendPasswordResetEmail(user.email, token);
       } catch (error) {
         logger.warn(
           { url, email: user.email },
           "Password reset email not sent (email not configured). Reset URL:"
         );
         console.log(`\n🔐 Password Reset Link: ${url}\n`);
+      }
+    },
+    sendVerificationEmail: async ({
+      user,
+      url,
+    }: {
+      user: { email: string };
+      url: string;
+    }) => {
+      try {
+        const { sendVerificationEmail } = await import("@/lib/email");
+        // Extract token from URL
+        const token = url.split("token=")[1] || url;
+        await sendVerificationEmail(user.email, token);
+      } catch (error) {
+        logger.warn(
+          { url, email: user.email },
+          "Verification email not sent (email not configured). Verification URL:"
+        );
+        console.log(`\n📧 Verification Link: ${url}\n`);
       }
     },
   },

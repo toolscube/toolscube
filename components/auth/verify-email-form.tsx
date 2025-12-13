@@ -30,9 +30,20 @@ export default function VerifyEmailForm({ token, email }: VerifyEmailFormProps) 
 
   const verifyEmail = useCallback(async (verificationToken: string) => {
     try {
-      // Better Auth handles email verification automatically
-      setIsVerified(true);
-      toast.success("Email verified successfully!");
+      const response = await fetch(`/api/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: verificationToken }),
+      });
+
+      if (response.ok) {
+        setIsVerified(true);
+        toast.success("Email verified successfully!");
+      } else {
+        const errorMessage = "Failed to verify email. Please try again.";
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
     } catch {
       const errorMessage = "Failed to verify email. Please try again.";
       setError(errorMessage);
@@ -50,7 +61,7 @@ export default function VerifyEmailForm({ token, email }: VerifyEmailFormProps) 
     }
   }, [token, verifyEmail]);
 
-    const resendVerificationEmail = async () => {
+  const resendVerificationEmail = async () => {
     if (!finalEmail) {
       toast.error("Email not found");
       return;
@@ -58,8 +69,17 @@ export default function VerifyEmailForm({ token, email }: VerifyEmailFormProps) 
 
     setIsResending(true);
     try {
-      // Better Auth handles email verification
-      toast.success("Verification email sent!");
+      const response = await fetch("/api/auth/send-verification-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: finalEmail }),
+      });
+
+      if (response.ok) {
+        toast.success("Verification email sent!");
+      } else {
+        toast.error("Failed to send verification email. Please try again.");
+      }
     } catch {
       toast.error("Failed to send verification email. Please try again.");
     } finally {

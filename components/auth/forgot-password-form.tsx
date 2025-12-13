@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
+import { forgetPassword, resetPassword } from "@/lib/auth-client";
 import logger from "@/lib/logger";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, CheckCircle, KeyRound, Loader2 } from "lucide-react";
@@ -34,7 +35,7 @@ const resetPasswordFormSchema = z
       .min(8, "Password must be at least 8 characters")
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
       ),
     confirmPassword: z.string(),
   })
@@ -75,17 +76,18 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: data.email }),
+      const result = await forgetPassword({
+        email: data.email,
+        redirectTo: "/forgot-password",
       });
 
-      if (response.ok) {
-        toast.success("If an account exists with this email, you will receive a reset link.");
-        setIsSubmitted(true);
-      } else {
+      if (result.error) {
         toast.error("Something went wrong. Please try again.");
+      } else {
+        toast.success(
+          "If an account exists with this email, you will receive a reset link."
+        );
+        setIsSubmitted(true);
       }
     } catch (error) {
       logger.error({ error }, "Forgot password error");
@@ -101,24 +103,19 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
     setIsResetting(true);
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          token,
-          password: data.password,
-        }),
+      const result = await resetPassword({
+        token,
+        newPassword: data.password,
       });
 
-      if (response.ok) {
+      if (result.error) {
+        toast.error(result.error.message || "Failed to reset password");
+      } else {
         toast.success("Password reset successfully!");
         setIsSuccess(true);
         setTimeout(() => {
           router.push("/sign-in");
         }, 2000);
-      } else {
-        const error = await response.json();
-        toast.error(error.message || "Failed to reset password");
       }
     } catch (error) {
       logger.error({ error }, "Reset password error");
@@ -135,9 +132,12 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
           <div className="flex items-center justify-center mb-4">
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
-          <CardTitle className="text-2xl text-center">Password Updated! 🎉</CardTitle>
+          <CardTitle className="text-2xl text-center">
+            Password Updated! 🎉
+          </CardTitle>
           <CardDescription className="text-center">
-            Your password has been successfully updated. Now login with the new password.
+            Your password has been successfully updated. Now login with the new
+            password.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -156,14 +156,19 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
           <div className="flex items-center justify-center mb-4">
             <KeyRound className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl text-center">Reset Your Password</CardTitle>
+          <CardTitle className="text-2xl text-center">
+            Reset Your Password
+          </CardTitle>
           <CardDescription className="text-center">
             Secure your account with a new password.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Form {...resetForm}>
-            <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
+            <form
+              onSubmit={resetForm.handleSubmit(onResetSubmit)}
+              className="space-y-4"
+            >
               <InputField
                 name="password"
                 label="New Password"
@@ -181,20 +186,30 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
                 placeholder="Confirm new password"
                 disabled={isResetting}
                 value={resetForm.watch("confirmPassword")}
-                onChange={(e) => resetForm.setValue("confirmPassword", e.target.value)}
+                onChange={(e) =>
+                  resetForm.setValue("confirmPassword", e.target.value)
+                }
               />
 
               <div className="text-xs text-muted-foreground">
-                💡 Password must be at least 8 characters with uppercase, lowercase, and numbers.
+                💡 Password must be at least 8 characters with uppercase,
+                lowercase, and numbers.
               </div>
 
               <Button type="submit" className="w-full" disabled={isResetting}>
-                {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}🔐 Reset Password
+                {isResetting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                🔐 Reset Password
               </Button>
             </form>
           </Form>
 
-          <Button onClick={() => router.push("/sign-in")} variant="outline" className="w-full">
+          <Button
+            onClick={() => router.push("/sign-in")}
+            variant="outline"
+            className="w-full"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to sign in
           </Button>
@@ -211,7 +226,9 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
           <div className="flex items-center justify-center mb-4">
             <KeyRound className="h-8 w-8 text-green-600" />
           </div>
-          <CardTitle className="text-2xl text-center">Check Your Email 📧</CardTitle>
+          <CardTitle className="text-2xl text-center">
+            Check Your Email 📧
+          </CardTitle>
           <CardDescription className="text-center">
             A password reset link has been sent to your email address.
           </CardDescription>
@@ -228,7 +245,11 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
             </button>
           </div>
 
-          <Button onClick={() => router.push("/sign-in")} variant="outline" className="w-full">
+          <Button
+            onClick={() => router.push("/sign-in")}
+            variant="outline"
+            className="w-full"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to sign in
           </Button>
@@ -244,14 +265,17 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
         <div className="flex items-center justify-center mb-4">
           <KeyRound className="h-8 w-8 text-primary" />
         </div>
-        <CardTitle className="text-2xl text-center">Forgot Password? 🔑</CardTitle>
+        <CardTitle className="text-2xl text-center">Forgot Password?</CardTitle>
         <CardDescription className="text-center">
           Enter your email address and we'll send you a password reset link.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Form {...forgotForm}>
-          <form onSubmit={forgotForm.handleSubmit(onForgotSubmit)} className="space-y-4">
+          <form
+            onSubmit={forgotForm.handleSubmit(onForgotSubmit)}
+            className="space-y-4"
+          >
             <InputField
               name="email"
               label="Email"
@@ -263,12 +287,17 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
             />
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}📧 Send reset link
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Send reset link
             </Button>
           </form>
         </Form>
 
-        <Button onClick={() => router.push("/sign-in")} variant="outline" className="w-full">
+        <Button
+          onClick={() => router.push("/sign-in")}
+          variant="outline"
+          className="w-full"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to sign in
         </Button>
