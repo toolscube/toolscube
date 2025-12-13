@@ -1,7 +1,5 @@
 "use client";
 
-import { Key, ShieldAlert, ShieldCheck } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionButton,
   CopyButton,
@@ -13,6 +11,8 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import Stat from "@/components/shared/stat";
 import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Key, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -56,7 +56,10 @@ export default function PasswordGeneratorClient() {
   }, [count, length, flags, charset, customSymbols]);
 
   useEffect(() => {
-    if (autoRun) run();
+    if (autoRun) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      run();
+    }
   }, [autoRun, run]);
 
   function resetAll() {

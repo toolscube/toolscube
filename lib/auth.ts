@@ -24,7 +24,7 @@ export const auth = betterAuth({
         // Extract token from URL
         const token = url.split("token=")[1] || url;
         await sendPasswordResetEmail(user.email, token);
-      } catch (error) {
+      } catch {
         logger.warn(
           { url, email: user.email },
           "Password reset email not sent (email not configured). Reset URL:"
@@ -44,7 +44,7 @@ export const auth = betterAuth({
         // Extract token from URL
         const token = url.split("token=")[1] || url;
         await sendVerificationEmail(user.email, token);
-      } catch (error) {
+      } catch {
         logger.warn(
           { url, email: user.email },
           "Verification email not sent (email not configured). Verification URL:"

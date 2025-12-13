@@ -1,6 +1,18 @@
 "use client";
 
 import {
+  ActionButton,
+  CopyButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import ColorField from "@/components/shared/color-field";
+import InputField from "@/components/shared/form-fields/input-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { CardContent } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
   Contrast as ContrastIcon,
   Droplet,
   Pipette as EyeDropperIcon,
@@ -10,14 +22,6 @@ import {
   Shuffle,
 } from "lucide-react";
 import * as React from "react";
-import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
-import ColorField from "@/components/shared/color-field";
-import InputField from "@/components/shared/form-fields/input-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { CardContent } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 
 /* types */
 type RGB = { r: number; g: number; b: number };
@@ -26,7 +30,8 @@ type HSV = { h: number; s: number; v: number };
 type CMYK = { c: number; m: number; y: number; k: number };
 
 /* utilities */
-const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+const clamp = (n: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, n));
 const round = (n: number, p = 0) => Math.round(n * 10 ** p) / 10 ** p;
 const HEX_RX = /^#?([\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i;
 const RGB_CSV_RX =
@@ -60,7 +65,9 @@ function hexToRgb(hex: string): RGB | null {
   return { r, g, b };
 }
 function rgbToHex({ r, g, b }: RGB) {
-  return `#${[r, g, b].map((x) => clamp(Math.round(x), 0, 255).toString(16).padStart(2, "0")).join("")}`;
+  return `#${[r, g, b]
+    .map((x) => clamp(Math.round(x), 0, 255).toString(16).padStart(2, "0"))
+    .join("")}`;
 }
 
 function rgbToHsl({ r, g, b }: RGB): HSL {
@@ -70,8 +77,8 @@ function rgbToHsl({ r, g, b }: RGB): HSL {
   const max = Math.max(R, G, B),
     min = Math.min(R, G, B);
   let h = 0,
-    s = 0,
-    l = (max + min) / 2;
+    s = 0;
+  const l = (max + min) / 2;
   const d = max - min;
   if (d) {
     s = d / (1 - Math.abs(2 * l - 1));

@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/correctness/noUnusedVariables: <> */
-
 // Image Resize
 type Anchor =
   | "center"

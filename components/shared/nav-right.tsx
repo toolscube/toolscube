@@ -111,7 +111,10 @@ export default function NavRight() {
   }, []);
 
   useEffect(() => {
-    if (open) setRecent(getRecent());
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRecent(getRecent());
+    }
   }, [open]);
 
   function go(item: FlatItem) {

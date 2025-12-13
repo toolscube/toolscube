@@ -1,7 +1,5 @@
 "use client";
 
-import { AlignLeft } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionButton,
   CopyButton,
@@ -23,6 +21,8 @@ import {
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { generateParagraph, mulberry32 } from "@/lib/utils/dev/lorem-ipsum";
+import { AlignLeft } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function LoremIpsumClient() {
   const [paragraphs, setParagraphs] = useState<number>(3);
@@ -52,7 +52,10 @@ export default function LoremIpsumClient() {
   }, [paragraphs, words, startWithClassic, punctuation, deterministic, seed]);
 
   useEffect(() => {
-    if (autoRun) run();
+    if (autoRun) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      run();
+    }
   }, [autoRun, run]);
 
   function resetAll() {

@@ -1,17 +1,6 @@
 "use client";
 
 import {
-  Check,
-  DownloadCloud,
-  Hash,
-  Lock,
-  RotateCcw,
-  TimerReset as Timer,
-  Upload,
-} from "lucide-react";
-import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
   ActionButton,
   CopyButton,
   ExportTextButton,
@@ -22,6 +11,17 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import Stat from "@/components/shared/stat";
 import ToolPageHeader from "@/components/shared/tool-page-header";
+import {
+  Check,
+  DownloadCloud,
+  Hash,
+  Lock,
+  RotateCcw,
+  TimerReset as Timer,
+  Upload,
+} from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -71,13 +71,19 @@ export default function HashGeneratorClient() {
   const [perf, setPerf] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const selectedAlgoList = useMemo(() => ALL_ALGOS.filter((a) => algos[a]), [algos]);
+  const selectedAlgoList = useMemo(
+    () => ALL_ALGOS.filter((a) => algos[a]),
+    [algos]
+  );
 
   const sourceBytes = useMemo(() => {
-    const payload = mode === "text" ? toBytes(text) : (fileBytes ?? new Uint8Array());
+    const payload =
+      mode === "text" ? toBytes(text) : fileBytes ?? new Uint8Array();
     const s = toBytes(salt);
     if (s.length === 0) return payload;
-    return saltBefore ? new Uint8Array([...s, ...payload]) : new Uint8Array([...payload, ...s]);
+    return saltBefore
+      ? new Uint8Array([...s, ...payload])
+      : new Uint8Array([...payload, ...s]);
   }, [mode, text, fileBytes, salt, saltBefore]);
 
   const run = useCallback(async () => {
@@ -93,7 +99,8 @@ export default function HashGeneratorClient() {
         } else {
           outBytes = await digest(algo, sourceBytes);
         }
-        const str = encoding === "hex" ? hex(outBytes, uppercase) : base64(outBytes);
+        const str =
+          encoding === "hex" ? hex(outBytes, uppercase) : base64(outBytes);
         list.push({ name: algo, value: str });
       }
       setResults(list);
@@ -106,7 +113,10 @@ export default function HashGeneratorClient() {
   }, [selectedAlgoList, useHmac, hmacKey, sourceBytes, encoding, uppercase]);
 
   useEffect(() => {
-    if (autoRun) void run();
+    if (autoRun) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void run();
+    }
   }, [autoRun, run]);
 
   function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -126,7 +136,13 @@ export default function HashGeneratorClient() {
     setText("Hello, World!");
     setFileName("");
     setFileBytes(null);
-    setAlgos({ MD5: true, "SHA-1": true, "SHA-256": true, "SHA-384": false, "SHA-512": false });
+    setAlgos({
+      MD5: true,
+      "SHA-1": true,
+      "SHA-256": true,
+      "SHA-384": false,
+      "SHA-512": false,
+    });
     setUseHmac(false);
     setHmacKey("");
     setSalt("");
@@ -168,7 +184,7 @@ export default function HashGeneratorClient() {
                     results,
                   },
                   null,
-                  2,
+                  2
                 )
               }
             />
@@ -180,7 +196,9 @@ export default function HashGeneratorClient() {
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <Stat
           label="Input bytes"
-          value={mode === "text" ? toBytes(text).length : (fileBytes?.length ?? 0)}
+          value={
+            mode === "text" ? toBytes(text).length : fileBytes?.length ?? 0
+          }
           hint={mode === "file" ? fileName || "No file" : "UTF‑8 length"}
         />
         <Stat
@@ -201,7 +219,9 @@ export default function HashGeneratorClient() {
         <GlassCard>
           <CardHeader>
             <CardTitle className="text-base">Input & Settings</CardTitle>
-            <CardDescription>Choose input type, algorithms and output format.</CardDescription>
+            <CardDescription>
+              Choose input type, algorithms and output format.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Mode */}
@@ -228,7 +248,9 @@ export default function HashGeneratorClient() {
                     size="sm"
                     variant={algos[name] ? "default" : "outline"}
                     label={name}
-                    onClick={() => setAlgos((p) => ({ ...p, [name]: !p[name] }))}
+                    onClick={() =>
+                      setAlgos((p) => ({ ...p, [name]: !p[name] }))
+                    }
                   />
                 ))}
               </div>
@@ -267,7 +289,11 @@ export default function HashGeneratorClient() {
                   </span>
                 ) as unknown as string
               }
-              hint={`Compute HMAC over the input using ${selectedAlgoList.length ? selectedAlgoList.join(", ") : "selected algos"}.`}
+              hint={`Compute HMAC over the input using ${
+                selectedAlgoList.length
+                  ? selectedAlgoList.join(", ")
+                  : "selected algos"
+              }.`}
               checked={useHmac}
               onCheckedChange={(v) => setUseHmac(Boolean(v))}
             />
@@ -309,7 +335,12 @@ export default function HashGeneratorClient() {
           </CardContent>
           <CardFooter className="flex gap-2">
             <ActionButton label="Hash" onClick={() => void run()} icon={Hash} />
-            <ActionButton label="Reset" variant="outline" onClick={resetAll} icon={RotateCcw} />
+            <ActionButton
+              label="Reset"
+              variant="outline"
+              onClick={resetAll}
+              icon={RotateCcw}
+            />
           </CardFooter>
         </GlassCard>
 
@@ -319,7 +350,9 @@ export default function HashGeneratorClient() {
             <CardTitle className="text-base">
               {mode === "text" ? "Text Input" : "File Input"}
             </CardTitle>
-            <CardDescription>Paste text or pick a file to hash.</CardDescription>
+            <CardDescription>
+              Paste text or pick a file to hash.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {mode === "text" ? (
@@ -366,9 +399,14 @@ export default function HashGeneratorClient() {
                   </div>
                 )}
                 {results.map((r) => (
-                  <div key={r.name} className="flex flex-col gap-2 rounded-md border p-3">
+                  <div
+                    key={r.name}
+                    className="flex flex-col gap-2 rounded-md border p-3"
+                  >
                     <div className="flex items-center justify-between">
-                      <Badge variant="secondary">{useHmac ? `HMAC-${r.name}` : r.name}</Badge>
+                      <Badge variant="secondary">
+                        {useHmac ? `HMAC-${r.name}` : r.name}
+                      </Badge>
                       <CopyButton
                         variant="outline"
                         size="sm"

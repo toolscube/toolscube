@@ -1,6 +1,38 @@
 "use client";
 
 import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  PasteButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  trackConversionValue,
+  trackError,
+  trackFeatureUsage,
+  trackProcessingTime,
+  trackToolCompletion,
+  trackToolConversion,
+  trackToolUsage,
+  trackUserEngagement,
+} from "@/lib/gtm";
+import {
   AlignLeft,
   Braces,
   Download,
@@ -16,33 +48,6 @@ import {
   Wand2,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import {
-  ActionButton,
-  CopyButton,
-  ExportTextButton,
-  PasteButton,
-  ResetButton,
-} from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SelectField from "@/components/shared/form-fields/select-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import TextareaField from "@/components/shared/form-fields/textarea-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import {
-  trackConversionValue,
-  trackError,
-  trackFeatureUsage,
-  trackProcessingTime,
-  trackToolCompletion,
-  trackToolConversion,
-  trackToolUsage,
-  trackUserEngagement,
-} from "@/lib/gtm";
 
 // Enhanced copy tracking
 export function trackCopyAction(toolName: string, contentLength?: number) {
@@ -72,7 +77,10 @@ export default function JsonFormatterClient() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY);
-      if (saved) setInput(saved);
+      if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setInput(saved);
+      }
     } catch {}
   }, []);
   useEffect(() => {
@@ -96,7 +104,9 @@ export default function JsonFormatterClient() {
     if (Array.isArray(value)) return value.map(sortObjectDeep) as unknown as T;
     if (value && typeof value === "object") {
       const entries = Object.entries(value as Record<string, unknown>);
-      entries.sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
+      entries.sort(([a], [b]) =>
+        a.localeCompare(b, undefined, { numeric: true })
+      );
       const sorted: Record<string, unknown> = {};
       for (const [k, v] of entries) sorted[k] = sortObjectDeep(v);
       return sorted as unknown as T;
@@ -116,7 +126,7 @@ export default function JsonFormatterClient() {
       if (m.startsWith("[")) {
         const key = g1?.trim()?.replace(/^['"]|['"]$/g, "");
         const n = Number(key);
-        tokens.push(Number.isFinite(n) && String(n) === key ? n : (key ?? ""));
+        tokens.push(Number.isFinite(n) && String(n) === key ? n : key ?? "");
       } else {
         tokens.push(m);
       }
@@ -125,7 +135,8 @@ export default function JsonFormatterClient() {
 
     let cur: unknown = root;
     for (const t of tokens) {
-      if (cur == null || (typeof cur !== "object" && !Array.isArray(cur))) return undefined;
+      if (cur == null || (typeof cur !== "object" && !Array.isArray(cur)))
+        return undefined;
       cur = (cur as Record<string | number, unknown>)[t];
     }
     return cur;
@@ -150,7 +161,11 @@ export default function JsonFormatterClient() {
       // Enhanced tracking
       trackToolConversion("JSON Formatter", "prettify");
       trackProcessingTime("JSON Formatter", "prettify", processingTime);
-      trackFeatureUsage("JSON Formatter", "sort_keys", sortKeys ? "enabled" : "disabled");
+      trackFeatureUsage(
+        "JSON Formatter",
+        "sort_keys",
+        sortKeys ? "enabled" : "disabled"
+      );
       trackFeatureUsage("JSON Formatter", "indent_size", getIndentValue());
       trackToolCompletion("JSON Formatter", "Developer", {
         processingTime,
@@ -271,7 +286,9 @@ export default function JsonFormatterClient() {
   }
   function b64Decode() {
     try {
-      const str = new TextDecoder().decode(Uint8Array.from(atob(input), (c) => c.charCodeAt(0)));
+      const str = new TextDecoder().decode(
+        Uint8Array.from(atob(input), (c) => c.charCodeAt(0))
+      );
       setOutput(str);
       setError("");
     } catch {
@@ -292,11 +309,15 @@ export default function JsonFormatterClient() {
     }
   }
   function escapeStr() {
-    setOutput(input.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/"/g, '\\"'));
+    setOutput(
+      input.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/"/g, '\\"')
+    );
     setError("");
   }
   function unescapeStr() {
-    setOutput(input.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\"));
+    setOutput(
+      input.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+    );
     setError("");
   }
 
@@ -305,10 +326,14 @@ export default function JsonFormatterClient() {
     function onKey(e: KeyboardEvent) {
       if (e.ctrlKey && e.key.toLowerCase() === "enter") {
         e.preventDefault();
-        (document.querySelector("[data-prettify]") as HTMLButtonElement | null)?.click();
+        (
+          document.querySelector("[data-prettify]") as HTMLButtonElement | null
+        )?.click();
       } else if (e.ctrlKey && e.key.toLowerCase() === "m") {
         e.preventDefault();
-        (document.querySelector("[data-minify]") as HTMLButtonElement | null)?.click();
+        (
+          document.querySelector("[data-minify]") as HTMLButtonElement | null
+        )?.click();
       }
     }
     window.addEventListener("keydown", onKey);
@@ -343,7 +368,11 @@ export default function JsonFormatterClient() {
               disabled={!output && !input}
             />
             <ResetButton onClick={clearAll} />
-            <CopyButton variant="default" getText={() => output || ""} disabled={!output} />
+            <CopyButton
+              variant="default"
+              getText={() => output || ""}
+              disabled={!output}
+            />
           </>
         }
       />
@@ -396,7 +425,11 @@ export default function JsonFormatterClient() {
                     if (autoOnPaste) {
                       try {
                         const json = parseSafe(next);
-                        const pretty = JSON.stringify(json, null, getIndentValue());
+                        const pretty = JSON.stringify(
+                          json,
+                          null,
+                          getIndentValue()
+                        );
                         setInput(pretty);
                         setError("");
                         setOutput("");
@@ -409,7 +442,11 @@ export default function JsonFormatterClient() {
                     if (!autoOnPaste) return;
                     try {
                       const json = parseSafe(raw);
-                      const pretty = JSON.stringify(json, null, getIndentValue());
+                      const pretty = JSON.stringify(
+                        json,
+                        null,
+                        getIndentValue()
+                      );
                       setInput(pretty);
                       setError("");
                       setOutput("");
@@ -437,7 +474,10 @@ export default function JsonFormatterClient() {
               value={input}
               onValueChange={setInput}
               placeholder='{"hello":"world"}'
-              textareaClassName={cn("min-h-[320px] font-mono", error && "border-destructive")}
+              textareaClassName={cn(
+                "min-h-[320px] font-mono",
+                error && "border-destructive"
+              )}
               onPaste={(e) => {
                 if (!autoOnPaste) return;
                 const text = e.clipboardData.getData("text");
@@ -469,7 +509,12 @@ export default function JsonFormatterClient() {
             )}
           </CardContent>
           <div className="px-6 pb-6 flex flex-wrap gap-2">
-            <ActionButton icon={Wand2} label="Prettify" onClick={prettify} data-prettify />
+            <ActionButton
+              icon={Wand2}
+              label="Prettify"
+              onClick={prettify}
+              data-prettify
+            />
             <ActionButton
               icon={Minimize2}
               label="Minify"
@@ -477,7 +522,11 @@ export default function JsonFormatterClient() {
               variant="secondary"
               data-minify
             />
-            <ActionButton icon={AlignLeft} label="Validate" onClick={validate} />
+            <ActionButton
+              icon={AlignLeft}
+              label="Validate"
+              onClick={validate}
+            />
             <ActionButton
               icon={RotateCcw}
               label="Example"
@@ -503,10 +552,16 @@ export default function JsonFormatterClient() {
                   onClick={() => setSortKeys((v) => !v)}
                   variant="ghost"
                 />
-                <CopyButton size="sm" getText={() => output || ""} disabled={!output} />
+                <CopyButton
+                  size="sm"
+                  getText={() => output || ""}
+                  disabled={!output}
+                />
               </div>
             </div>
-            <CardDescription>Formatted/minified JSON or tool results.</CardDescription>
+            <CardDescription>
+              Formatted/minified JSON or tool results.
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -548,7 +603,8 @@ export default function JsonFormatterClient() {
                       <Search className="h-4 w-4" /> JSON Path
                     </CardTitle>
                     <CardDescription>
-                      Read a value by path (e.g., products[0].title or meta.site).
+                      Read a value by path (e.g., products[0].title or
+                      meta.site).
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -559,7 +615,11 @@ export default function JsonFormatterClient() {
                         placeholder="products[0].title"
                         className="w-full"
                       />
-                      <ActionButton icon={Search} label="Query" onClick={doPathQuery} />
+                      <ActionButton
+                        icon={Search}
+                        label="Query"
+                        onClick={doPathQuery}
+                      />
                     </div>
                     <TextareaField
                       readOnly
@@ -582,7 +642,11 @@ export default function JsonFormatterClient() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <ActionButton icon={Braces} label="Generate Types" onClick={toTypescript} />
+                    <ActionButton
+                      icon={Braces}
+                      label="Generate Types"
+                      onClick={toTypescript}
+                    />
                     <TextareaField
                       readOnly
                       value={output}
@@ -599,12 +663,18 @@ export default function JsonFormatterClient() {
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Hash className="h-4 w-4" /> Base64 / URL / Escapes
                     </CardTitle>
-                    <CardDescription>Quick text conversions using the main input.</CardDescription>
+                    <CardDescription>
+                      Quick text conversions using the main input.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-2 gap-2 md:grid-cols-3">
                     <ActionButton label="Base64 Encode" onClick={b64Encode} />
                     <ActionButton label="Base64 Decode" onClick={b64Decode} />
-                    <ActionButton label="URL Encode" onClick={urlEncode} icon={Link2} />
+                    <ActionButton
+                      label="URL Encode"
+                      onClick={urlEncode}
+                      icon={Link2}
+                    />
                     <ActionButton label="URL Decode" onClick={urlDecode} />
                     <ActionButton label="Escape" onClick={escapeStr} />
                     <ActionButton label="Unescape" onClick={unescapeStr} />
@@ -617,8 +687,8 @@ export default function JsonFormatterClient() {
           {/* Output footer */}
           <div className="px-6 pb-6 flex flex-wrap items-center gap-2">
             <div className="text-xs text-muted-foreground">
-              Indent: {indent === "tab" ? "tab" : indent} • Sort keys: {String(sortKeys)} •
-              Auto-paste: {String(autoOnPaste)}
+              Indent: {indent === "tab" ? "tab" : indent} • Sort keys:{" "}
+              {String(sortKeys)} • Auto-paste: {String(autoOnPaste)}
             </div>
             <Separator orientation="vertical" className="mx-2 h-4" />
             <ExportTextButton

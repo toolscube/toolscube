@@ -278,7 +278,7 @@ export default function OGPreviewClient() {
                 <div className="rounded-xl border bg-background overflow-hidden">
                   {data.images[selectedImg] ? (
                     <div className="relative aspect-[1200/630] bg-muted">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       <picture>
                         <img
                           src={data.images[selectedImg]}
@@ -317,7 +317,7 @@ export default function OGPreviewClient() {
                         title={img}
                         type="button"
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        { }
                         <picture>
                           <img
                             src={img}
@@ -362,7 +362,7 @@ export default function OGPreviewClient() {
 
                   {data.images[selectedImg] ? (
                     <div className="aspect-video bg-muted">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       <picture>
                         <img
                           src={data.images[selectedImg]}
@@ -523,7 +523,7 @@ export default function OGPreviewClient() {
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-muted-foreground">Icons:</span>
                     {data.icons.slice(0, 4).map((i, idx) => (
-                      // eslint-disable-next-line @next/next/no-img-element
+                       
                       <picture key={`${i}-${idx as number}`}>
                         <img src={i} alt="icon" className="h-5 w-5 rounded" />
                       </picture>

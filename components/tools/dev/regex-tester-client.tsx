@@ -439,7 +439,6 @@ for (const m of matches) {
                 <div className="rounded-md border p-3">
                   <div
                     className="prose prose-sm max-w-none whitespace-pre-wrap font-mono leading-relaxed dark:prose-invert"
-                    // biome-ignore lint/security/noDangerouslySetInnerHtml: <>
                     dangerouslySetInnerHTML={{ __html: highlighted }}
                   />
                 </div>

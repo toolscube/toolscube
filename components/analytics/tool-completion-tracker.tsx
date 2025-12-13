@@ -34,12 +34,13 @@ export function ToolCompletionTracker({
       category={category}
       conversionValue={conversionValue}
       customData={{
-        ...(metadata.processingTime && { processing_time: metadata.processingTime }),
+        ...(metadata.processingTime && {
+          processing_time: metadata.processingTime,
+        }),
         ...(metadata.fileSize && { file_size: metadata.fileSize }),
         ...(metadata.outputFormat && { output_format: metadata.outputFormat }),
         ...(metadata.inputFormat && { input_format: metadata.inputFormat }),
         ...(metadata.userActions && { user_actions: metadata.userActions }),
-        completion_timestamp: Date.now(),
       }}
     />
   );

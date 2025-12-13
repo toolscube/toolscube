@@ -99,7 +99,6 @@ export function QRCodeBox({
   return (
     <div className={className}>
       {format === "svg" ? (
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: <>
         <div className={svgClassName} dangerouslySetInnerHTML={{ __html: svgMarkup || "<svg/>" }} />
       ) : (
         <canvas

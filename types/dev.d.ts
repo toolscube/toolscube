@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/correctness/noUnusedVariables: <> */
-
 // JSON Formatter
 type IndentOpt = "2" | "4" | "tab";
 
@@ -26,7 +24,12 @@ type JwtPayloadStd = {
 
 type Status =
   | { state: "none" }
-  | { state: "valid" | "expired" | "nbf"; exp?: number; iat?: number; nbf?: number };
+  | {
+      state: "valid" | "expired" | "nbf";
+      exp?: number;
+      iat?: number;
+      nbf?: number;
+    };
 
 // Regex Tester
 type Flag = "g" | "i" | "m" | "s" | "u" | "y";

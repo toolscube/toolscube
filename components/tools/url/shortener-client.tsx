@@ -1,6 +1,42 @@
 "use client";
 
 import {
+  ActionButton,
+  CopyButton,
+  LinkButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import ColorField from "@/components/shared/color-field";
+import InputField from "@/components/shared/form-fields/input-field";
+import { QRCodeBox } from "@/components/shared/qr-code";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useQrExport } from "@/hooks/use-qr-export";
+import { createShort } from "@/lib/actions/shortener.action";
+import {
+  trackError,
+  trackProcessingTime,
+  trackToolCompletion,
+  trackToolConversion,
+  trackToolUsage,
+  trackUserEngagement,
+} from "@/lib/gtm";
+import { timeAgo } from "@/lib/utils/time-ago";
+import {
   BarChart2,
   CalendarClock,
   Download,
@@ -15,33 +51,6 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import {
-  ActionButton,
-  CopyButton,
-  LinkButton,
-  ResetButton,
-} from "@/components/shared/action-buttons";
-import ColorField from "@/components/shared/color-field";
-import InputField from "@/components/shared/form-fields/input-field";
-import { QRCodeBox } from "@/components/shared/qr-code";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Badge } from "@/components/ui/badge";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useQrExport } from "@/hooks/use-qr-export";
-import { createShort } from "@/lib/actions/shortener.action";
-import {
-  trackError,
-  trackProcessingTime,
-  trackToolCompletion,
-  trackToolConversion,
-  trackToolUsage,
-  trackUserEngagement,
-} from "@/lib/gtm";
-import { timeAgo } from "@/lib/utils/time-ago";
 
 const RECENT_KEY = "toolscube:shortener-v1";
 
@@ -63,7 +72,9 @@ function saveRecent(items: RecentItem[]) {
 export default function ShortenerClient() {
   const [url, setUrl] = useState("");
   const [slug, setSlug] = useState("");
-  const [status, setStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "done" | "error">(
+    "idle"
+  );
   const [recent, setRecent] = useState<RecentItem[]>([]);
 
   // QR settings
@@ -73,17 +84,23 @@ export default function ShortenerClient() {
   const [qrDark, setQrDark] = useState<string>("#000000");
   const [qrLight, setQrLight] = useState<string>("#ffffff");
 
-  useEffect(() => setRecent(loadRecent()), []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRecent(loadRecent());
+  }, []);
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const shortUrl = useMemo(() => (slug ? `${origin}/${slug}` : ""), [origin, slug]);
+  const shortUrl = useMemo(
+    () => (slug ? `${origin}/${slug}` : ""),
+    [origin, slug]
+  );
   const interstitialUrl = useMemo(
     () => (slug ? `${origin}/tools/url/shortener/interstitial/${slug}` : ""),
-    [origin, slug],
+    [origin, slug]
   );
   const analyticsUrl = useMemo(
     () => (slug ? `${origin}/tools/url/shortener/analytics/${slug}` : ""),
-    [origin, slug],
+    [origin, slug]
   );
 
   const { downloadPNG, downloadSVG } = useQrExport({
@@ -131,7 +148,10 @@ export default function ShortenerClient() {
       url: res.link.targetUrl,
       createdAt: Date.now(),
     };
-    const next = [item, ...loadRecent().filter((i) => i.slug !== item.slug)].slice(0, 12);
+    const next = [
+      item,
+      ...loadRecent().filter((i) => i.slug !== item.slug),
+    ].slice(0, 12);
     setRecent(next);
     saveRecent(next);
 
@@ -162,7 +182,9 @@ export default function ShortenerClient() {
         actions={
           <CopyButton
             variant="default"
-            getText={() => (typeof window !== "undefined" ? window.location.href : "")}
+            getText={() =>
+              typeof window !== "undefined" ? window.location.href : ""
+            }
             label="Copy Link"
           />
         }
@@ -170,10 +192,14 @@ export default function ShortenerClient() {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
         <GlassCard className="p-4">
-          <div className="text-sm text-muted-foreground">Your shortest link</div>
+          <div className="text-sm text-muted-foreground">
+            Your shortest link
+          </div>
 
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <code className="rounded-md bg-muted px-2 py-1 text-sm">{shortUrl || "—"}</code>
+            <code className="rounded-md bg-muted px-2 py-1 text-sm">
+              {shortUrl || "—"}
+            </code>
 
             <CopyButton
               getText={() => shortUrl || ""}
@@ -358,7 +384,10 @@ export default function ShortenerClient() {
           </div>
           <p className="text-xs text-muted-foreground">
             We normalize URLs automatically (adds{" "}
-            <code className="rounded-md bg-muted px-2 py-1 text-xs">https://</code> if missing).
+            <code className="rounded-md bg-muted px-2 py-1 text-xs">
+              https://
+            </code>{" "}
+            if missing).
           </p>
         </div>
       </GlassCard>
@@ -420,13 +449,20 @@ export default function ShortenerClient() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <div className="truncate text-sm font-medium">{sUrl}</div>
-                        <Badge variant="secondary" className="hidden sm:inline-flex gap-1">
+                        <div className="truncate text-sm font-medium">
+                          {sUrl}
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="hidden sm:inline-flex gap-1"
+                        >
                           <CalendarClock className="h-3.5 w-3.5" />
                           {timeAgo(it.createdAt)}
                         </Badge>
                       </div>
-                      <div className="truncate text-xs text-muted-foreground">→ {it.url}</div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        → {it.url}
+                      </div>
                     </div>
                   </div>
 
@@ -464,10 +500,21 @@ export default function ShortenerClient() {
                     </Popover>
 
                     {/* Open */}
-                    <LinkButton size="sm" href={sUrl} newTab icon={ExternalLink} label="Open" />
+                    <LinkButton
+                      size="sm"
+                      href={sUrl}
+                      newTab
+                      icon={ExternalLink}
+                      label="Open"
+                    />
 
                     {/* Analytics */}
-                    <LinkButton icon={BarChart2} label="Analytics" href={aUrl} size="sm" />
+                    <LinkButton
+                      icon={BarChart2}
+                      label="Analytics"
+                      href={aUrl}
+                      size="sm"
+                    />
 
                     <ActionButton
                       onClick={() => removeRecent(it.slug)}

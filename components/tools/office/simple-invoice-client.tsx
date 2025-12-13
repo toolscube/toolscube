@@ -1,6 +1,17 @@
 "use client";
 
 import {
+  ActionButton,
+  CopyButton,
+  ExportCSVButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import {
   Building2,
   Calendar,
   Copy,
@@ -12,20 +23,14 @@ import {
   Trash2,
 } from "lucide-react";
 import * as React from "react";
-import {
-  ActionButton,
-  CopyButton,
-  ExportCSVButton,
-  ResetButton,
-} from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SelectField from "@/components/shared/form-fields/select-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import TextareaField from "@/components/shared/form-fields/textarea-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
 
 import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -79,14 +84,23 @@ function clamp(n: number, min: number, max: number) {
 }
 
 function nextInvoiceNo() {
-  return `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+  return `INV-${new Date().getFullYear()}-${String(
+    Math.floor(Math.random() * 9000) + 1000
+  )}`;
 }
 
-function fmtCurrency(amount: number, currency: string, mode: "code" | "symbol") {
+function fmtCurrency(
+  amount: number,
+  currency: string,
+  mode: "code" | "symbol"
+) {
   const value = Number.isFinite(amount) ? amount : 0;
   if (mode === "code") {
     try {
-      return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency,
+      }).format(value);
     } catch {
       return `${currency} ${value.toFixed(2)}`;
     }
@@ -132,53 +146,67 @@ export default function SimpleInvoiceClient() {
   }, [data]);
 
   // Derived totals
-  const { subTotal, discountAmt, taxAmt, grandTotal, balanceDue } = React.useMemo(() => {
-    const sub = data.items.reduce((sum, it) => sum + safeNum(it.qty) * safeNum(it.rate), 0);
-    const discPct = clamp(safeNum(data.discountPercent), 0, 100);
-    const disc = (discPct / 100) * sub;
+  const { subTotal, discountAmt, taxAmt, grandTotal, balanceDue } =
+    React.useMemo(() => {
+      const sub = data.items.reduce(
+        (sum, it) => sum + safeNum(it.qty) * safeNum(it.rate),
+        0
+      );
+      const discPct = clamp(safeNum(data.discountPercent), 0, 100);
+      const disc = (discPct / 100) * sub;
 
-    const shipping = Math.max(0, safeNum(data.shipping));
-    const taxedBase = Math.max(0, sub - disc) + shipping;
+      const shipping = Math.max(0, safeNum(data.shipping));
+      const taxedBase = Math.max(0, sub - disc) + shipping;
 
-    const taxPct = clamp(safeNum(data.taxPercent), 0, 100);
-    const tax = (taxPct / 100) * taxedBase;
+      const taxPct = clamp(safeNum(data.taxPercent), 0, 100);
+      const tax = (taxPct / 100) * taxedBase;
 
-    const total = taxedBase + tax;
+      const total = taxedBase + tax;
 
-    const paid = Math.max(0, safeNum(data.amountPaid));
-    const due = Math.max(0, total - paid);
+      const paid = Math.max(0, safeNum(data.amountPaid));
+      const due = Math.max(0, total - paid);
 
-    return {
-      subTotal: sub,
-      discountAmt: disc,
-      taxAmt: tax,
-      grandTotal: total,
-      balanceDue: due,
-    };
-  }, [data]);
+      return {
+        subTotal: sub,
+        discountAmt: disc,
+        taxAmt: tax,
+        grandTotal: total,
+        balanceDue: due,
+      };
+    }, [data]);
 
   /* Actions */
-  const resetAll = () => setData({ ...DEFAULT_INVOICE, invoiceNo: nextInvoiceNo() });
+  const resetAll = () =>
+    setData({ ...DEFAULT_INVOICE, invoiceNo: nextInvoiceNo() });
 
   const addRow = () =>
     setData((d) => ({
       ...d,
-      items: [...d.items, { id: uid(), name: "", description: "", qty: 1, rate: 0 }],
+      items: [
+        ...d.items,
+        { id: uid(), name: "", description: "", qty: 1, rate: 0 },
+      ],
     }));
 
   const cloneRow = (id: string) =>
     setData((d) => {
       const it = d.items.find((r) => r.id === id);
       if (!it) return d;
-      const { id: _old, ...rest } = it;
-      return { ...d, items: [...d.items, { ...rest, id: uid(), name: `${it.name} (copy)` }] };
+      const { id: _, ...rest } = it;
+      return {
+        ...d,
+        items: [...d.items, { ...rest, id: uid(), name: `${it.name} (copy)` }],
+      };
     });
 
   const removeRow = (id: string) =>
     setData((d) => ({ ...d, items: d.items.filter((r) => r.id !== id) }));
 
   const updateRow = (id: string, patch: Partial<LineItem>) =>
-    setData((d) => ({ ...d, items: d.items.map((r) => (r.id === id ? { ...r, ...patch } : r)) }));
+    setData((d) => ({
+      ...d,
+      items: d.items.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+    }));
 
   const onPrint = () => window.print();
 
@@ -202,7 +230,10 @@ export default function SimpleInvoiceClient() {
     ["Invoice No", data.invoiceNo],
     ["Issue Date", data.issueDate],
     ["Due Date", data.dueDate],
-    ["Currency", `${data.currencyMode === "code" ? "Code" : "Symbol"}: ${data.currency}`],
+    [
+      "Currency",
+      `${data.currencyMode === "code" ? "Code" : "Symbol"}: ${data.currency}`,
+    ],
     ["From", data.from.name],
     ["From Email", data.from.email || ""],
     ["From Phone", data.from.phone || ""],
@@ -247,7 +278,12 @@ export default function SimpleInvoiceClient() {
               filename={`${data.invoiceNo}.csv`}
               getRows={() => CSVRows}
             />
-            <ActionButton variant="default" icon={Printer} label="Print / PDF" onClick={onPrint} />
+            <ActionButton
+              variant="default"
+              icon={Printer}
+              label="Print / PDF"
+              onClick={onPrint}
+            />
           </>
         }
       />
@@ -256,7 +292,9 @@ export default function SimpleInvoiceClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Details</CardTitle>
-          <CardDescription>Invoice meta, currency, parties & status.</CardDescription>
+          <CardDescription>
+            Invoice meta, currency, parties & status.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 lg:grid-cols-3">
           {/* Meta */}
@@ -265,13 +303,17 @@ export default function SimpleInvoiceClient() {
               <InputField
                 label="Invoice No"
                 value={data.invoiceNo}
-                onChange={(e) => setData({ ...data, invoiceNo: e.target.value })}
+                onChange={(e) =>
+                  setData({ ...data, invoiceNo: e.target.value })
+                }
                 className="w-full"
               />
               <ActionButton
                 size="icon"
                 icon={RotateCcw}
-                onClick={() => setData((d) => ({ ...d, invoiceNo: nextInvoiceNo() }))}
+                onClick={() =>
+                  setData((d) => ({ ...d, invoiceNo: nextInvoiceNo() }))
+                }
               />
             </div>
 
@@ -280,7 +322,9 @@ export default function SimpleInvoiceClient() {
                 label="Issue Date"
                 type="date"
                 value={data.issueDate}
-                onChange={(e) => setData({ ...data, issueDate: e.target.value })}
+                onChange={(e) =>
+                  setData({ ...data, issueDate: e.target.value })
+                }
                 icon={Calendar}
               />
               <InputField
@@ -297,7 +341,11 @@ export default function SimpleInvoiceClient() {
                 label="Currency Mode"
                 value={data.currencyMode}
                 onValueChange={(v) =>
-                  v && setData((d) => ({ ...d, currencyMode: v as "code" | "symbol" }))
+                  v &&
+                  setData((d) => ({
+                    ...d,
+                    currencyMode: v as "code" | "symbol",
+                  }))
                 }
                 options={[
                   { label: "ISO Code (BDT/USD/EUR)", value: "code" },
@@ -310,7 +358,11 @@ export default function SimpleInvoiceClient() {
                     label="Currency Code"
                     value={data.currency}
                     onValueChange={(v) =>
-                      v && setData((d) => ({ ...d, currency: v.toString().toUpperCase() }))
+                      v &&
+                      setData((d) => ({
+                        ...d,
+                        currency: v.toString().toUpperCase(),
+                      }))
                     }
                     options={CURRENCY_CODE_OPTIONS}
                     placeholder="Pick currency"
@@ -332,14 +384,18 @@ export default function SimpleInvoiceClient() {
                   <SelectField
                     label="Symbol"
                     value={data.currency}
-                    onValueChange={(v) => v && setData((d) => ({ ...d, currency: v.toString() }))}
+                    onValueChange={(v) =>
+                      v && setData((d) => ({ ...d, currency: v.toString() }))
+                    }
                     options={CURRENCY_SYMBOL_PRESETS}
                     placeholder="Pick symbol"
                   />
                   <InputField
                     label="Custom"
                     value={data.currency}
-                    onChange={(e) => setData({ ...data, currency: e.target.value.slice(0, 3) })}
+                    onChange={(e) =>
+                      setData({ ...data, currency: e.target.value.slice(0, 3) })
+                    }
                     placeholder="৳"
                   />
                 </div>
@@ -362,22 +418,39 @@ export default function SimpleInvoiceClient() {
             <InputField
               placeholder="Your Company"
               value={data.from.name}
-              onChange={(e) => setData({ ...data, from: { ...data.from, name: e.target.value } })}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  from: { ...data.from, name: e.target.value },
+                })
+              }
             />
             <InputField
               placeholder="Email"
               value={data.from.email || ""}
-              onChange={(e) => setData({ ...data, from: { ...data.from, email: e.target.value } })}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  from: { ...data.from, email: e.target.value },
+                })
+              }
             />
             <InputField
               placeholder="Phone"
               value={data.from.phone || ""}
-              onChange={(e) => setData({ ...data, from: { ...data.from, phone: e.target.value } })}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  from: { ...data.from, phone: e.target.value },
+                })
+              }
             />
             <TextareaField
               placeholder="Address"
               value={data.from.address || ""}
-              onValueChange={(v) => setData({ ...data, from: { ...data.from, address: v } })}
+              onValueChange={(v) =>
+                setData({ ...data, from: { ...data.from, address: v } })
+              }
               textareaClassName="min-h-[82px]"
             />
             <InputField
@@ -386,7 +459,10 @@ export default function SimpleInvoiceClient() {
               min={0}
               value={data.amountPaid}
               onChange={(e) =>
-                setData({ ...data, amountPaid: Math.max(0, Number(e.target.value) || 0) })
+                setData({
+                  ...data,
+                  amountPaid: Math.max(0, Number(e.target.value) || 0),
+                })
               }
             />
           </div>
@@ -400,22 +476,30 @@ export default function SimpleInvoiceClient() {
             <InputField
               placeholder="Client Name"
               value={data.to.name}
-              onChange={(e) => setData({ ...data, to: { ...data.to, name: e.target.value } })}
+              onChange={(e) =>
+                setData({ ...data, to: { ...data.to, name: e.target.value } })
+              }
             />
             <InputField
               placeholder="Email"
               value={data.to.email || ""}
-              onChange={(e) => setData({ ...data, to: { ...data.to, email: e.target.value } })}
+              onChange={(e) =>
+                setData({ ...data, to: { ...data.to, email: e.target.value } })
+              }
             />
             <InputField
               placeholder="Phone"
               value={data.to.phone || ""}
-              onChange={(e) => setData({ ...data, to: { ...data.to, phone: e.target.value } })}
+              onChange={(e) =>
+                setData({ ...data, to: { ...data.to, phone: e.target.value } })
+              }
             />
             <TextareaField
               placeholder="Address"
               value={data.to.address || ""}
-              onValueChange={(v) => setData({ ...data, to: { ...data.to, address: v } })}
+              onValueChange={(v) =>
+                setData({ ...data, to: { ...data.to, address: v } })
+              }
               textareaClassName="min-h-[150px]"
             />
           </div>
@@ -426,7 +510,9 @@ export default function SimpleInvoiceClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Items</CardTitle>
-          <CardDescription>Add products or services with quantity and rate.</CardDescription>
+          <CardDescription>
+            Add products or services with quantity and rate.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="hidden md:grid grid-cols-12 gap-2 px-2 text-xs text-muted-foreground">
@@ -457,7 +543,9 @@ export default function SimpleInvoiceClient() {
                   <Label className="md:hidden">Description</Label>
                   <InputField
                     value={it.description || ""}
-                    onChange={(e) => updateRow(it.id, { description: e.target.value })}
+                    onChange={(e) =>
+                      updateRow(it.id, { description: e.target.value })
+                    }
                     placeholder="Optional"
                   />
                 </div>
@@ -470,7 +558,9 @@ export default function SimpleInvoiceClient() {
                     min={0}
                     value={safeNum(it.qty)}
                     onChange={(e) =>
-                      updateRow(it.id, { qty: Math.max(0, Number(e.target.value) || 0) })
+                      updateRow(it.id, {
+                        qty: Math.max(0, Number(e.target.value) || 0),
+                      })
                     }
                   />
                 </div>
@@ -483,11 +573,14 @@ export default function SimpleInvoiceClient() {
                     min={0}
                     value={safeNum(it.rate)}
                     onChange={(e) =>
-                      updateRow(it.id, { rate: Math.max(0, Number(e.target.value) || 0) })
+                      updateRow(it.id, {
+                        rate: Math.max(0, Number(e.target.value) || 0),
+                      })
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Amount: {fmtCurrency(amount, data.currency, data.currencyMode)}
+                    Amount:{" "}
+                    {fmtCurrency(amount, data.currency, data.currencyMode)}
                   </p>
                 </div>
 
@@ -513,7 +606,8 @@ export default function SimpleInvoiceClient() {
           <div className="flex justify-between">
             <ActionButton icon={Plus} label="Add Item" onClick={addRow} />
             <div className="text-sm text-muted-foreground hidden md:block pr-1">
-              Subtotal: {fmtCurrency(subTotal, data.currency, data.currencyMode)}
+              Subtotal:{" "}
+              {fmtCurrency(subTotal, data.currency, data.currencyMode)}
             </div>
           </div>
         </CardContent>
@@ -523,7 +617,9 @@ export default function SimpleInvoiceClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Summary</CardTitle>
-          <CardDescription>Discounts, tax, shipping, and total.</CardDescription>
+          <CardDescription>
+            Discounts, tax, shipping, and total.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-3">
@@ -571,7 +667,10 @@ export default function SimpleInvoiceClient() {
                 min={0}
                 value={safeNum(data.shipping)}
                 onChange={(e) =>
-                  setData((d) => ({ ...d, shipping: Math.max(0, Number(e.target.value) || 0) }))
+                  setData((d) => ({
+                    ...d,
+                    shipping: Math.max(0, Number(e.target.value) || 0),
+                  }))
                 }
               />
             </div>
@@ -581,19 +680,31 @@ export default function SimpleInvoiceClient() {
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{fmtCurrency(subTotal, data.currency, data.currencyMode)}</span>
+                <span>
+                  {fmtCurrency(subTotal, data.currency, data.currencyMode)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Discount</span>
-                <span>- {fmtCurrency(discountAmt, data.currency, data.currencyMode)}</span>
+                <span>
+                  - {fmtCurrency(discountAmt, data.currency, data.currencyMode)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>{fmtCurrency(data.shipping || 0, data.currency, data.currencyMode)}</span>
+                <span>
+                  {fmtCurrency(
+                    data.shipping || 0,
+                    data.currency,
+                    data.currencyMode
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Tax</span>
-                <span>{fmtCurrency(taxAmt, data.currency, data.currencyMode)}</span>
+                <span>
+                  {fmtCurrency(taxAmt, data.currency, data.currencyMode)}
+                </span>
               </div>
 
               <div className="flex justify-between font-semibold text-base pt-1">
@@ -603,17 +714,30 @@ export default function SimpleInvoiceClient() {
                 </span>
               </div>
 
-              <div className={cn("flex justify-between", data.paid ? "text-emerald-600" : "")}>
+              <div
+                className={cn(
+                  "flex justify-between",
+                  data.paid ? "text-emerald-600" : ""
+                )}
+              >
                 <span>Balance Due</span>
-                <span>{fmtCurrency(balanceDue, data.currency, data.currencyMode)}</span>
+                <span>
+                  {fmtCurrency(balanceDue, data.currency, data.currencyMode)}
+                </span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <Badge variant="secondary" className="w-fit">
-                All amounts in {data.currencyMode === "code" ? data.currency : `“${data.currency}”`}
+                All amounts in{" "}
+                {data.currencyMode === "code"
+                  ? data.currency
+                  : `“${data.currency}”`}
               </Badge>
-              <CopyButton size="sm" getText={() => String(grandTotal.toFixed(2))} />
+              <CopyButton
+                size="sm"
+                getText={() => String(grandTotal.toFixed(2))}
+              />
             </div>
           </div>
         </CardContent>
@@ -623,21 +747,27 @@ export default function SimpleInvoiceClient() {
       <GlassCard className="shadow-sm print:shadow-none print:bg-white print:border-0">
         <CardHeader>
           <CardTitle className="text-base">Preview</CardTitle>
-          <CardDescription>This area is optimized for printing to PDF.</CardDescription>
+          <CardDescription>
+            This area is optimized for printing to PDF.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="bg-background/50 rounded-xl border p-6 print:bg-transparent print:border-0">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold">Invoice</h2>
-                <p className="text-sm text-muted-foreground">{data.invoiceNo}</p>
+                <p className="text-sm text-muted-foreground">
+                  {data.invoiceNo}
+                </p>
               </div>
               <div className="text-sm">
                 <div>
-                  <span className="text-muted-foreground">Issue:</span> {data.issueDate}
+                  <span className="text-muted-foreground">Issue:</span>{" "}
+                  {data.issueDate}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Due:</span> {data.dueDate}
+                  <span className="text-muted-foreground">Due:</span>{" "}
+                  {data.dueDate}
                 </div>
               </div>
             </div>
@@ -647,19 +777,31 @@ export default function SimpleInvoiceClient() {
                 <div className="text-xs text-muted-foreground">From</div>
                 <div className="font-medium">{data.from.name}</div>
                 {data.from.address && (
-                  <div className="text-sm whitespace-pre-wrap">{data.from.address}</div>
+                  <div className="text-sm whitespace-pre-wrap">
+                    {data.from.address}
+                  </div>
                 )}
-                {data.from.email && <div className="text-sm">{data.from.email}</div>}
-                {data.from.phone && <div className="text-sm">{data.from.phone}</div>}
+                {data.from.email && (
+                  <div className="text-sm">{data.from.email}</div>
+                )}
+                {data.from.phone && (
+                  <div className="text-sm">{data.from.phone}</div>
+                )}
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Bill To</div>
                 <div className="font-medium">{data.to.name}</div>
                 {data.to.address && (
-                  <div className="text-sm whitespace-pre-wrap">{data.to.address}</div>
+                  <div className="text-sm whitespace-pre-wrap">
+                    {data.to.address}
+                  </div>
                 )}
-                {data.to.email && <div className="text-sm">{data.to.email}</div>}
-                {data.to.phone && <div className="text-sm">{data.to.phone}</div>}
+                {data.to.email && (
+                  <div className="text-sm">{data.to.email}</div>
+                )}
+                {data.to.phone && (
+                  <div className="text-sm">{data.to.phone}</div>
+                )}
               </div>
             </div>
 
@@ -678,16 +820,22 @@ export default function SimpleInvoiceClient() {
                   {data.items.map((it) => (
                     <tr key={it.id} className="border-b last:border-0">
                       <td className="py-2">{it.name || "-"}</td>
-                      <td className="py-2 text-muted-foreground">{it.description || "-"}</td>
+                      <td className="py-2 text-muted-foreground">
+                        {it.description || "-"}
+                      </td>
                       <td className="py-2 text-right">{safeNum(it.qty)}</td>
                       <td className="py-2 text-right">
-                        {fmtCurrency(safeNum(it.rate), data.currency, data.currencyMode)}
+                        {fmtCurrency(
+                          safeNum(it.rate),
+                          data.currency,
+                          data.currencyMode
+                        )}
                       </td>
                       <td className="py-2 text-right">
                         {fmtCurrency(
                           safeNum(it.qty) * safeNum(it.rate),
                           data.currency,
-                          data.currencyMode,
+                          data.currencyMode
                         )}
                       </td>
                     </tr>
@@ -700,35 +848,63 @@ export default function SimpleInvoiceClient() {
               <div className="w-full sm:max-w-sm space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>{fmtCurrency(subTotal, data.currency, data.currencyMode)}</span>
+                  <span>
+                    {fmtCurrency(subTotal, data.currency, data.currencyMode)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
                     Discount ({clamp(safeNum(data.discountPercent), 0, 100)}%)
                   </span>
-                  <span>- {fmtCurrency(discountAmt, data.currency, data.currencyMode)}</span>
+                  <span>
+                    -{" "}
+                    {fmtCurrency(discountAmt, data.currency, data.currencyMode)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span>{fmtCurrency(data.shipping || 0, data.currency, data.currencyMode)}</span>
+                  <span>
+                    {fmtCurrency(
+                      data.shipping || 0,
+                      data.currency,
+                      data.currencyMode
+                    )}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
                     Tax ({clamp(safeNum(data.taxPercent), 0, 100)}%)
                   </span>
-                  <span>{fmtCurrency(taxAmt, data.currency, data.currencyMode)}</span>
+                  <span>
+                    {fmtCurrency(taxAmt, data.currency, data.currencyMode)}
+                  </span>
                 </div>
                 <div className="flex justify-between font-semibold text-base pt-1">
                   <span>Total</span>
-                  <span>{fmtCurrency(grandTotal, data.currency, data.currencyMode)}</span>
+                  <span>
+                    {fmtCurrency(grandTotal, data.currency, data.currencyMode)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount Paid</span>
-                  <span>{fmtCurrency(data.amountPaid || 0, data.currency, data.currencyMode)}</span>
+                  <span>
+                    {fmtCurrency(
+                      data.amountPaid || 0,
+                      data.currency,
+                      data.currencyMode
+                    )}
+                  </span>
                 </div>
-                <div className={cn("flex justify-between", data.paid ? "text-emerald-600" : "")}>
+                <div
+                  className={cn(
+                    "flex justify-between",
+                    data.paid ? "text-emerald-600" : ""
+                  )}
+                >
                   <span>Balance Due</span>
-                  <span>{fmtCurrency(balanceDue, data.currency, data.currencyMode)}</span>
+                  <span>
+                    {fmtCurrency(balanceDue, data.currency, data.currencyMode)}
+                  </span>
                 </div>
               </div>
             </div>

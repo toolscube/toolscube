@@ -1,18 +1,30 @@
 "use client";
 
-import { Cake, Calendar, HeartPulse, Info } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import Stat from "@/components/shared/stat";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { cn, formatDateInput, formatTimeInput, getLocalTimeZone } from "@/lib/utils";
+import {
+  cn,
+  formatDateInput,
+  formatTimeInput,
+  getLocalTimeZone,
+} from "@/lib/utils";
 import {
   clampDateString,
   diffYMD,
@@ -20,6 +32,8 @@ import {
   nextBirthday,
   shortDate,
 } from "@/lib/utils/time/age-calculator";
+import { Cake, Calendar, HeartPulse, Info } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function AgeCalculatorClient() {
   const deviceTz = useMemo(() => getLocalTimeZone(), []);
@@ -77,7 +91,10 @@ export default function AgeCalculatorClient() {
     const p = new URLSearchParams(window.location.search);
     const date = p.get("date");
     const time = p.get("time");
-    if (date) setDobDate(date);
+    if (date) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDobDate(date);
+    }
     if (time) {
       setDobTime(time);
       setHasTime(true);

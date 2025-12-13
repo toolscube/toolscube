@@ -21,7 +21,6 @@ export function CodeBlock({ code, language = "text", ...props }: CodeBlockProps)
       <pre className="overflow-x-auto text-sm leading-relaxed">
         <code
           className={`language-${language}`}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: <>
           dangerouslySetInnerHTML={{ __html: highlightedCode }}
           {...props}
         />

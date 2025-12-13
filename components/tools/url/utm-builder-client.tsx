@@ -1,18 +1,6 @@
 "use client";
 
 import {
-  Download,
-  Eraser,
-  FolderInput,
-  History,
-  Link2,
-  Plus,
-  RotateCcw,
-  Share2,
-  Trash2,
-} from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import {
   ActionButton,
   CopyButton,
   ExportCSVButton,
@@ -45,6 +33,18 @@ import {
   isValidUrl,
   rid,
 } from "@/lib/utils/url/utm-builder";
+import {
+  Download,
+  Eraser,
+  FolderInput,
+  History,
+  Link2,
+  Plus,
+  RotateCcw,
+  Share2,
+  Trash2,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 /* Constants */
 const DEFAULT_UTM: UTMState = {
@@ -124,7 +124,10 @@ export default function UTMBuilderClient() {
   // Load presets
   useEffect(() => {
     try {
-      const p = JSON.parse(localStorage.getItem(PRESET_LS_KEY) || "[]") as Preset[];
+      const p = JSON.parse(
+        localStorage.getItem(PRESET_LS_KEY) || "[]"
+      ) as Preset[];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPresets(Array.isArray(p) ? p : []);
     } catch {}
   }, []);
@@ -612,7 +615,10 @@ function HistoryList() {
 
   useEffect(() => {
     try {
-      const x = JSON.parse(localStorage.getItem(HISTORY_LS_KEY) || "[]") as HistoryItem[];
+      const x = JSON.parse(
+        localStorage.getItem(HISTORY_LS_KEY) || "[]"
+      ) as HistoryItem[];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setItems(Array.isArray(x) ? x : []);
     } catch {}
   }, []);

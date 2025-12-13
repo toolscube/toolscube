@@ -18,7 +18,7 @@ export function safeEval(expr: string): number | null {
     // Only allow safe characters
     if (/[^0-9+\-*/().,%\s]|(\*\*){3,}/.test(js)) return null;
 
-    // eslint-disable-next-line no-new-func
+     
     const val = Function(`"use strict"; return (${js})`)();
     return Number.isFinite(val) ? val : null;
   } catch {

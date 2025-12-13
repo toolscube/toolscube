@@ -1,5 +1,13 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+  csvDownload,
+  downloadBlob,
+  downloadFromUrl,
+  downloadText,
+} from "@/lib/utils/download";
 import {
   Check,
   Clipboard,
@@ -13,11 +21,14 @@ import {
 import Link from "next/link";
 import * as React from "react";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { csvDownload, downloadBlob, downloadFromUrl, downloadText } from "@/lib/utils/download";
 
-type Variant = "default" | "outline" | "destructive" | "secondary" | "ghost" | "link";
+type Variant =
+  | "default"
+  | "outline"
+  | "destructive"
+  | "secondary"
+  | "ghost"
+  | "link";
 type Size = "default" | "sm" | "lg" | "icon";
 type MaybePromise<T> = T | Promise<T>;
 type GetText = string | (() => MaybePromise<string | null | undefined>);
@@ -110,10 +121,11 @@ export function CopyButton({
   };
 
   if (render) {
+    // eslint-disable-next-line react-hooks/refs
     return <>{render({ onClick: run, copied })}</>;
   }
 
-  const LeftIcon: LucideIcon = copied ? (IconCopied ?? Check) : (Icon ?? Copy);
+  const LeftIcon: LucideIcon = copied ? IconCopied ?? Check : Icon ?? Copy;
 
   return (
     <Button

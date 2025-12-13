@@ -1,7 +1,5 @@
 "use client";
 
-import { ClipboardType, Eraser, Wand2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 import {
   CopyButton,
   ExportTextButton,
@@ -14,12 +12,19 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toSentenceCase, toTitleCase } from "@/lib/utils";
+import { ClipboardType, Eraser, Wand2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 // Types
 type HistoryItem = { id: string; ts: number; src: string; out: string };
@@ -135,7 +140,10 @@ export default function ClipboardCleanerClient() {
   useEffect(() => {
     try {
       const s = localStorage.getItem("tools:clipclean:opts");
-      if (s) setOpts({ ...DEFAULT_OPTS, ...(JSON.parse(s) as CleanOptions) });
+      if (s) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setOpts({ ...DEFAULT_OPTS, ...(JSON.parse(s) as CleanOptions) });
+      }
       const h = localStorage.getItem("tools:clipclean:history");
       if (h) setHistory(JSON.parse(h));
       const r = localStorage.getItem("tools:clipclean:raw");

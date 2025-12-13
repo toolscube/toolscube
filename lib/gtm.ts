@@ -1,6 +1,6 @@
 // Google Tag Manager utility functions for tracking custom events
 
-// biome-ignore lint/suspicious/noExplicitAny: GTM dataLayer requires flexible typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DataLayerEvent = Record<string, any>;
 
 declare global {

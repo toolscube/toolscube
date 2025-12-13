@@ -1,6 +1,25 @@
 "use client";
 
 import {
+  ActionButton,
+  CopyButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { cn, pad } from "@/lib/utils";
+import {
   CalendarDays,
   CalendarRange,
   CalendarSearch,
@@ -12,16 +31,6 @@ import {
 } from "lucide-react";
 import type * as React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { cn, pad } from "@/lib/utils";
 
 /* Helpers */
 const msDay = 24 * 60 * 60 * 1000;
@@ -54,7 +63,9 @@ function isoWeekday(d: Date) {
 /** ISO week info: week-year + week number (1-53) */
 function isoWeekInfo(date: Date) {
   // Use UTC math to avoid DST drift
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
   const day = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - day); // Thursday of this week
   const isoYear = d.getUTCFullYear();
@@ -93,10 +104,18 @@ function fromISOYearWeek(isoYear: number, week: number) {
   week1Monday.setUTCDate(jan4.getUTCDate() - (jan4Dow - 1));
   const mondayUTC = new Date(week1Monday.getTime() + (week - 1) * 7 * msDay);
   // Return as local date (preserving calendar day)
-  return new Date(mondayUTC.getUTCFullYear(), mondayUTC.getUTCMonth(), mondayUTC.getUTCDate());
+  return new Date(
+    mondayUTC.getUTCFullYear(),
+    mondayUTC.getUTCMonth(),
+    mondayUTC.getUTCDate()
+  );
 }
 
-function downloadFile(filename: string, content: string, type = "text/plain;charset=utf-8") {
+function downloadFile(
+  filename: string,
+  content: string,
+  type = "text/plain;charset=utf-8"
+) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -117,8 +136,13 @@ function toICSAllDayRange({
   end: Date;
   description?: string;
 }) {
-  const dt = (d: Date) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
-  const dtEndExclusive = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1);
+  const dt = (d: Date) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+  const dtEndExclusive = new Date(
+    end.getFullYear(),
+    end.getMonth(),
+    end.getDate() + 1
+  );
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -129,7 +153,9 @@ function toICSAllDayRange({
     `DTSTART;VALUE=DATE:${dt(start)}`,
     `DTEND;VALUE=DATE:${dt(dtEndExclusive)}`,
     `SUMMARY:${title}`,
-    ...(description ? [`DESCRIPTION:${description.replace(/\n/g, "\\n")}`] : []),
+    ...(description
+      ? [`DESCRIPTION:${description.replace(/\n/g, "\\n")}`]
+      : []),
     "END:VEVENT",
     "END:VCALENDAR",
   ];
@@ -149,7 +175,7 @@ export default function WeekNumberClient() {
   const iso = useMemo(() => isoWeekInfo(date), [date]);
   const isoRange = useMemo(
     () => ({ start: startOfISOWeek(date), end: endOfISOWeek(date) }),
-    [date],
+    [date]
   );
 
   const usWeek = useMemo(() => {
@@ -157,14 +183,21 @@ export default function WeekNumberClient() {
     const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const startOfYear = new Date(d.getFullYear(), 0, 1);
     const offset = startOfYear.getDay(); // Sun=0..Sat=6
-    const daysSince = Math.floor((d.getTime() - startOfYear.getTime()) / msDay) + offset;
+    const daysSince =
+      Math.floor((d.getTime() - startOfYear.getTime()) / msDay) + offset;
     const week = Math.floor(daysSince / 7) + 1;
     return { year: d.getFullYear(), week };
   }, [date, showUS]);
 
   const gotoDelta = (deltaWeeks: number) =>
     setDateStr(
-      fmtDateInput(new Date(date.getFullYear(), date.getMonth(), date.getDate() + deltaWeeks * 7)),
+      fmtDateInput(
+        new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate() + deltaWeeks * 7
+        )
+      )
     );
   const setToday = () => setDateStr(fmtDateInput(new Date()));
 
@@ -178,6 +211,7 @@ export default function WeekNumberClient() {
     if (isoParam && /^\d{4}-W\d{1,2}$/.test(isoParam)) {
       const [y, w] = isoParam.split("-W").map(Number);
       const monday = fromISOYearWeek(y, w);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDateStr(fmtDateInput(monday));
     } else if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
       setDateStr(d);
@@ -190,7 +224,11 @@ export default function WeekNumberClient() {
     const list: { d: Date; label: string }[] = [];
     const start = isoRange.start;
     for (let i = 0; i < 7; i++) {
-      const di = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const di = new Date(
+        start.getFullYear(),
+        start.getMonth(),
+        start.getDate() + i
+      );
       list.push({ d: di, label: fmtShort(di) });
     }
     return list;
@@ -217,11 +255,12 @@ export default function WeekNumberClient() {
       isoYear: iso.isoYear,
       isoWeek: iso.week,
       range: { start: fmtISO(isoRange.start), end: fmtISO(isoRange.end) },
-      usWeek: showUS && usWeek ? { year: usWeek.year, week: usWeek.week } : null,
+      usWeek:
+        showUS && usWeek ? { year: usWeek.year, week: usWeek.week } : null,
       link,
     },
     null,
-    2,
+    2
   );
 
   const downloadICS = () => {
@@ -231,7 +270,11 @@ export default function WeekNumberClient() {
       end: isoRange.end,
       description: summary,
     });
-    downloadFile(`week-${iso.isoYear}-W${iso.week}.ics`, ics, "text/calendar;charset=utf-8");
+    downloadFile(
+      `week-${iso.isoYear}-W${iso.week}.ics`,
+      ics,
+      "text/calendar;charset=utf-8"
+    );
   };
 
   return (
@@ -245,10 +288,20 @@ export default function WeekNumberClient() {
           <>
             <ResetButton
               label="Week start"
-              onClick={() => setDateStr(fmtDateInput(fromISOYearWeek(iso.isoYear, iso.week)))}
+              onClick={() =>
+                setDateStr(fmtDateInput(fromISOYearWeek(iso.isoYear, iso.week)))
+              }
             />
-            <CopyButton label="Copy summary" copiedLabel="Copied" getText={() => summary} />
-            <CopyButton label="Copy link" copiedLabel="Copied" getText={() => link} />
+            <CopyButton
+              label="Copy summary"
+              copiedLabel="Copied"
+              getText={() => summary}
+            />
+            <CopyButton
+              label="Copy link"
+              copiedLabel="Copied"
+              getText={() => link}
+            />
             <ActionButton
               variant="default"
               icon={Download}
@@ -285,7 +338,12 @@ export default function WeekNumberClient() {
                 size="sm"
                 onClick={() => gotoDelta(-1)}
               />
-              <ActionButton icon={CalendarRange} label="Today" size="sm" onClick={setToday} />
+              <ActionButton
+                icon={CalendarRange}
+                label="Today"
+                size="sm"
+                onClick={setToday}
+              />
               <ActionButton
                 icon={ChevronRight}
                 label="Next"
@@ -323,7 +381,9 @@ export default function WeekNumberClient() {
                   placeholder={`${iso.isoYear}`}
                   value={isoYearInput}
                   onChange={(e) =>
-                    setIsoYearInput(e.target.value === "" ? "" : Number(e.target.value))
+                    setIsoYearInput(
+                      e.target.value === "" ? "" : Number(e.target.value)
+                    )
                   }
                 />
                 <InputField
@@ -336,7 +396,9 @@ export default function WeekNumberClient() {
                   placeholder={`${iso.week}`}
                   value={isoWeekInput}
                   onChange={(e) =>
-                    setIsoWeekInput(e.target.value === "" ? "" : Number(e.target.value))
+                    setIsoWeekInput(
+                      e.target.value === "" ? "" : Number(e.target.value)
+                    )
                   }
                 />
                 <div className="flex gap-2">
@@ -370,14 +432,28 @@ export default function WeekNumberClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Results</CardTitle>
-          <CardDescription>ISO info and the Monday–Sunday range.</CardDescription>
+          <CardDescription>
+            ISO info and the Monday–Sunday range.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Stat title="ISO Year" value={iso.isoYear} icon={CalendarSearch} />
-            <Stat title="ISO Week" value={`W${iso.week}`} icon={CalendarSearch} />
-            <Stat title="Start (Mon)" value={fmtShort(isoRange.start)} icon={CalendarDays} />
-            <Stat title="End (Sun)" value={fmtShort(isoRange.end)} icon={CalendarDays} />
+            <Stat
+              title="ISO Week"
+              value={`W${iso.week}`}
+              icon={CalendarSearch}
+            />
+            <Stat
+              title="Start (Mon)"
+              value={fmtShort(isoRange.start)}
+              icon={CalendarDays}
+            />
+            <Stat
+              title="End (Sun)"
+              value={fmtShort(isoRange.end)}
+              icon={CalendarDays}
+            />
           </div>
 
           {showUS && usWeek && (
@@ -407,7 +483,7 @@ export default function WeekNumberClient() {
                       "relative px-3 py-3 text-sm border-t",
                       "hover:bg-accent/50 transition-colors",
                       isWeekend && "bg-muted/30",
-                      isToday && "bg-primary/5",
+                      isToday && "bg-primary/5"
                     )}
                     title={`${fmtISO(d)} • ${label}`}
                   >
@@ -432,17 +508,25 @@ export default function WeekNumberClient() {
             <CopyButton
               label="Copy date range"
               copiedLabel="Copied"
-              getText={() => `${fmtISO(isoRange.start)} — ${fmtISO(isoRange.end)}`}
+              getText={() =>
+                `${fmtISO(isoRange.start)} — ${fmtISO(isoRange.end)}`
+              }
             />
-            <CopyButton label="Copy JSON" copiedLabel="Copied" getText={() => jsonSummary} />
+            <CopyButton
+              label="Copy JSON"
+              copiedLabel="Copied"
+              getText={() => jsonSummary}
+            />
           </div>
 
           <div className="flex flex-wrap gap-2 justify-end text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-primary/70" /> Today
+              <span className="inline-block h-2 w-2 rounded-full bg-primary/70" />{" "}
+              Today
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded bg-muted/60" /> Weekend
+              <span className="inline-block h-2 w-2 rounded bg-muted/60" />{" "}
+              Weekend
             </div>
           </div>
         </CardContent>

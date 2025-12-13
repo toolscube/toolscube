@@ -1,15 +1,22 @@
 "use client";
 
-import { Eraser, FileText, Sparkles, Type } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { CopyButton, ExportTextButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
 import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -33,6 +40,8 @@ import {
   stripHtmlTags,
   trimEachLine,
 } from "@/lib/utils/text/text-cleaner";
+import { Eraser, FileText, Sparkles, Type } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 const LS_KEY = "toolscube:text-cleaner-v1";
 
@@ -64,7 +73,10 @@ export default function TextCleanerClient() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY);
-      if (saved) setInput(saved);
+      if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setInput(saved);
+      }
     } catch {}
   }, []);
   useEffect(() => {
@@ -108,6 +120,7 @@ export default function TextCleanerClient() {
       default:
         break;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOutput(s);
   }, [
     input,

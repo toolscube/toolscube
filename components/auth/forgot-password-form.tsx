@@ -273,7 +273,8 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
         </div>
         <CardTitle className="text-2xl text-center">Forgot Password?</CardTitle>
         <CardDescription className="text-center">
-          Enter your email address and we'll send you a password reset link.
+          Enter your email address and we&apos;ll send you a password reset
+          link.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

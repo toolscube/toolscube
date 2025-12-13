@@ -1,12 +1,19 @@
 "use client";
 
-import { Clock, Diff, Globe, MapPin, Plus, Replace, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,7 +25,22 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { formatDateInput, formatTimeInput, getLocalTimeZone, pad } from "@/lib/utils";
+import {
+  formatDateInput,
+  formatTimeInput,
+  getLocalTimeZone,
+  pad,
+} from "@/lib/utils";
+import {
+  Clock,
+  Diff,
+  Globe,
+  MapPin,
+  Plus,
+  Replace,
+  Trash2,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 // Utils
 
@@ -28,7 +50,7 @@ function wallTimeToUTC(
   d: number,
   h: number,
   min: number,
-  timeZone: string,
+  timeZone: string
 ): number {
   let guess = Date.UTC(y, m - 1, d, h, min, 0, 0);
 
@@ -66,7 +88,11 @@ function wallTimeToUTC(
 }
 
 /** Pretty print a timestamp in a zone */
-function formatInZone(ts: number, timeZone: string, opts?: { hour12?: boolean; withTz?: boolean }) {
+function formatInZone(
+  ts: number,
+  timeZone: string,
+  opts?: { hour12?: boolean; withTz?: boolean }
+) {
   const { hour12 = false, withTz = true } = opts || {};
   const formatter = new Intl.DateTimeFormat("en-GB", {
     timeZone,
@@ -127,8 +153,6 @@ function fmtOffset(mins: number) {
   const mm = abs % 60;
   return `GMT${sign}${pad(hh)}:${pad(mm)}`;
 }
-
-
 
 function getAllTimeZones(): { value: string; label: string }[] {
   let zones: string[] | undefined;
@@ -248,7 +272,9 @@ function CityRow({
   const diffMin = offMin - srcOffMin;
   const diffHr = (Math.abs(diffMin) / 60).toFixed(1).replace(/\.0$/, "");
   const diffPretty =
-    diffMin === 0 ? "Same as source" : `${diffMin > 0 ? "+" : "−"}${diffHr}h vs source`;
+    diffMin === 0
+      ? "Same as source"
+      : `${diffMin > 0 ? "+" : "−"}${diffHr}h vs source`;
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border p-3 hover:ring-1 hover:ring-primary/20 transition">
@@ -272,9 +298,19 @@ function CityRow({
       <div className="text-sm text-muted-foreground">{text}</div>
 
       <div className="flex flex-wrap gap-2">
-        <ActionButton icon={Replace} label="Set as source" size="sm" onClick={onSwap} />
+        <ActionButton
+          icon={Replace}
+          label="Set as source"
+          size="sm"
+          onClick={onSwap}
+        />
         <CopyButton size="sm" getText={`${text} — ${tz}`} />
-        <ActionButton icon={Trash2} label="Remove" size="sm" onClick={onRemove} />
+        <ActionButton
+          icon={Trash2}
+          label="Remove"
+          size="sm"
+          onClick={onRemove}
+        />
       </div>
     </div>
   );
@@ -287,8 +323,12 @@ export default function TimezoneConverterClient() {
   const debSearch = useDebounced(search, 200);
 
   const [sourceTz, setSourceTz] = useState<string>(localTz);
-  const [dateStr, setDateStr] = useState<string>(() => formatDateInput(new Date()));
-  const [timeStr, setTimeStr] = useState<string>(() => formatTimeInput(new Date()));
+  const [dateStr, setDateStr] = useState<string>(() =>
+    formatDateInput(new Date())
+  );
+  const [timeStr, setTimeStr] = useState<string>(() =>
+    formatTimeInput(new Date())
+  );
   const [is12h, setIs12h] = useState(false);
 
   const [targets, setTargets] = useState<string[]>(() => {
@@ -323,8 +363,10 @@ export default function TimezoneConverterClient() {
     return wallTimeToUTC(yy, mm, dd, hh, min, sourceTz);
   }, [dateStr, timeStr, sourceTz]);
 
-  const addTarget = (tz: string) => setTargets((arr) => (arr.includes(tz) ? arr : [...arr, tz]));
-  const removeTarget = (tz: string) => setTargets((arr) => arr.filter((z) => z !== tz));
+  const addTarget = (tz: string) =>
+    setTargets((arr) => (arr.includes(tz) ? arr : [...arr, tz]));
+  const removeTarget = (tz: string) =>
+    setTargets((arr) => arr.filter((z) => z !== tz));
   const swapWithSource = (tz: string) => setSourceTz(tz);
 
   useEffect(() => {
@@ -333,22 +375,29 @@ export default function TimezoneConverterClient() {
     const src = params.get("src");
     const date = params.get("date");
     const time = params.get("time");
-    if (src) setSourceTz(src);
+    if (src) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSourceTz(src);
+    }
     if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) setDateStr(date);
     if (time && /^\d{2}:\d{2}$/.test(time)) setTimeStr(time);
   }, []);
 
   const sourceCandidates = ALL_ZONES;
   const targetCandidates = useMemo(
-    () => ALL_ZONES.filter((z) => z.value !== sourceTz && !targets.includes(z.value)),
-    [ALL_ZONES, sourceTz, targets],
+    () =>
+      ALL_ZONES.filter(
+        (z) => z.value !== sourceTz && !targets.includes(z.value)
+      ),
+    [ALL_ZONES, sourceTz, targets]
   );
 
   const filteredTargets = useMemo(() => {
     if (!debSearch.trim()) return targetCandidates;
     const q = debSearch.toLowerCase();
     return targetCandidates.filter(
-      (z) => z.value.toLowerCase().includes(q) || z.label.toLowerCase().includes(q),
+      (z) =>
+        z.value.toLowerCase().includes(q) || z.label.toLowerCase().includes(q)
     );
   }, [debSearch, targetCandidates]);
 
@@ -399,7 +448,11 @@ export default function TimezoneConverterClient() {
           <>
             <ResetButton onClick={resetAll} />
             <ActionButton icon={Clock} label="Now" onClick={applyNow} />
-            <CopyButton variant="default" label="Copy Link" getText={shareLink} />
+            <CopyButton
+              variant="default"
+              label="Copy Link"
+              getText={shareLink}
+            />
           </>
         }
       />
@@ -408,7 +461,9 @@ export default function TimezoneConverterClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
-          <CardDescription>Pick the source city and time. We handle the rest.</CardDescription>
+          <CardDescription>
+            Pick the source city and time. We handle the rest.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
@@ -459,7 +514,9 @@ export default function TimezoneConverterClient() {
       <GlassCard>
         <CardHeader>
           <CardTitle className="text-base">Add Cities</CardTitle>
-          <CardDescription>Choose where you want to see the converted time.</CardDescription>
+          <CardDescription>
+            Choose where you want to see the converted time.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
@@ -482,7 +539,8 @@ export default function TimezoneConverterClient() {
                   ))}
                   {filteredTargets.length === 0 && (
                     <div className="px-3 py-2 text-sm text-muted-foreground">
-                      No match in list. Paste a valid IANA zone above, then click “Add”.
+                      No match in list. Paste a valid IANA zone above, then
+                      click “Add”.
                     </div>
                   )}
                 </SelectContent>
@@ -499,7 +557,8 @@ export default function TimezoneConverterClient() {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Tip: Try zones like <span className="font-mono">Asia/Dhaka</span>,{" "}
+                Tip: Try zones like{" "}
+                <span className="font-mono">Asia/Dhaka</span>,{" "}
                 <span className="font-mono">Europe/London</span>,{" "}
                 <span className="font-mono">America/Los_Angeles</span>.
               </p>
@@ -535,7 +594,8 @@ export default function TimezoneConverterClient() {
         <CardHeader>
           <CardTitle className="text-base">Converted Times</CardTitle>
           <CardDescription>
-            Times are computed exactly for the above source — daylight saving aware.
+            Times are computed exactly for the above source — daylight saving
+            aware.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">

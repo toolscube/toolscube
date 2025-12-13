@@ -1,7 +1,5 @@
 "use client";
 
-import { Calculator, Calendar as CalendarIcon, Download, History } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 import {
   ActionButton,
   CopyButton,
@@ -12,9 +10,21 @@ import InputField from "@/components/shared/form-fields/input-field";
 import SelectField from "@/components/shared/form-fields/select-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
+import {
+  Calculator,
+  Calendar as CalendarIcon,
+  Download,
+  History,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 // Types
 type TermMode = "years" | "months";
@@ -33,7 +43,8 @@ type Row = {
 
 // Utils
 function parseNum(n: string | number): number {
-  const v = typeof n === "number" ? n : Number(String(n).replace(/,/g, "").trim());
+  const v =
+    typeof n === "number" ? n : Number(String(n).replace(/,/g, "").trim());
   return Number.isFinite(v) ? v : 0;
 }
 
@@ -77,8 +88,13 @@ function buildSchedule(
   annualRatePct: number,
   months: number,
   startDate: Date,
-  extra: number,
-): { schedule: Row[]; totalInterest: number; totalPayment: number; actualMonths: number } {
+  extra: number
+): {
+  schedule: Row[];
+  totalInterest: number;
+  totalPayment: number;
+  actualMonths: number;
+} {
   const schedule: Row[] = [];
   let bal = principal;
   const baseEmi = computeEMI(principal, annualRatePct, months);
@@ -125,12 +141,20 @@ function buildSchedule(
     if (i > months * 2 && r === 0) break;
   }
 
-  return { schedule, totalInterest, totalPayment, actualMonths: schedule.length };
+  return {
+    schedule,
+    totalInterest,
+    totalPayment,
+    actualMonths: schedule.length,
+  };
 }
 
 function useQueryParams() {
   const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setReady(true);
+  }, []);
   const setParams = (params: Record<string, string | number | boolean>) => {
     const url = new URL(window.location.href);
     Object.entries(params).forEach(([k, v]) => {

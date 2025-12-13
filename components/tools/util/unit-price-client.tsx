@@ -1,6 +1,25 @@
 "use client";
 
 import {
+  ActionButton,
+  ExportCSVButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import {
   BadgePercent,
   Beaker,
   Boxes,
@@ -12,20 +31,19 @@ import {
   Trash2,
 } from "lucide-react";
 import * as React from "react";
-import { ActionButton, ExportCSVButton, ResetButton } from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SelectField from "@/components/shared/form-fields/select-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import TextareaField from "@/components/shared/form-fields/textarea-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 
 // Types
 type UnitKind = "weight" | "volume" | "count" | "custom";
-type Unit = "mg" | "g" | "kg" | "ml" | "l" | "unit" | "pcs" | "piece" | "custom";
+type Unit =
+  | "mg"
+  | "g"
+  | "kg"
+  | "ml"
+  | "l"
+  | "unit"
+  | "pcs"
+  | "piece"
+  | "custom";
 
 type Item = {
   id: string;
@@ -88,7 +106,8 @@ function displayPerFactor(displayPer: DisplayPer): number {
 
 // Math
 function finalPrice(price: number, discountPct: number, taxPct: number) {
-  const afterDiscount = price * (1 - (Number.isFinite(discountPct) ? discountPct : 0) / 100);
+  const afterDiscount =
+    price * (1 - (Number.isFinite(discountPct) ? discountPct : 0) / 100);
   return afterDiscount * (1 + (Number.isFinite(taxPct) ? taxPct : 0) / 100);
 }
 
@@ -120,7 +139,8 @@ function perUnitPrice(item: Item, displayPer: DisplayPer): number | null {
 
 function fmt(n: number, digits = 4) {
   const x = Number.isFinite(n) ? n : 0;
-  const s = x >= 100 ? x.toFixed(2) : x >= 10 ? x.toFixed(3) : x.toFixed(digits);
+  const s =
+    x >= 100 ? x.toFixed(2) : x >= 10 ? x.toFixed(3) : x.toFixed(digits);
   return s.replace(/(\.\d*?[1-9])0+$/u, "$1").replace(/\.0+$/u, "");
 }
 
@@ -160,8 +180,12 @@ export default function UnitPriceClient() {
       ...it,
       perUnit: perUnitPrice(it, displayPer),
     }));
-    const comparable = rows.filter((r) => r.perUnit !== null) as (Item & { perUnit: number })[];
-    const cheapest = comparable.length ? Math.min(...comparable.map((r) => r.perUnit)) : null;
+    const comparable = rows.filter((r) => r.perUnit !== null) as (Item & {
+      perUnit: number;
+    })[];
+    const cheapest = comparable.length
+      ? Math.min(...comparable.map((r) => r.perUnit))
+      : null;
     const sorted = autoSort
       ? [...rows].sort((a, b) => {
           const aa = a.perUnit ?? Number.POSITIVE_INFINITY;
@@ -173,7 +197,9 @@ export default function UnitPriceClient() {
   }, [items, displayPer, autoSort]);
 
   function updateItem(id: string, patch: Partial<Item>) {
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, ...patch } : it))
+    );
   }
   function addItem() {
     setItems((prev) => [
@@ -194,8 +220,11 @@ export default function UnitPriceClient() {
     setItems((prev) => {
       const it = prev.find((x) => x.id === id);
       if (!it) return prev;
-      const { id: _old, ...copy } = it;
-      return [...prev, { ...copy, id: crypto.randomUUID(), name: `${it.name} (copy)` }];
+      const { id: _, ...copy } = it;
+      return [
+        ...prev,
+        { ...copy, id: crypto.randomUUID(), name: `${it.name} (copy)` },
+      ];
     });
   }
   function removeItem(id: string) {
@@ -225,8 +254,19 @@ export default function UnitPriceClient() {
 
       const qty = parseFloat(m[1]);
       const unitRaw = m[2].toLowerCase();
-      const allowed = new Set<Unit>(["mg", "g", "kg", "ml", "l", "unit", "pcs", "piece"]);
-      const unit: Unit = allowed.has(unitRaw as Unit) ? (unitRaw as Unit) : "custom";
+      const allowed = new Set<Unit>([
+        "mg",
+        "g",
+        "kg",
+        "ml",
+        "l",
+        "unit",
+        "pcs",
+        "piece",
+      ]);
+      const unit: Unit = allowed.has(unitRaw as Unit)
+        ? (unitRaw as Unit)
+        : "custom";
 
       parsed.push({
         id: crypto.randomUUID(),
@@ -289,7 +329,12 @@ export default function UnitPriceClient() {
                 return [header, ...rows];
               }}
             />
-            <ActionButton variant="default" icon={Plus} label="Add Item" onClick={addItem} />
+            <ActionButton
+              variant="default"
+              icon={Plus}
+              label="Add Item"
+              onClick={addItem}
+            />
           </>
         }
       />
@@ -364,7 +409,7 @@ export default function UnitPriceClient() {
               key={it.id}
               className={cn(
                 "shadow-sm border relative overflow-hidden",
-                isCheapest && "ring-1 ring-primary",
+                isCheapest && "ring-1 ring-primary"
               )}
             >
               {isCheapest && (
@@ -380,7 +425,8 @@ export default function UnitPriceClient() {
                   <CardTitle className="text-base">Product</CardTitle>
                 </div>
                 <CardDescription>
-                  Enter pack size and price; we’ll compute price per {displayPer}.
+                  Enter pack size and price; we’ll compute price per{" "}
+                  {displayPer}.
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
@@ -388,7 +434,9 @@ export default function UnitPriceClient() {
                   <InputField
                     label="Name"
                     value={it.name}
-                    onChange={(e) => updateItem(it.id, { name: e.target.value })}
+                    onChange={(e) =>
+                      updateItem(it.id, { name: e.target.value })
+                    }
                     placeholder="e.g., Rice 5kg"
                   />
 
@@ -400,14 +448,18 @@ export default function UnitPriceClient() {
                       step="any"
                       value={it.qty}
                       onChange={(e) =>
-                        updateItem(it.id, { qty: parseFloat(e.target.value || "0") })
+                        updateItem(it.id, {
+                          qty: parseFloat(e.target.value || "0"),
+                        })
                       }
                       placeholder="e.g., 500"
                     />
                     <SelectField
                       label="Unit"
                       value={it.unit}
-                      onValueChange={(v) => updateItem(it.id, { unit: v as Unit })}
+                      onValueChange={(v) =>
+                        updateItem(it.id, { unit: v as Unit })
+                      }
                       placeholder="Select unit"
                       options={[
                         { label: "mg", value: "mg" },
@@ -430,7 +482,9 @@ export default function UnitPriceClient() {
                     step="any"
                     value={it.price}
                     onChange={(e) =>
-                      updateItem(it.id, { price: parseFloat(e.target.value || "0") })
+                      updateItem(it.id, {
+                        price: parseFloat(e.target.value || "0"),
+                      })
                     }
                     placeholder="e.g., 199"
                   />
@@ -439,12 +493,14 @@ export default function UnitPriceClient() {
                 {it.unit === "custom" && (
                   <div className="grid gap-2 rounded-md border p-3">
                     <div className="text-sm text-muted-foreground">
-                      Custom unit: set how many <span className="font-medium">base units</span>{" "}
-                      equals <span className="font-medium">1 custom</span>. Base is{" "}
+                      Custom unit: set how many{" "}
+                      <span className="font-medium">base units</span> equals{" "}
+                      <span className="font-medium">1 custom</span>. Base is{" "}
                       <span className="font-medium">g</span> for weight,{" "}
                       <span className="font-medium">ml</span> for volume, or{" "}
-                      <span className="font-medium">unit</span> for count. Since type is ambiguous,
-                      we’ll treat this as “base units” directly for comparison.
+                      <span className="font-medium">unit</span> for count. Since
+                      type is ambiguous, we’ll treat this as “base units”
+                      directly for comparison.
                     </div>
                     <div className="grid gap-2 sm:grid-cols-2">
                       <InputField
@@ -460,7 +516,11 @@ export default function UnitPriceClient() {
                         }
                       />
 
-                      <InputField label="Example" readOnly value="e.g., 1 pouch = 250 base units" />
+                      <InputField
+                        label="Example"
+                        readOnly
+                        value="e.g., 1 pouch = 250 base units"
+                      />
                     </div>
                   </div>
                 )}
@@ -475,7 +535,9 @@ export default function UnitPriceClient() {
                       step="any"
                       value={it.discountPct}
                       onChange={(e) =>
-                        updateItem(it.id, { discountPct: parseFloat(e.target.value || "0") })
+                        updateItem(it.id, {
+                          discountPct: parseFloat(e.target.value || "0"),
+                        })
                       }
                     />
 
@@ -486,7 +548,9 @@ export default function UnitPriceClient() {
                       step="any"
                       value={it.taxPct}
                       onChange={(e) =>
-                        updateItem(it.id, { taxPct: parseFloat(e.target.value || "0") })
+                        updateItem(it.id, {
+                          taxPct: parseFloat(e.target.value || "0"),
+                        })
                       }
                     />
                   </div>
@@ -494,13 +558,21 @@ export default function UnitPriceClient() {
 
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
                   <div className="text-sm">
-                    <div className="text-muted-foreground">Price per {displayPer}</div>
+                    <div className="text-muted-foreground">
+                      Price per {displayPer}
+                    </div>
                     <div className="text-lg font-semibold tabular-nums">
-                      {it.perUnit == null ? "—" : `${currency}${fmt(it.perUnit)}`}
+                      {it.perUnit == null
+                        ? "—"
+                        : `${currency}${fmt(it.perUnit)}`}
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <ActionButton label="Duplicate" size="sm" onClick={() => cloneItem(it.id)} />
+                    <ActionButton
+                      label="Duplicate"
+                      size="sm"
+                      onClick={() => cloneItem(it.id)}
+                    />
                     <ActionButton
                       variant="destructive"
                       icon={Trash2}
@@ -523,7 +595,8 @@ export default function UnitPriceClient() {
         <CardHeader>
           <CardTitle className="text-base">Bulk paste</CardTitle>
           <CardDescription>
-            One per line: <code>Name, qty unit, price</code> — e.g., <em>Rice, 5 kg, 575</em>
+            One per line: <code>Name, qty unit, price</code> — e.g.,{" "}
+            <em>Rice, 5 kg, 575</em>
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
@@ -536,15 +609,21 @@ export default function UnitPriceClient() {
           <div className="flex flex-wrap gap-2">
             <ResetButton onClick={() => setBulk("")} />
 
-            <ActionButton variant="default" icon={Plus} label="Add Lines" onClick={parseBulk} />
+            <ActionButton
+              variant="default"
+              icon={Plus}
+              label="Add Lines"
+              onClick={parseBulk}
+            />
           </div>
         </CardContent>
       </GlassCard>
 
       {/* Legend / Tips */}
       <GlassCard className="p-4 text-xs text-muted-foreground">
-        Tips: Choose a meaningful “display per” (e.g., per kg when comparing rice bags). If items
-        show “N/A”, they may use incompatible units—switch display unit accordingly.
+        Tips: Choose a meaningful “display per” (e.g., per kg when comparing
+        rice bags). If items show “N/A”, they may use incompatible units—switch
+        display unit accordingly.
       </GlassCard>
     </>
   );

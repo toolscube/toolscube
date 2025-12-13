@@ -9,7 +9,6 @@ export function GoogleTagManager() {
     <Script
       id="google-tag-manager"
       strategy="afterInteractive"
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: Required for GTM
       dangerouslySetInnerHTML={{
         __html: `
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

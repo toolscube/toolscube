@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { generateSEOMetadata } from "@/lib/seo-config";
+import Link from "next/link";
 
 export const metadata = generateSEOMetadata({
   title: "About Tools Cube",
@@ -92,7 +93,7 @@ export default function AboutPage() {
       {/* CTA */}
       <div className="text-center">
         <Button size="lg" asChild>
-          <a href="/tools">Explore All Tools</a>
+          <Link href="/tools">Explore All Tools</Link>
         </Button>
       </div>
     </div>

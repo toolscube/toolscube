@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/correctness/noUnusedVariables: <> */
-
 // Base64 Encoder / Decoder
 type Base64Mode = "encode" | "decode";
 type TabKey = "text" | "file";

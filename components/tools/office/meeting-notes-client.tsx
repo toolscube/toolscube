@@ -1,6 +1,24 @@
 "use client";
 
 import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Label } from "@/components/ui/label";
+import {
   AlarmClock,
   Check,
   ListTodo,
@@ -12,23 +30,16 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  ActionButton,
-  CopyButton,
-  ExportTextButton,
-  ResetButton,
-} from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import TextareaField from "@/components/shared/form-fields/textarea-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Label } from "@/components/ui/label";
 
 // Types
 
-type ActionItem = { id: string; task: string; owner?: string; due?: string; done?: boolean };
+type ActionItem = {
+  id: string;
+  task: string;
+  owner?: string;
+  due?: string;
+  done?: boolean;
+};
 
 type Note = { id: string; ts: number; text: string };
 
@@ -65,7 +76,11 @@ function fmtClock(ms: number) {
 
 function fmtStamp(ts: number) {
   const d = new Date(ts);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return d.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 const DEFAULT: Meeting = {
@@ -97,10 +112,17 @@ export default function MeetingNotesClient() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("tools:meeting-notes");
-      if (saved) setData(JSON.parse(saved));
+      if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setData(JSON.parse(saved));
+      }
       const savedClock = localStorage.getItem("tools:meeting-notes:clock");
       if (savedClock) {
-        const obj = JSON.parse(savedClock) as { running: boolean; start: number; elapsed: number };
+        const obj = JSON.parse(savedClock) as {
+          running: boolean;
+          start: number;
+          elapsed: number;
+        };
         setRunning(obj.running);
         setStartTs(obj.start);
         setElapsed(obj.elapsed || 0);
@@ -118,7 +140,7 @@ export default function MeetingNotesClient() {
     try {
       localStorage.setItem(
         "tools:meeting-notes:clock",
-        JSON.stringify({ running, start: startTs, elapsed }),
+        JSON.stringify({ running, start: startTs, elapsed })
       );
     } catch {}
   }, [running, startTs, elapsed]);
@@ -138,7 +160,10 @@ export default function MeetingNotesClient() {
     if (!noteDraft.trim()) return;
     setData((d) => ({
       ...d,
-      notes: [{ id: uid("note"), ts: Date.now(), text: noteDraft.trim() }, ...d.notes],
+      notes: [
+        { id: uid("note"), ts: Date.now(), text: noteDraft.trim() },
+        ...d.notes,
+      ],
     }));
     setNoteDraft("");
   };
@@ -149,7 +174,10 @@ export default function MeetingNotesClient() {
   const addAction = () =>
     setData((d) => ({
       ...d,
-      actions: [{ id: uid("act"), task: "", owner: "", due: "", done: false }, ...d.actions],
+      actions: [
+        { id: uid("act"), task: "", owner: "", due: "", done: false },
+        ...d.actions,
+      ],
     }));
   const updateAction = (id: string, patch: Partial<ActionItem>) =>
     setData((d) => ({
@@ -164,7 +192,9 @@ export default function MeetingNotesClient() {
     resetClock();
   };
 
-  const md = `# ${data.title}\n\n- **Date:** ${data.date}\n- **Location:** ${data.location || "-"}\n- **Attendees:** ${data.attendees || "-"}\n\n## Agenda\n${
+  const md = `# ${data.title}\n\n- **Date:** ${data.date}\n- **Location:** ${
+    data.location || "-"
+  }\n- **Attendees:** ${data.attendees || "-"}\n\n## Agenda\n${
     data.agenda || "_(none)_"
   }\n\n## Notes\n${
     data.notes
@@ -178,13 +208,18 @@ export default function MeetingNotesClient() {
       .reverse()
       .map(
         (a) =>
-          `- [${a.done ? "x" : " "}] ${a.task} ${a.owner ? `(owner: ${a.owner})` : ""} ${a.due ? `(due: ${a.due})` : ""}`,
+          `- [${a.done ? "x" : " "}] ${a.task} ${
+            a.owner ? `(owner: ${a.owner})` : ""
+          } ${a.due ? `(due: ${a.due})` : ""}`
       )
       .join("\n") || "_None_"
   }\n`;
 
   // derived counts
-  const openCount = useMemo(() => data.actions.filter((a) => !a.done).length, [data.actions]);
+  const openCount = useMemo(
+    () => data.actions.filter((a) => !a.done).length,
+    [data.actions]
+  );
 
   return (
     <>
@@ -266,7 +301,9 @@ export default function MeetingNotesClient() {
       <GlassCard className="shadow-sm print:hidden">
         <CardHeader>
           <CardTitle className="text-base">Live Notes</CardTitle>
-          <CardDescription>Use the timer and insert timestamp into your notes.</CardDescription>
+          <CardDescription>
+            Use the timer and insert timestamp into your notes.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -276,15 +313,26 @@ export default function MeetingNotesClient() {
                 <span className="font-mono">{fmtClock(elapsed)}</span>
               </div>
               {!running ? (
-                <ActionButton variant="default" icon={Play} label="Play" onClick={start} />
+                <ActionButton
+                  variant="default"
+                  icon={Play}
+                  label="Play"
+                  onClick={start}
+                />
               ) : (
-                <ActionButton variant="default" icon={Pause} label="Pause" onClick={pause} />
+                <ActionButton
+                  variant="default"
+                  icon={Pause}
+                  label="Pause"
+                  onClick={pause}
+                />
               )}
               <ResetButton onClick={resetClock} />
             </div>
             <div className="text-xs text-muted-foreground">
               Tip: Press <kbd className="rounded border px-1">Ctrl</kbd>+
-              <kbd className="rounded border px-1">M</kbd> to insert current time.
+              <kbd className="rounded border px-1">M</kbd> to insert current
+              time.
             </div>
           </div>
 
@@ -333,9 +381,14 @@ export default function MeetingNotesClient() {
             </p>
           )}
           {data.notes.map((n) => (
-            <div key={n.id} className="flex flex-col gap-2 rounded-md border p-3">
+            <div
+              key={n.id}
+              className="flex flex-col gap-2 rounded-md border p-3"
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{fmtStamp(n.ts)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {fmtStamp(n.ts)}
+                </span>
                 <ActionButton
                   icon={Trash2}
                   variant="destructive"
@@ -371,19 +424,30 @@ export default function MeetingNotesClient() {
           <div className="lg:col-span-2 space-y-3">
             <div className="flex items-center justify-between">
               <Label>Action Items</Label>
-              <ActionButton icon={ListTodo} label="Add Action" onClick={addAction} />
+              <ActionButton
+                icon={ListTodo}
+                label="Add Action"
+                onClick={addAction}
+              />
             </div>
             {data.actions.length === 0 && (
-              <p className="text-sm text-muted-foreground">No action items yet.</p>
+              <p className="text-sm text-muted-foreground">
+                No action items yet.
+              </p>
             )}
             <div className="space-y-3">
               {data.actions.map((a) => (
-                <div key={a.id} className="grid gap-2 border rounded-lg p-3 md:grid-cols-12">
+                <div
+                  key={a.id}
+                  className="grid gap-2 border rounded-lg p-3 md:grid-cols-12"
+                >
                   <div className="md:col-span-6">
                     <InputField
                       label="Task"
                       value={a.task}
-                      onChange={(e) => updateAction(a.id, { task: e.target.value })}
+                      onChange={(e) =>
+                        updateAction(a.id, { task: e.target.value })
+                      }
                       placeholder="Task description"
                     />
                   </div>
@@ -391,7 +455,9 @@ export default function MeetingNotesClient() {
                     <InputField
                       label="Owner"
                       value={a.owner || ""}
-                      onChange={(e) => updateAction(a.id, { owner: e.target.value })}
+                      onChange={(e) =>
+                        updateAction(a.id, { owner: e.target.value })
+                      }
                       placeholder="Owner"
                     />
                   </div>
@@ -401,7 +467,9 @@ export default function MeetingNotesClient() {
                       label="Due"
                       type="date"
                       value={a.due || ""}
-                      onChange={(e) => updateAction(a.id, { due: e.target.value })}
+                      onChange={(e) =>
+                        updateAction(a.id, { due: e.target.value })
+                      }
                     />
                   </div>
                   <div className="md:col-span-2 flex items-end justify-end gap-2">
@@ -437,8 +505,12 @@ export default function MeetingNotesClient() {
           <div className="bg-background/50 rounded-xl border p-6 print:bg-transparent print:border-0">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold">{data.title || "Meeting Notes"}</h2>
-                <div className="text-sm text-muted-foreground">{data.location}</div>
+                <h2 className="text-xl font-semibold">
+                  {data.title || "Meeting Notes"}
+                </h2>
+                <div className="text-sm text-muted-foreground">
+                  {data.location}
+                </div>
               </div>
               <div className="text-sm">
                 <span className="text-muted-foreground">Date:</span> {data.date}
@@ -448,11 +520,15 @@ export default function MeetingNotesClient() {
             <div className="mt-4 grid gap-6 sm:grid-cols-2">
               <div>
                 <div className="text-xs text-muted-foreground">Attendees</div>
-                <div className="text-sm whitespace-pre-wrap">{data.attendees || "-"}</div>
+                <div className="text-sm whitespace-pre-wrap">
+                  {data.attendees || "-"}
+                </div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Agenda</div>
-                <div className="text-sm whitespace-pre-wrap">{data.agenda || "-"}</div>
+                <div className="text-sm whitespace-pre-wrap">
+                  {data.agenda || "-"}
+                </div>
               </div>
             </div>
 
@@ -476,18 +552,25 @@ export default function MeetingNotesClient() {
 
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
               <div>
-                <div className="text-xs text-muted-foreground mb-1">Decisions</div>
-                <div className="text-sm whitespace-pre-wrap">{data.decisions || "-"}</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  Decisions
+                </div>
+                <div className="text-sm whitespace-pre-wrap">
+                  {data.decisions || "-"}
+                </div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground mb-1">Action Items</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  Action Items
+                </div>
                 {data.actions.length === 0 ? (
                   <div className="text-sm text-muted-foreground">None.</div>
                 ) : (
                   <ul className="text-sm space-y-1">
                     {data.actions.map((a) => (
                       <li key={a.id}>
-                        [{a.done ? "x" : " "}] {a.task} {a.owner ? `(owner: ${a.owner})` : ""}{" "}
+                        [{a.done ? "x" : " "}] {a.task}{" "}
+                        {a.owner ? `(owner: ${a.owner})` : ""}{" "}
                         {a.due ? `(due: ${a.due})` : ""}
                       </li>
                     ))}
@@ -502,7 +585,10 @@ export default function MeetingNotesClient() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <CopyButton label="Copy Header" getText={`# ${data.title}\nDate: ${data.date}\n\n`} />
+            <CopyButton
+              label="Copy Header"
+              getText={`# ${data.title}\nDate: ${data.date}\n\n`}
+            />
             <ExportTextButton
               variant="default"
               label="Export Markdown"

@@ -1,15 +1,20 @@
 "use client";
 
-import { Check, ClipboardList, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
 import InputField from "@/components/shared/form-fields/input-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
+import { Check, ClipboardList, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Types
 
@@ -36,7 +41,10 @@ export default function TodoOfflineClient() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("tools:todo");
-      if (saved) setTodos(JSON.parse(saved));
+      if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTodos(JSON.parse(saved));
+      }
     } catch {}
   }, []);
 

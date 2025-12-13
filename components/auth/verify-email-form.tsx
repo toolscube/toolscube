@@ -155,15 +155,18 @@ export default function VerifyEmailForm({ token, email }: VerifyEmailFormProps) 
         <div className="flex items-center justify-center mb-4">
           <Mail className="h-8 w-8 text-primary" />
         </div>
-        <CardTitle className="text-2xl text-center">Verify your email</CardTitle>
+        <CardTitle className="text-2xl text-center">
+          Verify your email
+        </CardTitle>
         <CardDescription className="text-center">
-          We've sent a verification link to your email address. Please check your inbox and click
-          the link to verify your account.
+          We&apos;ve sent a verification link to your email address. Please
+          check your inbox and click the link to verify your account.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-center text-sm text-muted-foreground">
-          Didn't receive the email? Check your spam folder or click below to resend.
+          Didn&apos;t receive the email? Check your spam folder or click below
+          to resend.
         </div>
 
         <Button
@@ -176,7 +179,11 @@ export default function VerifyEmailForm({ token, email }: VerifyEmailFormProps) 
           Resend verification email
         </Button>
 
-        <Button onClick={() => router.push("/sign-in")} variant="outline" className="w-full">
+        <Button
+          onClick={() => router.push("/sign-in")}
+          variant="outline"
+          className="w-full"
+        >
           Back to sign in
         </Button>
       </CardContent>

@@ -29,7 +29,7 @@ export default function TermsPage() {
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p>• Use tools for lawful purposes only</p>
             <p>• No spam, phishing, malware, or illegal content</p>
-            <p>• Respect rate limits and don't abuse the service</p>
+            <p>• Respect rate limits and don&apos;t abuse the service</p>
             <p>• We reserve the right to block abusive usage</p>
           </CardContent>
         </Card>
@@ -39,7 +39,7 @@ export default function TermsPage() {
             <CardTitle>Service Availability</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>• Tools provided "as is" without warranties</p>
+            <p>• Tools provided &quot;as is&quot; without warranties</p>
             <p>• We may modify or discontinue features</p>
             <p>• Not liable for data loss or service interruptions</p>
             <p>• Always keep backups of important files</p>

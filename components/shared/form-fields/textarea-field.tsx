@@ -1,8 +1,5 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
-import * as React from "react";
-import type { FieldPath, FieldValues } from "react-hook-form";
 import {
   FormControl,
   FormDescription,
@@ -14,6 +11,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
+import * as React from "react";
+import type { FieldPath, FieldValues } from "react-hook-form";
 
 type BaseProps = {
   id?: string;
@@ -112,7 +112,11 @@ const TextareaField = React.forwardRef<
 
     const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
       const next = e.target.value;
-      onValueChange ? onValueChange(next) : setInternal(next);
+      if (onValueChange) {
+        onValueChange(next);
+      } else {
+        setInternal(next);
+      }
       onChange?.(e);
       resizeNow();
     };
@@ -121,7 +125,11 @@ const TextareaField = React.forwardRef<
       if (trimOnBlur) {
         const trimmed = e.target.value.trim();
         if (trimmed !== e.target.value) {
-          onValueChange ? onValueChange(trimmed) : setInternal(trimmed);
+          if (onValueChange) {
+            onValueChange(trimmed);
+          } else {
+            setInternal(trimmed);
+          }
         }
       }
       onBlur?.(e);

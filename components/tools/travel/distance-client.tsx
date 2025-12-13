@@ -134,7 +134,7 @@ function useLeafletDefaultIcon() {
 
       const proto = L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown };
       if ("_getIconUrl" in proto) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+         
         delete proto._getIconUrl;
       }
 

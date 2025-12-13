@@ -36,6 +36,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
+import Link from "next/link";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
@@ -194,7 +195,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
               </p>
             </div>
             <Button variant="outline" asChild>
-              <a href="/forgot-password">Change Password</a>
+              <Link href="/forgot-password">Change Password</Link>
             </Button>
           </div>
 
@@ -209,7 +210,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
                   Please verify your email address to unlock all features
                 </p>
                 <Button size="sm" variant="outline" asChild>
-                  <a href="/verify-email">Verify Email</a>
+                  <Link href="/verify-email">Verify Email</Link>
                 </Button>
               </div>
             </div>

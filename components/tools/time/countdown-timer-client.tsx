@@ -1,5 +1,19 @@
 "use client";
 
+import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
+import { cn, formatDateInput, formatTimeInput, pad } from "@/lib/utils";
 import {
   AlarmClock,
   CalendarClock,
@@ -13,15 +27,6 @@ import {
 } from "lucide-react";
 import type * as React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { ActionButton, ResetButton } from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
-import { cn, formatDateInput, formatTimeInput, pad } from "@/lib/utils";
 
 /* Types */
 type Mode = "countdown" | "pomodoro" | "event";
@@ -169,7 +174,11 @@ function advanceTimer(t: Timer, dtMs: number): Timer {
 
 /* ICS export */
 
-function downloadFile(filename: string, content: string, type = "text/plain;charset=utf-8") {
+function downloadFile(
+  filename: string,
+  content: string,
+  type = "text/plain;charset=utf-8"
+) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -184,7 +193,11 @@ function toICSAlarmCountdown(label: string, seconds: number) {
   const start = now;
   const end = new Date(now.getTime() + seconds * 1000);
   const dt = (d: Date) =>
-    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(
+      d.getUTCDate()
+    )}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(
+      d.getUTCSeconds()
+    )}Z`;
 
   const lines = [
     "BEGIN:VCALENDAR",
@@ -263,7 +276,9 @@ export default function CountdownTimerClient() {
 
     if (anyDone) {
       interval = window.setInterval(() => {
-        document.title = document.title.startsWith("⏰") ? base : `⏰ Timer done!`;
+        document.title = document.title.startsWith("⏰")
+          ? base
+          : `⏰ Timer done!`;
       }, 1000);
     } else {
       document.title = base.replace(/^⏰\s+/, "");
@@ -293,7 +308,8 @@ export default function CountdownTimerClient() {
     ]);
   };
 
-  const addMeeting = (minutes: number) => addCountdown(`Meeting ${minutes}m`, minutes);
+  const addMeeting = (minutes: number) =>
+    addCountdown(`Meeting ${minutes}m`, minutes);
 
   const addPomodoro = (workMin = 25, breakMin = 5, cycles = 4) => {
     const workMs = workMin * ms.min;
@@ -332,12 +348,15 @@ export default function CountdownTimerClient() {
   };
 
   const onRunToggle = (id: string, run: boolean) => {
-    setTimers((arr) => arr.map((t) => (t.id === id ? { ...t, running: run } : t)));
+    setTimers((arr) =>
+      arr.map((t) => (t.id === id ? { ...t, running: run } : t))
+    );
   };
   const onReset = (id: string) => {
     setTimers((arr) => arr.map((t) => (t.id === id ? resetTimer(t) : t)));
   };
-  const onDelete = (id: string) => setTimers((arr) => arr.filter((t) => t.id !== id));
+  const onDelete = (id: string) =>
+    setTimers((arr) => arr.filter((t) => t.id !== id));
   const onDeleteAll = () => setTimers([]);
 
   const actions = [
@@ -427,7 +446,9 @@ export default function CountdownTimerClient() {
               type="number"
               min={1}
               value={cdMin}
-              onChange={(e) => setCdMin(e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                setCdMin(e.target.value === "" ? "" : Number(e.target.value))
+              }
             />
             <div className="flex items-end">
               <ActionButton
@@ -435,7 +456,8 @@ export default function CountdownTimerClient() {
                 icon={Plus}
                 label="Add Countdown"
                 onClick={() => {
-                  if (cdMin && cdMin > 0) addCountdown(cdLabel || "Countdown", cdMin);
+                  if (cdMin && cdMin > 0)
+                    addCountdown(cdLabel || "Countdown", cdMin);
                 }}
               />
             </div>
@@ -452,7 +474,9 @@ export default function CountdownTimerClient() {
               type="number"
               min={1}
               value={poWork}
-              onChange={(e) => setPoWork(e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                setPoWork(e.target.value === "" ? "" : Number(e.target.value))
+              }
             />
             <InputField
               className="sm:col-span-2"
@@ -461,7 +485,9 @@ export default function CountdownTimerClient() {
               type="number"
               min={1}
               value={poBreak}
-              onChange={(e) => setPoBreak(e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                setPoBreak(e.target.value === "" ? "" : Number(e.target.value))
+              }
             />
             <InputField
               className="sm:col-span-2"
@@ -470,7 +496,9 @@ export default function CountdownTimerClient() {
               type="number"
               min={1}
               value={poCycles}
-              onChange={(e) => setPoCycles(e.target.value === "" ? "" : Number(e.target.value))}
+              onChange={(e) =>
+                setPoCycles(e.target.value === "" ? "" : Number(e.target.value))
+              }
             />
             <div className="flex items-end lg:col-span-2">
               <ActionButton
@@ -478,7 +506,8 @@ export default function CountdownTimerClient() {
                 variant="outline"
                 icon={Plus}
                 onClick={() => {
-                  if (poWork && poBreak && poCycles) addPomodoro(poWork, poBreak, poCycles);
+                  if (poWork && poBreak && poCycles)
+                    addPomodoro(poWork, poBreak, poCycles);
                 }}
                 label="Add Pomodoro"
               />
@@ -517,7 +546,9 @@ export default function CountdownTimerClient() {
                 className="w-full"
                 variant="outline"
                 icon={Plus}
-                onClick={() => addEvent(evLabel, parseDateTimeLocal(evDate, evTime))}
+                onClick={() =>
+                  addEvent(evLabel, parseDateTimeLocal(evDate, evTime))
+                }
                 label="Add Event"
               />
             </div>
@@ -527,7 +558,11 @@ export default function CountdownTimerClient() {
 
           {/* Preferences */}
           <div className="flex flex-wrap items-center gap-4">
-            <SwitchRow label="Sound on finish" checked={sound} onCheckedChange={setSound} />
+            <SwitchRow
+              label="Sound on finish"
+              checked={sound}
+              onCheckedChange={setSound}
+            />
             <SwitchRow
               label="Blink page title"
               checked={titleBlink}
@@ -542,12 +577,15 @@ export default function CountdownTimerClient() {
         <CardHeader>
           <CardTitle className="text-base">Active Timers</CardTitle>
           <CardDescription>
-            Start, pause, reset, or remove timers. Pomodoro auto-advances phases.
+            Start, pause, reset, or remove timers. Pomodoro auto-advances
+            phases.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {timers.length === 0 && (
-            <p className="text-sm text-muted-foreground">No timers yet. Create one above.</p>
+            <p className="text-sm text-muted-foreground">
+              No timers yet. Create one above.
+            </p>
           )}
           {timers.map((t) => (
             <TimerCard
@@ -583,9 +621,19 @@ function TimerCard({
   const isEvent = t.mode === "event";
   const isPomo = t.mode === "pomodoro";
 
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!isEvent) return;
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isEvent]);
+
   const { remaining, duration, subtitle, phaseBadge } = useMemo(() => {
     if (isEvent) {
-      const now = Date.now();
+      const now = currentTime;
       const rem = (t.targetTs || now) - now;
       const lab = rem <= 0 ? "Happened" : "Until event";
       return {
@@ -597,18 +645,33 @@ function TimerCard({
     }
     if (isPomo) {
       const dur =
-        t.phase === "work" ? t.workMs || 0 : t.phase === "break" ? t.breakMs || 0 : t.workMs || 0;
+        t.phase === "work"
+          ? t.workMs || 0
+          : t.phase === "break"
+          ? t.breakMs || 0
+          : t.workMs || 0;
       const rem = t.remainingMs || 0;
       const cyc = t.currentCycle || 1;
       const total = t.cycles || 1;
       const badge = (
         <Badge
-          variant={t.phase === "work" ? "default" : t.phase === "break" ? "secondary" : "secondary"}
+          variant={
+            t.phase === "work"
+              ? "default"
+              : t.phase === "break"
+              ? "secondary"
+              : "secondary"
+          }
         >
           {t.phase === "done" ? "Done" : `${t.phase} • ${cyc}/${total}`}
         </Badge>
       );
-      return { remaining: rem, duration: dur, subtitle: "Pomodoro", phaseBadge: badge };
+      return {
+        remaining: rem,
+        duration: dur,
+        subtitle: "Pomodoro",
+        phaseBadge: badge,
+      };
     }
     return {
       remaining: t.remainingMs || 0,
@@ -623,6 +686,7 @@ function TimerCard({
   const [justFinished, setJustFinished] = useState(false);
   useEffect(() => {
     if (remaining <= 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setJustFinished(true);
       if (sound) beep();
       const to = window.setTimeout(() => setJustFinished(false), 1500);
@@ -638,13 +702,16 @@ function TimerCard({
     downloadFile(
       `countdown-${t.label.replace(/\s+/g, "-").toLowerCase()}.ics`,
       ics,
-      "text/calendar;charset=utf-8",
+      "text/calendar;charset=utf-8"
     );
   };
 
   return (
     <div
-      className={cn("rounded-md border p-3 transition-colors", justFinished && "border-primary")}
+      className={cn(
+        "rounded-md border p-3 transition-colors",
+        justFinished && "border-primary"
+      )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -656,11 +723,16 @@ function TimerCard({
 
       {/* Progress */}
       <div className="mt-2 h-2 w-full overflow-hidden rounded bg-muted">
-        <div className="h-2 bg-primary" style={{ width: `${(ratio * 100).toFixed(1)}%` }} />
+        <div
+          className="h-2 bg-primary"
+          style={{ width: `${(ratio * 100).toFixed(1)}%` }}
+        />
       </div>
 
       {/* Time */}
-      <div className="mt-2 text-3xl font-semibold tabular-nums">{fmtHMS(remaining)}</div>
+      <div className="mt-2 text-3xl font-semibold tabular-nums">
+        {fmtHMS(remaining)}
+      </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {!isEvent && (
@@ -688,8 +760,12 @@ function TimerCard({
         )}
 
         {isEvent && (
-          <Badge variant={remaining <= 0 ? "secondary" : "default"} className="gap-1">
-            <CalendarClock className="h-3 w-3" /> {remaining <= 0 ? "Started/Passed" : "Scheduled"}
+          <Badge
+            variant={remaining <= 0 ? "secondary" : "default"}
+            className="gap-1"
+          >
+            <CalendarClock className="h-3 w-3" />{" "}
+            {remaining <= 0 ? "Started/Passed" : "Scheduled"}
           </Badge>
         )}
 

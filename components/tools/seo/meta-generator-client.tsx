@@ -676,7 +676,7 @@ export default function MetaGeneratorClient() {
             <div className="rounded-xl border bg-background overflow-hidden">
               {previewImage ? (
                 <div className="relative aspect-[1200/630] bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <picture>
                     <img src={previewImage} alt="OG" className="h-full w-full object-cover" />
                   </picture>
@@ -726,7 +726,7 @@ export default function MetaGeneratorClient() {
               {s.twitterCard === "summary_large_image" ? (
                 previewImage ? (
                   <div className="aspect-video bg-muted">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    { }
                     <picture>
                       <img
                         src={previewImage}

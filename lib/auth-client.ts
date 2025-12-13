@@ -36,7 +36,7 @@ export const forgetPassword = async ({
 
     const data = await response.json().catch(() => ({}));
     return { data };
-  } catch (error) {
+  } catch {
     return { error: { message: "Network error. Please try again." } };
   }
 };
@@ -64,7 +64,7 @@ export const resetPassword = async ({
 
     const data = await response.json().catch(() => ({}));
     return { data };
-  } catch (error) {
+  } catch {
     return { error: { message: "Network error. Please try again." } };
   }
 };

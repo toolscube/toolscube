@@ -1,6 +1,23 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 "use client";
 
+import {
+  ActionButton,
+  CopyButton,
+  ExportFileButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+import { useMDXComponents } from "@/mdx-components";
 import {
   Bold,
   Code,
@@ -28,24 +45,6 @@ import * as React from "react";
 import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import type { PluggableList } from "unified";
-import {
-  ActionButton,
-  CopyButton,
-  ExportFileButton,
-  ExportTextButton,
-  ResetButton,
-} from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import TextareaField from "@/components/shared/form-fields/textarea-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Button } from "@/components/ui/button";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { useMDXComponents } from "@/mdx-components";
 
 /* utils */
 function sanitizeTitle(s: string) {
@@ -96,16 +95,25 @@ function Panel({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border bg-background/60 backdrop-blur", className)}>
+    <div
+      className={cn(
+        "rounded-xl border bg-background/60 backdrop-blur",
+        className
+      )}
+    >
       <div className="flex items-center justify-between border-b px-3 py-2">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {title}
             </span>
-            {left ? <span className="inline-flex items-center">{left}</span> : null}
+            {left ? (
+              <span className="inline-flex items-center">{left}</span>
+            ) : null}
           </div>
-          {subtitle ? <div className="text-[11px] text-muted-foreground">{subtitle}</div> : null}
+          {subtitle ? (
+            <div className="text-[11px] text-muted-foreground">{subtitle}</div>
+          ) : null}
         </div>
         {right ? <div className="flex items-center gap-2">{right}</div> : null}
       </div>
@@ -124,7 +132,6 @@ Write in **Write** tab — see live **Preview**.
 - Export .md / .html
 `;
 
-
 export default function MarkdownPreviewerClient() {
   const [state, setState] = useLocalStorage(STORAGE_KEY, {
     md: SAMPLE_MD,
@@ -134,8 +141,9 @@ export default function MarkdownPreviewerClient() {
   });
 
   const setPatch = React.useCallback(
-    (patch: Partial<typeof state>) => setState((prev) => ({ ...prev, ...patch })),
-    [setState],
+    (patch: Partial<typeof state>) =>
+      setState((prev) => ({ ...prev, ...patch })),
+    [setState]
   );
 
   const md = state.md as string;
@@ -164,11 +172,16 @@ export default function MarkdownPreviewerClient() {
   }, []);
   const remarkPlugins = React.useMemo<PluggableList>(
     () => (useGfm ? gfmList : []),
-    [useGfm, gfmList],
+    [useGfm, gfmList]
   );
-  const rehypePlugins = React.useMemo<PluggableList>(() => highlightList, [highlightList]);
+  const rehypePlugins = React.useMemo<PluggableList>(
+    () => highlightList,
+    [highlightList]
+  );
 
-  const [activeTab, setActiveTab] = React.useState<"write" | "preview">("write");
+  const [activeTab, setActiveTab] = React.useState<"write" | "preview">(
+    "write"
+  );
   const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [cursorRowCol, setCursorRowCol] = React.useState({ row: 1, col: 1 });
 
@@ -206,7 +219,7 @@ export default function MarkdownPreviewerClient() {
         editorRef.current.focus();
       });
     },
-    [md, setPatch],
+    [md, setPatch]
   );
 
   const wrapSelection = React.useCallback(
@@ -216,7 +229,9 @@ export default function MarkdownPreviewerClient() {
       const start = el.selectionStart ?? 0;
       const end = el.selectionEnd ?? 0;
       const sel = md.slice(start, end) || placeholder;
-      const next = `${md.slice(0, start)}${prefix}${sel}${suffix}${md.slice(end)}`;
+      const next = `${md.slice(0, start)}${prefix}${sel}${suffix}${md.slice(
+        end
+      )}`;
       setPatch({ md: next });
       requestAnimationFrame(() => {
         if (!editorRef.current) return;
@@ -227,7 +242,7 @@ export default function MarkdownPreviewerClient() {
         editorRef.current.focus();
       });
     },
-    [insertAtCursor, md, setPatch],
+    [insertAtCursor, md, setPatch]
   );
 
   const prefixLines = React.useCallback(
@@ -245,7 +260,7 @@ export default function MarkdownPreviewerClient() {
       const next = `${md.slice(0, start)}${nextBlock}${md.slice(end)}`;
       setPatch({ md: next });
     },
-    [md, setPatch],
+    [md, setPatch]
   );
 
   // keyboard shortcuts
@@ -270,16 +285,23 @@ export default function MarkdownPreviewerClient() {
     setPatch({ md: e.target.value });
     const pos = e.target.selectionStart ?? 0;
     const rows = e.target.value.slice(0, pos).split("\n");
-    setCursorRowCol({ row: rows.length, col: rows[rows.length - 1].length + 1 });
+    setCursorRowCol({
+      row: rows.length,
+      col: rows[rows.length - 1].length + 1,
+    });
   };
 
   // MDX bridge
   type MDXProvidedComponents = {
     code?: React.ComponentType<{ code: string; language?: string }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
   const mdx = useMDXComponents() as MDXProvidedComponents;
-  const components = React.useMemo<Components>(() => buildMarkdownComponents(mdx), [mdx]);
+  const components = React.useMemo<Components>(
+    () => buildMarkdownComponents(mdx),
+    [mdx]
+  );
 
   return (
     <>
@@ -290,7 +312,11 @@ export default function MarkdownPreviewerClient() {
         actions={
           <>
             <ResetButton onClick={resetAll} />
-            <ActionButton icon={Wand2} label="Sample" onClick={() => setPatch({ md: SAMPLE_MD })} />
+            <ActionButton
+              icon={Wand2}
+              label="Sample"
+              onClick={() => setPatch({ md: SAMPLE_MD })}
+            />
             <InputField
               fileButtonVariant="default"
               type="file"
@@ -376,7 +402,10 @@ ${html}
       {/* Workspace */}
       <GlassCard>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "write" | "preview")}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as "write" | "preview")}
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="write" className="gap-2">
                 Write
@@ -399,7 +428,9 @@ ${html}
                   codeInline: () => wrapSelection("`"),
                   codeBlock: () => {
                     const el = editorRef.current;
-                    const sel = el ? md.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0) : "";
+                    const sel = el
+                      ? md.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0)
+                      : "";
                     insertAtCursor(`\n\`\`\`\n${sel || "code"}\n\`\`\`\n`);
                   },
                   h1: () => insertAtCursor("# "),
@@ -410,7 +441,7 @@ ${html}
                   hr: () => insertAtCursor("\n---\n"),
                   table: () =>
                     insertAtCursor(
-                      `\n| Column 1 | Column 2 |\n| -------- | -------- |\n| Value    | Value    |\n`,
+                      `\n| Column 1 | Column 2 |\n| -------- | -------- |\n| Value    | Value    |\n`
                     ),
                   image: () => insertAtCursor(`![alt text](https://)\n`),
                   list: () => prefixLines("- "),
@@ -532,19 +563,55 @@ const EditorPanel = React.forwardRef<
               },
             ],
             [
-              { title: "Heading 1", icon: <Heading1 className="h-4 w-4" />, onClick: onCmd.h1 },
-              { title: "Heading 2", icon: <Heading2 className="h-4 w-4" />, onClick: onCmd.h2 },
-              { title: "Heading 3", icon: <Heading3 className="h-4 w-4" />, onClick: onCmd.h3 },
-              { title: "Link", icon: <LinkIcon className="h-4 w-4" />, onClick: onCmd.link },
+              {
+                title: "Heading 1",
+                icon: <Heading1 className="h-4 w-4" />,
+                onClick: onCmd.h1,
+              },
+              {
+                title: "Heading 2",
+                icon: <Heading2 className="h-4 w-4" />,
+                onClick: onCmd.h2,
+              },
+              {
+                title: "Heading 3",
+                icon: <Heading3 className="h-4 w-4" />,
+                onClick: onCmd.h3,
+              },
+              {
+                title: "Link",
+                icon: <LinkIcon className="h-4 w-4" />,
+                onClick: onCmd.link,
+              },
             ],
             [
-              { title: "Quote", icon: <Quote className="h-4 w-4" />, onClick: onCmd.quote },
-              { title: "Horizontal rule", icon: <Minus className="h-4 w-4" />, onClick: onCmd.hr },
-              { title: "Table", icon: <List className="h-4 w-4" />, onClick: onCmd.table },
-              { title: "Image", icon: <ImageIcon className="h-4 w-4" />, onClick: onCmd.image },
+              {
+                title: "Quote",
+                icon: <Quote className="h-4 w-4" />,
+                onClick: onCmd.quote,
+              },
+              {
+                title: "Horizontal rule",
+                icon: <Minus className="h-4 w-4" />,
+                onClick: onCmd.hr,
+              },
+              {
+                title: "Table",
+                icon: <List className="h-4 w-4" />,
+                onClick: onCmd.table,
+              },
+              {
+                title: "Image",
+                icon: <ImageIcon className="h-4 w-4" />,
+                onClick: onCmd.image,
+              },
             ],
             [
-              { title: "Bullet list", icon: <List className="h-4 w-4" />, onClick: onCmd.list },
+              {
+                title: "Bullet list",
+                icon: <List className="h-4 w-4" />,
+                onClick: onCmd.list,
+              },
               {
                 title: "Numbered list",
                 icon: <ListOrdered className="h-4 w-4" />,
@@ -570,7 +637,7 @@ const EditorPanel = React.forwardRef<
         onChange={onChange}
         textareaClassName={cn(
           "min-h-[360px] resize-none rounded-md border bg-background/70 text-sm",
-          softWrap ? "whitespace-pre-wrap" : "whitespace-pre",
+          softWrap ? "whitespace-pre-wrap" : "whitespace-pre"
         )}
         placeholder="Start typing your Markdown here… (paste images directly)"
         aria-label="Markdown editor"
@@ -621,6 +688,7 @@ function PreviewPanel({
 
 type MDXProvided = {
   code?: React.ComponentType<{ code: string; language?: string }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 };
 
@@ -628,21 +696,29 @@ function buildMarkdownComponents(mdx: MDXProvided): Components {
   type HeadingTag = "h1" | "h2" | "h3" | "h4";
   const m: MDXProvided = mdx || {};
 
-  const withAnchor = (Tag: HeadingTag) => (props: React.HTMLAttributes<HTMLHeadingElement>) => {
-    const text = String(React.Children.toArray(props.children).join(" "));
-    const generated = text
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-");
-    const id = (props as { id?: string }).id ?? generated;
-    const Comp = Tag as unknown as React.ElementType;
-    return (
-      <Comp id={id} {...props} className={cn("group scroll-mt-20", props.className)}>
-        <a href={`#${id}`} className="no-underline hover:underline">
-          {props.children}
-        </a>
-      </Comp>
-    );
+  const withAnchor = (Tag: HeadingTag) => {
+    const Component = (props: React.HTMLAttributes<HTMLHeadingElement>) => {
+      const text = String(React.Children.toArray(props.children).join(" "));
+      const generated = text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-");
+      const id = (props as { id?: string }).id ?? generated;
+      const Comp = Tag as unknown as React.ElementType;
+      return (
+        <Comp
+          id={id}
+          {...props}
+          className={cn("group scroll-mt-20", props.className)}
+        >
+          <a href={`#${id}`} className="no-underline hover:underline">
+            {props.children}
+          </a>
+        </Comp>
+      );
+    };
+    Component.displayName = `Heading${Tag.toUpperCase()}`;
+    return Component;
   };
 
   type CodeRendererProps = React.HTMLAttributes<HTMLElement> & {
@@ -668,12 +744,18 @@ function buildMarkdownComponents(mdx: MDXProvided): Components {
         );
       }
 
-      const language = /language-([\w-]+)/.exec(className ?? "")?.[1] ?? undefined;
+      const language =
+        /language-([\w-]+)/.exec(className ?? "")?.[1] ?? undefined;
       const codeText =
-        typeof children === "string" ? children : String(React.Children.toArray(children).join(""));
+        typeof children === "string"
+          ? children
+          : String(React.Children.toArray(children).join(""));
 
       if (m.code) {
-        const MDXCodeBlock = m.code as React.ComponentType<{ code: string; language?: string }>;
+        const MDXCodeBlock = m.code as React.ComponentType<{
+          code: string;
+          language?: string;
+        }>;
         return <MDXCodeBlock code={codeText} language={language} />;
       }
       return <DefaultCodeBlock>{codeText}</DefaultCodeBlock>;
@@ -682,12 +764,18 @@ function buildMarkdownComponents(mdx: MDXProvided): Components {
     h1: (props) =>
       withAnchor("h1")({
         ...props,
-        className: cn(props.className, "text-3xl font-semibold tracking-tight pt-10 pb-4"),
+        className: cn(
+          props.className,
+          "text-3xl font-semibold tracking-tight pt-10 pb-4"
+        ),
       }),
     h2: (props) =>
       withAnchor("h2")({
         ...props,
-        className: cn(props.className, "text-2xl font-semibold tracking-tight pt-8 pb-3"),
+        className: cn(
+          props.className,
+          "text-2xl font-semibold tracking-tight pt-8 pb-3"
+        ),
       }),
     h3: (props) =>
       withAnchor("h3")({
@@ -700,17 +788,33 @@ function buildMarkdownComponents(mdx: MDXProvided): Components {
         className: cn(props.className, "text-lg font-medium pt-5 pb-1"),
       }),
 
-    p: (props) => (m.p ? m.p(props) : <p className="mb-4 leading-relaxed" {...props} />),
-    ol: (props) => (m.ol ? m.ol(props) : <ol className="list-decimal space-y-2 pl-5" {...props} />),
-    ul: (props) => (m.ul ? m.ul(props) : <ul className="list-disc space-y-1 pl-5" {...props} />),
+    p: (props) =>
+      m.p ? m.p(props) : <p className="mb-4 leading-relaxed" {...props} />,
+    ol: (props) =>
+      m.ol ? (
+        m.ol(props)
+      ) : (
+        <ol className="list-decimal space-y-2 pl-5" {...props} />
+      ),
+    ul: (props) =>
+      m.ul ? (
+        m.ul(props)
+      ) : (
+        <ul className="list-disc space-y-1 pl-5" {...props} />
+      ),
     li: (props) => (m.li ? m.li(props) : <li className="pl-1" {...props} />),
 
     em: (props) => (m.em ? m.em(props) : <em className="italic" {...props} />),
     strong: (props) =>
-      m.strong ? m.strong(props) : <strong className="font-semibold" {...props} />,
+      m.strong ? (
+        m.strong(props)
+      ) : (
+        <strong className="font-semibold" {...props} />
+      ),
 
     a: ({ href, children, ...props }) => {
-      const cls = "text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300";
+      const cls =
+        "text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300";
       if (m.a) return m.a({ href, children, ...props });
       if (href?.startsWith("/"))
         return (
@@ -725,7 +829,13 @@ function buildMarkdownComponents(mdx: MDXProvided): Components {
           </a>
         );
       return (
-        <a href={href} target="_blank" rel="noopener noreferrer" className={cls} {...props}>
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cls}
+          {...props}
+        >
           {children}
         </a>
       );
@@ -735,17 +845,31 @@ function buildMarkdownComponents(mdx: MDXProvided): Components {
       m.blockquote ? (
         m.blockquote(props)
       ) : (
-        <blockquote className="ml-2 border-l-4 pl-4 italic opacity-80" {...props} />
+        <blockquote
+          className="ml-2 border-l-4 pl-4 italic opacity-80"
+          {...props}
+        />
       ),
 
     table: (props) =>
-      m.table ? m.table(props) : <table className="my-4 w-full table-auto" {...props} />,
-    thead: (props) => (m.thead ? m.thead(props) : <thead className="bg-muted/40" {...props} />),
+      m.table ? (
+        m.table(props)
+      ) : (
+        <table className="my-4 w-full table-auto" {...props} />
+      ),
+    thead: (props) =>
+      m.thead ? m.thead(props) : <thead className="bg-muted/40" {...props} />,
     tbody: (props) => (m.tbody ? m.tbody(props) : <tbody {...props} />),
-    tr: (props) => (m.tr ? m.tr(props) : <tr className="border-t" {...props} />),
+    tr: (props) =>
+      m.tr ? m.tr(props) : <tr className="border-t" {...props} />,
     th: (props) =>
-      m.th ? m.th(props) : <th className="p-2 text-left text-sm font-semibold" {...props} />,
-    td: (props) => (m.td ? m.td(props) : <td className="p-2 text-sm" {...props} />),
+      m.th ? (
+        m.th(props)
+      ) : (
+        <th className="p-2 text-left text-sm font-semibold" {...props} />
+      ),
+    td: (props) =>
+      m.td ? m.td(props) : <td className="p-2 text-sm" {...props} />,
   };
 }
 
@@ -754,7 +878,9 @@ function buildMarkdownComponents(mdx: MDXProvided): Components {
 function Toolbar({
   groups,
 }: {
-  groups: Array<Array<{ title: string; icon: React.ReactNode; onClick: () => void }>>;
+  groups: Array<
+    Array<{ title: string; icon: React.ReactNode; onClick: () => void }>
+  >;
 }) {
   return (
     <div className="inline-flex w-full flex-wrap items-center gap-2">

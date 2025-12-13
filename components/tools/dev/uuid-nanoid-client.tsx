@@ -1,9 +1,5 @@
 "use client";
 
-import { Hash, Key, ListChecks, Shuffle, Type as TypeIcon, Upload, Wand2 } from "lucide-react";
-import { customAlphabet, nanoid as nanoidFn } from "nanoid";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import * as uuid from "uuid";
 import {
   ActionButton,
   CopyButton,
@@ -16,6 +12,18 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import Stat from "@/components/shared/stat";
 import ToolPageHeader from "@/components/shared/tool-page-header";
+import {
+  Hash,
+  Key,
+  ListChecks,
+  Shuffle,
+  Type as TypeIcon,
+  Upload,
+  Wand2,
+} from "lucide-react";
+import { customAlphabet, nanoid as nanoidFn } from "nanoid";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import * as uuid from "uuid";
 
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -73,6 +81,7 @@ export default function UuidNanoidClient() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const s = JSON.parse(raw);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMode((s.mode as Mode) ?? "uuid");
       setCount(Number.isFinite(s.count) ? s.count : 12);
       setUniqueOnly(Boolean(s.uniqueOnly ?? true));
@@ -82,8 +91,11 @@ export default function UuidNanoidClient() {
       setUuidVersion((s.uuidVersion as UuidVersion) ?? "v4");
       setUuidUpper(Boolean(s.uuidUpper ?? false));
       setUuidHyphens(Boolean(s.uuidHyphens ?? true));
+
       setUuidBraces(Boolean(s.uuidBraces ?? false));
-      setV5NamespacePreset((s.v5NamespacePreset as "URL" | "DNS" | "Custom") ?? "URL");
+      setV5NamespacePreset(
+        (s.v5NamespacePreset as "URL" | "DNS" | "Custom") ?? "URL"
+      );
       setV5Namespace(String(s.v5Namespace ?? ""));
       setV5Name(String(s.v5Name ?? ""));
       setNanoSize(Number.isFinite(s.nanoSize) ? s.nanoSize : 21);

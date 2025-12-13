@@ -1,6 +1,27 @@
 "use client";
 
 import {
+  ActionButton,
+  CopyButton,
+  ExportTextButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
+import InputField from "@/components/shared/form-fields/input-field";
+import SelectField from "@/components/shared/form-fields/select-field";
+import SwitchRow from "@/components/shared/form-fields/switch-row";
+import TextareaField from "@/components/shared/form-fields/textarea-field";
+import ToolPageHeader from "@/components/shared/tool-page-header";
+import { Badge } from "@/components/ui/badge";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
+import { normalizeEOL } from "@/lib/utils";
+import {
   Filter,
   Hash,
   List,
@@ -13,22 +34,6 @@ import {
   SortDesc,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  ActionButton,
-  CopyButton,
-  ExportTextButton,
-  ResetButton,
-} from "@/components/shared/action-buttons";
-import InputField from "@/components/shared/form-fields/input-field";
-import SelectField from "@/components/shared/form-fields/select-field";
-import SwitchRow from "@/components/shared/form-fields/switch-row";
-import TextareaField from "@/components/shared/form-fields/textarea-field";
-import ToolPageHeader from "@/components/shared/tool-page-header";
-import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
-import { normalizeEOL } from "@/lib/utils";
 
 const LS_KEY = "toolscube:line-tools-v1";
 
@@ -65,7 +70,10 @@ export default function LineToolsClient() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY);
-      if (saved) setText(saved);
+      if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setText(saved);
+      }
     } catch {}
   }, []);
   useEffect(() => {
@@ -85,9 +93,19 @@ export default function LineToolsClient() {
   const stats = useMemo(() => {
     const total = splitLines(text).length;
     const empty = splitLines(text).filter((x) => x.trim() === "").length;
-    const uniqSet = new Set(lines.map((x) => (caseSensitive ? x : x.toLowerCase())));
-    const avgLen = lines.length ? Math.round(lines.join("").length / lines.length) : 0;
-    return { total, nonEmpty: total - empty, empty, unique: uniqSet.size, avgLen };
+    const uniqSet = new Set(
+      lines.map((x) => (caseSensitive ? x : x.toLowerCase()))
+    );
+    const avgLen = lines.length
+      ? Math.round(lines.join("").length / lines.length)
+      : 0;
+    return {
+      total,
+      nonEmpty: total - empty,
+      empty,
+      unique: uniqSet.size,
+      avgLen,
+    };
   }, [text, lines, caseSensitive]);
 
   const output = useMemo(() => {
@@ -97,14 +115,16 @@ export default function LineToolsClient() {
       base.map((line, i) => {
         const n = numbering ? `${startNum + i}${numSep}` : "";
         return `${n}${prefix}${line}${suffix}`;
-      }),
+      })
     );
   }, [resultLines, lines, numbering, startNum, numSep, prefix, suffix]);
 
   /* Actions */
   function actionSort(dir: "asc" | "desc") {
     const key = (s: string) => (caseSensitive ? s : s.toLowerCase());
-    const sorted = [...lines].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+    const sorted = [...lines].sort((a, b) =>
+      key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0
+    );
     if (dir === "desc") sorted.reverse();
     setResultLines(sorted);
   }
@@ -150,7 +170,10 @@ export default function LineToolsClient() {
     const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const re =
       pattern ||
-      new RegExp(wholeWord ? `\\b${esc(find)}\\b` : esc(find), caseSensitive ? "g" : "gi");
+      new RegExp(
+        wholeWord ? `\\b${esc(find)}\\b` : esc(find),
+        caseSensitive ? "g" : "gi"
+      );
     const out = src.map((line) => line.replace(re, replace));
     setResultLines(out);
   }
@@ -169,9 +192,11 @@ export default function LineToolsClient() {
       re
         ? re.test(s)
         : caseSensitive
-          ? s.includes(filterQuery)
-          : s.toLowerCase().includes(filterQuery.toLowerCase());
-    const out = src.filter((l) => (filterMode === "keep" ? contains(l) : !contains(l)));
+        ? s.includes(filterQuery)
+        : s.toLowerCase().includes(filterQuery.toLowerCase());
+    const out = src.filter((l) =>
+      filterMode === "keep" ? contains(l) : !contains(l)
+    );
     setResultLines(out);
   }
 
@@ -273,7 +298,8 @@ export default function LineToolsClient() {
         <CardHeader>
           <CardTitle className="text-base">Input</CardTitle>
           <CardDescription>
-            Paste or type your lines below. We can trim and remove empty lines automatically.
+            Paste or type your lines below. We can trim and remove empty lines
+            automatically.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -328,7 +354,8 @@ export default function LineToolsClient() {
         <CardHeader>
           <CardTitle className="text-base">Operations</CardTitle>
           <CardDescription>
-            Run one action at a time—result appears below. Prefix/suffix/numbering update live.
+            Run one action at a time—result appears below.
+            Prefix/suffix/numbering update live.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -479,7 +506,9 @@ export default function LineToolsClient() {
               <CardTitle className="text-base">Output</CardTitle>
               <Badge variant="secondary">Live</Badge>
             </div>
-            <CardDescription>Result of the last action with live affixes applied.</CardDescription>
+            <CardDescription>
+              Result of the last action with live affixes applied.
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">

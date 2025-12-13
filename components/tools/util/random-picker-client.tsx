@@ -1,7 +1,5 @@
 "use client";
 
-import { Dice5, Sparkles, Users } from "lucide-react";
-import { useEffect, useState } from "react";
 import {
   ActionButton,
   CopyButton,
@@ -10,9 +8,16 @@ import {
 } from "@/components/shared/action-buttons";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
+import { Dice5, Sparkles, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Types
 type Entry = { id: string; name: string };
@@ -32,7 +37,10 @@ export default function RandomPickerClient() {
   useEffect(() => {
     try {
       const s = localStorage.getItem("tools:randpicker:entries");
-      if (s) setEntries(JSON.parse(s));
+      if (s) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setEntries(JSON.parse(s));
+      }
       const h = localStorage.getItem("tools:randpicker:history");
       if (h) setHistory(JSON.parse(h));
     } catch {}
