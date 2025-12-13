@@ -13,7 +13,13 @@ import { Form } from "@/components/ui/form";
 import { forgetPassword, resetPassword } from "@/lib/auth-client";
 import logger from "@/lib/logger";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, CheckCircle, KeyRound, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle,
+  KeyRound,
+  Lightbulb,
+  Loader2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -192,15 +198,15 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
               />
 
               <div className="text-xs text-muted-foreground">
-                💡 Password must be at least 8 characters with uppercase,
-                lowercase, and numbers.
+                <Lightbulb /> Password must be at least 8 characters with
+                uppercase, lowercase, and numbers.
               </div>
 
               <Button type="submit" className="w-full" disabled={isResetting}>
                 {isResetting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                🔐 Reset Password
+                Reset Password
               </Button>
             </form>
           </Form>
@@ -227,7 +233,7 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
             <KeyRound className="h-8 w-8 text-green-600" />
           </div>
           <CardTitle className="text-2xl text-center">
-            Check Your Email 📧
+            Check Your Email
           </CardTitle>
           <CardDescription className="text-center">
             A password reset link has been sent to your email address.
