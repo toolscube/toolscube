@@ -27,6 +27,16 @@ const createTransporter = () => {
 };
 
 export const sendEmail = async ({ to, subject, html }: EmailOptions) => {
+  // Check if email is configured
+  if (!env.email.host || !env.email.user) {
+    logger.warn(
+      { to, subject },
+      "Email not configured. Logging email content:"
+    );
+    console.log(`\n📧 Email to ${to}\nSubject: ${subject}\n`);
+    return { success: true, messageId: "console-log" };
+  }
+
   try {
     const transporter = createTransporter();
 

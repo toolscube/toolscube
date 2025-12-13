@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -9,6 +10,21 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: false, // Optional for open source
+    sendResetPassword: async ({ user, url }) => {
+      // Email sending with fallback for open source
+      try {
+        const { sendPasswordResetEmail } = await import("@/lib/email");
+        await sendPasswordResetEmail(user.email, url);
+      } catch (error) {
+        // Fallback for development/open source without email config
+        logger.warn(
+          { url, email: user.email },
+          "Password reset email not sent (email not configured). Reset URL:"
+        );
+        console.log(`\n🔐 Password Reset Link: ${url}\n`);
+      }
+    },
   },
   socialProviders: {
     google: {

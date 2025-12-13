@@ -69,10 +69,18 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
     setIsLoading(true);
 
     try {
-      // TODO: Implement password reset with Better Auth
-      // For now, just show success message
-      toast.success("If an account exists with this email, you will receive a reset link.");
-      setIsSubmitted(true);
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      if (response.ok) {
+        toast.success("If an account exists with this email, you will receive a reset link.");
+        setIsSubmitted(true);
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
     } catch (error) {
       logger.error({ error }, "Forgot password error");
       toast.error("Something went wrong. Please try again.");
@@ -87,15 +95,24 @@ export default function ForgotPasswordForm({ token }: ForgotPasswordFormProps) {
     setIsResetting(true);
 
     try {
-      // TODO: Implement password reset with Better Auth
-      toast.success("Password reset successfully!");
-      setIsSuccess(true);
-      setTimeout(() => {
-        router.push("/sign-in");
-      }, 2000);
-      } else if (result.success) {
-        toast.success(result.message || "Password reset successfully!");
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          token,
+          password: data.password,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Password reset successfully!");
         setIsSuccess(true);
+        setTimeout(() => {
+          router.push("/sign-in");
+        }, 2000);
+      } else {
+        const error = await response.json();
+        toast.error(error.message || "Failed to reset password");
       }
     } catch (error) {
       logger.error({ error }, "Reset password error");

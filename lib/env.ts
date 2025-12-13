@@ -83,7 +83,7 @@ export const env = {
   email: {
     get host() {
       return getEnvVar("EMAIL_SERVER_HOST", {
-        required: true,
+        required: false,
         serverOnly: true,
       });
     },
@@ -95,13 +95,13 @@ export const env = {
     },
     get user() {
       return getEnvVar("EMAIL_SERVER_USER", {
-        required: true,
+        required: false,
         serverOnly: true,
       });
     },
     get password() {
       return getEnvVar("EMAIL_SERVER_PASSWORD", {
-        required: true,
+        required: false,
         serverOnly: true,
       });
     },

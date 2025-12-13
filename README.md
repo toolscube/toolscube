@@ -16,18 +16,29 @@
 git clone https://github.com/toolscube/tools-cube.git
 cd tools-cube
 npm install
-cp .env.example .env.local
+
+# Setup environment
+cp .env.example .env
+# Edit .env with DATABASE_URL and BETTER_AUTH_SECRET
+
+# Setup database
+npx prisma migrate dev
+npx prisma generate
+
+# Start dev server
 npm run dev
 ```
 
 Open [localhost:3000](http://localhost:3000)
 
+**Detailed setup:** See [docs/AUTH_SETUP.md](docs/AUTH_SETUP.md)
+
 ## Stack
 
-- **Framework:** Next.js 15 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **UI:** Shadcn/ui + Tailwind CSS
-- **Database:** PostgreSQL + Prisma
-- **Auth:** NextAuth.js
+- **Database:** PostgreSQL + Prisma 7
+- **Auth:** Better Auth
 - **Deployment:** Docker
 
 ## Features
