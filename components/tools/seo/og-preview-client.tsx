@@ -1,16 +1,6 @@
 "use client";
 
 import {
-  Globe,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Loader2,
-  Sparkles,
-  TrendingUpDown,
-  Twitter,
-} from "lucide-react";
-import * as React from "react";
-import {
   ActionButton,
   CopyButton,
   LinkButton,
@@ -21,10 +11,25 @@ import SwitchRow from "@/components/shared/form-fields/switch-row";
 import TextareaField from "@/components/shared/form-fields/textarea-field";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Globe,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Loader2,
+  Sparkles,
+  TrendingUpDown,
+  Twitter,
+} from "lucide-react";
+import * as React from "react";
 
 type OgResult = {
   ok: boolean;
@@ -63,7 +68,10 @@ function hostnameOf(u?: string) {
 function toMetaTags(meta: OgResult) {
   const lines: string[] = [];
   const esc = (s?: string) =>
-    (s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    (s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;");
 
   const title = meta.allMeta["og:title"]?.[0] ?? meta.title ?? "";
   const desc = meta.allMeta["og:description"]?.[0] ?? meta.description ?? "";
@@ -74,25 +82,32 @@ function toMetaTags(meta: OgResult) {
   lines.push(`<meta property="og:title" content="${esc(title)}" />`);
   lines.push(`<meta property="og:description" content="${esc(desc)}" />`);
   if (url) lines.push(`<meta property="og:url" content="${esc(url)}" />`);
-  if (site) lines.push(`<meta property="og:site_name" content="${esc(site)}" />`);
+  if (site)
+    lines.push(`<meta property="og:site_name" content="${esc(site)}" />`);
   lines.push(`<meta property="og:type" content="${esc(type)}" />`);
-  if (meta.images[0]) lines.push(`<meta property="og:image" content="${esc(meta.images[0])}" />`);
+  if (meta.images[0])
+    lines.push(`<meta property="og:image" content="${esc(meta.images[0])}" />`);
 
   const tTitle = meta.allMeta["twitter:title"]?.[0] ?? title;
   const tDesc = meta.allMeta["twitter:description"]?.[0] ?? desc;
   const tCard =
-    meta.allMeta["twitter:card"]?.[0] ?? (meta.images[0] ? "summary_large_image" : "summary");
+    meta.allMeta["twitter:card"]?.[0] ??
+    (meta.images[0] ? "summary_large_image" : "summary");
   const tSite = meta.allMeta["twitter:site"]?.[0] ?? meta.twitterSite ?? "";
   const tImg = meta.allMeta["twitter:image"]?.[0] ?? meta.images[0] ?? "";
 
   lines.push(`<meta name="twitter:card" content="${esc(tCard)}" />`);
   if (tSite) lines.push(`<meta name="twitter:site" content="${esc(tSite)}" />`);
-  if (tTitle) lines.push(`<meta name="twitter:title" content="${esc(tTitle)}" />`);
-  if (tDesc) lines.push(`<meta name="twitter:description" content="${esc(tDesc)}" />`);
+  if (tTitle)
+    lines.push(`<meta name="twitter:title" content="${esc(tTitle)}" />`);
+  if (tDesc)
+    lines.push(`<meta name="twitter:description" content="${esc(tDesc)}" />`);
   if (tImg) lines.push(`<meta name="twitter:image" content="${esc(tImg)}" />`);
 
-  if (meta.canonical) lines.push(`<link rel="canonical" href="${esc(meta.canonical)}" />`);
-  if (meta.icons[0]) lines.push(`<link rel="icon" href="${esc(meta.icons[0])}" />`);
+  if (meta.canonical)
+    lines.push(`<link rel="canonical" href="${esc(meta.canonical)}" />`);
+  if (meta.icons[0])
+    lines.push(`<link rel="icon" href="${esc(meta.icons[0])}" />`);
 
   return lines.join("\n");
 }
@@ -147,7 +162,8 @@ export default function OGPreviewClient() {
         setLoading(false);
       }
     },
-    [noCache, url],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [noCache, url]
   );
 
   // Auto fetch
@@ -164,6 +180,7 @@ export default function OGPreviewClient() {
     }, 600);
 
     return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFetch, url, runFetch, data, dataUrl]);
 
   function resetAll() {
@@ -222,9 +239,17 @@ export default function OGPreviewClient() {
               />
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2 md:w-[340px]">
-              <SwitchRow label="Bypass cache" checked={noCache} onCheckedChange={setNoCache} />
-              <SwitchRow label="Auto fetch" checked={autoFetch} onCheckedChange={setAutoFetch} />
+            <div className="grid gap-2 sm:grid-cols-2 md:w-85">
+              <SwitchRow
+                label="Bypass cache"
+                checked={noCache}
+                onCheckedChange={setNoCache}
+              />
+              <SwitchRow
+                label="Auto fetch"
+                checked={autoFetch}
+                onCheckedChange={setAutoFetch}
+              />
             </div>
           </div>
 
@@ -268,7 +293,8 @@ export default function OGPreviewClient() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="flex items-center gap-2">
-                      <Globe className="h-4 w-4" /> Open Graph (Facebook/LinkedIn)
+                      <Globe className="h-4 w-4" /> Open Graph
+                      (Facebook/LinkedIn)
                     </Label>
                     <p className="text-xs text-muted-foreground">{domain}</p>
                   </div>
@@ -277,8 +303,8 @@ export default function OGPreviewClient() {
 
                 <div className="rounded-xl border bg-background overflow-hidden">
                   {data.images[selectedImg] ? (
-                    <div className="relative aspect-[1200/630] bg-muted">
-                      { }
+                    <div className="relative aspect-1200/630 bg-muted">
+                      {}
                       <picture>
                         <img
                           src={data.images[selectedImg]}
@@ -288,7 +314,7 @@ export default function OGPreviewClient() {
                       </picture>
                     </div>
                   ) : (
-                    <div className="aspect-[1200/630] grid place-items-center bg-muted text-muted-foreground">
+                    <div className="aspect-1200/630 grid place-items-center bg-muted text-muted-foreground">
                       <div className="flex items-center gap-2 text-sm">
                         <ImageIcon className="h-4 w-4" /> No image found
                       </div>
@@ -296,7 +322,9 @@ export default function OGPreviewClient() {
                   )}
 
                   <div className="p-4">
-                    <div className="text-xs text-muted-foreground">{data.siteName || domain}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {data.siteName || domain}
+                    </div>
                     <div className="mt-1 line-clamp-2 font-semibold">
                       {data.title || "(no title)"}
                     </div>
@@ -312,12 +340,14 @@ export default function OGPreviewClient() {
                     data.images.map((img, i) => (
                       <button
                         key={`${img}-${i as number}`}
-                        className={`h-10 w-16 overflow-hidden rounded-md border ${selectedImg === i ? "ring-2 ring-primary" : ""}`}
+                        className={`h-10 w-16 overflow-hidden rounded-md border ${
+                          selectedImg === i ? "ring-2 ring-primary" : ""
+                        }`}
                         onClick={() => setSelectedImg(i)}
                         title={img}
                         type="button"
                       >
-                        { }
+                        {}
                         <picture>
                           <img
                             src={img}
@@ -328,7 +358,9 @@ export default function OGPreviewClient() {
                       </button>
                     ))
                   ) : (
-                    <span className="text-xs text-muted-foreground">No images to pick.</span>
+                    <span className="text-xs text-muted-foreground">
+                      No images to pick.
+                    </span>
                   )}
                 </div>
               </div>
@@ -341,7 +373,8 @@ export default function OGPreviewClient() {
                       <Twitter className="h-4 w-4" /> Twitter Card
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                      {data.twitterCard || (data.images[0] ? "summary_large_image" : "summary")}
+                      {data.twitterCard ||
+                        (data.images[0] ? "summary_large_image" : "summary")}
                     </p>
                   </div>
                   <Badge variant="secondary">Summary Large</Badge>
@@ -362,7 +395,7 @@ export default function OGPreviewClient() {
 
                   {data.images[selectedImg] ? (
                     <div className="aspect-video bg-muted">
-                      { }
+                      {}
                       <picture>
                         <img
                           src={data.images[selectedImg]}
@@ -386,7 +419,9 @@ export default function OGPreviewClient() {
                     <div className="text-xs text-muted-foreground line-clamp-2">
                       {data.description || "(no description)"}
                     </div>
-                    <div className="mt-1 text-xs text-muted-foreground">{hostnameOf(data.url)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {hostnameOf(data.url)}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -399,7 +434,9 @@ export default function OGPreviewClient() {
           <GlassCard>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Extracted Meta</CardTitle>
-              <CardDescription>Copy tags, inspect JSON, or open the page.</CardDescription>
+              <CardDescription>
+                Copy tags, inspect JSON, or open the page.
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6 lg:grid-cols-2">
               <div className="space-y-3">
@@ -417,13 +454,16 @@ export default function OGPreviewClient() {
                     getText={JSON.stringify(data, null, 2)}
                   />
 
-                  {data.url && <LinkButton target="_blank" size="sm" href={data.url} />}
+                  {data.url && (
+                    <LinkButton target="_blank" size="sm" href={data.url} />
+                  )}
                 </div>
 
                 <div className="rounded-md border p-3 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary" className="font-normal">
-                      {data.status ?? "—"} {data.contentType ? `· ${data.contentType}` : ""}
+                      {data.status ?? "—"}{" "}
+                      {data.contentType ? `· ${data.contentType}` : ""}
                     </Badge>
                     {data.fetchedAt && (
                       <span className="text-muted-foreground">
@@ -444,7 +484,11 @@ export default function OGPreviewClient() {
                 <div className="rounded-md border p-3">
                   <div className="flex items-center justify-between">
                     <Label>Raw (JSON)</Label>
-                    <SwitchRow label="Show raw" checked={showRaw} onCheckedChange={setShowRaw} />
+                    <SwitchRow
+                      label="Show raw"
+                      checked={showRaw}
+                      onCheckedChange={setShowRaw}
+                    />
                   </div>
 
                   <div className="mt-2">
@@ -472,7 +516,9 @@ export default function OGPreviewClient() {
                       Primary OG/Twitter fields detected.
                     </p>
                   </div>
-                  <Badge variant="secondary">{Object.keys(data.allMeta).length} tags</Badge>
+                  <Badge variant="secondary">
+                    {Object.keys(data.allMeta).length} tags
+                  </Badge>
                 </div>
 
                 <div className="rounded-md border overflow-hidden">
@@ -485,33 +531,59 @@ export default function OGPreviewClient() {
                     </thead>
                     <tbody>
                       {[
-                        ["og:title", data.allMeta["og:title"]?.[0] ?? data.title ?? ""],
+                        [
+                          "og:title",
+                          data.allMeta["og:title"]?.[0] ?? data.title ?? "",
+                        ],
                         [
                           "og:description",
-                          data.allMeta["og:description"]?.[0] ?? data.description ?? "",
+                          data.allMeta["og:description"]?.[0] ??
+                            data.description ??
+                            "",
                         ],
                         ["og:image", data.images[0] ?? ""],
-                        ["og:site_name", data.allMeta["og:site_name"]?.[0] ?? data.siteName ?? ""],
-                        ["og:url", data.allMeta["og:url"]?.[0] ?? data.url ?? ""],
+                        [
+                          "og:site_name",
+                          data.allMeta["og:site_name"]?.[0] ??
+                            data.siteName ??
+                            "",
+                        ],
+                        [
+                          "og:url",
+                          data.allMeta["og:url"]?.[0] ?? data.url ?? "",
+                        ],
                         [
                           "twitter:card",
                           data.allMeta["twitter:card"]?.[0] ??
-                            (data.images[0] ? "summary_large_image" : "summary"),
+                            (data.images[0]
+                              ? "summary_large_image"
+                              : "summary"),
                         ],
-                        ["twitter:title", data.allMeta["twitter:title"]?.[0] ?? data.title ?? ""],
+                        [
+                          "twitter:title",
+                          data.allMeta["twitter:title"]?.[0] ??
+                            data.title ??
+                            "",
+                        ],
                         [
                           "twitter:description",
-                          data.allMeta["twitter:description"]?.[0] ?? data.description ?? "",
+                          data.allMeta["twitter:description"]?.[0] ??
+                            data.description ??
+                            "",
                         ],
                         [
                           "twitter:image",
-                          data.allMeta["twitter:image"]?.[0] ?? data.images[0] ?? "",
+                          data.allMeta["twitter:image"]?.[0] ??
+                            data.images[0] ??
+                            "",
                         ],
                       ].map(([k, v]) => (
                         <tr key={k as string} className="border-t">
                           <td className="py-2 px-3 font-mono text-xs">{k}</td>
                           <td className="py-2 px-3 break-all">
-                            {v || <span className="text-muted-foreground">—</span>}
+                            {v || (
+                              <span className="text-muted-foreground">—</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -523,7 +595,6 @@ export default function OGPreviewClient() {
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-muted-foreground">Icons:</span>
                     {data.icons.slice(0, 4).map((i, idx) => (
-                       
                       <picture key={`${i}-${idx as number}`}>
                         <img src={i} alt="icon" className="h-5 w-5 rounded" />
                       </picture>

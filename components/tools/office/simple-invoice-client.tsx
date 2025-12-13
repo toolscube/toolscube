@@ -192,7 +192,8 @@ export default function SimpleInvoiceClient() {
     setData((d) => {
       const it = d.items.find((r) => r.id === id);
       if (!it) return d;
-      const { id: _, ...rest } = it;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: __, ...rest } = it;
       return {
         ...d,
         items: [...d.items, { ...rest, id: uid(), name: `${it.name} (copy)` }],

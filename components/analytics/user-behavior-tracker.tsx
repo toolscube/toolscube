@@ -1,7 +1,7 @@
 "use client";
 
 import { trackUserEngagement } from "@/lib/gtm";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface UserBehaviorTrackerProps {
   toolName: string;
@@ -44,7 +44,7 @@ export function UserBehaviorTracker({ toolName }: UserBehaviorTrackerProps) {
     };
 
     const handleBeforeUnload = () => {
-      const timeSpent = Math.round((Date.now() - startTime.current) / 1000);
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
       // Track time spent (in seconds)
       trackUserEngagement(toolName, "time_spent", timeSpent);
@@ -69,6 +69,7 @@ export function UserBehaviorTracker({ toolName }: UserBehaviorTrackerProps) {
       document.removeEventListener("keydown", handleInteraction);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toolName]);
 
   return null;

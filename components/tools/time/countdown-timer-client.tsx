@@ -679,7 +679,7 @@ function TimerCard({
       subtitle: "Countdown",
       phaseBadge: null as React.ReactNode,
     };
-  }, [t, isEvent, isPomo]);
+  }, [t, isEvent, isPomo, currentTime]);
 
   const ratio = progressRatio(remaining, duration);
 

@@ -220,7 +220,8 @@ export default function UnitPriceClient() {
     setItems((prev) => {
       const it = prev.find((x) => x.id === id);
       if (!it) return prev;
-      const { id: _, ...copy } = it;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: __, ...copy } = it;
       return [
         ...prev,
         { ...copy, id: crypto.randomUUID(), name: `${it.name} (copy)` },
