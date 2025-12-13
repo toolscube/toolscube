@@ -1,7 +1,7 @@
 export const socialIcons = [
   {
     name: "Facebook",
-    href: "https://www.facebook.com/profile.php?id=61581928709555",
+    href: "https://www.facebook.com/toolscubebd",
     svg: (
       <svg
         className="size-6 transition-transform duration-200 hover:scale-110"

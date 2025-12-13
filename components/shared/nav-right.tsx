@@ -1,10 +1,5 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
-import { ArrowRight, Facebook, Link2, Search, Star } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,8 +11,18 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ToolsData } from "@/data/tools";
+import type { LucideIcon } from "lucide-react";
+import { ArrowRight, Facebook, Link2, Search, Star } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { socialIcons } from "./icons";
 import { UserNav } from "./user-nav";
 
@@ -137,7 +142,7 @@ export default function NavRight() {
                 type="button"
                 ref={inputProxyRef}
                 onClick={() => setOpen(true)}
-                className="hidden sm:flex items-center gap-2 rounded-md border bg-background/50 px-3 py-2 text-sm text-muted-foreground hover:bg-background/70 ring-1 ring-border/50 shadow-sm transition backdrop-blur supports-[backdrop-filter]:bg-background/40"
+                className="hidden sm:flex items-center gap-2 rounded-md border bg-background/50 px-3 py-2 text-sm text-muted-foreground hover:bg-background/70 ring-1 ring-border/50 shadow-sm transition backdrop-blur supports-backdrop-filter:bg-background/40"
                 aria-label="Search tools"
               >
                 <Search className="h-4 w-4" />
@@ -153,9 +158,14 @@ export default function NavRight() {
           </Tooltip>
         </TooltipProvider>
 
-        <Button variant="outline" asChild size="icon" className="hidden sm:flex">
+        <Button
+          variant="outline"
+          asChild
+          size="icon"
+          className="hidden sm:flex"
+        >
           <Link
-            href="https://www.facebook.com/profile.php?id=61581928709555"
+            href="https://www.facebook.com/toolscubebd"
             rel="noopener noreferrer"
             target="_blank"
             className="dark:text-foreground inline-flex items-center gap-1"
@@ -163,7 +173,12 @@ export default function NavRight() {
             <Facebook className="size-6" />
           </Link>
         </Button>
-        <Button variant="outline" asChild size="icon" className="hidden sm:flex">
+        <Button
+          variant="outline"
+          asChild
+          size="icon"
+          className="hidden sm:flex"
+        >
           <Link
             href="https://discord.gg/e5v3J6eX"
             rel="noopener noreferrer"
