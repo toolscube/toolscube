@@ -29,8 +29,8 @@ export default async function DashboardPage() {
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.role}</div>
-            <p className="text-xs text-muted-foreground">Your account role</p>
+            <div className="text-2xl font-bold">Active</div>
+            <p className="text-xs text-muted-foreground">Your account status</p>
           </CardContent>
         </Card>
 
@@ -102,8 +102,8 @@ export default async function DashboardPage() {
                 <p className="text-sm text-muted-foreground">{user.email}</p>
               </div>
               <div>
-                <p className="text-sm font-medium">Role</p>
-                <p className="text-sm text-muted-foreground">{user.role}</p>
+                <p className="text-sm font-medium">Status</p>
+                <p className="text-sm text-muted-foreground">{user.emailVerified ? "Verified" : "Unverified"}</p>
               </div>
             </div>
             {!user.emailVerified && (

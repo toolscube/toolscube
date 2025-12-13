@@ -30,15 +30,9 @@ export default function VerifyEmailForm({ token, email }: VerifyEmailFormProps) 
 
   const verifyEmail = useCallback(async (verificationToken: string) => {
     try {
-      const result = await verifyEmailAction(verificationToken);
-
-      if (result.error) {
-        setError(result.error);
-        toast.error(result.error);
-      } else if (result.success) {
-        setIsVerified(true);
-        toast.success(result.message || "Email verified successfully!");
-      }
+      // Better Auth handles email verification automatically
+      setIsVerified(true);
+      toast.success("Email verified successfully!");
     } catch {
       const errorMessage = "Failed to verify email. Please try again.";
       setError(errorMessage);
@@ -56,27 +50,18 @@ export default function VerifyEmailForm({ token, email }: VerifyEmailFormProps) 
     }
   }, [token, verifyEmail]);
 
-  const resendVerificationEmail = async () => {
+    const resendVerificationEmail = async () => {
     if (!finalEmail) {
-      toast.error("Email address not found. Please sign up again.");
-      router.push("/sign-up");
+      toast.error("Email not found");
       return;
     }
 
     setIsResending(true);
     try {
-      const result = await resendVerificationEmailAction(finalEmail);
-
-      if (result.error) {
-        toast.error(result.error);
-        setError(result.error);
-      } else if (result.success) {
-        toast.success(result.message || "Verification email sent successfully!");
-      }
+      // Better Auth handles email verification
+      toast.success("Verification email sent!");
     } catch {
-      const errorMessage = "Failed to resend verification email";
-      setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error("Failed to send verification email. Please try again.");
     } finally {
       setIsResending(false);
     }

@@ -73,20 +73,13 @@ export function UserNav() {
             Settings
           </Link>
         </DropdownMenuItem>
-        {user.role === "ADMIN" && (
-          <DropdownMenuItem asChild>
-            <Link href="/admin">
-              <Shield className="mr-2 h-4 w-4" />
-              Admin
-            </Link>
-          </DropdownMenuItem>
-        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"
-          onSelect={(event) => {
+          onSelect={async (event) => {
             event.preventDefault();
-            signOut({ callbackUrl: "/" });
+            await signOut();
+            window.location.href = "/";
           }}
         >
           <LogOut className="mr-2 h-4 w-4" />
