@@ -1,5 +1,10 @@
 "use client";
 
+import InputField from "@/components/shared/form-fields/input-field";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { signUp } from "@/lib/auth-client";
+import logger from "@/lib/logger";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -7,11 +12,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
-import InputField from "@/components/shared/form-fields/input-field";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { signUpAction } from "@/lib/actions/auth.action";
-import logger from "@/lib/logger";
 
 const signUpFormSchema = z
   .object({
@@ -22,7 +22,7 @@ const signUpFormSchema = z
       .min(8, "Password must be at least 8 characters")
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
       ),
     confirmPassword: z.string(),
   })
@@ -55,17 +55,19 @@ export default function SignUpForm() {
     setIsLoading(true);
 
     try {
-      const result = await signUpAction({
+      const result = await signUp.email({
         name: data.name,
         email: data.email,
         password: data.password,
+        callbackURL: "/",
       });
 
       if (result.error) {
-        toast.error(result.error);
-      } else if (result.success) {
-        toast.success(result.message || "Account created successfully!");
-        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        toast.error(result.error.message || "Sign up failed");
+      } else {
+        toast.success("Account created successfully!");
+        router.push("/");
+        router.refresh();
       }
     } catch (error) {
       logger.error({ error }, "Sign up error");

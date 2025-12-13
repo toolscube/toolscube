@@ -1,8 +1,5 @@
 "use client";
 
-import { LogOut, Settings, Shield, User } from "lucide-react";
-import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,12 +8,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { signOut, useSession } from "@/lib/auth-client";
+import { LogOut, Settings, Shield, User } from "lucide-react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export function UserNav() {
-  const { data: session, status } = useSession();
+  const { data: session, isPending } = useSession();
 
-  if (typeof window === "undefined" || status === "loading") {
+  if (typeof window === "undefined" || isPending) {
     return <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />;
   }
 

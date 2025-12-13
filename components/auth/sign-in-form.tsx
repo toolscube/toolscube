@@ -1,18 +1,18 @@
 "use client";
 
+import InputField from "@/components/shared/form-fields/input-field";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { signIn } from "@/lib/auth-client";
+import logger from "@/lib/logger";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
-import InputField from "@/components/shared/form-fields/input-field";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import logger from "@/lib/logger";
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -39,15 +39,15 @@ export default function SignInForm() {
     setIsLoading(true);
 
     try {
-      const result = await signIn("credentials", {
+      const result = await signIn.email({
         email: data.email,
         password: data.password,
-        redirect: false,
+        callbackURL: "/",
       });
 
-      if (result?.error) {
+      if (result.error) {
         toast.error("Invalid email or password");
-      } else if (result?.ok) {
+      } else {
         toast.success("Signed in successfully!");
         router.push("/");
         router.refresh();

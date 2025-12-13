@@ -115,21 +115,27 @@ export const env = {
 
   auth: {
     get secret() {
-      return getEnvVar("NEXTAUTH_SECRET", { required: true, serverOnly: true });
+      return getEnvVar("BETTER_AUTH_SECRET", {
+        required: true,
+        serverOnly: true,
+      });
     },
     get url() {
-      return getEnvVar("NEXTAUTH_URL", { required: true, serverOnly: true });
+      return getEnvVar("BETTER_AUTH_URL", {
+        defaultValue: "http://localhost:3000",
+        serverOnly: true,
+      });
     },
     google: {
       get clientId() {
         return getEnvVar("GOOGLE_CLIENT_ID", {
-          required: true,
+          required: false,
           serverOnly: true,
         });
       },
       get clientSecret() {
         return getEnvVar("GOOGLE_CLIENT_SECRET", {
-          required: true,
+          required: false,
           serverOnly: true,
         });
       },

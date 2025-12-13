@@ -1,8 +1,14 @@
-import { env } from "@/lib/env";
 import { PrismaClient } from "@prisma/client";
-import { withAccelerate } from "@prisma/extension-accelerate";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { env } from "@/lib/env";
 
-const create = () => new PrismaClient().$extends(withAccelerate());
+const connectionString = env.db.url;
+
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
+const create = () => new PrismaClient({ adapter });
 type PrismaX = ReturnType<typeof create>;
 
 const g = globalThis as unknown as { prisma?: PrismaX };

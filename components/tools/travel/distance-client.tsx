@@ -1,6 +1,7 @@
 "use client";
 
 import type * as LeafletNS from "leaflet";
+import "leaflet/dist/leaflet.css";
 import {
   Bike,
   Car,
@@ -17,14 +18,22 @@ import {
 import dynamic from "next/dynamic";
 import * as React from "react";
 import toast from "react-hot-toast";
-import "leaflet/dist/leaflet.css";
 
-import { ActionButton, CopyButton, ResetButton } from "@/components/shared/action-buttons";
+import {
+  ActionButton,
+  CopyButton,
+  ResetButton,
+} from "@/components/shared/action-buttons";
 import SelectField from "@/components/shared/form-fields/select-field";
 import Stat from "@/components/shared/stat";
 import ToolPageHeader from "@/components/shared/tool-page-header";
 import { Badge } from "@/components/ui/badge";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -36,12 +45,24 @@ type Traffic = "light" | "normal" | "heavy";
 type Pin = "from" | "to";
 type LatLon = { lat: number; lon: number };
 
-const BASE_SPEED_KMH: Record<Mode, number> = { driving: 55, cycling: 16, walking: 5 };
-const ROAD_FACTOR: Record<Mode, number> = { driving: 1.25, cycling: 1.15, walking: 1.1 };
-const TRAFFIC_FACTOR: Record<Traffic, number> = { light: 0.9, normal: 1.0, heavy: 1.35 };
+const BASE_SPEED_KMH: Record<Mode, number> = {
+  driving: 55,
+  cycling: 16,
+  walking: 5,
+};
+const ROAD_FACTOR: Record<Mode, number> = {
+  driving: 1.25,
+  cycling: 1.15,
+  walking: 1.1,
+};
+const TRAFFIC_FACTOR: Record<Traffic, number> = {
+  light: 0.9,
+  normal: 1.0,
+  heavy: 1.35,
+};
 const KM_TO_MI = 0.621371;
 const nf = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
-const LS_KEY = "tools-hub:distance-eta:v2";
+const LS_KEY = "tools-cube:distance-eta:v2";
 
 /* Math */
 function toRad(d: number) {
