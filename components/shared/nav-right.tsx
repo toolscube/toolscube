@@ -23,6 +23,7 @@ import { ArrowRight, Facebook, Link2, Search, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { GitHubStars } from "./github-stars";
 import { socialIcons } from "./icons";
 import { UserNav } from "./user-nav";
 
@@ -165,30 +166,30 @@ export default function NavRight() {
           variant="outline"
           asChild
           size="icon"
-          className="hidden sm:flex"
+          className="hidden sm:flex h-9 w-9"
         >
           <Link
             href="https://www.facebook.com/toolscubebd"
             rel="noopener noreferrer"
             target="_blank"
-            className="dark:text-foreground inline-flex items-center gap-1"
+            aria-label="Follow us on Facebook"
           >
-            <Facebook className="size-6" />
+            <Facebook className="size-4" />
           </Link>
         </Button>
         <Button
           variant="outline"
           asChild
-          size="icon"
-          className="hidden sm:flex"
+          className="hidden sm:flex h-9 gap-1.5 px-3"
         >
           <Link
-            href="https://discord.gg/e5v3J6eX"
+            href="https://github.com/toolscube/tools-cube"
             rel="noopener noreferrer"
             target="_blank"
-            className="dark:text-foreground inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1.5"
           >
-            {socialIcons.find((icon) => icon.name === "Discord")?.svg}
+            {socialIcons.find((icon) => icon.name === "Github")?.svg}
+            <GitHubStars />
           </Link>
         </Button>
         <UserNav />
