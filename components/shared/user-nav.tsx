@@ -23,10 +23,10 @@ export function UserNav() {
   if (!session?.user) {
     return (
       <div className="flex gap-2">
-        <Button asChild variant="ghost">
+        <Button asChild variant="outline">
           <Link href="/sign-in">Sign In</Link>
         </Button>
-        <Button asChild>
+        <Button asChild className="hidden md:inline-flex">
           <Link href="/sign-up">Sign Up</Link>
         </Button>
       </div>
@@ -57,7 +57,9 @@ export function UserNav() {
         <div className="flex items-center justify-start gap-2 p-2">
           <div className="flex flex-col space-y-1 leading-none">
             {user.name && <p className="font-medium">{user.name}</p>}
-            <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
+            <p className="w-50 truncate text-sm text-muted-foreground">
+              {user.email}
+            </p>
           </div>
         </div>
         <DropdownMenuSeparator />
@@ -68,7 +70,7 @@ export function UserNav() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/profile">
+          <Link href="/dashboard/settings/profile">
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </Link>

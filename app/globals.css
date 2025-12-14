@@ -191,4 +191,13 @@
     border-radius: 0.5rem;
     background: color-mix(in oklab, var(--color-background) 92%, #000 8%);
   }
+
+  .scrollbar-thin {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    display: none;
+  }
 }
