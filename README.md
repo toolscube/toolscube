@@ -13,7 +13,7 @@
 ## Quick Start
 
 ```bash
-git clone https://github.com/toolscube/tools-cube.git
+git clone https://github.com/toolscube/toolscube.git
 cd tools-cube
 npm install
 

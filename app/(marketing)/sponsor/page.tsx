@@ -21,7 +21,7 @@ const supportWays = [
   {
     title: "Star on GitHub",
     icon: Star,
-    href: "https://github.com/toolscube/tools-cube",
+    href: "https://github.com/toolscube/toolscube",
   },
   {
     title: "Sponsor Development",
@@ -31,7 +31,7 @@ const supportWays = [
   {
     title: "Contribute Code",
     icon: Rocket,
-    href: "https://github.com/toolscube/tools-cube/blob/main/CONTRIBUTING.md",
+    href: "https://github.com/toolscube/toolscube/blob/main/CONTRIBUTING.md",
   },
 ] as const;
 
@@ -70,7 +70,7 @@ export default function SponsorPage() {
               asChild
             >
               <Link
-                href="https://github.com/toolscube/tools-cube"
+                href="https://github.com/toolscube/toolscube"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -178,7 +178,7 @@ export default function SponsorPage() {
             </Button>
             <Button size="lg" variant="outline" asChild>
               <Link
-                href="https://github.com/toolscube/tools-cube"
+                href="https://github.com/toolscube/toolscube"
                 target="_blank"
                 rel="noopener noreferrer"
               >

@@ -183,7 +183,7 @@ export default function NavRight() {
           className="hidden sm:flex h-9 gap-1.5 px-3"
         >
           <Link
-            href="https://github.com/toolscube/tools-cube"
+            href="https://github.com/toolscube/toolscube"
             rel="noopener noreferrer"
             target="_blank"
             className="inline-flex items-center gap-1.5"
