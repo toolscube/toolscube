@@ -2,10 +2,6 @@
 
 > Free and open source online tools platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://typescriptlang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
 70+ essential online utilities for developers and professionals. Built with Next.js 15, privacy-focused, and MIT licensed.
 
 **Live:** [toolscube.app](https://toolscube.app) • **Docs:** [/docs](./docs)
@@ -30,8 +26,6 @@ npm run dev
 ```
 
 Open [localhost:3000](http://localhost:3000)
-
-**Detailed setup:** See [docs/AUTH_SETUP.md](docs/AUTH_SETUP.md)
 
 ## Stack
 
