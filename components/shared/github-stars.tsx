@@ -1,28 +1,36 @@
-import { Suspense } from "react";
+"use client";
 
-async function getGitHubStars() {
-  try {
-    const res = await fetch(
-      "https://api.github.com/repos/toolscube/tools-cube",
-      {
-        next: { revalidate: 3600 },
+import { useEffect, useState } from "react";
+
+export function GitHubStars() {
+  const [stars, setStars] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStars() {
+      try {
+        const res = await fetch(
+          "https://api.github.com/repos/toolscube/toolscube",
+          {
+            headers: {
+              Accept: "application/vnd.github.v3+json",
+            },
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          setStars(data.stargazers_count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching GitHub stars:", error);
+      } finally {
+        setLoading(false);
       }
-    );
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch stars");
     }
 
-    const data = await res.json();
-    return data.stargazers_count || 0;
-  } catch (error) {
-    console.error("Error fetching GitHub stars:", error);
-    return 0;
-  }
-}
-
-async function GitHubStarsCount() {
-  const stars = await getGitHubStars();
+    fetchStars();
+  }, []);
 
   const formatStars = (count: number) => {
     if (count >= 1000) {
@@ -31,23 +39,15 @@ async function GitHubStarsCount() {
     return count.toString();
   };
 
+  if (loading) {
+    return (
+      <span className="text-xs font-semibold tabular-nums opacity-50">0</span>
+    );
+  }
+
   return (
     <span className="text-xs font-semibold tabular-nums">
       {stars > 0 ? formatStars(stars) : "0"}
     </span>
-  );
-}
-
-function GitHubStarsSkeleton() {
-  return (
-    <span className="text-xs font-semibold tabular-nums opacity-50">0</span>
-  );
-}
-
-export function GitHubStars() {
-  return (
-    <Suspense fallback={<GitHubStarsSkeleton />}>
-      <GitHubStarsCount />
-    </Suspense>
   );
 }
