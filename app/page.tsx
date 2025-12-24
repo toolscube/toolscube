@@ -1,3 +1,28 @@
+import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
+import { GridPattern } from "@/components/magicui/grid-pattern";
+import JsonLd from "@/components/seo/json-ld";
+import Footer from "@/components/shared/footer";
+import { Navbar } from "@/components/shared/navbar";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Separator } from "@/components/ui/separator";
+import { ToolsData } from "@/data/tools";
+import { generateSEOMetadata } from "@/lib/seo-config";
+import { cn } from "@/lib/utils";
 import {
   ArrowRight,
   Fingerprint,
@@ -9,29 +34,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
-import { GridPattern } from "@/components/magicui/grid-pattern";
-import Footer from "@/components/shared/footer";
-import { Navbar } from "@/components/shared/navbar";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Separator } from "@/components/ui/separator";
-import { ToolsData } from "@/data/tools";
-import { generateSEOMetadata } from "@/lib/seo-config";
-import { cn } from "@/lib/utils";
 
 export const metadata = generateSEOMetadata({
-  title: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
+  title:
+    "70+ Free Online Tools - URL Shortener, Image Converter & Developer Tools",
   description:
-    "Build faster with everyday developer & business tools. Shorten links, convert files, format JSON, calculate values — all in one place. Free and privacy-friendly.",
+    "Free online tools for developers and professionals. URL shortener, QR code generator, JSON formatter, image converter, calculators, and 70+ utilities. No signup required, privacy-first, open source.",
   path: "/",
 });
 
@@ -53,7 +61,9 @@ type ToolCategory = {
 const isRootTools = (c: ToolCategory) => c.title.toLowerCase() === "tools";
 
 function getPopularTools(max = 12): ToolItem[] {
-  const flat: ToolItem[] = (ToolsData as ToolCategory[]).flatMap((cat) => cat.items ?? []);
+  const flat: ToolItem[] = (ToolsData as ToolCategory[]).flatMap(
+    (cat) => cat.items ?? []
+  );
   const popular = flat.filter((t) => t.popular);
   const pool = popular.length ? popular : flat;
   const seen = new Set<string>();
@@ -66,14 +76,56 @@ function getPopularTools(max = 12): ToolItem[] {
 }
 
 function getActiveCategories(): ToolCategory[] {
-  return (ToolsData as ToolCategory[]).filter((c) => c.isActive && !isRootTools(c));
+  return (ToolsData as ToolCategory[]).filter(
+    (c) => c.isActive && !isRootTools(c)
+  );
 }
 
 export default function HomePage() {
   const trending = useMemo(() => getPopularTools(8), []);
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Is Tools Cube free?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Most tools are free to use without an account. We offer 70+ online tools completely free with no signup required.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do you store my data?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No. Tools run in your browser where possible. Server features avoid persistent storage. We prioritize privacy and process data on-device whenever possible.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How can I request a tool?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "You can request a new tool by using the Contact page or opening an issue on our GitHub repository. We're always looking to add tools that our users need.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What types of tools are available?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "We offer URL tools (shortener, QR codes), text utilities (word counter, case converter), developer tools (JSON formatter, hash generator), calculators (BMI, currency, EMI), SEO tools (meta generator, schema markup), image tools (converter, resizer), and more.",
+        },
+      },
+    ],
+  };
+
   return (
     <main>
+      <JsonLd data={faqSchema} />
       <Navbar />
 
       {/* Hero */}
@@ -82,7 +134,7 @@ export default function HomePage() {
         <div className="z-10 flex items-center justify-center">
           <div
             className={cn(
-              "group rounded-full border border-black/5 bg-neutral-100 text-base text-white transition-all ease-in hover:bg-neutral-200 dark:border-white/5 dark:bg-neutral-900 dark:hover:bg-neutral-800",
+              "group rounded-full border border-black/5 bg-neutral-100 text-base text-white transition-all ease-in hover:bg-neutral-200 dark:border-white/5 dark:bg-neutral-900 dark:hover:bg-neutral-800"
             )}
           >
             <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-600 hover:duration-300 hover:dark:text-neutral-400">
@@ -91,10 +143,11 @@ export default function HomePage() {
           </div>
         </div>
         <h1 className="max-w-4xl text-balance text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-          Build faster with everyday developer & business tools.
+          70+ Free Online Tools for Developers & Professionals
         </h1>
-        <p className="max-w-2xl text-pretty text-muted-foreground">
-          Shorten links, convert files, format JSON, calculate values — crafted with ShadCN, tuned
+        <p className="max-w-2xl text-pretty text-muted-foreground md:text-lg">
+          URL shortener, QR codes, image converter, JSON formatter, calculators,
+          and more. No signup required. Privacy-first, open source, and built
           for speed.
         </p>
 
@@ -115,10 +168,16 @@ export default function HomePage() {
       {/* Three-up feature row */}
       <section className="mx-auto max-w-7xl px-2 pt-30">
         <div className="grid gap-4 md:grid-cols-3">
-          <FeatureCard icon={<Rocket className="h-5 w-5" />} title="Blazing fast">
+          <FeatureCard
+            icon={<Rocket className="h-5 w-5" />}
+            title="Blazing fast"
+          >
             Instant load, lightweight pages and cache‑friendly.
           </FeatureCard>
-          <FeatureCard icon={<Lock className="h-5 w-5" />} title="Private by default">
+          <FeatureCard
+            icon={<Lock className="h-5 w-5" />}
+            title="Private by default"
+          >
             Browser‑first tools; server features avoid persistent storage.
           </FeatureCard>
           <FeatureCard
@@ -132,7 +191,11 @@ export default function HomePage() {
 
       {/* Categories grid */}
       <section className="mx-auto max-w-7xl px-2 pt-12">
-        <SectionHeader title="Browse by category" href="/tools" cta="View all" />
+        <SectionHeader
+          title="Browse by category"
+          href="/tools"
+          cta="View all"
+        />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {getActiveCategories().map((c, idx) => (
             <Link
@@ -156,14 +219,19 @@ export default function HomePage() {
                       {c.title}
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      {c.items?.length ?? 0} tool{(c.items?.length ?? 0) === 1 ? "" : "s"}
+                      {c.items?.length ?? 0} tool
+                      {(c.items?.length ?? 0) === 1 ? "" : "s"}
                     </CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex flex-wrap gap-2">
                     {(c.items || []).slice(0, 3).map((t) => (
-                      <Badge key={t.url} variant="secondary" className="text-xs">
+                      <Badge
+                        key={t.url}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {t.title}
                       </Badge>
                     ))}
@@ -178,7 +246,11 @@ export default function HomePage() {
       {/* Popular & Recent side-by-side */}
       <section className="mx-auto max-w-7xl px-2 pt-12">
         <div>
-          <SectionHeader title="Popular tools" href="/tools" cta="Explore all" />
+          <SectionHeader
+            title="Popular tools"
+            href="/tools"
+            cta="Explore all"
+          />
           <ToolsGrid tools={trending} />
         </div>
       </section>
@@ -190,10 +262,13 @@ export default function HomePage() {
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2">
                 <Fingerprint className="h-5 w-5" />
-                <h3 className="text-lg font-semibold tracking-tight">Security & Privacy</h3>
+                <h3 className="text-lg font-semibold tracking-tight">
+                  Security & Privacy
+                </h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                We prioritize on‑device processing. For server features, we don’t persist your data.
+                We prioritize on‑device processing. For server features, we
+                don’t persist your data.
               </p>
             </div>
             <div className="self-center justify-self-end">
@@ -207,22 +282,52 @@ export default function HomePage() {
 
       {/* FAQ */}
       <section className="mx-auto max-w-7xl px-2 pt-12">
-        <h2 className="mb-4 text-xl font-semibold tracking-tight">FAQs</h2>
+        <h2 className="mb-4 text-xl font-semibold tracking-tight">
+          Frequently Asked Questions
+        </h2>
         <Accordion type="single" collapsible className="rounded-2xl border p-2">
           <AccordionItem value="a1">
             <AccordionTrigger>Is Tools Cube free?</AccordionTrigger>
-            <AccordionContent>Yes. Most tools are free to use without an account.</AccordionContent>
+            <AccordionContent>
+              Yes. Most tools are free to use without an account. We offer 70+
+              online tools completely free with no signup required.
+            </AccordionContent>
           </AccordionItem>
           <AccordionItem value="a2">
             <AccordionTrigger>Do you store my data?</AccordionTrigger>
             <AccordionContent>
-              No. Tools run in your browser where possible. Server features avoid persistent
-              storage.
+              No. Tools run in your browser where possible. Server features
+              avoid persistent storage. We prioritize privacy and process data
+              on-device whenever possible.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="a3">
             <AccordionTrigger>How can I request a tool?</AccordionTrigger>
-            <AccordionContent>Use the Contact page or open an issue on GitHub.</AccordionContent>
+            <AccordionContent>
+              You can request a new tool by using the Contact page or opening an
+              issue on our GitHub repository. We&apos;re always looking to add
+              tools that our users need.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="a4">
+            <AccordionTrigger>
+              What types of tools are available?
+            </AccordionTrigger>
+            <AccordionContent>
+              We offer URL tools (shortener, QR codes), text utilities (word
+              counter, case converter), developer tools (JSON formatter, hash
+              generator), calculators (BMI, currency, EMI), SEO tools (meta
+              generator, schema markup), image tools (converter, resizer), and
+              more.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="a5">
+            <AccordionTrigger>Do I need to create an account?</AccordionTrigger>
+            <AccordionContent>
+              No account is required for most tools. You can use them instantly
+              without signing up. Some advanced features may require optional
+              registration for saved preferences.
+            </AccordionContent>
           </AccordionItem>
         </Accordion>
       </section>
@@ -234,9 +339,12 @@ export default function HomePage() {
             <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
             <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
             <div className="relative">
-              <h3 className="text-2xl font-semibold tracking-tight">Support the project</h3>
+              <h3 className="text-2xl font-semibold tracking-tight">
+                Support the project
+              </h3>
               <p className="mt-2 max-w-prose text-sm text-muted-foreground">
-                Sponsor to help us ship faster and keep Tools Cube free for everyone.
+                Sponsor to help us ship faster and keep Tools Cube free for
+                everyone.
               </p>
             </div>
             <div className="relative flex flex-wrap gap-3 md:justify-end">
@@ -244,7 +352,11 @@ export default function HomePage() {
                 <Link href="/sponsor">Become a sponsor</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="https://github.com/toolscube" target="_blank" rel="noreferrer">
+                <Link
+                  href="https://github.com/toolscube"
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <Github className="mr-2 h-4 w-4" /> GitHub
                 </Link>
               </Button>
@@ -260,7 +372,15 @@ export default function HomePage() {
   );
 }
 
-function SectionHeader({ title, href, cta }: { title: string; href: string; cta: string }) {
+function SectionHeader({
+  title,
+  href,
+  cta,
+}: {
+  title: string;
+  href: string;
+  cta: string;
+}) {
   return (
     <div className="mb-4 flex items-center justify-between">
       <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
@@ -288,7 +408,9 @@ function FeatureCard({
         <div className="rounded-xl border bg-background p-2">{icon}</div>
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 text-sm text-muted-foreground">{children}</CardContent>
+      <CardContent className="pt-0 text-sm text-muted-foreground">
+        {children}
+      </CardContent>
     </GlassCard>
   );
 }
@@ -305,7 +427,9 @@ function ToolsGrid({ tools }: { tools: ToolItem[] }) {
         >
           <GlassCard className="h-full">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold tracking-tight">{t.title}</CardTitle>
+              <CardTitle className="text-lg font-semibold tracking-tight">
+                {t.title}
+              </CardTitle>
               {t.description && (
                 <CardDescription className="text-sm text-muted-foreground line-clamp-2">
                   {t.description}

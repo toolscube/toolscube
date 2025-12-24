@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import "leaflet/dist/leaflet.css";
+import type { Metadata } from "next";
 import "./globals.css";
 
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import {
   GoogleTagManager,
   GoogleTagManagerNoScript,
@@ -13,11 +12,22 @@ import JsonLd from "@/components/seo/json-ld";
 import { ToolsData } from "@/data/tools";
 import { siteURL } from "@/lib/constants";
 import { structuredData } from "@/lib/seo-config";
-import { buildDynamicKeywords, mergeKeywords, siteDescriptionFallback } from "@/lib/seo-tools";
+import {
+  buildDynamicKeywords,
+  mergeKeywords,
+  siteDescriptionFallback,
+} from "@/lib/seo-tools";
+import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
-const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+});
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+});
 
 const STATIC_KEYWORDS = [
   "online tools",
@@ -40,7 +50,7 @@ const DYNAMIC_KEYWORDS = buildDynamicKeywords(ToolsData);
 const KEYWORDS = mergeKeywords(STATIC_KEYWORDS, DYNAMIC_KEYWORDS);
 
 const description =
-  "URL shortener, PDF tools, image converters, text utilities, developer helpers, and calculators — all in one place.";
+  "Free online tools for developers and professionals: URL shortener, QR code generator, JSON formatter, image converter, Base64 encoder, hash generator, regex tester, calculators, and 70+ utilities. No signup required, privacy-first.";
 const smartDescription = description || siteDescriptionFallback(ToolsData);
 
 export const metadata: Metadata = {
@@ -62,9 +72,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
+    title: "Tools Cube — 70+ Free Online Tools for Developers & Professionals",
     description:
-      "Fast, free, privacy-friendly online tools. Shorten links, convert files, optimize images, and more.",
+      "Free online tools: URL shortener, QR codes, JSON formatter, image converter, calculators, and 70+ utilities. No signup required, privacy-first, open source.",
     type: "website",
     url: `${siteURL}/tools`,
     siteName: "Tools Cube",
@@ -83,9 +93,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@toolscube",
     creator: "@toolscube",
-    title: "Tools Cube — Fast, Free, Privacy-Friendly Online Tools",
+    title: "Tools Cube — 70+ Free Online Tools",
     description:
-      "Shorten links, convert files, optimize images, and more. 100% free and privacy-first.",
+      "URL shortener, QR codes, JSON formatter, image converter, calculators, and more. 100% free, no signup required, privacy-first.",
     images: [`${siteURL}/assets/tools-cube.jpg`],
   },
   robots: {
@@ -101,9 +111,8 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: `${siteURL}/tools`,
     languages: {
-      "en-US": `${siteURL}/tools`,
+      "en-US": `${siteURL}`,
     },
   },
   icons: {

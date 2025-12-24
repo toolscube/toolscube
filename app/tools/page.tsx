@@ -1,5 +1,3 @@
-import type { Metadata } from "next";
-import Link from "next/link";
 import JsonLd from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,26 +6,45 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Separator } from "@/components/ui/separator";
 import { ToolsData } from "@/data/tools";
 import { siteURL } from "@/lib/constants";
-import { buildDynamicKeywords, mergeKeywords, siteDescriptionFallback } from "@/lib/seo-tools";
+import {
+  buildDynamicKeywords,
+  mergeKeywords,
+  siteDescriptionFallback,
+} from "@/lib/seo-tools";
+import type { Metadata } from "next";
+import Link from "next/link";
 
 const STATIC_KEYWORDS = [
   "online tools",
   "url shortener",
+  "free online tools",
+  "developer tools",
   "pdf tools",
   "image tools",
+  "image converter",
   "text utilities",
-  "developer tools",
+  "json formatter",
+  "qr code generator",
+  "base64 encoder",
+  "hash generator",
+  "password generator",
   "seo tools",
   "calculators",
+  "unit converter",
+  "bmi calculator",
+  "currency converter",
+  "regex tester",
   "free tools",
   "privacy friendly",
+  "no signup required",
+  "web utilities",
 ];
 
 const DYNAMIC_KEYWORDS = buildDynamicKeywords(ToolsData);
 const KEYWORDS = mergeKeywords(STATIC_KEYWORDS, DYNAMIC_KEYWORDS);
 
 const description =
-  "Browse all online utilities: URL shortener, PDF & image tools, text utilities, developer helpers, SEO tools, and calculators.";
+  "Browse 70+ free online tools for developers and professionals. URL shortener with QR codes, JSON formatter, image converter, Base64 encoder, hash generator, calculators, SEO tools, and more. No signup required, privacy-first.";
 const smartDescription = description || siteDescriptionFallback(ToolsData);
 
 export const metadata: Metadata = {
@@ -66,18 +83,20 @@ export const metadata: Metadata = {
   },
 };
 
-const categories = ToolsData.filter((cat) => cat.title !== "Tools").map((cat) => ({
-  key: cat.title
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/&/g, "")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, ""),
-  label: cat.title,
-  icon: cat.icon,
-  items: cat.items,
-}));
+const categories = ToolsData.filter((cat) => cat.title !== "Tools").map(
+  (cat) => ({
+    key: cat.title
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/&/g, "")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, ""),
+    label: cat.title,
+    icon: cat.icon,
+    items: cat.items,
+  })
+);
 
 export default function ToolsIndexPage() {
   const navLd = {
@@ -102,18 +121,25 @@ export default function ToolsIndexPage() {
           All Tools
         </h1>
         <p className="max-w-2xl text-pretty text-muted-foreground">
-          Utilities for links, text, PDF, images, development, SEO, and quick calculations.
+          Utilities for links, text, PDF, images, development, SEO, and quick
+          calculations.
         </p>
       </header>
 
       {/* Category tiles */}
       <section className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         {categories.map((c) => (
-          <Link key={c.key} href={`#cat-${c.key}`} className="group focus:outline-none">
+          <Link
+            key={c.key}
+            href={`#cat-${c.key}`}
+            className="group focus:outline-none"
+          >
             <GlassCard>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  {c.icon && <c.icon className="h-4 w-4 text-muted-foreground" />}
+                  {c.icon && (
+                    <c.icon className="h-4 w-4 text-muted-foreground" />
+                  )}
                   {c.label}
                 </CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">

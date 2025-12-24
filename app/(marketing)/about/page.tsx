@@ -4,9 +4,9 @@ import { generateSEOMetadata } from "@/lib/seo-config";
 import Link from "next/link";
 
 export const metadata = generateSEOMetadata({
-  title: "About Tools Cube",
+  title: "About Tools Cube - Free Open Source Online Tools",
   description:
-    "Learn about Tools Cube — our mission is to provide fast, free, privacy-friendly online utilities for developers and businesses worldwide.",
+    "Learn about Tools Cube — 70+ free online tools for developers and professionals. Open source, privacy-first, no signup required. Built with Next.js, TypeScript, and modern web technologies.",
   path: "/about",
 });
 

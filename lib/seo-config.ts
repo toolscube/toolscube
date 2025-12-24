@@ -3,14 +3,15 @@ import { siteURL } from "./constants";
 
 export const siteConfig = {
   name: "Tools Cube",
-  description: "Fast, free, privacy-friendly online tools. Shorten links, convert files, optimize images, and more.",
+  description:
+    "70+ free online tools for developers and professionals. URL shortener, QR code generator, JSON formatter, image converter, calculators, and more. No signup required, privacy-first.",
   url: siteURL,
   ogImage: `${siteURL}/og/tools-cube-og.png`,
   twitter: "@toolscube",
   keywords: [
     "online tools",
     "url shortener",
-    "pdf tools", 
+    "pdf tools",
     "image converter",
     "text utilities",
     "developer tools",
@@ -32,8 +33,8 @@ export const siteConfig = {
     "html formatter",
     "tools cube",
     "web utilities",
-    "productivity tools"
-  ]
+    "productivity tools",
+  ],
 };
 
 export function generateSEOMetadata({

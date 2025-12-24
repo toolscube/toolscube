@@ -1,8 +1,8 @@
 # Tools Cube
 
-> Free and open source online tools platform
+> 70+ free online tools for developers and professionals
 
-70+ essential online utilities for developers and professionals. Built with Next.js 15, privacy-focused, and MIT licensed.
+Essential online utilities built with Next.js 16, TypeScript, and modern web technologies. URL shortener, QR codes, JSON formatter, image converter, calculators, SEO tools, and more. Privacy-first, open source, MIT licensed.
 
 **Live:** [toolscube.app](https://toolscube.app) • **Docs:** [/docs](./docs)
 
